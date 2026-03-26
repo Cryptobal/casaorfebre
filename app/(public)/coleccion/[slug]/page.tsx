@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductBySlug } from "@/lib/queries/products";
-import { formatCLP } from "@/lib/utils";
 import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
-import { Button } from "@/components/ui/button";
+import { AddToCart } from "./add-to-cart";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -159,9 +158,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
             )}
 
             {/* Add to cart button */}
-            <Button size="lg" className="w-full">
-              A&ntilde;adir al Carrito &mdash; {formatCLP(product.price)}
-            </Button>
+            <AddToCart
+              productId={product.id}
+              price={product.price}
+              isUnique={product.isUnique}
+              stock={product.stock}
+            />
 
             {/* Trust icons */}
             <div className="flex items-center justify-between gap-4">
