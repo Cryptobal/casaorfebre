@@ -1,21 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
+import { resolveGuestCartLines } from "@/lib/actions/guest-cart";
+import { GUEST_CART_UPDATED_EVENT, readGuestCartLines } from "@/lib/guest-cart-storage";
 
 interface CartButtonProps {
-  initialCount: number;
   initialItems: SerializedCartItem[];
   initialTotal: number;
+  isLoggedIn: boolean;
 }
 
 export function CartButton({
-  initialCount,
   initialItems,
   initialTotal,
+  isLoggedIn,
 }: CartButtonProps) {
+  const { status } = useSession();
+  const loggedIn =
+    status === "authenticated" || (isLoggedIn && status === "loading");
+
   const [isOpen, setIsOpen] = useState(false);
+  const [guestItems, setGuestItems] = useState<SerializedCartItem[]>([]);
+  const [guestTotal, setGuestTotal] = useState(0);
+
+  const hydrateGuest = useCallback(async () => {
+    const lines = readGuestCartLines();
+    if (lines.length === 0) {
+      setGuestItems([]);
+      setGuestTotal(0);
+      return;
+    }
+    const { items } = await resolveGuestCartLines(lines);
+    setGuestItems([...items]);
+    setGuestTotal(
+      items.reduce((s, i) => s + i.product.price * i.quantity, 0)
+    );
+  }, []);
+
+  useEffect(() => {
+    if (loggedIn) return;
+    const id = requestAnimationFrame(() => {
+      void hydrateGuest();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [loggedIn, hydrateGuest]);
+
+  useEffect(() => {
+    if (loggedIn) return;
+    const onUpdate = () => void hydrateGuest();
+    window.addEventListener(GUEST_CART_UPDATED_EVENT, onUpdate);
+    window.addEventListener("storage", onUpdate);
+    return () => {
+      window.removeEventListener(GUEST_CART_UPDATED_EVENT, onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
+  }, [loggedIn, hydrateGuest]);
+
+  const displayItems = loggedIn ? initialItems : guestItems;
+  const displayTotal = loggedIn ? initialTotal : guestTotal;
+  const displayCount = useMemo(
+    () => displayItems.reduce((s, i) => s + i.quantity, 0),
+    [displayItems]
+  );
 
   return (
     <>
@@ -39,17 +88,18 @@ export function CartButton({
           <line x1="3" y1="6" x2="21" y2="6" />
           <path d="M16 10a4 4 0 01-8 0" />
         </svg>
-        {initialCount > 0 && (
+        {displayCount > 0 && (
           <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold leading-none text-white">
-            {initialCount > 9 ? "9+" : initialCount}
+            {displayCount > 9 ? "9+" : displayCount}
           </span>
         )}
       </button>
       <CartDrawer
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        items={initialItems}
-        total={initialTotal}
+        items={displayItems}
+        total={displayTotal}
+        isGuest={!loggedIn}
       />
     </>
   );

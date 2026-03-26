@@ -7,8 +7,15 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sendBuyerWelcomeEmail } from "@/lib/emails/templates";
 
-export async function loginWithGoogle() {
-  await signIn("google", { redirectTo: "/" });
+function safeInternalPath(url: string | null | undefined): string {
+  if (!url || typeof url !== "string") return "/";
+  if (!url.startsWith("/") || url.startsWith("//")) return "/";
+  return url;
+}
+
+export async function loginWithGoogle(formData?: FormData) {
+  const callbackUrl = safeInternalPath(formData?.get("callbackUrl") as string | undefined);
+  await signIn("google", { redirectTo: callbackUrl });
 }
 
 export async function loginWithCredentials(
@@ -25,7 +32,7 @@ export async function loginWithCredentials(
     return { error: "Email o contraseña incorrectos" };
   }
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(safeInternalPath(formData.get("callbackUrl") as string | undefined));
 }
 
 export async function register(

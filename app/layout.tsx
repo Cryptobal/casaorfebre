@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-provider";
+import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
 import { GoogleAnalytics } from "@/components/analytics";
 import "./globals.css";
 
@@ -65,7 +66,10 @@ export default function RootLayout({
       className={`${cormorantGaramond.variable} ${outfit.variable}`}
     >
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <GuestCartMerge />
+          {children}
+        </AuthProvider>
         <GoogleAnalytics />
       </body>
     </html>

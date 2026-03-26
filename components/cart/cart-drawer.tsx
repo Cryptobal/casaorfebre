@@ -11,6 +11,7 @@ interface CartDrawerProps {
   onClose: () => void;
   items: SerializedCartItem[];
   total: number;
+  isGuest?: boolean;
 }
 
 function groupByArtisan(items: SerializedCartItem[]) {
@@ -23,7 +24,13 @@ function groupByArtisan(items: SerializedCartItem[]) {
   return groups;
 }
 
-export function CartDrawer({ isOpen, onClose, items, total }: CartDrawerProps) {
+export function CartDrawer({
+  isOpen,
+  onClose,
+  items,
+  total,
+  isGuest = false,
+}: CartDrawerProps) {
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
@@ -103,7 +110,7 @@ export function CartDrawer({ isOpen, onClose, items, total }: CartDrawerProps) {
                   </p>
                   <div className="flex flex-col gap-4">
                     {artisanItems.map((item) => (
-                      <CartItem key={item.id} item={item} />
+                      <CartItem key={item.id} item={item} isGuest={isGuest} />
                     ))}
                   </div>
                 </div>
@@ -122,9 +129,21 @@ export function CartDrawer({ isOpen, onClose, items, total }: CartDrawerProps) {
                   {formatCLP(total)}
                 </span>
               </div>
-              <Link href="/checkout" onClick={onClose}>
+              <Link
+                href={
+                  isGuest
+                    ? "/login?callbackUrl=%2Fcheckout"
+                    : "/checkout"
+                }
+                onClick={onClose}
+              >
                 <Button className="w-full">Ir al Checkout</Button>
               </Link>
+              {isGuest && (
+                <p className="mt-2 text-center text-xs text-text-tertiary">
+                  Debes iniciar sesión para completar la compra
+                </p>
+              )}
             </div>
           </>
         )}

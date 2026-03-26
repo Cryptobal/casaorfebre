@@ -31,18 +31,34 @@ export function MobileMenu({ links }: MobileMenuProps) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 top-16 z-40 bg-background">
-          <nav className="flex flex-col items-center gap-8 pt-16">
-            {links.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setOpen(false)} className="font-serif text-2xl font-light text-text-secondary transition-colors hover:text-text">
-                {link.label}
+        <>
+          {/* Capa por encima del header sticky (z-50) — fondo casi opaco + blur fuerte para legibilidad */}
+          <div
+            className="fixed inset-0 top-16 z-[60] bg-[color:var(--color-background)]/[0.97] backdrop-blur-xl backdrop-saturate-150"
+            aria-hidden="true"
+          />
+          <div className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto">
+            <nav className="flex flex-col items-center gap-8 px-6 pt-10 pb-12">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="font-serif text-2xl font-light text-text transition-colors hover:text-accent"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
+              >
+                Ingresar
               </Link>
-            ))}
-            <Link href="/login" onClick={() => setOpen(false)} className="mt-4 rounded-md border border-accent px-8 py-3 text-sm text-accent transition-colors hover:bg-accent hover:text-white">
-              Ingresar
-            </Link>
-          </nav>
-        </div>
+            </nav>
+          </div>
+        </>
       )}
     </div>
   );

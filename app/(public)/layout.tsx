@@ -1,10 +1,12 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { auth } from "@/lib/auth";
-import { getCart, getCartCount, getCartTotal } from "@/lib/queries/cart";
+import { getCart, getCartTotal } from "@/lib/queries/cart";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 export const dynamic = "force-dynamic";
+
+type CartRow = Awaited<ReturnType<typeof getCart>>[number];
 
 export default async function PublicLayout({
   children,
@@ -12,20 +14,17 @@ export default async function PublicLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  let cartCount = 0;
   let cartItems: SerializedCartItem[] = [];
   let cartTotal = 0;
 
   if (session?.user?.id) {
-    const [count, items, total] = await Promise.all([
-      getCartCount(session.user.id),
+    const [items, total] = await Promise.all([
       getCart(session.user.id),
       getCartTotal(session.user.id),
     ]);
-    cartCount = count;
     cartTotal = total;
     // Serialize Prisma objects to plain data for client components
-    cartItems = items.map((item: any) => ({
+    cartItems = items.map((item: CartRow) => ({
       id: item.id,
       quantity: item.quantity,
       product: {
@@ -39,7 +38,7 @@ export default async function PublicLayout({
           displayName: item.product.artisan.displayName,
           slug: item.product.artisan.slug,
         },
-        images: item.product.images.map((img: any) => ({
+        images: item.product.images.map((img) => ({
           id: img.id,
           url: img.url,
           altText: img.altText,
@@ -51,9 +50,9 @@ export default async function PublicLayout({
   return (
     <>
       <Navbar
-        cartCount={cartCount}
         cartItems={cartItems}
         cartTotal={cartTotal}
+        isLoggedIn={!!session?.user?.id}
         user={session?.user ? { name: session.user.name, email: session.user.email, image: session.user.image, role: session.user.role } : null}
       />
       <main className="min-h-[calc(100vh-4rem)]">{children}</main>

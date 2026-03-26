@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/lib/actions/cart";
+import { validateGuestAddToCart } from "@/lib/actions/guest-cart";
+import { addGuestCartLine, readGuestCartLines } from "@/lib/guest-cart-storage";
 import { formatCLP } from "@/lib/utils";
 
 interface AddToCartProps {
@@ -15,10 +18,14 @@ interface AddToCartProps {
 
 export function AddToCart({ productId, price, isUnique, stock }: AddToCartProps) {
   const router = useRouter();
+  const { status } = useSession();
   const [isPending, startTransition] = useTransition();
   const [quantity, setQuantity] = useState(1);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const sessionLoading = status === "loading";
+  const isGuestMode = status === "unauthenticated";
 
   function decrement() {
     setQuantity((q) => Math.max(1, q - 1));
@@ -32,14 +39,30 @@ export function AddToCart({ productId, price, isUnique, stock }: AddToCartProps)
     setSuccessMsg(null);
     setErrorMsg(null);
     startTransition(async () => {
-      const result = await addToCart(productId, quantity);
-      if (result?.error) {
-        setErrorMsg(result.error);
-      } else {
-        setSuccessMsg("¡Agregado al carrito!");
-        router.refresh();
-        setTimeout(() => setSuccessMsg(null), 2000);
+      if (!isGuestMode) {
+        const result = await addToCart(productId, quantity);
+        if (result?.error) {
+          setErrorMsg(result.error);
+        } else {
+          setSuccessMsg("¡Agregado al carrito!");
+          router.refresh();
+          setTimeout(() => setSuccessMsg(null), 2000);
+        }
+        return;
       }
+
+      if (isUnique && readGuestCartLines().some((l) => l.productId === productId)) {
+        setErrorMsg("Esta pieza única ya está en tu carrito");
+        return;
+      }
+      const check = await validateGuestAddToCart(productId, quantity);
+      if (check && "error" in check && check.error) {
+        setErrorMsg(check.error);
+        return;
+      }
+      addGuestCartLine(productId, quantity);
+      setSuccessMsg("¡Agregado al carrito!");
+      setTimeout(() => setSuccessMsg(null), 2000);
     });
   }
 
@@ -79,7 +102,8 @@ export function AddToCart({ productId, price, isUnique, stock }: AddToCartProps)
       <Button
         size="lg"
         className="w-full"
-        loading={isPending}
+        loading={isPending || sessionLoading}
+        disabled={sessionLoading}
         onClick={handleAddToCart}
       >
         A&ntilde;adir al Carrito &mdash; {formatCLP(price * quantity)}

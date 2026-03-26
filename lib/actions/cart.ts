@@ -3,6 +3,54 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import type { GuestCartLine } from "@/lib/guest-cart";
+
+async function mergeGuestLinesIntoUserCart(userId: string, lines: GuestCartLine[]) {
+  if (lines.length === 0) return;
+
+  const merged = new Map<string, number>();
+  for (const l of lines) {
+    merged.set(l.productId, (merged.get(l.productId) ?? 0) + l.quantity);
+  }
+
+  for (const [productId, rawQty] of merged) {
+    const product = await prisma.product.findUnique({
+      where: { id: productId, status: "APPROVED" },
+    });
+    if (!product) continue;
+
+    let qtyToAdd = Math.min(rawQty, product.stock);
+    if (product.isUnique) qtyToAdd = Math.min(qtyToAdd, 1);
+    if (qtyToAdd < 1) continue;
+
+    const existing = await prisma.cartItem.findUnique({
+      where: { userId_productId: { userId, productId } },
+    });
+
+    if (existing) {
+      if (product.isUnique) continue;
+      const newQty = Math.min(existing.quantity + qtyToAdd, product.stock);
+      await prisma.cartItem.update({
+        where: { id: existing.id },
+        data: { quantity: newQty },
+      });
+    } else {
+      await prisma.cartItem.create({
+        data: { userId, productId, quantity: qtyToAdd },
+      });
+    }
+  }
+}
+
+/** Migra el carrito local del invitado al usuario recién autenticado. */
+export async function mergeGuestCartAfterLogin(lines: GuestCartLine[]) {
+  const session = await auth();
+  if (!session?.user) return { error: "No autorizado" as const };
+
+  await mergeGuestLinesIntoUserCart(session.user.id, lines);
+  revalidatePath("/");
+  return { success: true as const };
+}
 
 export async function addToCart(productId: string, quantity = 1) {
   const session = await auth();
