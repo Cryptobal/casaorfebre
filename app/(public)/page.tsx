@@ -1,19 +1,363 @@
-import Image from "next/image";
+import Link from "next/link";
+import { SectionHeading } from "@/components/shared/section-heading";
+import { FadeIn } from "@/components/shared/fade-in";
+import { ProductCard } from "@/components/products/product-card";
+import { ArtisanCard } from "@/components/artisans/artisan-card";
+import { Button } from "@/components/ui/button";
+import { getLatestProducts } from "@/lib/queries/products";
+import { getFeaturedArtisans } from "@/lib/queries/artisans";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [products, artisans] = await Promise.all([
+    getLatestProducts(8),
+    getFeaturedArtisans(3),
+  ]);
+
   return (
-    <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
-      <Image src="/casaorfebre-logo-light.svg" alt="Casa Orfebre" width={280} height={64} priority />
-      <p className="mt-6 font-serif text-3xl font-light italic text-text-secondary">
-        Joyería de Autor
-      </p>
-      <p className="mt-4 max-w-md text-sm font-light leading-relaxed text-text-tertiary">
-        Piezas únicas nacidas de manos chilenas. Cada joya cuenta una historia,
-        cada orfebre es un artista verificado.
-      </p>
-      <p className="mt-8 rounded-full border border-border px-6 py-2 text-xs uppercase tracking-widest text-text-tertiary">
-        Próximamente
-      </p>
-    </div>
+    <>
+      {/* ─── 1. Hero Section ─── */}
+      <section className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
+        <FadeIn>
+          <span className="text-accent text-lg">◆</span>
+          <h1 className="mt-6 font-serif text-4xl font-light italic text-text sm:text-5xl lg:text-6xl">
+            Piezas únicas nacidas de manos chilenas
+          </h1>
+          <p className="mx-auto mt-6 max-w-lg text-base font-light text-text-secondary sm:text-lg">
+            Joyería artesanal de orfebres verificados. Cada pieza cuenta una
+            historia.
+          </p>
+          <div className="mt-10">
+            <Link href="/coleccion">
+              <Button size="lg">Explorar Colección</Button>
+            </Link>
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* ─── 2. Trust Bar ─── */}
+      <section className="border-y border-border bg-surface">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
+          {TRUST_ITEMS.map((item, i) => (
+            <FadeIn key={item.title} delay={i * 80}>
+              <div className="flex flex-col items-center text-center">
+                <div className="text-accent">{item.icon}</div>
+                <p className="mt-3 text-sm font-medium text-text">
+                  {item.title}
+                </p>
+                <p className="mt-1 text-xs text-text-tertiary">
+                  {item.description}
+                </p>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── 3. Why Casa Orfebre ─── */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <SectionHeading
+              title="¿Por qué comprar en Casa Orfebre?"
+              subtitle="Una experiencia superior a comprar por redes sociales"
+            />
+          </FadeIn>
+
+          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {VALUE_PROPS.map((prop, index) => (
+              <FadeIn key={prop.title} delay={index * 100}>
+                <div className="p-6 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center text-accent">
+                    {prop.icon}
+                  </div>
+                  <h3 className="mt-4 text-sm font-medium text-text">
+                    {prop.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-text-secondary">
+                    {prop.description}
+                  </p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 4. Featured Artisans ─── */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <SectionHeading title="Orfebres Destacados" />
+          </FadeIn>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {artisans.map((artisan, i) => (
+              <FadeIn key={artisan.id} delay={i * 120}>
+                <ArtisanCard artisan={artisan} />
+              </FadeIn>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/orfebres"
+              className="text-sm font-medium text-accent transition-colors hover:text-accent-dark"
+            >
+              Ver todos los orfebres &rarr;
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 5. Latest Products ─── */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <FadeIn>
+            <SectionHeading title="Últimas Piezas" />
+          </FadeIn>
+
+          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
+            {products.map((product, i) => (
+              <FadeIn key={product.id} delay={i * 80}>
+                <ProductCard product={product} />
+              </FadeIn>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/coleccion"
+              className="text-sm font-medium text-accent transition-colors hover:text-accent-dark"
+            >
+              Ver toda la colección &rarr;
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 6. CTA — Artisan Recruitment ─── */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <FadeIn>
+            <h2 className="font-serif text-2xl font-light text-text sm:text-3xl">
+              ¿Eres Orfebre?
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-text-secondary">
+              Únete a nuestra comunidad de artesanos verificados
+            </p>
+            <div className="mt-8">
+              <Link href="/postular">
+                <Button variant="secondary" size="lg">
+                  Postular como Orfebre
+                </Button>
+              </Link>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+    </>
   );
 }
+
+/* ─── Static Data ─── */
+
+const TRUST_ITEMS = [
+  {
+    title: "Autenticidad Garantizada",
+    description: "Cada pieza verificada",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+  },
+  {
+    title: "Certificado Digital",
+    description: "QR verificable incluido",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3.85 8.62a4 4 0 014.78-4.77 4 4 0 016.74 0 4 4 0 014.78 4.78 4 4 0 010 6.74 4 4 0 01-4.77 4.78 4 4 0 01-6.75 0 4 4 0 01-4.78-4.77 4 4 0 010-6.76z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    title: "Envío a Todo Chile",
+    description: "Seguimiento en tiempo real",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M1 3h15v13H1z" />
+        <path d="M16 8h4l3 3v5h-7V8z" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    title: "Orfebres Verificados",
+    description: "Proceso de curaduría",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    ),
+  },
+];
+
+const VALUE_PROPS = [
+  {
+    title: "Pago seguro con tarjeta",
+    description: "No necesitas transferir a una cuenta desconocida",
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+        <line x1="1" y1="10" x2="23" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    title: "Garantía de 14 días",
+    description: "Algo que no existe comprando por Instagram",
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    title: "Certificado de autenticidad",
+    description: "QR verificable con cada pieza que compras",
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="2" y="2" width="8" height="8" rx="1" />
+        <rect x="14" y="2" width="8" height="8" rx="1" />
+        <rect x="2" y="14" width="8" height="8" rx="1" />
+        <rect x="14" y="14" width="4" height="4" rx="0.5" />
+        <path d="M22 14h-4v4" />
+        <path d="M22 22h-8v-4" />
+      </svg>
+    ),
+  },
+  {
+    title: "Tracking de envío real",
+    description: "Sigue tu pedido en tiempo real, no promesas vagas",
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+    ),
+  },
+  {
+    title: "Orfebres verificados",
+    description: "Cada artesano pasa por nuestro proceso de curaduría",
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <polyline points="16 11 18 13 22 9" />
+      </svg>
+    ),
+  },
+  {
+    title: "Fotos y descripciones profesionales",
+    description: "Sabes exactamente lo que estás comprando",
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+        <circle cx="12" cy="13" r="4" />
+      </svg>
+    ),
+  },
+];
