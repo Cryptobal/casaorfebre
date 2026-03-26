@@ -4,14 +4,42 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import type { Adapter } from "next-auth/adapters";
 
 const ADMIN_EMAILS = [
   "carlos.irigoyen@gmail.com",
   "camilatorrespuga@gmail.com",
 ];
 
+// Wrap PrismaAdapter to handle email-based account linking automatically.
+// When a user signs in with Google and a User with that email already exists
+// (e.g. created via credentials registration or admin approval), we link the
+// OAuth account to the existing User instead of throwing OAuthAccountNotLinked.
+const baseAdapter = PrismaAdapter(prisma) as Adapter;
+
+const linkingAdapter: Adapter = {
+  ...baseAdapter,
+  getUserByEmail: (email: string) => baseAdapter.getUserByEmail!(email),
+  getUserByAccount: (providerAccount) =>
+    baseAdapter.getUserByAccount!(providerAccount),
+  linkAccount: async (account) => {
+    // Skip if this provider+providerAccountId is already linked
+    const existing = await prisma.account.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        },
+      },
+    });
+    if (existing) return;
+
+    await baseAdapter.linkAccount!(account);
+  },
+};
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: linkingAdapter,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -62,12 +90,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       console.log("[AUTH] signIn callback:", {
         userId: user?.id,
         email: user?.email,
         provider: account?.provider,
       });
+
+      // Update Google profile picture if user doesn't have one
+      if (account?.provider === "google" && user?.email && profile?.picture) {
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+        if (existing && !existing.image) {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              image: profile.picture as string,
+              emailVerified: existing.emailVerified ?? new Date(),
+            },
+          });
+        }
+      }
+
       return true;
     },
     async jwt({ token, user, account }) {
