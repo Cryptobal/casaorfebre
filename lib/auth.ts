@@ -62,20 +62,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account }) {
+      console.log("[AUTH] signIn callback:", {
+        userId: user?.id,
+        email: user?.email,
+        provider: account?.provider,
+      });
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      // On initial sign-in, user object is available
       if (user) {
         token.id = user.id;
         token.role = user.role ?? "BUYER";
+        console.log("[AUTH] jwt callback - initial sign-in:", {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          provider: account?.provider,
+        });
       }
 
-      // Admin auto-detection: promote admin emails on every token refresh
+      // Admin auto-detection
       if (token.email && ADMIN_EMAILS.includes(token.email)) {
         if (token.role !== "ADMIN") {
-          await prisma.user.update({
-            where: { email: token.email },
-            data: { role: "ADMIN" },
-          });
-          token.role = "ADMIN";
+          try {
+            await prisma.user.update({
+              where: { email: token.email },
+              data: { role: "ADMIN" },
+            });
+            token.role = "ADMIN";
+            console.log("[AUTH] Promoted to ADMIN:", token.email);
+          } catch (e) {
+            console.error("[AUTH] Failed to promote admin:", e);
+          }
         }
       }
 
@@ -86,8 +106,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.role = token.role as string;
       }
+      console.log("[AUTH] session callback:", {
+        userId: session.user?.id,
+        email: session.user?.email,
+        role: session.user?.role,
+      });
       return session;
     },
   },
   trustHost: true,
+  debug: process.env.NODE_ENV === "development",
 });
