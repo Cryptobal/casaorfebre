@@ -2,6 +2,7 @@ import { getPendingProducts } from "@/lib/queries/admin";
 import { formatCLP } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { MaterialBadge } from "@/components/shared/material-badge";
+import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { ProductModerationActions } from "./product-moderation-actions";
 
@@ -76,11 +77,13 @@ export default async function ProductosModeracionPage() {
                         className="h-20 w-20 flex-shrink-0 rounded"
                       />
                     ) : (
-                      <img
+                      <Image
                         key={img.id}
                         src={img.url}
                         alt={img.altText ?? product.name}
-                        className="h-20 w-20 flex-shrink-0 rounded object-cover"
+                        width={80}
+                        height={80}
+                        className="flex-shrink-0 rounded object-cover"
                       />
                     )
                   )}

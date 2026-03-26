@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import {
   approvePhoto,
@@ -207,17 +208,19 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                     />
                   </label>
                 )}
-                <div className="aspect-square">
+                <div className="aspect-square relative">
                   {photo.url.startsWith("r2://") ? (
                     <ImagePlaceholder
                       name={photo.productName}
                       className="h-full w-full"
                     />
                   ) : (
-                    <img
+                    <Image
                       src={photo.url}
                       alt={photo.altText ?? photo.productName}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, 25vw"
                     />
                   )}
                 </div>

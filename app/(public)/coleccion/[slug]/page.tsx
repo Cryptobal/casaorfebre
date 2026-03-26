@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: PageProps) {
     openGraph: {
       title: `${product.name} | Casa Orfebre`,
       description: product.description.slice(0, 160),
+      images: product.images?.[0]?.url ? [{ url: product.images[0].url }] : undefined,
     },
   };
 }
@@ -43,10 +44,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: product.images[0]?.url,
+    image: product.images.map((img: any) => img.url),
     brand: {
       "@type": "Brand",
       name: "Casa Orfebre",
+    },
+    manufacturer: {
+      "@type": "Person",
+      name: artisan.displayName,
     },
     offers: {
       "@type": "Offer",
@@ -55,6 +60,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
       availability: product.stock > 0
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: "Casa Orfebre",
+      },
     },
   });
 

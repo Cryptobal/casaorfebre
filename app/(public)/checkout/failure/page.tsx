@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Error en el Pago",
+  description: "Hubo un problema con tu pago. Puedes intentar nuevamente.",
+};
+
 export default function CheckoutFailurePage() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">

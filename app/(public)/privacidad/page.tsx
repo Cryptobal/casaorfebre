@@ -1,4 +1,7 @@
-export const metadata = { title: "Política de Privacidad" };
+export const metadata = {
+  title: "Política de Privacidad",
+  description: "Política de privacidad de Casa Orfebre. Cómo recopilamos, usamos y protegemos tus datos personales.",
+};
 
 export default function PrivacidadPage() {
   return (

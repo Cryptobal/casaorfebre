@@ -8,6 +8,24 @@ import { getLatestProducts, getUserFavoriteIds } from "@/lib/queries/products";
 import { getFeaturedArtisans } from "@/lib/queries/artisans";
 import { auth } from "@/lib/auth";
 
+const jsonLd = JSON.stringify([
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Casa Orfebre",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Casa Orfebre",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl",
+    logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/casaorfebre-logo-compact.svg`,
+    description: "Marketplace curado de joyería artesanal chilena.",
+    sameAs: [],
+  },
+]);
+
 export default async function HomePage() {
   const session = await auth();
   const [products, artisans, favoriteIds] = await Promise.all([
@@ -18,6 +36,10 @@ export default async function HomePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
       {/* ─── 1. Hero Section ─── */}
       <section className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
         <FadeIn>
