@@ -1,3 +1,5 @@
+export const revalidate = 60;
+
 import { Suspense } from "react";
 import { getApprovedProducts, getAllMaterials, getUserFavoriteIds } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";

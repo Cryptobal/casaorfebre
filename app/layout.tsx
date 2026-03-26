@@ -65,6 +65,9 @@ export default function RootLayout({
       lang="es"
       className={`${cormorantGaramond.variable} ${outfit.variable}`}
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body>
         <AuthProvider>
           <GuestCartMerge />

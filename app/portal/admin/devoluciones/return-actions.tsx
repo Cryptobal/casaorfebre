@@ -6,6 +6,7 @@ import {
   approveReturn,
   rejectReturn,
   processRefund,
+  markReturnReceived,
 } from "@/lib/actions/admin";
 
 interface ReturnActionsProps {
@@ -121,6 +122,27 @@ export function ReturnActions({
             </div>
           )}
         </>
+      )}
+
+      {currentStatus === "SHIPPED_BACK" && (
+        <Button
+          size="sm"
+          className="bg-blue-700 text-white hover:bg-blue-800"
+          onClick={() => {
+            startTransition(async () => {
+              const result = await markReturnReceived(returnRequestId);
+              if (result.error) {
+                setFeedback({ type: "error", message: result.error });
+              } else {
+                setFeedback({ type: "success", message: "Devolucion marcada como recibida" });
+              }
+            });
+          }}
+          disabled={isPending}
+          loading={isPending}
+        >
+          Marcar como Recibida
+        </Button>
       )}
 
       {["APPROVED", "SHIPPED_BACK", "RECEIVED_BY_ARTISAN"].includes(

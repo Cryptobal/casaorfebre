@@ -1,3 +1,5 @@
+export const revalidate = 300;
+
 import { getApprovedArtisans } from "@/lib/queries/artisans";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { SectionHeading } from "@/components/shared/section-heading";

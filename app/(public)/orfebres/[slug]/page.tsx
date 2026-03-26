@@ -1,3 +1,5 @@
+export const revalidate = 300;
+
 import { notFound } from "next/navigation";
 import { getArtisanBySlug } from "@/lib/queries/artisans";
 import { getUserFavoriteIds } from "@/lib/queries/products";

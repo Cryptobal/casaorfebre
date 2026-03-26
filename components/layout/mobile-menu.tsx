@@ -2,13 +2,29 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 interface MobileMenuProps {
   links: { href: string; label: string }[];
+  user?: { name?: string | null; email?: string | null; role?: string } | null;
 }
 
-export function MobileMenu({ links }: MobileMenuProps) {
+export function MobileMenu({ links, user }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+
+  const portalLink =
+    user?.role === "ADMIN"
+      ? "/portal/admin"
+      : user?.role === "ARTISAN"
+        ? "/portal/orfebre"
+        : "/portal/comprador/pedidos";
+
+  const portalLabel =
+    user?.role === "ADMIN"
+      ? "Panel Admin"
+      : user?.role === "ARTISAN"
+        ? "Mi Portal"
+        : "Mi Cuenta";
 
   return (
     <div className="md:hidden">
@@ -32,9 +48,8 @@ export function MobileMenu({ links }: MobileMenuProps) {
 
       {open && (
         <>
-          {/* Capa por encima del header sticky (z-50) — fondo casi opaco + blur fuerte para legibilidad */}
           <div
-            className="fixed inset-0 top-16 z-[60] bg-[color:var(--color-background)]/[0.97] backdrop-blur-xl backdrop-saturate-150"
+            className="fixed inset-0 top-16 z-[60] bg-[color:var(--color-background)] backdrop-blur-xl backdrop-saturate-150"
             aria-hidden="true"
           />
           <div className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto">
@@ -49,13 +64,32 @@ export function MobileMenu({ links }: MobileMenuProps) {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
-              >
-                Ingresar
-              </Link>
+
+              {user ? (
+                <>
+                  <Link
+                    href={portalLink}
+                    onClick={() => setOpen(false)}
+                    className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
+                  >
+                    {portalLabel}
+                  </Link>
+                  <button
+                    onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
+                    className="text-sm text-text-secondary transition-colors hover:text-text"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
+                >
+                  Ingresar
+                </Link>
+              )}
             </nav>
           </div>
         </>
