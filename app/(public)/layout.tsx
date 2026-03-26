@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { getCart, getCartTotal } from "@/lib/queries/cart";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
-export const dynamic = "force-dynamic";
 
 type CartRow = Awaited<ReturnType<typeof getCart>>[number];
 

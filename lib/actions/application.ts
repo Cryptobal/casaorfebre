@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { resend, FROM_EMAIL } from "@/lib/resend";
+import { emailLayout } from "@/lib/emails/base-layout";
 
 export async function submitApplication(
   _prevState: { error?: string; success?: boolean } | null,
@@ -57,6 +59,50 @@ export async function submitApplication(
       status: "PENDING",
     },
   });
+
+  // Send confirmation email to applicant
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: "Recibimos tu postulación — Casa Orfebre",
+      html: emailLayout(
+        `<p style="margin:0 0 16px;">Hola ${name},</p>
+         <p style="margin:0 0 16px;">Recibimos tu postulación como orfebre en <strong>Casa Orfebre</strong>. Nuestro equipo la revisará en los próximos 3 a 7 días hábiles.</p>
+         <p style="margin:0 0 16px;">Te notificaremos por email cuando tengamos una respuesta. ¡Gracias por tu interés!</p>`
+      ),
+    });
+  } catch (e) {
+    console.error("Confirmation email failed:", e);
+  }
+
+  // Notify admin of new application
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { email: true },
+    });
+    for (const admin of admins) {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: admin.email,
+        subject: `Nueva postulación de orfebre: ${name}`,
+        html: emailLayout(
+          `<p style="margin:0 0 16px;">Se recibió una nueva postulación de orfebre.</p>
+           <p style="margin:0 0 8px;"><strong>Nombre:</strong> ${name}</p>
+           <p style="margin:0 0 8px;"><strong>Email:</strong> ${email}</p>
+           <p style="margin:0 0 8px;"><strong>Ciudad:</strong> ${location}</p>
+           <p style="margin:0 0 8px;"><strong>Especialidad:</strong> ${specialty}</p>
+           <p style="margin:0 0 16px;"><strong>Materiales:</strong> ${materials.join(", ")}</p>
+           <p style="margin:0 0 0;">
+             <a href="https://casaorfebre.cl/portal/admin/postulaciones" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Revisar postulación</a>
+           </p>`
+        ),
+      });
+    }
+  } catch (e) {
+    console.error("Admin notification email failed:", e);
+  }
 
   revalidatePath("/portal/admin/postulaciones");
   return { success: true };

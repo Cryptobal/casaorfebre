@@ -1,3 +1,5 @@
+export const revalidate = 300;
+
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductBySlug } from "@/lib/queries/products";

@@ -13,6 +13,7 @@ import {
   sendDisputeResolvedEmail,
   sendReturnApprovedEmail,
   sendReturnRejectedEmail,
+  sendReturnReceivedEmail,
   sendRefundProcessedEmail,
 } from "@/lib/emails/templates";
 
@@ -559,6 +560,45 @@ export async function processRefund(
       await sendRefundProcessedEmail(orderItem.order.user.email, {
         buyerName: orderItem.order.user.name || "Cliente",
         amount: refundAmount,
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
+
+  revalidatePath("/portal/admin/devoluciones");
+  return { success: true };
+}
+
+// 15. Mark return as received by artisan
+export async function markReturnReceived(
+  returnRequestId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+  });
+  if (!returnRequest) return { error: "Solicitud no encontrada" };
+
+  await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: { status: "RECEIVED_BY_ARTISAN" },
+  });
+
+  const orderItem = await prisma.orderItem.findUnique({
+    where: { id: returnRequest.orderItemId },
+    include: { order: { include: { user: { select: { email: true, name: true } } } } },
+  });
+  if (orderItem?.order?.user?.email) {
+    try {
+      await sendReturnReceivedEmail(orderItem.order.user.email, {
+        buyerName: orderItem.order.user.name || "Cliente",
+        productName: orderItem.productName,
       });
     } catch (e) {
       console.error("Email failed:", e);

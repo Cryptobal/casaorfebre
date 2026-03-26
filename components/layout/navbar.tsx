@@ -42,6 +42,16 @@ export function Navbar({
         </ul>
 
         <div className="flex items-center gap-4">
+          {user?.role === "ADMIN" && (
+            <Link href="/portal/admin" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark md:block">
+              Panel Admin
+            </Link>
+          )}
+          {user?.role === "ARTISAN" && (
+            <Link href="/portal/orfebre" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark md:block">
+              Mi Portal
+            </Link>
+          )}
           <CartButton
             initialItems={cartItems}
             initialTotal={cartTotal}
@@ -54,7 +64,7 @@ export function Navbar({
               Ingresar
             </Link>
           )}
-          <MobileMenu links={navLinks} />
+          <MobileMenu links={navLinks} user={user} />
         </div>
       </nav>
     </header>
