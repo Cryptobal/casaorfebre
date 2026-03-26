@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/products/image-upload";
+import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { createProduct, updateProduct, submitForReview } from "@/lib/actions/products";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -46,6 +47,7 @@ export function ProductForm({ product, artisanId }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!product;
 
+  const [category, setCategory] = useState(product?.category ?? "ANILLO");
   const [materials, setMaterials] = useState<string[]>(product?.materials ?? []);
   const [materialInput, setMaterialInput] = useState("");
   const [isUnique, setIsUnique] = useState(product?.isUnique ?? true);
@@ -167,19 +169,17 @@ export function ProductForm({ product, artisanId }: ProductFormProps) {
         {/* Category */}
         <div className="space-y-1.5">
           <Label htmlFor="category">Categoria</Label>
-          <select
-            id="category"
-            name="category"
-            required
-            defaultValue={product?.category ?? "ANILLO"}
-            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-          >
-            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <input type="hidden" name="category" value={category} />
+          <SelectDropdown
+            value={category}
+            onChange={setCategory}
+            placeholder="Seleccionar categoría"
+            options={Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+            className="w-full"
+          />
         </div>
 
         {/* Materials — tag input */}

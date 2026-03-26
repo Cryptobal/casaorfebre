@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ApplicationForm } from "./application-form";
+import { getActiveCategories, getActiveMaterials } from "@/lib/queries/catalog";
 
 export const metadata: Metadata = {
   title: "Postular como Orfebre",
@@ -7,7 +8,12 @@ export const metadata: Metadata = {
     "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
 };
 
-export default function PostularPage() {
+export default async function PostularPage() {
+  const [categories, materials] = await Promise.all([
+    getActiveCategories(),
+    getActiveMaterials(),
+  ]);
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
@@ -21,7 +27,10 @@ export default function PostularPage() {
       </div>
 
       <div className="mt-12">
-        <ApplicationForm />
+        <ApplicationForm
+          categories={categories.map((c) => c.name)}
+          materials={materials.map((m) => m.name)}
+        />
       </div>
     </div>
   );

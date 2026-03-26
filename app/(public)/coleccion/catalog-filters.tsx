@@ -2,16 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback } from "react";
-
-const CATEGORY_MAP: Record<string, string> = {
-  AROS: "Aros",
-  COLLAR: "Collar",
-  ANILLO: "Anillo",
-  PULSERA: "Pulsera",
-  BROCHE: "Broche",
-  COLGANTE: "Colgante",
-  OTRO: "Otro",
-};
+import { SelectDropdown } from "@/components/ui/select-dropdown";
 
 const PRICE_RANGES = [
   { label: "Todos", value: "" },
@@ -28,11 +19,12 @@ const SORT_OPTIONS = [
 ] as const;
 
 interface CatalogFiltersProps {
+  categories: { name: string; slug: string }[];
   materials: string[];
   artisans: { slug: string; displayName: string }[];
 }
 
-export function CatalogFilters({ materials, artisans }: CatalogFiltersProps) {
+export function CatalogFilters({ categories, materials, artisans }: CatalogFiltersProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -61,7 +53,10 @@ export function CatalogFilters({ materials, artisans }: CatalogFiltersProps) {
   }, [router]);
 
   const activeFilters: { key: string; label: string }[] = [];
-  if (category) activeFilters.push({ key: "category", label: CATEGORY_MAP[category] ?? category });
+  if (category) {
+    const cat = categories.find((c) => c.slug.toUpperCase() === category || c.name.toUpperCase() === category);
+    activeFilters.push({ key: "category", label: cat?.name ?? category });
+  }
   if (material) activeFilters.push({ key: "material", label: material });
   if (price) {
     const found = PRICE_RANGES.find((r) => r.value === price);
@@ -76,79 +71,69 @@ export function CatalogFilters({ materials, artisans }: CatalogFiltersProps) {
     activeFilters.push({ key: "sort", label: found?.label ?? sort });
   }
 
-  const selectClass =
-    "border border-border rounded-md bg-surface text-sm text-text px-3 py-2 focus:outline-none focus:ring-1 focus:ring-accent";
-
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
         {/* Category */}
-        <select
+        <SelectDropdown
           value={category}
-          onChange={(e) => updateParam("category", e.target.value)}
-          className={selectClass}
-        >
-          <option value="">Todas las categorías</option>
-          {Object.entries(CATEGORY_MAP).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => updateParam("category", v)}
+          placeholder="Todas las categorías"
+          options={[
+            { value: "", label: "Todas las categorías" },
+            ...categories.map((c) => ({
+              value: c.name.toUpperCase(),
+              label: c.name,
+            })),
+          ]}
+        />
 
         {/* Material */}
-        <select
+        <SelectDropdown
           value={material}
-          onChange={(e) => updateParam("material", e.target.value)}
-          className={selectClass}
-        >
-          <option value="">Todos los materiales</option>
-          {materials.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => updateParam("material", v)}
+          placeholder="Todos los materiales"
+          options={[
+            { value: "", label: "Todos los materiales" },
+            ...materials.map((m) => ({ value: m, label: m })),
+          ]}
+        />
 
         {/* Price */}
-        <select
+        <SelectDropdown
           value={price}
-          onChange={(e) => updateParam("price", e.target.value)}
-          className={selectClass}
-        >
-          {PRICE_RANGES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label === "Todos" ? "Todos los precios" : r.label}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => updateParam("price", v)}
+          placeholder="Todos los precios"
+          options={PRICE_RANGES.map((r) => ({
+            value: r.value,
+            label: r.label === "Todos" ? "Todos los precios" : r.label,
+          }))}
+        />
 
         {/* Artisan */}
-        <select
+        <SelectDropdown
           value={artisan}
-          onChange={(e) => updateParam("artisan", e.target.value)}
-          className={selectClass}
-        >
-          <option value="">Todos los orfebres</option>
-          {artisans.map((a) => (
-            <option key={a.slug} value={a.slug}>
-              {a.displayName}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => updateParam("artisan", v)}
+          placeholder="Todos los orfebres"
+          options={[
+            { value: "", label: "Todos los orfebres" },
+            ...artisans.map((a) => ({
+              value: a.slug,
+              label: a.displayName,
+            })),
+          ]}
+        />
 
         {/* Sort */}
-        <select
+        <SelectDropdown
           value={sort}
-          onChange={(e) => updateParam("sort", e.target.value)}
-          className={selectClass}
-        >
-          {SORT_OPTIONS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => updateParam("sort", v)}
+          placeholder="Más recientes"
+          options={SORT_OPTIONS.map((s) => ({
+            value: s.value,
+            label: s.label,
+          }))}
+        />
       </div>
 
       {/* Active filter chips */}

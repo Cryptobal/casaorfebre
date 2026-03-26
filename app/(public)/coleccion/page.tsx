@@ -3,6 +3,7 @@ export const revalidate = 60;
 import { Suspense } from "react";
 import { getApprovedProducts, getAllMaterials, getUserFavoriteIds } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
+import { getActiveCategories, getActiveMaterials } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
@@ -63,12 +64,17 @@ export default async function ColeccionPage({
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
 
   const session = await auth();
-  const [products, materials, artisans, favoriteIds] = await Promise.all([
+  const [products, materials, artisans, favoriteIds, dbCategories, dbMaterials] = await Promise.all([
     getApprovedProducts({ category, material, minPrice, maxPrice, artisanSlug, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
     getUserFavoriteIds(session?.user?.id),
+    getActiveCategories(),
+    getActiveMaterials(),
   ]);
+
+  // Use DB materials if available, fallback to product-derived materials
+  const materialNames = dbMaterials.length > 0 ? dbMaterials.map((m) => m.name) : materials;
 
   const artisanOptions = artisans.map((a) => ({
     slug: a.slug,
@@ -85,7 +91,7 @@ export default async function ColeccionPage({
 
       <div className="mt-8">
         <Suspense fallback={null}>
-          <CatalogFilters materials={materials} artisans={artisanOptions} />
+          <CatalogFilters categories={dbCategories} materials={materialNames} artisans={artisanOptions} />
         </Suspense>
       </div>
 

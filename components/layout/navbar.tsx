@@ -29,7 +29,7 @@ export function Navbar({
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex-shrink-0">
-          <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={140} height={32} priority />
+          <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={210} height={48} priority />
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">

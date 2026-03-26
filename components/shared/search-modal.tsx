@@ -229,9 +229,14 @@ export function SearchModal() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="shrink-0 text-[10px] font-medium text-text-tertiary border border-border rounded px-1.5 py-0.5 hover:text-text transition-colors"
+                className="shrink-0 text-text-tertiary hover:text-text transition-colors md:border md:border-border md:rounded md:px-1.5 md:py-0.5 md:text-[10px] md:font-medium"
+                aria-label="Cerrar búsqueda"
               >
-                ESC
+                <svg className="h-5 w-5 md:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                <span className="hidden md:inline">ESC</span>
               </button>
             </div>
 

@@ -29,42 +29,25 @@ const CIUDADES = [
   "Punta Arenas",
 ];
 
-const ESPECIALIDADES = [
-  "Plata",
-  "Oro",
-  "Cobre",
-  "Bronce",
-  "Piedras Naturales",
-  "Piedras Preciosas",
-  "Esmalte",
-  "Filigrana",
-  "Grabado",
-  "Forja",
+// Fallbacks only used if DB is empty
+const DEFAULT_ESPECIALIDADES = [
+  "Plata", "Oro", "Cobre", "Bronce", "Piedras Naturales",
+  "Piedras Preciosas", "Esmalte", "Filigrana", "Grabado", "Forja",
+];
+const DEFAULT_MATERIALES = [
+  "Plata 950", "Plata 925", "Oro 18K", "Oro 14K", "Cobre", "Bronce",
+  "Alpaca", "Cuarzo", "Lapislázuli", "Turquesa", "Ágata", "Amatista",
+  "Ónix", "Perla", "Madreperla", "Resina", "Madera", "Cuero", "Hilo encerado",
 ];
 
-const MATERIALES = [
-  "Plata 950",
-  "Plata 925",
-  "Oro 18K",
-  "Oro 14K",
-  "Cobre",
-  "Bronce",
-  "Alpaca",
-  "Cuarzo",
-  "Lapislázuli",
-  "Turquesa",
-  "Ágata",
-  "Amatista",
-  "Ónix",
-  "Perla",
-  "Madreperla",
-  "Resina",
-  "Madera",
-  "Cuero",
-  "Hilo encerado",
-];
+interface ApplicationFormProps {
+  categories?: string[];
+  materials?: string[];
+}
 
-export function ApplicationForm() {
+export function ApplicationForm({ categories, materials: materialsProp }: ApplicationFormProps) {
+  const ESPECIALIDADES = categories && categories.length > 0 ? categories : DEFAULT_ESPECIALIDADES;
+  const MATERIALES = materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES;
   const [state, formAction, pending] = useActionState(submitApplication, null);
   const [ciudad, setCiudad] = useState("");
   const [especialidades, setEspecialidades] = useState<string[]>([]);
