@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" fill="#FAFAF8" rx="20"/>
+  <rect x="10" y="10" width="160" height="160" fill="none" stroke="#8B7355" stroke-width="0.5" opacity="0.2" rx="14"/>
+  <text x="56" y="118" font-family="Cormorant Garamond, Georgia, serif" font-size="90" font-weight="300" fill="#1a1a18" letter-spacing="2">C</text>
+  <text x="100" y="122" font-family="Cormorant Garamond, Georgia, serif" font-size="58" font-weight="300" fill="#8B7355" font-style="italic">o</text>
+  <line x1="55" y1="130" x2="132" y2="130" stroke="#8B7355" stroke-width="0.6" opacity="0.4"/>
+</svg>

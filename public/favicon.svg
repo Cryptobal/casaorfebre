@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" fill="#1a1a18" rx="8"/>
+  <text x="16" y="46" font-family="Cormorant Garamond, Georgia, serif" font-size="40" font-weight="400" fill="#FAFAF8" letter-spacing="0">C</text>
+  <text x="34" y="48" font-family="Cormorant Garamond, Georgia, serif" font-size="26" font-weight="300" fill="#8B7355" font-style="italic">o</text>
+</svg>

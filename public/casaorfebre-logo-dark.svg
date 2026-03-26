@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="200" fill="#1a1a18"/>
+  <line x1="100" y1="45" x2="700" y2="45" stroke="#8B7355" stroke-width="0.6" opacity="0.3"/>
+  <text x="400" y="115" font-family="Cormorant Garamond, Georgia, serif" font-size="72" font-weight="300" fill="#FAFAF8" text-anchor="middle" letter-spacing="12">casa orfebre</text>
+  <line x1="260" y1="130" x2="540" y2="130" stroke="#8B7355" stroke-width="1"/>
+  <text x="400" y="158" font-family="Outfit, sans-serif" font-size="14" font-weight="300" fill="#8B7355" text-anchor="middle" letter-spacing="8">JOYERÍA DE AUTOR</text>
+  <line x1="100" y1="172" x2="700" y2="172" stroke="#8B7355" stroke-width="0.6" opacity="0.3"/>
+</svg>
