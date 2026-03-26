@@ -1,0 +1,431 @@
+"use server";
+
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { uploadToR2 } from "@/lib/r2";
+import { revalidatePath } from "next/cache";
+import { slugify } from "@/lib/utils";
+
+async function requireAdmin() {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    throw new Error("No autorizado");
+  }
+  return session;
+}
+
+// 1. Approve application
+export async function approveApplication(
+  applicationId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const application = await prisma.artisanApplication.findUnique({
+    where: { id: applicationId },
+  });
+
+  if (!application) return { error: "Postulacion no encontrada" };
+  if (application.status !== "PENDING") return { error: "La postulacion ya fue revisada" };
+
+  let slug = slugify(application.name);
+  const existingSlug = await prisma.artisan.findUnique({ where: { slug } });
+  if (existingSlug) {
+    slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+  }
+
+  // Check if user with this email already exists
+  let user = await prisma.user.findUnique({
+    where: { email: application.email },
+  });
+
+  if (user) {
+    // Promote existing user to ARTISAN
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role: "ARTISAN", name: user.name || application.name },
+    });
+  } else {
+    // Create new user with ARTISAN role
+    user = await prisma.user.create({
+      data: {
+        email: application.email,
+        name: application.name,
+        role: "ARTISAN",
+      },
+    });
+  }
+
+  await prisma.artisan.create({
+    data: {
+      userId: user.id,
+      slug,
+      displayName: application.name,
+      bio: application.bio,
+      location: application.location,
+      specialty: application.specialty,
+      materials: application.materials,
+      phone: application.phone,
+      status: "APPROVED",
+      approvedAt: new Date(),
+    },
+  });
+
+  await prisma.artisanApplication.update({
+    where: { id: applicationId },
+    data: {
+      status: "APPROVED",
+      reviewedAt: new Date(),
+    },
+  });
+
+  // TODO Phase 7: Send welcome email
+
+  revalidatePath("/portal/admin/postulaciones");
+  return { success: true };
+}
+
+// 2. Reject application
+export async function rejectApplication(
+  applicationId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const reason = formData.get("reason") as string;
+
+  await prisma.artisanApplication.update({
+    where: { id: applicationId },
+    data: {
+      status: "REJECTED",
+      reviewNotes: reason || null,
+      reviewedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/portal/admin/postulaciones");
+  return { success: true };
+}
+
+// 3. Approve product
+export async function approveProduct(
+  productId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: {
+      status: "APPROVED",
+      publishedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/portal/admin/productos");
+  return { success: true };
+}
+
+// 4. Reject product
+export async function rejectProduct(
+  productId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const notes = formData.get("notes") as string;
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: {
+      status: "REJECTED",
+      adminNotes: notes || null,
+    },
+  });
+
+  revalidatePath("/portal/admin/productos");
+  return { success: true };
+}
+
+// 5. Approve photo
+export async function approvePhoto(
+  imageId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  await prisma.productImage.update({
+    where: { id: imageId },
+    data: { status: "APPROVED" },
+  });
+
+  revalidatePath("/portal/admin/fotos");
+  return { success: true };
+}
+
+// 6. Approve photos batch
+export async function approvePhotosBatch(
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const imageIdsRaw = formData.get("imageIds") as string;
+  if (!imageIdsRaw) return { error: "No se proporcionaron imagenes" };
+
+  let imageIds: string[];
+  try {
+    imageIds = JSON.parse(imageIdsRaw);
+  } catch {
+    return { error: "Formato de IDs invalido" };
+  }
+
+  await prisma.productImage.updateMany({
+    where: { id: { in: imageIds } },
+    data: { status: "APPROVED" },
+  });
+
+  revalidatePath("/portal/admin/fotos");
+  return { success: true };
+}
+
+// 7. Reject photo
+export async function rejectPhoto(
+  imageId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const reason = formData.get("reason") as string;
+
+  await prisma.productImage.update({
+    where: { id: imageId },
+    data: {
+      status: "REJECTED",
+      altText: reason || null, // Workaround: store rejection reason in altText
+    },
+  });
+
+  revalidatePath("/portal/admin/fotos");
+  return { success: true };
+}
+
+// 8. Replace photo
+export async function replacePhoto(
+  imageId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const file = formData.get("file") as File;
+  if (!file || file.size === 0) return { error: "No se proporciono archivo" };
+
+  const existingImage = await prisma.productImage.findUnique({
+    where: { id: imageId },
+    include: { product: true },
+  });
+
+  if (!existingImage) return { error: "Imagen no encontrada" };
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const ext = file.name.split(".").pop() || "jpg";
+  const key = `products/${existingImage.productId}/${Date.now()}.${ext}`;
+  const newUrl = await uploadToR2(buffer, key, file.type);
+
+  await prisma.productImage.update({
+    where: { id: imageId },
+    data: {
+      originalUrl: existingImage.url,
+      url: newUrl,
+      status: "REPLACED",
+      isOriginal: false,
+    },
+  });
+
+  revalidatePath("/portal/admin/fotos");
+  return { success: true };
+}
+
+// 9. Update artisan commission rate
+export async function updateArtisanCommission(
+  artisanId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const rateStr = formData.get("rate") as string;
+  const rate = parseFloat(rateStr);
+
+  if (isNaN(rate) || rate <= 0 || rate >= 1) {
+    return { error: "La comision debe ser un valor entre 0 y 1" };
+  }
+
+  await prisma.artisan.update({
+    where: { id: artisanId },
+    data: { commissionRate: rate },
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
+
+// 10. Suspend artisan
+export async function suspendArtisan(
+  artisanId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  await prisma.artisan.update({
+    where: { id: artisanId },
+    data: { status: "SUSPENDED" },
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
+
+// 11. Resolve dispute
+export async function resolveDispute(
+  disputeId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const resolution = formData.get("resolution") as string;
+  const status = formData.get("status") as
+    | "RESOLVED_REFUND"
+    | "RESOLVED_PARTIAL_REFUND"
+    | "RESOLVED_NO_REFUND"
+    | "CLOSED";
+
+  if (!resolution || !status) {
+    return { error: "Resolucion y estado son requeridos" };
+  }
+
+  await prisma.dispute.update({
+    where: { id: disputeId },
+    data: {
+      status,
+      resolution,
+      resolvedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/portal/admin/disputas");
+  return { success: true };
+}
+
+// 12. Approve return
+export async function approveReturn(
+  returnRequestId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: { status: "APPROVED" },
+  });
+
+  revalidatePath("/portal/admin/devoluciones");
+  return { success: true };
+}
+
+// 13. Reject return
+export async function rejectReturn(
+  returnRequestId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const adminNotes = formData.get("adminNotes") as string;
+
+  await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: {
+      status: "REJECTED",
+      adminNotes: adminNotes || null,
+    },
+  });
+
+  revalidatePath("/portal/admin/devoluciones");
+  return { success: true };
+}
+
+// 14. Process refund
+export async function processRefund(
+  returnRequestId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const refundAmountStr = formData.get("refundAmount") as string;
+  const refundAmount = parseInt(refundAmountStr, 10);
+
+  if (isNaN(refundAmount) || refundAmount <= 0) {
+    return { error: "Monto de devolucion invalido" };
+  }
+
+  await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: {
+      status: "REFUNDED",
+      refundAmount,
+      resolvedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/portal/admin/devoluciones");
+  return { success: true };
+}
