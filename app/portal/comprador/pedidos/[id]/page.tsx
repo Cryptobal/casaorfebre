@@ -6,6 +6,7 @@ import {
   getReturnRequestsForItems,
 } from "@/lib/queries/buyer-orders";
 import { formatCLP } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { ReviewForm } from "./review-form";
@@ -68,6 +69,21 @@ export default async function BuyerOrderDetailPage({
     getUserReviewsForOrder(session.user.id, productIds),
     getReturnRequestsForItems(orderItemIds),
   ]);
+
+  // Fetch certificates for delivered items
+  const deliveredProductIds = order.items
+    .filter((item) => item.fulfillmentStatus === "DELIVERED")
+    .map((item) => item.productId);
+
+  const certificates =
+    deliveredProductIds.length > 0
+      ? await prisma.certificate.findMany({
+          where: { productId: { in: deliveredProductIds } },
+        })
+      : [];
+  const certByProduct = new Map(
+    certificates.map((c) => [c.productId, c])
+  );
 
   const hasOpenDispute = order.disputes.some((d) => d.status !== "CLOSED");
 
@@ -227,10 +243,21 @@ export default async function BuyerOrderDetailPage({
                           </Link>
                         )}
 
-                        {/* Certificate placeholder */}
-                        <span className="text-xs text-text-tertiary">
-                          Certificado disponible proximamente
-                        </span>
+                        {/* Certificate download or pending */}
+                        {certByProduct.has(item.productId) ? (
+                          <a
+                            href={`/api/certificates/${certByProduct.get(item.productId)!.code}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-accent hover:underline"
+                          >
+                            Descargar Certificado
+                          </a>
+                        ) : (
+                          <span className="text-xs text-text-tertiary">
+                            Certificado en proceso
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
