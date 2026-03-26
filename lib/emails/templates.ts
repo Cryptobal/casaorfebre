@@ -3,11 +3,17 @@ import { emailLayout } from "./base-layout";
 import { formatCLP } from "@/lib/utils";
 
 async function sendEmail(to: string, subject: string, html: string) {
-  try {
-    await resend.emails.send({ from: FROM_EMAIL, to, subject, html: emailLayout(html) });
-  } catch (error) {
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject,
+    html: emailLayout(html),
+  });
+  if (error) {
     console.error(`Email failed [${subject}]:`, error);
+    return;
   }
+  return data;
 }
 
 // ---------------------------------------------------------------------------
