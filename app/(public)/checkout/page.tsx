@@ -49,7 +49,7 @@ export default async function CheckoutPage() {
               Resumen del pedido
             </h2>
             <ul className="divide-y divide-border">
-              {cartItems.map((item) => (
+              {cartItems.map((item: any) => (
                 <li key={item.id} className="flex justify-between py-3">
                   <div>
                     <p className="text-sm font-medium text-text">
