@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
