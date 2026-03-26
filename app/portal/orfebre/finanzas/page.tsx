@@ -22,9 +22,9 @@ export default async function FinanzasPage() {
     },
   });
 
-  const totalSales = orderItems.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
-  const totalCommissions = orderItems.reduce((sum, item) => sum + item.commissionAmount, 0);
-  const totalPayout = orderItems.reduce((sum, item) => sum + item.artisanPayout, 0);
+  const totalSales = orderItems.reduce((sum: number, item: any) => sum + item.productPrice * item.quantity, 0);
+  const totalCommissions = orderItems.reduce((sum: number, item: any) => sum + item.commissionAmount, 0);
+  const totalPayout = orderItems.reduce((sum: number, item: any) => sum + item.artisanPayout, 0);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -69,7 +69,7 @@ export default async function FinanzasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {orderItems.map((item) => (
+              {orderItems.map((item: any) => (
                 <tr key={item.id} className="hover:bg-background/50">
                   <td className="px-4 py-3 text-text-secondary">
                     {new Date(item.createdAt).toLocaleDateString("es-CL")}

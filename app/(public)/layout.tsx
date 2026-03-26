@@ -23,7 +23,7 @@ export default async function PublicLayout({
     cartCount = count;
     cartTotal = total;
     // Serialize Prisma objects to plain data for client components
-    cartItems = items.map((item) => ({
+    cartItems = items.map((item: any) => ({
       id: item.id,
       quantity: item.quantity,
       product: {
@@ -37,7 +37,7 @@ export default async function PublicLayout({
           displayName: item.product.artisan.displayName,
           slug: item.product.artisan.slug,
         },
-        images: item.product.images.map((img) => ({
+        images: item.product.images.map((img: any) => ({
           id: img.id,
           url: img.url,
           altText: img.altText,

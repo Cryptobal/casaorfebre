@@ -32,10 +32,10 @@ export async function createCheckoutPreference(formData: FormData) {
 
   // Fetch product + artisan data for commission calculation
   const products = await prisma.product.findMany({
-    where: { id: { in: cartItems.map((i) => i.productId) } },
+    where: { id: { in: cartItems.map((i: any) => i.productId) } },
     include: { artisan: { select: { id: true, commissionRate: true } } },
   });
-  const productMap = new Map(products.map((p) => [p.id, p]));
+  const productMap = new Map(products.map((p: any) => [p.id, p]));
 
   // Validate stock
   for (const item of cartItems) {
@@ -49,7 +49,7 @@ export async function createCheckoutPreference(formData: FormData) {
 
   // Calculate totals
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum: number, item: any) => sum + item.product.price * item.quantity,
     0
   );
   const shippingCost = 0; // Free for MVP
@@ -71,7 +71,7 @@ export async function createCheckoutPreference(formData: FormData) {
       total,
       status: "PENDING_PAYMENT",
       items: {
-        create: cartItems.map((item) => {
+        create: cartItems.map((item: any) => {
           const product = productMap.get(item.productId)!;
           const commissionRate = product.artisan?.commissionRate ?? 0.18;
           const itemTotal = product.price * item.quantity;
@@ -101,7 +101,7 @@ export async function createCheckoutPreference(formData: FormData) {
 
     const preference = await preferenceClient.create({
       body: {
-        items: cartItems.map((item) => ({
+        items: cartItems.map((item: any) => ({
           id: item.product.id,
           title: item.product.name,
           quantity: item.quantity,

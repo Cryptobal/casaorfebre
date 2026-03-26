@@ -76,7 +76,7 @@ export async function POST(request: Request) {
           await sendPurchaseConfirmationEmail(buyer.email, {
             name: buyer.name || "Cliente",
             orderNumber: order.orderNumber,
-            items: order.items.map((i) => ({
+            items: order.items.map((i: any) => ({
               name: i.productName,
               price: i.productPrice,
               quantity: i.quantity,
@@ -89,21 +89,21 @@ export async function POST(request: Request) {
       }
 
       // Send new order notification to each artisan
-      const artisanIds = [...new Set(order.items.map((i) => i.artisanId))];
+      const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
       for (const artisanId of artisanIds) {
         const artisan = await prisma.artisan.findUnique({
           where: { id: artisanId },
           include: { user: { select: { email: true } } },
         });
         const artisanItems = order.items.filter(
-          (i) => i.artisanId === artisanId
+          (i: any) => i.artisanId === artisanId
         );
         if (artisan?.user?.email) {
           try {
             await sendNewOrderToArtisanEmail(artisan.user.email, {
               artisanName: artisan.displayName,
               orderNumber: order.orderNumber,
-              items: artisanItems.map((i) => ({
+              items: artisanItems.map((i: any) => ({
                 name: i.productName,
                 price: i.productPrice,
                 quantity: i.quantity,

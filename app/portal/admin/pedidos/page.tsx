@@ -97,9 +97,9 @@ export default async function PedidosPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {orders.map((order) => {
+              {orders.map((order: any) => {
                 const hasLateItems = order.items.some(
-                  (item) =>
+                  (item: any) =>
                     ["PENDING", "PREPARING"].includes(
                       item.fulfillmentStatus
                     ) && new Date(item.createdAt) < fiveDaysAgo
@@ -121,7 +121,7 @@ export default async function PedidosPage({
                           )}
                         </summary>
                         <div className="mt-2 space-y-2 pl-2">
-                          {order.items.map((item) => (
+                          {order.items.map((item: any) => (
                             <div
                               key={item.id}
                               className="rounded border border-border p-2 text-xs"

@@ -28,7 +28,7 @@ export async function createDispute(formData: FormData) {
   if (order.disputes.length > 0) return { error: "Ya existe una disputa abierta para este pedido" };
 
   // Check within 14 days of any delivered item
-  const deliveredItem = order.items.find(i => i.fulfillmentStatus === "DELIVERED" && i.deliveredAt);
+  const deliveredItem = order.items.find((i: any) => i.fulfillmentStatus === "DELIVERED" && i.deliveredAt);
   if (deliveredItem?.deliveredAt) {
     const daysSince = (Date.now() - deliveredItem.deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
     if (daysSince > 14) return { error: "El plazo para abrir una disputa ha expirado (14 días)" };
@@ -46,7 +46,7 @@ export async function createDispute(formData: FormData) {
   });
 
   // Send dispute notification to each artisan involved in the order
-  const artisanIds = [...new Set(order.items.map((i) => i.artisanId))];
+  const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
   for (const artisanId of artisanIds) {
     const artisan = await prisma.artisan.findUnique({
       where: { id: artisanId },

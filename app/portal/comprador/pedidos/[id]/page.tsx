@@ -62,8 +62,8 @@ export default async function BuyerOrderDetailPage({
   const order = await getBuyerOrderDetail(orderId, session.user.id);
   if (!order) notFound();
 
-  const productIds = order.items.map((item) => item.productId);
-  const orderItemIds = order.items.map((item) => item.id);
+  const productIds = order.items.map((item: any) => item.productId);
+  const orderItemIds = order.items.map((item: any) => item.id);
 
   const [reviewedProductIds, returnRequests] = await Promise.all([
     getUserReviewsForOrder(session.user.id, productIds),
@@ -72,8 +72,8 @@ export default async function BuyerOrderDetailPage({
 
   // Fetch certificates for delivered items
   const deliveredProductIds = order.items
-    .filter((item) => item.fulfillmentStatus === "DELIVERED")
-    .map((item) => item.productId);
+    .filter((item: any) => item.fulfillmentStatus === "DELIVERED")
+    .map((item: any) => item.productId);
 
   const certificates =
     deliveredProductIds.length > 0
@@ -82,10 +82,10 @@ export default async function BuyerOrderDetailPage({
         })
       : [];
   const certByProduct = new Map(
-    certificates.map((c) => [c.productId, c])
+    certificates.map((c: any) => [c.productId, c])
   );
 
-  const hasOpenDispute = order.disputes.some((d) => d.status !== "CLOSED");
+  const hasOpenDispute = order.disputes.some((d: any) => d.status !== "CLOSED");
 
   // Group items by artisan
   const grouped = new Map<string, typeof order.items>();
@@ -148,7 +148,7 @@ export default async function BuyerOrderDetailPage({
               Orfebre: {artisanName}
             </p>
             <div className="divide-y divide-border">
-              {items.map((item) => {
+              {items.map((item: any) => {
                 const daysSinceDelivery = item.deliveredAt
                   ? (Date.now() - item.deliveredAt.getTime()) /
                     (1000 * 60 * 60 * 24)
@@ -175,9 +175,9 @@ export default async function BuyerOrderDetailPage({
                           {formatCLP(item.productPrice)}
                         </p>
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${fulfillmentColors[item.fulfillmentStatus]}`}
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${fulfillmentColors[item.fulfillmentStatus as FulfillmentStatus]}`}
                         >
-                          {fulfillmentLabels[item.fulfillmentStatus]}
+                          {fulfillmentLabels[item.fulfillmentStatus as FulfillmentStatus]}
                         </span>
                       </div>
                     </div>

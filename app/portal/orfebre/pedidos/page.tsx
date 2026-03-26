@@ -94,7 +94,7 @@ export default async function PedidosPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {orders.map((item) => (
+              {orders.map((item: any) => (
                 <tr key={item.id} className="hover:bg-background/50">
                   <td className="px-4 py-3">
                     <Link
