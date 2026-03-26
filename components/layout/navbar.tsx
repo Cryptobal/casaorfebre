@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
+import { CartButton } from "./cart-button";
+import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinks = [
   { href: "/coleccion", label: "Colección" },
@@ -8,7 +10,13 @@ const navLinks = [
   { href: "/postular", label: "Postular" },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+  cartCount?: number;
+  cartItems?: SerializedCartItem[];
+  cartTotal?: number;
+}
+
+export function Navbar({ cartCount = 0, cartItems = [], cartTotal = 0 }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -27,13 +35,11 @@ export function Navbar() {
         </ul>
 
         <div className="flex items-center gap-4">
-          <button aria-label="Carrito" className="relative text-text-secondary transition-colors hover:text-text">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 01-8 0" />
-            </svg>
-          </button>
+          <CartButton
+            initialCount={cartCount}
+            initialItems={cartItems}
+            initialTotal={cartTotal}
+          />
           <Link href="/login" className="hidden text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text md:block">
             Ingresar
           </Link>
