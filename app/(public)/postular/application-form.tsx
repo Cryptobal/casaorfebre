@@ -5,35 +5,30 @@ import { submitApplication } from "@/lib/actions/application";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Combobox } from "@/components/ui/combobox";
+import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { TagSelect } from "@/components/ui/tag-select";
+import { CHILEAN_REGIONS, citiesForRegion } from "@/lib/chile-cities";
 
-const CIUDADES = [
-  "Arica",
-  "Iquique",
-  "Antofagasta",
-  "Copiapó",
-  "La Serena",
-  "Valparaíso",
-  "Viña del Mar",
-  "Santiago",
-  "Rancagua",
-  "Talca",
-  "Chillán",
-  "Concepción",
-  "Temuco",
-  "Valdivia",
-  "Osorno",
-  "Puerto Montt",
-  "Coyhaique",
-  "Punta Arenas",
-];
-
-// Fallbacks only used if DB is empty
 const DEFAULT_ESPECIALIDADES = [
-  "Plata", "Oro", "Cobre", "Bronce", "Piedras Naturales",
-  "Piedras Preciosas", "Esmalte", "Filigrana", "Grabado", "Forja",
+  "Joyería de autor",
+  "Engastado de piedras",
+  "Fundición y modelado",
+  "Orfebrería tradicional",
+  "Alta joyería",
+  "Joyería contemporánea",
 ];
+
+const CATEGORIAS = [
+  "Aros",
+  "Collar",
+  "Anillo",
+  "Pulsera",
+  "Broche",
+  "Colgante",
+  "Bisutería",
+  "Otro",
+];
+
 const DEFAULT_MATERIALES = [
   "Plata 950", "Plata 925", "Oro 18K", "Oro 14K", "Cobre", "Bronce",
   "Alpaca", "Cuarzo", "Lapislázuli", "Turquesa", "Ágata", "Amatista",
@@ -49,9 +44,14 @@ export function ApplicationForm({ categories, materials: materialsProp }: Applic
   const ESPECIALIDADES = categories && categories.length > 0 ? categories : DEFAULT_ESPECIALIDADES;
   const MATERIALES = materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES;
   const [state, formAction, pending] = useActionState(submitApplication, null);
+  const [region, setRegion] = useState("");
   const [ciudad, setCiudad] = useState("");
   const [especialidades, setEspecialidades] = useState<string[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [materiales, setMateriales] = useState<string[]>([]);
+
+  const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
+  const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
 
   if (state?.success) {
     return (
@@ -90,137 +90,155 @@ export function ApplicationForm({ categories, materials: materialsProp }: Applic
         </p>
       )}
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div>
-          <Label htmlFor="name">Nombre completo *</Label>
-          <Input
-            id="name"
-            name="name"
-            required
-            className="mt-1"
-            placeholder="Tu nombre artístico o real"
-          />
-        </div>
-        <div>
-          <Label htmlFor="email">Email *</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            className="mt-1"
-            placeholder="tu@email.com"
-          />
-        </div>
-      </div>
+      {/* Hidden inputs for form data */}
+      <input type="hidden" name="region" value={region} />
+      <input type="hidden" name="location" value={ciudad} />
+      <input type="hidden" name="categories" value={categorias.join(",")} />
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div>
-          <Label>Ciudad *</Label>
-          <Combobox
-            options={CIUDADES}
-            value={ciudad}
-            onChange={setCiudad}
-            name="location"
-            required
-            placeholder="Escribe tu ciudad..."
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label>Especialidad *</Label>
-          <TagSelect
-            options={ESPECIALIDADES}
-            selected={especialidades}
-            onChange={setEspecialidades}
-            name="specialty"
-            required
-            className="mt-2"
-          />
-        </div>
-      </div>
-
+      {/* ─── Section 1: Datos personales ─── */}
       <div>
-        <Label>Materiales con los que trabajas *</Label>
-        <TagSelect
-          options={MATERIALES}
-          selected={materiales}
-          onChange={setMateriales}
-          name="materials"
-          required
-          className="mt-2"
-        />
-      </div>
+        <h3 className="font-serif text-lg font-light text-text mb-4">Datos personales</h3>
 
-      <div>
-        <Label htmlFor="bio">Sobre ti y tu trabajo *</Label>
-        <textarea
-          id="bio"
-          name="bio"
-          required
-          rows={4}
-          className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-          placeholder="Cuéntanos sobre tu trayectoria, tu inspiración y qué hace únicas tus piezas..."
-        />
-      </div>
+        <div className="space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="name">Nombre completo *</Label>
+              <Input
+                id="name"
+                name="name"
+                required
+                className="mt-1"
+                placeholder="Tu nombre artístico o real"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="mt-1"
+                placeholder="tu@email.com"
+              />
+            </div>
+          </div>
 
-      <div>
-        <Label htmlFor="experience">Experiencia (opcional)</Label>
-        <textarea
-          id="experience"
-          name="experience"
-          rows={3}
-          className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-          placeholder="Años de experiencia, formación, exposiciones, premios..."
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="portfolioUrl">Link a tu portafolio (opcional)</Label>
-        <Input
-          id="portfolioUrl"
-          name="portfolioUrl"
-          type="url"
-          className="mt-1"
-          placeholder="https://tu-portafolio.com o Instagram"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="phone">Teléfono de contacto *</Label>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="flex h-[38px] items-center rounded-md border border-border bg-background px-3 text-sm text-text-secondary">
-            +56 9
-          </span>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            required
-            inputMode="numeric"
-            pattern="[0-9]{8}"
-            maxLength={8}
-            placeholder="1234 5678"
-            onKeyDown={(e) => {
-              // Allow control keys
-              if (
-                e.key === "Backspace" ||
-                e.key === "Delete" ||
-                e.key === "Tab" ||
-                e.key === "ArrowLeft" ||
-                e.key === "ArrowRight" ||
-                e.ctrlKey ||
-                e.metaKey
-              )
-                return;
-              // Block non-numeric
-              if (!/[0-9]/.test(e.key)) e.preventDefault();
-            }}
-          />
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <Label>Región *</Label>
+              <SelectDropdown
+                options={regionOptions}
+                value={region}
+                onChange={(v) => {
+                  setRegion(v);
+                  setCiudad("");
+                }}
+                placeholder="Selecciona tu región..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Ciudad *</Label>
+              <SelectDropdown
+                options={cityOptions}
+                value={ciudad}
+                onChange={setCiudad}
+                placeholder={region ? "Selecciona tu ciudad..." : "Selecciona una región primero"}
+                className="mt-1"
+              />
+            </div>
+          </div>
         </div>
-        <p className="mt-1 text-xs text-text-tertiary">
-          Solo para uso interno. Nunca será visible al público.
-        </p>
+      </div>
+
+      {/* ─── Section 2: Tu oficio ─── */}
+      <div className="border-t border-border pt-6 mt-6">
+        <h3 className="font-serif text-lg font-light text-text mb-4">Tu oficio</h3>
+
+        <div className="space-y-6">
+          <div>
+            <Label>Especialidad en orfebrería *</Label>
+            <TagSelect
+              options={ESPECIALIDADES}
+              selected={especialidades}
+              onChange={setEspecialidades}
+              name="specialty"
+              required
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label>Categorías de piezas que produces *</Label>
+            <TagSelect
+              options={CATEGORIAS}
+              selected={categorias}
+              onChange={setCategorias}
+              name="_categories_display"
+              required
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label>Materiales con los que trabajas *</Label>
+            <TagSelect
+              options={MATERIALES}
+              selected={materiales}
+              onChange={setMateriales}
+              name="materials"
+              required
+              className="mt-2"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Section 3: Sobre ti ─── */}
+      <div className="border-t border-border pt-6 mt-6">
+        <h3 className="font-serif text-lg font-light text-text mb-4">Sobre ti</h3>
+
+        <div className="space-y-6">
+          <div>
+            <Label htmlFor="bio">Sobre ti y tu trabajo *</Label>
+            <textarea
+              id="bio"
+              name="bio"
+              required
+              rows={4}
+              className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              placeholder="Cuéntanos sobre tu trayectoria, tu inspiración y qué hace únicas tus piezas..."
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="experience">Experiencia (opcional)</Label>
+            <textarea
+              id="experience"
+              name="experience"
+              rows={3}
+              className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              placeholder="Años de experiencia, formación, exposiciones, premios..."
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="portfolioUrl">Link a tu portafolio (opcional)</Label>
+            <Input
+              id="portfolioUrl"
+              name="portfolioUrl"
+              type="url"
+              className="mt-1"
+              placeholder="https://tu-portafolio.com o Instagram"
+            />
+          </div>
+
+          <div>
+            <Label>Fotos de tu trabajo (opcional)</Label>
+            <p className="mt-1 text-sm text-text-tertiary italic">Próximamente</p>
+          </div>
+        </div>
       </div>
 
       <Button type="submit" className="w-full" size="lg" loading={pending}>

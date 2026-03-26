@@ -76,8 +76,10 @@ model Artisan {
   displayName    String
   bio            String
   story          String?
+  region         String?
   location       String
   specialty      String
+  specialties    Specialty[]
   materials      String[]
   profileImage   String?
   workshopImages String[]
@@ -118,6 +120,9 @@ model Product {
   compareAtPrice Int?
   category       ProductCategory
   materials      String[]
+  specialtyId    String?
+  specialty      Specialty?    @relation(fields: [specialtyId], references: [id])
+  occasions      Occasion[]
   technique      String?
   dimensions     String?
   weight         Float?
@@ -343,6 +348,7 @@ model ArtisanApplication {
   id              String                   @id @default(cuid())
   email           String
   name            String
+  region          String?
   location        String
   specialty       String
   bio             String
@@ -553,4 +559,31 @@ model Material {
   updatedAt DateTime @updatedAt
 
   @@map("materials")
+}
+
+model Occasion {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  position  Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+
+  @@map("occasions")
+}
+
+model Specialty {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  position  Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+  artisans  Artisan[]
+
+  @@map("specialties")
 }

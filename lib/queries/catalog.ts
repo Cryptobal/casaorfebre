@@ -14,10 +14,32 @@ export async function getActiveMaterials() {
   });
 }
 
+export async function getActiveOccasions() {
+  return prisma.occasion.findMany({
+    where: { isActive: true },
+    orderBy: { position: "asc" },
+  });
+}
+
+export async function getActiveSpecialties() {
+  return prisma.specialty.findMany({
+    where: { isActive: true },
+    orderBy: { position: "asc" },
+  });
+}
+
 export async function getAllCategories() {
   return prisma.category.findMany({ orderBy: { position: "asc" } });
 }
 
 export async function getAllMaterials() {
   return prisma.material.findMany({ orderBy: { position: "asc" } });
+}
+
+export async function getAllOccasions() {
+  return prisma.occasion.findMany({ orderBy: { position: "asc" } });
+}
+
+export async function getAllSpecialties() {
+  return prisma.specialty.findMany({ orderBy: { position: "asc" } });
 }

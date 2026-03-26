@@ -39,11 +39,15 @@ interface ProductFormProps {
     status: string;
     adminNotes: string | null;
     images: { id: string; url: string; altText: string | null; position: number }[];
+    specialtyId: string | null;
+    occasionIds: string[];
   };
   artisanId: string;
+  specialties?: { id: string; name: string }[];
+  occasions?: { id: string; name: string }[];
 }
 
-export function ProductForm({ product, artisanId }: ProductFormProps) {
+export function ProductForm({ product, artisanId, specialties = [], occasions = [] }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!product;
 
@@ -52,6 +56,8 @@ export function ProductForm({ product, artisanId }: ProductFormProps) {
   const [materialInput, setMaterialInput] = useState("");
   const [isUnique, setIsUnique] = useState(product?.isUnique ?? true);
   const [isCustomMade, setIsCustomMade] = useState(product?.isCustomMade ?? false);
+  const [specialtyId, setSpecialtyId] = useState(product?.specialtyId ?? "");
+  const [selectedOccasionIds, setSelectedOccasionIds] = useState<string[]>(product?.occasionIds ?? []);
   const [submitting, setSubmitting] = useState(false);
 
   const updateBound = product
@@ -180,6 +186,63 @@ export function ProductForm({ product, artisanId }: ProductFormProps) {
             }))}
             className="w-full"
           />
+        </div>
+
+        {/* Specialty */}
+        <div className="space-y-1.5">
+          <Label htmlFor="specialtyId">Especialidad</Label>
+          <input type="hidden" name="specialtyId" value={specialtyId} />
+          <SelectDropdown
+            value={specialtyId}
+            onChange={setSpecialtyId}
+            placeholder="Seleccionar especialidad"
+            options={[
+              { value: "", label: "Sin especialidad" },
+              ...specialties.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+            className="w-full"
+          />
+        </div>
+
+        {/* Occasions */}
+        <div className="space-y-1.5">
+          <Label>Ocasiones</Label>
+          <input type="hidden" name="occasionIds" value={selectedOccasionIds.join(",")} />
+          <p className="text-xs text-text-secondary">
+            ¿Para qué ocasiones es ideal esta pieza?
+          </p>
+          {occasions.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {occasions.map((o) => {
+                const isSelected = selectedOccasionIds.includes(o.id);
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedOccasionIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== o.id)
+                          : [...prev, o.id]
+                      )
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Materials — tag input */}

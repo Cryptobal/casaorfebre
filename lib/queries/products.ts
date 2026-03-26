@@ -7,6 +7,8 @@ interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   artisanSlug?: string;
+  occasionSlug?: string;
+  specialtySlug?: string;
   sort?: "newest" | "price_asc" | "price_desc" | "rating";
 }
 
@@ -24,6 +26,12 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   if (filters.artisanSlug) {
     where.artisan = { slug: filters.artisanSlug };
   }
+  if (filters.occasionSlug) {
+    where.occasions = { some: { slug: filters.occasionSlug } };
+  }
+  if (filters.specialtySlug) {
+    where.specialty = { slug: filters.specialtySlug };
+  }
 
   const orderBy =
     filters.sort === "price_asc"
@@ -38,6 +46,8 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },
+      specialty: { select: { id: true, name: true, slug: true } },
+      occasions: { select: { id: true, name: true, slug: true } },
     },
   });
 }
@@ -51,13 +61,17 @@ export async function getProductBySlug(slug: string) {
           id: true,
           displayName: true,
           slug: true,
+          region: true,
           location: true,
           specialty: true,
+          specialties: { select: { id: true, name: true, slug: true } },
           materials: true,
           profileImage: true,
         },
       },
       images: { orderBy: { position: "asc" } },
+      specialty: { select: { id: true, name: true, slug: true } },
+      occasions: { select: { id: true, name: true, slug: true } },
     },
   });
 }

@@ -41,6 +41,11 @@ function parseFormData(formData: FormData) {
   const weightRaw = formData.get("weight") as string;
   const weight = weightRaw ? parseFloat(weightRaw) : null;
   const isReturnable = !isCustomMade;
+  const specialtyId = (formData.get("specialtyId") as string) || null;
+  const occasionIdsRaw = formData.get("occasionIds") as string;
+  const occasionIds = occasionIdsRaw
+    ? occasionIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
+    : [];
 
   return {
     name,
@@ -58,6 +63,8 @@ function parseFormData(formData: FormData) {
     isReturnable,
     dimensions,
     weight,
+    specialtyId,
+    occasionIds,
   };
 }
 
@@ -95,6 +102,10 @@ export async function createProduct(
         story: data.story,
         category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
         materials: data.materials,
+        specialtyId: data.specialtyId,
+        occasions: data.occasionIds.length > 0
+          ? { connect: data.occasionIds.map((id) => ({ id })) }
+          : undefined,
         technique: data.technique,
         price: data.price,
         compareAtPrice: data.compareAtPrice,
@@ -161,6 +172,8 @@ export async function updateProduct(
         story: data.story,
         category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
         materials: data.materials,
+        specialtyId: data.specialtyId,
+        occasions: { set: data.occasionIds.map((id) => ({ id })) },
         technique: data.technique,
         price: data.price,
         compareAtPrice: data.compareAtPrice,

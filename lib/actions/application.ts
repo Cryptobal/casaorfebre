@@ -11,6 +11,7 @@ export async function submitApplication(
 ) {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
+  const region = (formData.get("region") as string) || null;
   const location = formData.get("location") as string;
   const specialty = formData.get("specialty") as string;
   const bio = formData.get("bio") as string;
@@ -20,7 +21,7 @@ export async function submitApplication(
   const phoneRaw = (formData.get("phone") as string) || null;
   const phone = phoneRaw ? `+569${phoneRaw.replace(/\D/g, "")}` : null;
 
-  if (!name || !email || !location || !specialty || !bio || !materialsRaw || !phoneRaw) {
+  if (!name || !email || !region || !location || !specialty || !bio || !materialsRaw || !phoneRaw) {
     return { error: "Todos los campos marcados son requeridos" };
   }
 
@@ -53,6 +54,7 @@ export async function submitApplication(
     data: {
       name,
       email,
+      region,
       location,
       specialty,
       bio,

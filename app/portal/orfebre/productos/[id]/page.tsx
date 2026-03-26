@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { ProductForm } from "../product-form";
+import { getActiveSpecialties, getActiveOccasions } from "@/lib/queries/catalog";
 
 export default async function EditProductPage({
   params,
@@ -19,14 +20,17 @@ export default async function EditProductPage({
 
   if (!artisan) redirect("/");
 
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      images: {
-        orderBy: { position: "asc" },
+  const [product, specialties, occasions] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id },
+      include: {
+        images: { orderBy: { position: "asc" } },
+        occasions: { select: { id: true } },
       },
-    },
-  });
+    }),
+    getActiveSpecialties(),
+    getActiveOccasions(),
+  ]);
 
   if (!product || product.artisanId !== artisan.id) {
     notFound();
@@ -47,6 +51,8 @@ export default async function EditProductPage({
 
       <ProductForm
         artisanId={artisan.id}
+        specialties={specialties}
+        occasions={occasions}
         product={{
           id: product.id,
           name: product.name,
@@ -71,6 +77,8 @@ export default async function EditProductPage({
             altText: img.altText,
             position: img.position,
           })),
+          specialtyId: product.specialtyId,
+          occasionIds: product.occasions.map((o) => o.id),
         }}
       />
     </div>

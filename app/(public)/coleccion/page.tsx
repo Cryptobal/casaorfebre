@@ -3,7 +3,7 @@ export const revalidate = 60;
 import { Suspense } from "react";
 import { getApprovedProducts, getAllMaterials, getUserFavoriteIds } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
-import { getActiveCategories, getActiveMaterials } from "@/lib/queries/catalog";
+import { getActiveCategories, getActiveMaterials, getActiveOccasions, getActiveSpecialties } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
@@ -56,6 +56,8 @@ export default async function ColeccionPage({
     : undefined;
   const material = typeof params.material === "string" ? params.material : undefined;
   const artisanSlug = typeof params.artisan === "string" ? params.artisan : undefined;
+  const occasionSlug = typeof params.occasion === "string" ? params.occasion : undefined;
+  const specialtySlug = typeof params.specialty === "string" ? params.specialty : undefined;
   const sortParam = typeof params.sort === "string" ? params.sort : undefined;
   const sort = (sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "newest" || sortParam === "rating")
     ? sortParam as "price_asc" | "price_desc" | "newest" | "rating"
@@ -64,13 +66,15 @@ export default async function ColeccionPage({
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
 
   const session = await auth();
-  const [products, materials, artisans, favoriteIds, dbCategories, dbMaterials] = await Promise.all([
-    getApprovedProducts({ category, material, minPrice, maxPrice, artisanSlug, sort }),
+  const [products, materials, artisans, favoriteIds, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
+    getApprovedProducts({ category, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
     getUserFavoriteIds(session?.user?.id),
     getActiveCategories(),
     getActiveMaterials(),
+    getActiveOccasions(),
+    getActiveSpecialties(),
   ]);
 
   // Use DB materials if available, fallback to product-derived materials
@@ -91,7 +95,7 @@ export default async function ColeccionPage({
 
       <div className="mt-8">
         <Suspense fallback={null}>
-          <CatalogFilters categories={dbCategories} materials={materialNames} artisans={artisanOptions} />
+          <CatalogFilters categories={dbCategories} materials={materialNames} artisans={artisanOptions} occasions={dbOccasions} specialties={dbSpecialties} />
         </Suspense>
       </div>
 

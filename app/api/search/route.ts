@@ -14,6 +14,8 @@ export async function GET(req: NextRequest) {
           { description: { contains: q, mode: "insensitive" } },
           { materials: { hasSome: [q.toUpperCase()] } },
           { artisan: { displayName: { contains: q, mode: "insensitive" } } },
+          { occasions: { some: { name: { contains: q, mode: "insensitive" } } } },
+          { specialty: { name: { contains: q, mode: "insensitive" } } },
         ],
       },
       select: {
@@ -33,6 +35,8 @@ export async function GET(req: NextRequest) {
           { displayName: { contains: q, mode: "insensitive" } },
           { specialty: { contains: q, mode: "insensitive" } },
           { location: { contains: q, mode: "insensitive" } },
+          { region: { contains: q, mode: "insensitive" } },
+          { specialties: { some: { name: { contains: q, mode: "insensitive" } } } },
         ],
       },
       select: {

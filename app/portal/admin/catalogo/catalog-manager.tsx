@@ -8,6 +8,12 @@ import {
   createMaterial,
   updateMaterial,
   deleteMaterial,
+  createOccasion,
+  updateOccasion,
+  deleteOccasion,
+  createSpecialty,
+  updateSpecialty,
+  deleteSpecialty,
 } from "@/lib/actions/catalog";
 
 interface CatalogItem {
@@ -23,6 +29,8 @@ interface CatalogItem {
 interface CatalogManagerProps {
   initialCategories: CatalogItem[];
   initialMaterials: CatalogItem[];
+  initialOccasions: CatalogItem[];
+  initialSpecialties: CatalogItem[];
 }
 
 // ─── Inline edit state ───
@@ -298,9 +306,11 @@ function CatalogSection({
 export function CatalogManager({
   initialCategories,
   initialMaterials,
+  initialOccasions,
+  initialSpecialties,
 }: CatalogManagerProps) {
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
+    <div className="space-y-8">
       <CatalogSection
         title="Categorías"
         items={initialCategories}
@@ -333,6 +343,40 @@ export function CatalogManager({
         }}
         onRename={async (id, name) => {
           await updateMaterial(id, { name });
+        }}
+      />
+      <CatalogSection
+        title="Especialidades"
+        items={initialSpecialties}
+        placeholder="Nueva especialidad..."
+        onAdd={async (name) => {
+          await createSpecialty(name);
+        }}
+        onToggle={async (id, isActive) => {
+          await updateSpecialty(id, { isActive });
+        }}
+        onDelete={async (id) => {
+          await deleteSpecialty(id);
+        }}
+        onRename={async (id, name) => {
+          await updateSpecialty(id, { name });
+        }}
+      />
+      <CatalogSection
+        title="Ocasiones"
+        items={initialOccasions}
+        placeholder="Nueva ocasión..."
+        onAdd={async (name) => {
+          await createOccasion(name);
+        }}
+        onToggle={async (id, isActive) => {
+          await updateOccasion(id, { isActive });
+        }}
+        onDelete={async (id) => {
+          await deleteOccasion(id);
+        }}
+        onRename={async (id, name) => {
+          await updateOccasion(id, { name });
         }}
       />
     </div>

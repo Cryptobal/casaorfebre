@@ -592,6 +592,110 @@ async function main() {
 
   console.log(`✅ Reviews: ${reviews.length} created`);
 
+  // ─── Occasions ───
+  const occasionData = [
+    { name: "Uso diario", slug: "uso-diario" },
+    { name: "Regalo", slug: "regalo" },
+    { name: "Cumpleaños", slug: "cumpleanos" },
+    { name: "Aniversario", slug: "aniversario" },
+    { name: "Compromiso", slug: "compromiso" },
+    { name: "Matrimonio", slug: "matrimonio" },
+    { name: "Autoregalo", slug: "autoregalo" },
+    { name: "Amistad", slug: "amistad" },
+    { name: "Graduación", slug: "graduacion" },
+    { name: "Nacimiento / Maternidad", slug: "nacimiento" },
+    { name: "Protección / Amuleto", slug: "proteccion" },
+    { name: "Significado especial", slug: "significado-especial" },
+  ];
+
+  for (let i = 0; i < occasionData.length; i++) {
+    await prisma.occasion.upsert({
+      where: { slug: occasionData[i].slug },
+      update: { name: occasionData[i].name, position: i },
+      create: { ...occasionData[i], position: i },
+    });
+  }
+  console.log(`✅ ${occasionData.length} occasions seeded`);
+
+  // ─── Specialties ───
+  const specialtyData = [
+    { name: "Joyería de autor", slug: "joyeria-de-autor" },
+    { name: "Engastado de piedras", slug: "engastado-de-piedras" },
+    { name: "Fundición y modelado", slug: "fundicion-y-modelado" },
+    { name: "Orfebrería tradicional", slug: "orfebreria-tradicional" },
+    { name: "Alta joyería", slug: "alta-joyeria" },
+    { name: "Joyería contemporánea", slug: "joyeria-contemporanea" },
+  ];
+
+  for (let i = 0; i < specialtyData.length; i++) {
+    await prisma.specialty.upsert({
+      where: { slug: specialtyData[i].slug },
+      update: { name: specialtyData[i].name, position: i },
+      create: { ...specialtyData[i], position: i },
+    });
+  }
+  console.log(`✅ ${specialtyData.length} specialties seeded`);
+
+  // Connect artisans to specialties
+  const joyeriaDeAutor = await prisma.specialty.findUnique({ where: { slug: "joyeria-de-autor" } });
+  const engastado = await prisma.specialty.findUnique({ where: { slug: "engastado-de-piedras" } });
+  const altaJoyeria = await prisma.specialty.findUnique({ where: { slug: "alta-joyeria" } });
+  const orfebreriaTradicional = await prisma.specialty.findUnique({ where: { slug: "orfebreria-tradicional" } });
+
+  if (joyeriaDeAutor && engastado && altaJoyeria && orfebreriaTradicional) {
+    const artisans = await prisma.artisan.findMany();
+    for (const artisan of artisans) {
+      const specialtyIds: string[] = [];
+      if (artisan.specialty.toLowerCase().includes("autor") || artisan.specialty.toLowerCase().includes("diseño")) {
+        specialtyIds.push(joyeriaDeAutor.id);
+      }
+      if (artisan.specialty.toLowerCase().includes("piedra") || artisan.specialty.toLowerCase().includes("engast")) {
+        specialtyIds.push(engastado.id);
+      }
+      if (artisan.specialty.toLowerCase().includes("alta") || artisan.specialty.toLowerCase().includes("botánic")) {
+        specialtyIds.push(altaJoyeria.id);
+      }
+      if (artisan.specialty.toLowerCase().includes("tradicion") || artisan.specialty.toLowerCase().includes("orgánic")) {
+        specialtyIds.push(orfebreriaTradicional.id);
+      }
+      if (specialtyIds.length === 0) specialtyIds.push(joyeriaDeAutor.id);
+
+      await prisma.artisan.update({
+        where: { id: artisan.id },
+        data: {
+          specialties: { set: specialtyIds.map(id => ({ id })) },
+        },
+      });
+    }
+    console.log("✅ Artisans connected to specialties");
+  }
+
+  // Connect some products to occasions
+  const regalo = await prisma.occasion.findUnique({ where: { slug: "regalo" } });
+  const usoDiario = await prisma.occasion.findUnique({ where: { slug: "uso-diario" } });
+  const compromiso = await prisma.occasion.findUnique({ where: { slug: "compromiso" } });
+  const aniversario = await prisma.occasion.findUnique({ where: { slug: "aniversario" } });
+
+  if (regalo && usoDiario && compromiso && aniversario) {
+    const allProducts = await prisma.product.findMany({ take: 15 });
+    for (let i = 0; i < allProducts.length; i++) {
+      const occasionIds: string[] = [];
+      if (i % 2 === 0) occasionIds.push(regalo.id);
+      if (i % 3 === 0) occasionIds.push(usoDiario.id);
+      if (allProducts[i].category === "ANILLO" && i % 2 === 0) occasionIds.push(compromiso.id);
+      if (i % 4 === 0) occasionIds.push(aniversario.id);
+      if (occasionIds.length === 0) occasionIds.push(regalo.id);
+
+      await prisma.product.update({
+        where: { id: allProducts[i].id },
+        data: {
+          occasions: { set: occasionIds.map(id => ({ id })) },
+        },
+      });
+    }
+    console.log("✅ Products connected to occasions");
+  }
+
   console.log("🌱 Seed complete!");
 }
 

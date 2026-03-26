@@ -120,6 +120,27 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </Link>
             </p>
 
+            {/* Specialty badge */}
+            {product.specialty && (
+              <span className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
+                {product.specialty.name}
+              </span>
+            )}
+
+            {/* Occasion badges */}
+            {product.occasions.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs text-text-tertiary">Ideal para:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.occasions.map((o: { id: string; name: string }) => (
+                    <span key={o.id} className="inline-block rounded-full bg-background border border-border px-2.5 py-0.5 text-xs text-text-secondary">
+                      {o.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Price */}
             <PriceDisplay
               price={product.price}

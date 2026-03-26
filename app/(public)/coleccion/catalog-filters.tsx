@@ -22,9 +22,11 @@ interface CatalogFiltersProps {
   categories: { name: string; slug: string }[];
   materials: string[];
   artisans: { slug: string; displayName: string }[];
+  occasions: { name: string; slug: string }[];
+  specialties: { name: string; slug: string }[];
 }
 
-export function CatalogFilters({ categories, materials, artisans }: CatalogFiltersProps) {
+export function CatalogFilters({ categories, materials, artisans, occasions, specialties }: CatalogFiltersProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -32,6 +34,8 @@ export function CatalogFilters({ categories, materials, artisans }: CatalogFilte
   const material = searchParams.get("material") ?? "";
   const price = searchParams.get("price") ?? "";
   const artisan = searchParams.get("artisan") ?? "";
+  const occasion = searchParams.get("occasion") ?? "";
+  const specialty = searchParams.get("specialty") ?? "";
   const sort = searchParams.get("sort") ?? "";
 
   const updateParam = useCallback(
@@ -65,6 +69,14 @@ export function CatalogFilters({ categories, materials, artisans }: CatalogFilte
   if (artisan) {
     const found = artisans.find((a) => a.slug === artisan);
     activeFilters.push({ key: "artisan", label: found?.displayName ?? artisan });
+  }
+  if (occasion) {
+    const found = occasions.find((o) => o.slug === occasion);
+    activeFilters.push({ key: "occasion", label: found?.name ?? occasion });
+  }
+  if (specialty) {
+    const found = specialties.find((s) => s.slug === specialty);
+    activeFilters.push({ key: "specialty", label: found?.name ?? specialty });
   }
   if (sort) {
     const found = SORT_OPTIONS.find((s) => s.value === sort);
@@ -121,6 +133,28 @@ export function CatalogFilters({ categories, materials, artisans }: CatalogFilte
               value: a.slug,
               label: a.displayName,
             })),
+          ]}
+        />
+
+        {/* Occasion */}
+        <SelectDropdown
+          value={occasion}
+          onChange={(v) => updateParam("occasion", v)}
+          placeholder="Todas las ocasiones"
+          options={[
+            { value: "", label: "Todas las ocasiones" },
+            ...occasions.map((o) => ({ value: o.slug, label: o.name })),
+          ]}
+        />
+
+        {/* Specialty */}
+        <SelectDropdown
+          value={specialty}
+          onChange={(v) => updateParam("specialty", v)}
+          placeholder="Todas las especialidades"
+          options={[
+            { value: "", label: "Todas las especialidades" },
+            ...specialties.map((s) => ({ value: s.slug, label: s.name })),
           ]}
         />
 

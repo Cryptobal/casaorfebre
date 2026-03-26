@@ -57,6 +57,7 @@ export default async function ArtisanProfilePage({
     address: {
       "@type": "PostalAddress",
       addressLocality: artisan.location,
+      ...(artisan.region ? { addressRegion: artisan.region } : {}),
       addressCountry: "CL",
     },
   });
@@ -83,10 +84,26 @@ export default async function ArtisanProfilePage({
             {artisan.displayName}
           </h1>
 
-          {/* Location + Specialty */}
+          {/* Location + Region */}
           <p className="mt-2 text-text-secondary">
-            {artisan.location} · {artisan.specialty}
+            {artisan.region ? `${artisan.location}, ${artisan.region}` : artisan.location}
           </p>
+
+          {/* Specialties */}
+          {artisan.specialties.length > 0 ? (
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {artisan.specialties.map((s: { id: string; name: string; slug: string }) => (
+                <span
+                  key={s.id}
+                  className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent"
+                >
+                  {s.name}
+                </span>
+              ))}
+            </div>
+          ) : artisan.specialty ? (
+            <p className="mt-2 text-sm text-text-tertiary">{artisan.specialty}</p>
+          ) : null}
 
           {/* Materials */}
           {artisan.materials.length > 0 && (

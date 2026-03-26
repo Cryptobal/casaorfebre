@@ -87,3 +87,75 @@ export async function deleteMaterial(id: string) {
   await prisma.material.delete({ where: { id } });
   revalidatePath("/portal/admin/catalogo");
 }
+
+// --- Occasions ---
+
+export async function createOccasion(name: string) {
+  await requireAdmin();
+  const slug = slugify(name);
+  const maxPos = await prisma.occasion.aggregate({
+    _max: { position: true },
+  });
+  await prisma.occasion.create({
+    data: { name, slug, position: (maxPos._max.position ?? 0) + 1 },
+  });
+  revalidatePath("/portal/admin/catalogo");
+}
+
+export async function updateOccasion(
+  id: string,
+  data: { name?: string; isActive?: boolean; position?: number }
+) {
+  await requireAdmin();
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) {
+    updateData.name = data.name;
+    updateData.slug = slugify(data.name);
+  }
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.position !== undefined) updateData.position = data.position;
+  await prisma.occasion.update({ where: { id }, data: updateData });
+  revalidatePath("/portal/admin/catalogo");
+}
+
+export async function deleteOccasion(id: string) {
+  await requireAdmin();
+  await prisma.occasion.delete({ where: { id } });
+  revalidatePath("/portal/admin/catalogo");
+}
+
+// --- Specialties ---
+
+export async function createSpecialty(name: string) {
+  await requireAdmin();
+  const slug = slugify(name);
+  const maxPos = await prisma.specialty.aggregate({
+    _max: { position: true },
+  });
+  await prisma.specialty.create({
+    data: { name, slug, position: (maxPos._max.position ?? 0) + 1 },
+  });
+  revalidatePath("/portal/admin/catalogo");
+}
+
+export async function updateSpecialty(
+  id: string,
+  data: { name?: string; isActive?: boolean; position?: number }
+) {
+  await requireAdmin();
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) {
+    updateData.name = data.name;
+    updateData.slug = slugify(data.name);
+  }
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.position !== undefined) updateData.position = data.position;
+  await prisma.specialty.update({ where: { id }, data: updateData });
+  revalidatePath("/portal/admin/catalogo");
+}
+
+export async function deleteSpecialty(id: string) {
+  await requireAdmin();
+  await prisma.specialty.delete({ where: { id } });
+  revalidatePath("/portal/admin/catalogo");
+}
