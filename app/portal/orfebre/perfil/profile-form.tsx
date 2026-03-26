@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,9 +52,11 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
         <div className="mt-3 flex items-center gap-4">
           <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-border bg-background">
             {artisan.profileImage ? (
-              <img
+              <Image
                 src={artisan.profileImage}
                 alt={artisan.displayName}
+                width={64}
+                height={64}
                 className="h-full w-full object-cover"
               />
             ) : (

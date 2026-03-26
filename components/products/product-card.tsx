@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { toggleFavorite } from "@/lib/actions/favorites";
@@ -43,7 +44,17 @@ export function ProductCard({ product, isFavorited = false }: ProductCardProps) 
     <Link href={`/coleccion/${product.slug}`} className="group block">
       {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
-        <ImagePlaceholder name={product.name} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
+        {product.images[0]?.url ? (
+          <Image
+            src={product.images[0].url}
+            alt={product.images[0].altText ?? product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <ImagePlaceholder name={product.name} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
+        )}
 
         {/* Favorite heart */}
         <button

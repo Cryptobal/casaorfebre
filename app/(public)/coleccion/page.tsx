@@ -78,6 +78,7 @@ export default async function ColeccionPage({
       <SectionHeading
         title="Colección"
         subtitle="Piezas de orfebres chilenos verificados"
+        as="h1"
       />
 
       <div className="mt-8">

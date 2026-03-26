@@ -1,4 +1,7 @@
-export const metadata = { title: "Términos y Condiciones" };
+export const metadata = {
+  title: "Términos y Condiciones",
+  description: "Términos y condiciones de uso de Casa Orfebre. Conoce las reglas del marketplace de joyería artesanal chilena.",
+};
 
 export default function TerminosPage() {
   return (

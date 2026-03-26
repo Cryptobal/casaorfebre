@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+export const metadata = {
+  title: "Compra Exitosa",
+  description: "Tu compra en Casa Orfebre fue procesada exitosamente.",
+};
+
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
