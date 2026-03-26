@@ -17,10 +17,15 @@ export async function submitApplication(
   const materialsRaw = formData.get("materials") as string;
   const experience = (formData.get("experience") as string) || null;
   const portfolioUrl = (formData.get("portfolioUrl") as string) || null;
-  const phone = (formData.get("phone") as string) || null;
+  const phoneRaw = (formData.get("phone") as string) || null;
+  const phone = phoneRaw ? `+569${phoneRaw.replace(/\D/g, "")}` : null;
 
-  if (!name || !email || !location || !specialty || !bio || !materialsRaw) {
+  if (!name || !email || !location || !specialty || !bio || !materialsRaw || !phoneRaw) {
     return { error: "Todos los campos marcados son requeridos" };
+  }
+
+  if (phoneRaw && phoneRaw.replace(/\D/g, "").length !== 8) {
+    return { error: "El teléfono debe tener 8 dígitos después del +56 9" };
   }
 
   if (!email.includes("@")) {

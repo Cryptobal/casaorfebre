@@ -1,13 +1,74 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { submitApplication } from "@/lib/actions/application";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
+import { TagSelect } from "@/components/ui/tag-select";
+
+const CIUDADES = [
+  "Arica",
+  "Iquique",
+  "Antofagasta",
+  "Copiapó",
+  "La Serena",
+  "Valparaíso",
+  "Viña del Mar",
+  "Santiago",
+  "Rancagua",
+  "Talca",
+  "Chillán",
+  "Concepción",
+  "Temuco",
+  "Valdivia",
+  "Osorno",
+  "Puerto Montt",
+  "Coyhaique",
+  "Punta Arenas",
+];
+
+const ESPECIALIDADES = [
+  "Plata",
+  "Oro",
+  "Cobre",
+  "Bronce",
+  "Piedras Naturales",
+  "Piedras Preciosas",
+  "Esmalte",
+  "Filigrana",
+  "Grabado",
+  "Forja",
+];
+
+const MATERIALES = [
+  "Plata 950",
+  "Plata 925",
+  "Oro 18K",
+  "Oro 14K",
+  "Cobre",
+  "Bronce",
+  "Alpaca",
+  "Cuarzo",
+  "Lapislázuli",
+  "Turquesa",
+  "Ágata",
+  "Amatista",
+  "Ónix",
+  "Perla",
+  "Madreperla",
+  "Resina",
+  "Madera",
+  "Cuero",
+  "Hilo encerado",
+];
 
 export function ApplicationForm() {
   const [state, formAction, pending] = useActionState(submitApplication, null);
+  const [ciudad, setCiudad] = useState("");
+  const [especialidades, setEspecialidades] = useState<string[]>([]);
+  const [materiales, setMateriales] = useState<string[]>([]);
 
   if (state?.success) {
     return (
@@ -72,39 +133,40 @@ export function ApplicationForm() {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <Label htmlFor="location">Ciudad *</Label>
-          <Input
-            id="location"
+          <Label>Ciudad *</Label>
+          <Combobox
+            options={CIUDADES}
+            value={ciudad}
+            onChange={setCiudad}
             name="location"
             required
+            placeholder="Escribe tu ciudad..."
             className="mt-1"
-            placeholder="Ej: Valparaíso"
           />
         </div>
         <div>
-          <Label htmlFor="specialty">Especialidad *</Label>
-          <Input
-            id="specialty"
+          <Label>Especialidad *</Label>
+          <TagSelect
+            options={ESPECIALIDADES}
+            selected={especialidades}
+            onChange={setEspecialidades}
             name="specialty"
             required
-            className="mt-1"
-            placeholder="Ej: Plata & Piedras Naturales"
+            className="mt-2"
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="materials">Materiales con los que trabajas *</Label>
-        <Input
-          id="materials"
+        <Label>Materiales con los que trabajas *</Label>
+        <TagSelect
+          options={MATERIALES}
+          selected={materiales}
+          onChange={setMateriales}
           name="materials"
           required
-          className="mt-1"
-          placeholder="Separados por coma: Plata 950, Cobre, Cuarzo"
+          className="mt-2"
         />
-        <p className="mt-1 text-xs text-text-tertiary">
-          Separa cada material con una coma
-        </p>
       </div>
 
       <div>
@@ -142,14 +204,37 @@ export function ApplicationForm() {
       </div>
 
       <div>
-        <Label htmlFor="phone">Teléfono de contacto (opcional)</Label>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          className="mt-1"
-          placeholder="+56 9 1234 5678"
-        />
+        <Label htmlFor="phone">Teléfono de contacto *</Label>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="flex h-[38px] items-center rounded-md border border-border bg-background px-3 text-sm text-text-secondary">
+            +56 9
+          </span>
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            required
+            inputMode="numeric"
+            pattern="[0-9]{8}"
+            maxLength={8}
+            placeholder="1234 5678"
+            onKeyDown={(e) => {
+              // Allow control keys
+              if (
+                e.key === "Backspace" ||
+                e.key === "Delete" ||
+                e.key === "Tab" ||
+                e.key === "ArrowLeft" ||
+                e.key === "ArrowRight" ||
+                e.ctrlKey ||
+                e.metaKey
+              )
+                return;
+              // Block non-numeric
+              if (!/[0-9]/.test(e.key)) e.preventDefault();
+            }}
+          />
+        </div>
         <p className="mt-1 text-xs text-text-tertiary">
           Solo para uso interno. Nunca será visible al público.
         </p>

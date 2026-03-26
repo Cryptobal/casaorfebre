@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+
+const emptySubscribe = () => () => {};
+
+function useIsClient() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+}
 
 interface MobileMenuProps {
   links: { href: string; label: string }[];
@@ -11,6 +18,16 @@ interface MobileMenuProps {
 
 export function MobileMenu({ links, user }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const isClient = useIsClient();
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const portalLink =
     user?.role === "ADMIN"
@@ -26,10 +43,69 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
         ? "Mi Portal"
         : "Mi Cuenta";
 
+  const panel =
+    open &&
+    isClient &&
+    createPortal(
+      <>
+        <div
+          className="fixed inset-0 top-16 z-[60] bg-[color:var(--color-background)] backdrop-blur-xl backdrop-saturate-150"
+          aria-hidden="true"
+        />
+        <div className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto">
+          <nav className="flex flex-col items-center gap-8 px-6 pt-10 pb-12">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="font-serif text-2xl font-light text-text transition-colors hover:text-accent"
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {user ? (
+              <>
+                <Link
+                  href={portalLink}
+                  onClick={() => setOpen(false)}
+                  className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
+                >
+                  {portalLabel}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    signOut({ callbackUrl: "/" });
+                  }}
+                  className="text-sm text-text-secondary transition-colors hover:text-text"
+                >
+                  Cerrar Sesión
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
+              >
+                Ingresar
+              </Link>
+            )}
+          </nav>
+        </div>
+      </>,
+      document.body
+    );
+
   return (
     <div className="md:hidden">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
         className="flex h-8 w-8 items-center justify-center text-text-secondary"
       >
@@ -46,54 +122,7 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
         )}
       </button>
 
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 top-16 z-[60] bg-[color:var(--color-background)] backdrop-blur-xl backdrop-saturate-150"
-            aria-hidden="true"
-          />
-          <div className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto">
-            <nav className="flex flex-col items-center gap-8 px-6 pt-10 pb-12">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="font-serif text-2xl font-light text-text transition-colors hover:text-accent"
-                >
-                  {link.label}
-                </Link>
-              ))}
-
-              {user ? (
-                <>
-                  <Link
-                    href={portalLink}
-                    onClick={() => setOpen(false)}
-                    className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
-                  >
-                    {portalLabel}
-                  </Link>
-                  <button
-                    onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
-                    className="text-sm text-text-secondary transition-colors hover:text-text"
-                  >
-                    Cerrar Sesión
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setOpen(false)}
-                  className="mt-2 inline-flex min-h-[44px] min-w-[200px] items-center justify-center rounded-md border-2 border-accent bg-accent px-8 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-accent-dark hover:text-white"
-                >
-                  Ingresar
-                </Link>
-              )}
-            </nav>
-          </div>
-        </>
-      )}
+      {panel}
     </div>
   );
 }
