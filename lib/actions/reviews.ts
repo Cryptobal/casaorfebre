@@ -3,6 +3,10 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  checkContactInfo,
+  CONTACT_FILTER_MESSAGE,
+} from "@/lib/contact-filter";
 
 export async function createReview(formData: FormData) {
   const session = await auth();
@@ -42,7 +46,9 @@ export async function createReview(formData: FormData) {
   });
   if (existing) return { error: "Ya dejaste una opinión sobre este producto" };
 
-  // TODO Phase 7: Apply contact-filter.ts to comment before saving
+  // Contact filter
+  const filter = checkContactInfo(comment);
+  if (!filter.isClean) return { error: CONTACT_FILTER_MESSAGE };
 
   await prisma.review.create({
     data: {

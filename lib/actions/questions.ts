@@ -3,6 +3,41 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  checkContactInfo,
+  CONTACT_FILTER_MESSAGE,
+} from "@/lib/contact-filter";
+
+export async function submitQuestion(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) return { error: "No autorizado" };
+
+  const productId = formData.get("productId") as string;
+  const artisanId = formData.get("artisanId") as string;
+  const question = formData.get("question") as string;
+
+  if (!productId || !artisanId || !question?.trim()) {
+    return { error: "Todos los campos son requeridos" };
+  }
+
+  // Contact filter
+  const filter = checkContactInfo(question);
+  if (!filter.isClean) return { error: CONTACT_FILTER_MESSAGE };
+
+  await prisma.productQuestion.create({
+    data: {
+      productId,
+      artisanId,
+      userId: session.user.id,
+      question: question.trim(),
+      isPublic: true,
+      isBlocked: false,
+    },
+  });
+
+  revalidatePath(`/coleccion`);
+  return { success: true };
+}
 
 export async function answerQuestion(questionId: string, formData: FormData) {
   const session = await auth();
@@ -10,6 +45,10 @@ export async function answerQuestion(questionId: string, formData: FormData) {
 
   const answer = formData.get("answer") as string;
   if (!answer?.trim()) return { error: "La respuesta no puede estar vacia" };
+
+  // Contact filter
+  const filter = checkContactInfo(answer);
+  if (!filter.isClean) return { error: CONTACT_FILTER_MESSAGE };
 
   const artisan = await prisma.artisan.findUnique({ where: { userId: session.user.id } });
   if (!artisan) return { error: "No autorizado" };
