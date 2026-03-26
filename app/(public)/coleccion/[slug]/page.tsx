@@ -118,7 +118,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Materials */}
             {product.materials.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {product.materials.map((m) => (
+                {product.materials.map((m: string) => (
                   <MaterialBadge key={m} material={m} />
                 ))}
               </div>
