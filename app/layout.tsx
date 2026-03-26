@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
+import { AuthProvider } from "@/lib/auth-provider";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -56,7 +57,9 @@ export default function RootLayout({
       lang="es"
       className={`${cormorantGaramond.variable} ${outfit.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
