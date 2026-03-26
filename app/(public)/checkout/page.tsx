@@ -15,9 +15,9 @@ export default async function CheckoutPage() {
 
   if (cartItems.length === 0) redirect("/coleccion");
 
-  const hasCustomMade = cartItems.some((item) => item.product.isCustomMade);
+  const hasCustomMade = cartItems.some((item: any) => item.product.isCustomMade);
 
-  const serializedItems = cartItems.map((item) => ({
+  const serializedItems = cartItems.map((item: any) => ({
     id: item.id,
     quantity: item.quantity,
     productId: item.productId,
@@ -25,7 +25,7 @@ export default async function CheckoutPage() {
       id: item.product.id,
       name: item.product.name,
       price: item.product.price,
-      images: item.product.images.map((img) => ({
+      images: item.product.images.map((img: any) => ({
         url: img.url,
         altText: img.altText,
       })),
