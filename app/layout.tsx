@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-provider";
+import { GoogleAnalytics } from "@/components/analytics";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -45,6 +46,12 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "theme-color": "#8B7355",
+  },
 };
 
 export default function RootLayout({
@@ -59,6 +66,7 @@ export default function RootLayout({
     >
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <GoogleAnalytics />
       </body>
     </html>
   );

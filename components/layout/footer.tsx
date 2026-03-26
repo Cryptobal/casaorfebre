@@ -20,6 +20,8 @@ const footerColumns = [
     title: "Soporte",
     links: [
       { href: "/garantia", label: "Garantía" },
+      { href: "/terminos", label: "Términos y Condiciones" },
+      { href: "/privacidad", label: "Privacidad" },
       { href: "mailto:soporte@casaorfebre.cl", label: "Contacto" },
     ],
   },
