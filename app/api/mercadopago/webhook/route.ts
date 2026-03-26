@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
+import {
+  sendPurchaseConfirmationEmail,
+  sendNewOrderToArtisanEmail,
+} from "@/lib/emails/templates";
 
 export async function POST(request: Request) {
   try {
@@ -62,7 +66,58 @@ export async function POST(request: Request) {
         where: { userId: order.userId },
       });
 
-      // TODO Phase 7: Send confirmation emails via Resend
+      // Send purchase confirmation to buyer
+      const buyer = await prisma.user.findUnique({
+        where: { id: order.userId },
+        select: { email: true, name: true },
+      });
+      if (buyer?.email) {
+        try {
+          await sendPurchaseConfirmationEmail(buyer.email, {
+            name: buyer.name || "Cliente",
+            orderNumber: order.orderNumber,
+            items: order.items.map((i) => ({
+              name: i.productName,
+              price: i.productPrice,
+              quantity: i.quantity,
+            })),
+            total: order.total,
+          });
+        } catch (e) {
+          console.error("Email failed:", e);
+        }
+      }
+
+      // Send new order notification to each artisan
+      const artisanIds = [...new Set(order.items.map((i) => i.artisanId))];
+      for (const artisanId of artisanIds) {
+        const artisan = await prisma.artisan.findUnique({
+          where: { id: artisanId },
+          include: { user: { select: { email: true } } },
+        });
+        const artisanItems = order.items.filter(
+          (i) => i.artisanId === artisanId
+        );
+        if (artisan?.user?.email) {
+          try {
+            await sendNewOrderToArtisanEmail(artisan.user.email, {
+              artisanName: artisan.displayName,
+              orderNumber: order.orderNumber,
+              items: artisanItems.map((i) => ({
+                name: i.productName,
+                price: i.productPrice,
+                quantity: i.quantity,
+              })),
+              shippingName: order.shippingName,
+              shippingAddress: order.shippingAddress,
+              shippingCity: order.shippingCity,
+              shippingRegion: order.shippingRegion,
+            });
+          } catch (e) {
+            console.error("Email failed:", e);
+          }
+        }
+      }
     } else if (payment.status === "rejected") {
       await prisma.order.update({
         where: { id: orderId },

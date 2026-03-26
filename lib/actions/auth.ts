@@ -4,6 +4,7 @@ import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { sendBuyerWelcomeEmail } from "@/lib/emails/templates";
 
 export async function loginWithGoogle() {
   await signIn("google", { redirectTo: "/" });
@@ -61,6 +62,13 @@ export async function register(
       role: "BUYER",
     },
   });
+
+  // Send welcome email (non-blocking)
+  try {
+    await sendBuyerWelcomeEmail(email, { name });
+  } catch (e) {
+    console.error("Email failed:", e);
+  }
 
   try {
     await signIn("credentials", {

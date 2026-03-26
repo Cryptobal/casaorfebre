@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendOrderShippedEmail } from "@/lib/emails/templates";
 
 export async function confirmPreparation(orderItemId: string) {
   const session = await auth();
@@ -42,7 +43,7 @@ export async function markAsShipped(orderItemId: string, formData: FormData) {
   });
   if (!item) return { error: "Pedido no encontrado" };
 
-  await prisma.orderItem.update({
+  const updatedItem = await prisma.orderItem.update({
     where: { id: orderItemId },
     data: {
       fulfillmentStatus: "SHIPPED",
@@ -50,7 +51,25 @@ export async function markAsShipped(orderItemId: string, formData: FormData) {
       trackingCarrier,
       shippedAt: new Date(),
     },
+    include: {
+      order: {
+        include: { user: { select: { email: true, name: true } } },
+      },
+    },
   });
+
+  if (updatedItem.order.user.email) {
+    try {
+      await sendOrderShippedEmail(updatedItem.order.user.email, {
+        name: updatedItem.order.user.name || "Cliente",
+        orderNumber: updatedItem.order.orderNumber,
+        trackingNumber,
+        trackingCarrier,
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
 
   revalidatePath("/portal/orfebre/pedidos");
   return { success: true };

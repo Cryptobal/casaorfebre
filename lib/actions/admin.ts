@@ -5,6 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { uploadToR2 } from "@/lib/r2";
 import { revalidatePath } from "next/cache";
 import { slugify } from "@/lib/utils";
+import {
+  sendArtisanWelcomeEmail,
+  sendApplicationRejectedEmail,
+  sendProductApprovedEmail,
+  sendProductRejectedEmail,
+  sendDisputeResolvedEmail,
+  sendReturnApprovedEmail,
+  sendReturnRejectedEmail,
+  sendRefundProcessedEmail,
+} from "@/lib/emails/templates";
 
 async function requireAdmin() {
   const session = await auth();
@@ -82,7 +92,11 @@ export async function approveApplication(
     },
   });
 
-  // TODO Phase 7: Send welcome email
+  try {
+    await sendArtisanWelcomeEmail(application.email, { name: application.name });
+  } catch (e) {
+    console.error("Email failed:", e);
+  }
 
   revalidatePath("/portal/admin/postulaciones");
   return { success: true };
@@ -101,6 +115,11 @@ export async function rejectApplication(
 
   const reason = formData.get("reason") as string;
 
+  const application = await prisma.artisanApplication.findUnique({
+    where: { id: applicationId },
+  });
+  if (!application) return { error: "Postulacion no encontrada" };
+
   await prisma.artisanApplication.update({
     where: { id: applicationId },
     data: {
@@ -109,6 +128,15 @@ export async function rejectApplication(
       reviewedAt: new Date(),
     },
   });
+
+  try {
+    await sendApplicationRejectedEmail(application.email, {
+      name: application.name,
+      reason: reason || "No se proporcionó motivo",
+    });
+  } catch (e) {
+    console.error("Email failed:", e);
+  }
 
   revalidatePath("/portal/admin/postulaciones");
   return { success: true };
@@ -124,6 +152,12 @@ export async function approveProduct(
     return { error: "No autorizado" };
   }
 
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { artisan: { include: { user: { select: { email: true } } } } },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+
   await prisma.product.update({
     where: { id: productId },
     data: {
@@ -131,6 +165,15 @@ export async function approveProduct(
       publishedAt: new Date(),
     },
   });
+
+  try {
+    await sendProductApprovedEmail(product.artisan.user.email, {
+      artisanName: product.artisan.displayName,
+      productName: product.name,
+    });
+  } catch (e) {
+    console.error("Email failed:", e);
+  }
 
   revalidatePath("/portal/admin/productos");
   return { success: true };
@@ -149,6 +192,12 @@ export async function rejectProduct(
 
   const notes = formData.get("notes") as string;
 
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { artisan: { include: { user: { select: { email: true } } } } },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+
   await prisma.product.update({
     where: { id: productId },
     data: {
@@ -156,6 +205,16 @@ export async function rejectProduct(
       adminNotes: notes || null,
     },
   });
+
+  try {
+    await sendProductRejectedEmail(product.artisan.user.email, {
+      artisanName: product.artisan.displayName,
+      productName: product.name,
+      reason: notes || "No se proporcionó motivo",
+    });
+  } catch (e) {
+    console.error("Email failed:", e);
+  }
 
   revalidatePath("/portal/admin/productos");
   return { success: true };
@@ -342,6 +401,15 @@ export async function resolveDispute(
     return { error: "Resolucion y estado son requeridos" };
   }
 
+  const dispute = await prisma.dispute.findUnique({
+    where: { id: disputeId },
+    include: {
+      user: { select: { email: true, name: true } },
+      order: { select: { orderNumber: true } },
+    },
+  });
+  if (!dispute) return { error: "Disputa no encontrada" };
+
   await prisma.dispute.update({
     where: { id: disputeId },
     data: {
@@ -350,6 +418,16 @@ export async function resolveDispute(
       resolvedAt: new Date(),
     },
   });
+
+  try {
+    await sendDisputeResolvedEmail(dispute.user.email, {
+      name: dispute.user.name || "Cliente",
+      orderNumber: dispute.order.orderNumber,
+      resolution,
+    });
+  } catch (e) {
+    console.error("Email failed:", e);
+  }
 
   revalidatePath("/portal/admin/disputas");
   return { success: true };
@@ -365,10 +443,30 @@ export async function approveReturn(
     return { error: "No autorizado" };
   }
 
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+  });
+  if (!returnRequest) return { error: "Solicitud no encontrada" };
+
   await prisma.returnRequest.update({
     where: { id: returnRequestId },
     data: { status: "APPROVED" },
   });
+
+  const orderItem = await prisma.orderItem.findUnique({
+    where: { id: returnRequest.orderItemId },
+    include: { order: { include: { user: { select: { email: true, name: true } } } } },
+  });
+  if (orderItem?.order?.user?.email) {
+    try {
+      await sendReturnApprovedEmail(orderItem.order.user.email, {
+        buyerName: orderItem.order.user.name || "Cliente",
+        productName: orderItem.productName,
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
 
   revalidatePath("/portal/admin/devoluciones");
   return { success: true };
@@ -387,6 +485,11 @@ export async function rejectReturn(
 
   const adminNotes = formData.get("adminNotes") as string;
 
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+  });
+  if (!returnRequest) return { error: "Solicitud no encontrada" };
+
   await prisma.returnRequest.update({
     where: { id: returnRequestId },
     data: {
@@ -394,6 +497,22 @@ export async function rejectReturn(
       adminNotes: adminNotes || null,
     },
   });
+
+  const orderItem = await prisma.orderItem.findUnique({
+    where: { id: returnRequest.orderItemId },
+    include: { order: { include: { user: { select: { email: true, name: true } } } } },
+  });
+  if (orderItem?.order?.user?.email) {
+    try {
+      await sendReturnRejectedEmail(orderItem.order.user.email, {
+        buyerName: orderItem.order.user.name || "Cliente",
+        productName: orderItem.productName,
+        reason: adminNotes || "No se proporcionó motivo",
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
 
   revalidatePath("/portal/admin/devoluciones");
   return { success: true };
@@ -417,6 +536,11 @@ export async function processRefund(
     return { error: "Monto de devolucion invalido" };
   }
 
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+  });
+  if (!returnRequest) return { error: "Solicitud no encontrada" };
+
   await prisma.returnRequest.update({
     where: { id: returnRequestId },
     data: {
@@ -425,6 +549,21 @@ export async function processRefund(
       resolvedAt: new Date(),
     },
   });
+
+  const orderItem = await prisma.orderItem.findUnique({
+    where: { id: returnRequest.orderItemId },
+    include: { order: { include: { user: { select: { email: true, name: true } } } } },
+  });
+  if (orderItem?.order?.user?.email) {
+    try {
+      await sendRefundProcessedEmail(orderItem.order.user.email, {
+        buyerName: orderItem.order.user.name || "Cliente",
+        amount: refundAmount,
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
 
   revalidatePath("/portal/admin/devoluciones");
   return { success: true };

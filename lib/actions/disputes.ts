@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { DisputeReason } from "@prisma/client";
+import { sendDisputeOpenedEmail } from "@/lib/emails/templates";
 
 export async function createDispute(formData: FormData) {
   const session = await auth();
@@ -43,6 +44,26 @@ export async function createDispute(formData: FormData) {
       status: "OPEN",
     },
   });
+
+  // Send dispute notification to each artisan involved in the order
+  const artisanIds = [...new Set(order.items.map((i) => i.artisanId))];
+  for (const artisanId of artisanIds) {
+    const artisan = await prisma.artisan.findUnique({
+      where: { id: artisanId },
+      include: { user: { select: { email: true } } },
+    });
+    if (artisan?.user?.email) {
+      try {
+        await sendDisputeOpenedEmail(artisan.user.email, {
+          artisanName: artisan.displayName,
+          orderNumber: order.orderNumber,
+          reason: description.trim(),
+        });
+      } catch (e) {
+        console.error("Email failed:", e);
+      }
+    }
+  }
 
   revalidatePath(`/portal/comprador/pedidos/${orderId}`);
   return { success: true };

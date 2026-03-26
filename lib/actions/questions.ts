@@ -7,6 +7,10 @@ import {
   checkContactInfo,
   CONTACT_FILTER_MESSAGE,
 } from "@/lib/contact-filter";
+import {
+  sendNewQuestionEmail,
+  sendQuestionAnsweredEmail,
+} from "@/lib/emails/templates";
 
 export async function submitQuestion(formData: FormData) {
   const session = await auth();
@@ -35,6 +39,29 @@ export async function submitQuestion(formData: FormData) {
     },
   });
 
+  // Send notification email to artisan
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: artisanId },
+    include: {
+      user: { select: { email: true } },
+    },
+  });
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { name: true },
+  });
+  if (artisan?.user?.email && product) {
+    try {
+      await sendNewQuestionEmail(artisan.user.email, {
+        artisanName: artisan.displayName,
+        productName: product.name,
+        question: question.trim(),
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
+
   revalidatePath(`/coleccion`);
   return { success: true };
 }
@@ -53,15 +80,32 @@ export async function answerQuestion(questionId: string, formData: FormData) {
   const artisan = await prisma.artisan.findUnique({ where: { userId: session.user.id } });
   if (!artisan) return { error: "No autorizado" };
 
-  const question = await prisma.productQuestion.findFirst({
+  const questionRecord = await prisma.productQuestion.findFirst({
     where: { id: questionId, artisanId: artisan.id },
+    include: {
+      user: { select: { email: true, name: true } },
+      product: { select: { name: true } },
+    },
   });
-  if (!question) return { error: "Pregunta no encontrada" };
+  if (!questionRecord) return { error: "Pregunta no encontrada" };
 
   await prisma.productQuestion.update({
     where: { id: questionId },
     data: { answer: answer.trim(), answeredAt: new Date() },
   });
+
+  // Send notification email to buyer
+  if (questionRecord.user.email) {
+    try {
+      await sendQuestionAnsweredEmail(questionRecord.user.email, {
+        buyerName: questionRecord.user.name || "Cliente",
+        productName: questionRecord.product.name,
+        answer: answer.trim(),
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
 
   revalidatePath("/portal/orfebre/preguntas");
   return { success: true };

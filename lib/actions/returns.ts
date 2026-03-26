@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { ReturnReason } from "@prisma/client";
+import { sendReturnRequestedEmail } from "@/lib/emails/templates";
 
 export async function createReturnRequest(formData: FormData) {
   const session = await auth();
@@ -42,6 +43,23 @@ export async function createReturnRequest(formData: FormData) {
       status: "REQUESTED",
     },
   });
+
+  // Send notification to artisan
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: item.artisanId },
+    include: { user: { select: { email: true } } },
+  });
+  if (artisan?.user?.email) {
+    try {
+      await sendReturnRequestedEmail(artisan.user.email, {
+        name: artisan.displayName,
+        productName: item.productName,
+        reason: description?.trim() || reason,
+      });
+    } catch (e) {
+      console.error("Email failed:", e);
+    }
+  }
 
   revalidatePath(`/portal/comprador/pedidos/${item.order.id}`);
   return { success: true };
