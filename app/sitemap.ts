@@ -10,6 +10,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/coleccion`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
     { url: `${baseUrl}/orfebres`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
     { url: `${baseUrl}/garantia`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
+    { url: `${baseUrl}/terminos`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${baseUrl}/privacidad`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${baseUrl}/postular`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
   ];
 
   // Dynamic: products

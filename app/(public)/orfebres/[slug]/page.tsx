@@ -21,6 +21,7 @@ export async function generateMetadata({
     openGraph: {
       title: `${artisan.displayName} | Casa Orfebre`,
       description: artisan.bio.slice(0, 160),
+      images: artisan.profileImage ? [{ url: artisan.profileImage }] : undefined,
     },
   };
 }

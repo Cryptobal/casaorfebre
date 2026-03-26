@@ -45,13 +45,13 @@ export async function createDispute(formData: FormData) {
     },
   });
 
-  // Send dispute notification to each artisan involved in the order
+  // Send dispute notification to each artisan involved (pre-fetch to avoid N+1)
   const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
-  for (const artisanId of artisanIds) {
-    const artisan = await prisma.artisan.findUnique({
-      where: { id: artisanId },
-      include: { user: { select: { email: true } } },
-    });
+  const artisans = await prisma.artisan.findMany({
+    where: { id: { in: artisanIds as string[] } },
+    include: { user: { select: { email: true } } },
+  });
+  for (const artisan of artisans) {
     if (artisan?.user?.email) {
       try {
         await sendDisputeOpenedEmail(artisan.user.email, {

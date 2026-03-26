@@ -4,6 +4,7 @@ import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { sendBuyerWelcomeEmail } from "@/lib/emails/templates";
 
 function safeInternalPath(url: string | null | undefined): string {
@@ -30,6 +31,7 @@ export async function loginWithCredentials(
   } catch {
     return { error: "Email o contraseña incorrectos" };
   }
+  revalidatePath("/", "layout");
   redirect(safeInternalPath(formData.get("callbackUrl") as string | undefined));
 }
 
@@ -87,5 +89,6 @@ export async function register(
     return { error: "Cuenta creada. Inicia sesión manualmente." };
   }
 
+  revalidatePath("/", "layout");
   redirect("/");
 }

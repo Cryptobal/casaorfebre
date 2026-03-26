@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { togglePauseProduct } from "@/lib/actions/products";
 
@@ -88,9 +89,11 @@ export default async function ProductosPage() {
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border border-border bg-background">
                           {thumbnail ? (
-                            <img
+                            <Image
                               src={thumbnail}
                               alt={product.name}
+                              width={40}
+                              height={40}
                               className="h-full w-full object-cover"
                             />
                           ) : (

@@ -46,20 +46,21 @@ export async function POST(request: Request) {
         },
       });
 
-      // Destock products
-      for (const item of order.items) {
-        const product = await prisma.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        });
-        // If stock reaches 0, mark as sold out
-        if (product.stock <= 0) {
-          await prisma.product.update({
+      // Destock products (batch to avoid N+1)
+      await Promise.all(
+        order.items.map(async (item: any) => {
+          const product = await prisma.product.update({
             where: { id: item.productId },
-            data: { status: "SOLD_OUT" },
+            data: { stock: { decrement: item.quantity } },
           });
-        }
-      }
+          if (product.stock <= 0) {
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: { status: "SOLD_OUT" },
+            });
+          }
+        })
+      );
 
       // Clear cart for the buyer
       await prisma.cartItem.deleteMany({
@@ -88,15 +89,15 @@ export async function POST(request: Request) {
         }
       }
 
-      // Send new order notification to each artisan
+      // Send new order notification to each artisan (pre-fetch to avoid N+1)
       const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
-      for (const artisanId of artisanIds) {
-        const artisan = await prisma.artisan.findUnique({
-          where: { id: artisanId },
-          include: { user: { select: { email: true } } },
-        });
+      const artisans = await prisma.artisan.findMany({
+        where: { id: { in: artisanIds as string[] } },
+        include: { user: { select: { email: true } } },
+      });
+      for (const artisan of artisans) {
         const artisanItems = order.items.filter(
-          (i: any) => i.artisanId === artisanId
+          (i: any) => i.artisanId === artisan.id
         );
         if (artisan?.user?.email) {
           try {
