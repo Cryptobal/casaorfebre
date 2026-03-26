@@ -3,6 +3,7 @@ import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
 import { CartButton } from "./cart-button";
 import { UserMenu } from "./user-menu";
+import { SearchModal } from "@/components/shared/search-modal";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinks = [
@@ -42,6 +43,7 @@ export function Navbar({
         </ul>
 
         <div className="flex items-center gap-4">
+          <SearchModal />
           {user?.role === "ADMIN" && (
             <Link href="/portal/admin" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark md:block">
               Panel Admin

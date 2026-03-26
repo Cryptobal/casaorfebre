@@ -7,6 +7,7 @@ const footerColumns = [
     links: [
       { href: "/coleccion", label: "Colección" },
       { href: "/orfebres", label: "Orfebres" },
+      { href: "/blog", label: "Blog" },
     ],
   },
   {
@@ -20,9 +21,10 @@ const footerColumns = [
     title: "Soporte",
     links: [
       { href: "/garantia", label: "Garantía" },
+      { href: "/preguntas-frecuentes", label: "Preguntas Frecuentes" },
       { href: "/terminos", label: "Términos y Condiciones" },
       { href: "/privacidad", label: "Privacidad" },
-      { href: "mailto:soporte@casaorfebre.cl", label: "Contacto" },
+      { href: "mailto:contacto@casaorfebre.cl", label: "Contacto" },
     ],
   },
 ];

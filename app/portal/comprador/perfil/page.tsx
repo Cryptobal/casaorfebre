@@ -13,7 +13,17 @@ export default async function PerfilPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true, hashedPassword: true },
+    select: {
+      name: true,
+      email: true,
+      hashedPassword: true,
+      shippingName: true,
+      shippingAddress: true,
+      shippingCity: true,
+      shippingRegion: true,
+      shippingPostalCode: true,
+      shippingPhone: true,
+    },
   });
 
   if (!user) redirect("/login");
@@ -25,6 +35,14 @@ export default async function PerfilPage() {
         name={user.name ?? ""}
         email={user.email ?? ""}
         hasPassword={!!user.hashedPassword}
+        shippingAddress={{
+          shippingName: user.shippingName ?? "",
+          shippingAddress: user.shippingAddress ?? "",
+          shippingCity: user.shippingCity ?? "",
+          shippingRegion: user.shippingRegion ?? "",
+          shippingPostalCode: user.shippingPostalCode ?? "",
+          shippingPhone: user.shippingPhone ?? "",
+        }}
       />
     </div>
   );

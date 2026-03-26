@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { createReview } from "@/lib/actions/reviews";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ReviewImageUpload } from "@/components/reviews/review-image-upload";
 
 interface ReviewFormProps {
   productId: string;
@@ -15,6 +16,7 @@ interface ReviewFormProps {
 export function ReviewForm({ productId, artisanId, orderId }: ReviewFormProps) {
   const [expanded, setExpanded] = useState(false);
   const [rating, setRating] = useState(0);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const [state, formAction, isPending] = useActionState(
     async (_prev: { error?: string; success?: boolean } | null, formData: FormData) => {
@@ -45,7 +47,7 @@ export function ReviewForm({ productId, artisanId, orderId }: ReviewFormProps) {
       <input type="hidden" name="artisanId" value={artisanId} />
       <input type="hidden" name="orderId" value={orderId} />
       <input type="hidden" name="rating" value={rating} />
-      <input type="hidden" name="imageUrls" value="[]" />
+      <input type="hidden" name="imageUrls" value={JSON.stringify(imageUrls)} />
 
       <div>
         <Label>Calificacion</Label>
@@ -87,9 +89,7 @@ export function ReviewForm({ productId, artisanId, orderId }: ReviewFormProps) {
         />
       </div>
 
-      <p className="text-xs text-text-tertiary">
-        Upload de fotos disponible proximamente
-      </p>
+      <ReviewImageUpload onImagesChange={setImageUrls} />
 
       {state?.error && (
         <p className="text-sm text-red-600">{state.error}</p>

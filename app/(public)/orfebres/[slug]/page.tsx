@@ -8,6 +8,8 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { ProductCard } from "@/components/products/product-card";
+import { prisma } from "@/lib/prisma";
+import Image from "next/image";
 
 export async function generateMetadata({
   params,
@@ -147,16 +149,158 @@ export default async function ArtisanProfilePage({
         )}
       </div>
 
-      {/* Reviews Placeholder */}
-      <div className="mt-16">
-        <SectionHeading title={`Opiniones sobre ${artisan.displayName}`} />
-        <div className="mt-6 rounded-lg border border-border bg-surface px-6 py-8 text-center">
-          <p className="text-sm font-light text-text-tertiary">
-            Las opiniones estarán disponibles próximamente
-          </p>
-        </div>
-      </div>
+      {/* Reviews */}
+      <ArtisanReviews artisanId={artisan.id} displayName={artisan.displayName} />
     </div>
     </>
   );
+}
+
+async function ArtisanReviews({
+  artisanId,
+  displayName,
+}: {
+  artisanId: string;
+  displayName: string;
+}) {
+  const reviews = await prisma.review.findMany({
+    where: { artisanId },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    include: {
+      user: { select: { name: true } },
+      product: { select: { name: true, slug: true } },
+    },
+  });
+
+  return (
+    <div className="mt-16">
+      <SectionHeading title={`Opiniones sobre ${displayName}`} />
+
+      {reviews.length === 0 ? (
+        <div className="mt-6 rounded-lg border border-border bg-surface px-6 py-8 text-center">
+          <p className="text-sm font-light text-text-tertiary">
+            Este orfebre a&uacute;n no tiene opiniones.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 divide-y divide-border rounded-lg border border-border">
+          {reviews.map((review) => {
+            const userName = review.user.name
+              ? formatReviewerName(review.user.name)
+              : "Cliente";
+
+            return (
+              <div key={review.id} className="px-6 py-6">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill={star <= review.rating ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          className={
+                            star <= review.rating
+                              ? "text-[#f59e0b]"
+                              : "text-[#d1d5db]"
+                          }
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium text-text">
+                      {userName}
+                    </span>
+                    {review.isVerified && (
+                      <span className="flex items-center gap-1 text-xs text-green-600">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                          <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                        Compra verificada
+                      </span>
+                    )}
+                  </div>
+                  <time className="text-xs text-text-tertiary">
+                    {review.createdAt.toLocaleDateString("es-CL", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </time>
+                </div>
+
+                <p className="mt-2 text-xs text-text-tertiary">
+                  sobre{" "}
+                  <a
+                    href={`/coleccion/${review.product.slug}`}
+                    className="text-accent hover:underline"
+                  >
+                    {review.product.name}
+                  </a>
+                </p>
+
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  {review.comment}
+                </p>
+
+                {review.images.length > 0 && (
+                  <div className="mt-3 flex gap-2">
+                    {review.images.map((url, index) => (
+                      <div
+                        key={url}
+                        className="relative h-[60px] w-[60px] overflow-hidden rounded-lg border border-border"
+                      >
+                        <Image
+                          src={url}
+                          alt={`Foto de opinion ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="60px"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {review.response && (
+                  <div className="ml-8 mt-4 border-l-2 border-accent/20 pl-4">
+                    <p className="text-xs font-medium text-text-tertiary">
+                      Respuesta del orfebre:
+                    </p>
+                    <p className="mt-1 text-sm text-text-secondary">
+                      {review.response}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatReviewerName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) return parts[0] || "Cliente";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }

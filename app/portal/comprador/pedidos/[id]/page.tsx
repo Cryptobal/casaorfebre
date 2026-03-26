@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { ReviewForm } from "./review-form";
+import { ResumePaymentButton } from "./resume-payment-button";
 import type { OrderStatus, FulfillmentStatus } from "@prisma/client";
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -125,6 +126,21 @@ export default async function BuyerOrderDetailPage({
           {statusLabels[order.status]}
         </span>
       </div>
+
+      {order.status === "PENDING_PAYMENT" && (
+        <Card className="mt-6 border-amber-200 bg-amber-50/80">
+          <p className="text-sm font-medium text-text">
+            Este pedido aún no está pagado
+          </p>
+          <p className="mt-1 text-sm text-text-secondary">
+            Puedes completar el pago con Mercado Pago aquí. El monto y los
+            productos son los de este pedido (no hace falta volver al carrito).
+          </p>
+          <div className="mt-4">
+            <ResumePaymentButton orderId={order.id} />
+          </div>
+        </Card>
+      )}
 
       {/* Shipping address */}
       {order.shippingAddress && (

@@ -95,6 +95,18 @@ export async function createCheckoutPreference(formData: FormData) {
     },
   });
 
+  // Save shipping address to user profile for future pre-fill
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      shippingName,
+      shippingAddress,
+      shippingCity,
+      shippingRegion,
+      shippingPostalCode,
+    },
+  });
+
   // Create MercadoPago preference
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -130,6 +142,73 @@ export async function createCheckoutPreference(formData: FormData) {
     console.error("MercadoPago preference error:", error);
     // Clean up the pending order
     await prisma.order.delete({ where: { id: order.id } });
+    return { error: "Error al crear el pago. Intenta nuevamente." };
+  }
+}
+
+/** Reabre Mercado Pago para un pedido ya creado (pendiente de pago), sin usar el carrito. */
+export async function resumeOrderPayment(orderId: string) {
+  const session = await auth();
+  if (!session?.user?.email) return { error: "No autorizado" };
+
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId: session.user.id,
+      status: "PENDING_PAYMENT",
+    },
+    include: { items: true },
+  });
+
+  if (!order) {
+    return { error: "Pedido no encontrado o ya no está pendiente de pago." };
+  }
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: order.items.map((i) => i.productId) } },
+  });
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
+  for (const item of order.items) {
+    const product = productMap.get(item.productId);
+    if (!product || product.stock < item.quantity) {
+      return {
+        error: `No hay stock suficiente para "${item.productName}". Contacta al sitio si necesitas ayuda.`,
+      };
+    }
+  }
+
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    const preference = await preferenceClient.create({
+      body: {
+        items: order.items.map((item) => ({
+          id: item.productId,
+          title: item.productName,
+          quantity: item.quantity,
+          unit_price: item.productPrice,
+          currency_id: "CLP",
+        })),
+        payer: {
+          email: session.user.email,
+        },
+        back_urls: {
+          success: `${appUrl}/checkout/success`,
+          failure: `${appUrl}/checkout/failure`,
+          pending: `${appUrl}/checkout/success`,
+        },
+        auto_return: "approved",
+        external_reference: order.id,
+        notification_url: `${appUrl}/api/mercadopago/webhook`,
+      },
+    });
+
+    const redirectUrl = preference.sandbox_init_point || preference.init_point;
+
+    return { success: true as const, redirectUrl };
+  } catch (error) {
+    console.error("MercadoPago preference error (resume):", error);
     return { error: "Error al crear el pago. Intenta nuevamente." };
   }
 }

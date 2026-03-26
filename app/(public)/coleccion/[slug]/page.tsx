@@ -7,6 +7,7 @@ import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart } from "./add-to-cart";
+import { ReviewList } from "@/components/reviews/review-list";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -158,13 +159,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {product.description}
             </p>
 
-            {/* Story */}
-            {product.story && (
-              <blockquote className="border-l-2 border-accent/30 pl-4 font-serif italic text-text-secondary">
-                {product.story}
-              </blockquote>
-            )}
-
             {/* Stock */}
             {!product.isUnique && product.stock > 0 && (
               <p className="text-sm text-text-secondary">
@@ -221,6 +215,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           </div>
 
+          {/* Story */}
+          {product.story && (
+            <div className="rounded-lg bg-background p-6">
+              <h3 className="mb-3 font-serif text-sm uppercase tracking-widest text-text-tertiary">La Historia de esta Pieza</h3>
+              <p className="font-serif text-lg font-light italic leading-relaxed text-text-secondary">
+                {product.story}
+              </p>
+            </div>
+          )}
+
           {/* Q&A placeholder */}
           <div className="rounded-lg border border-border p-6">
             <h2 className="mb-2 font-serif text-lg">Preguntas y Respuestas</h2>
@@ -229,13 +233,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </p>
           </div>
 
-          {/* Reviews placeholder */}
-          <div className="rounded-lg border border-border p-6">
-            <h2 className="mb-2 font-serif text-lg">Opiniones</h2>
-            <p className="text-sm text-text-tertiary">
-              Las opiniones estar&aacute;n disponibles pr&oacute;ximamente
-            </p>
-          </div>
+          {/* Reviews */}
+          <ReviewList productId={product.id} />
         </div>
       </div>
     </>

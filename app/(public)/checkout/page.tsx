@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getCart, getCartTotal } from "@/lib/queries/cart";
+import { getUserShippingAddress } from "@/lib/queries/users";
 import { formatCLP } from "@/lib/utils";
 import { CheckoutForm } from "./checkout-form";
 
@@ -8,9 +9,10 @@ export default async function CheckoutPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [cartItems, cartTotal] = await Promise.all([
+  const [cartItems, cartTotal, savedAddress] = await Promise.all([
     getCart(session.user.id),
     getCartTotal(session.user.id),
+    getUserShippingAddress(session.user.id),
   ]);
 
   if (cartItems.length === 0) redirect("/coleccion");
@@ -41,6 +43,7 @@ export default async function CheckoutPage() {
             items={serializedItems}
             total={cartTotal}
             hasCustomMade={hasCustomMade}
+            savedAddress={savedAddress}
           />
         </div>
         <div className="lg:col-span-2">

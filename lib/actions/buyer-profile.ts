@@ -21,6 +21,37 @@ export async function updateBuyerProfile(formData: FormData) {
   return { success: true };
 }
 
+export async function updateShippingAddress(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) return { error: "No autenticado" };
+
+  const shippingName = (formData.get("shippingName") as string)?.trim();
+  const shippingAddress = (formData.get("shippingAddress") as string)?.trim();
+  const shippingCity = (formData.get("shippingCity") as string)?.trim();
+  const shippingRegion = (formData.get("shippingRegion") as string)?.trim();
+  const shippingPostalCode = (formData.get("shippingPostalCode") as string)?.trim() || null;
+  const shippingPhone = (formData.get("shippingPhone") as string)?.trim() || null;
+
+  if (!shippingName || !shippingAddress || !shippingCity || !shippingRegion) {
+    return { error: "Nombre, dirección, ciudad y región son requeridos" };
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      shippingName,
+      shippingAddress,
+      shippingCity,
+      shippingRegion,
+      shippingPostalCode,
+      shippingPhone,
+    },
+  });
+
+  revalidatePath("/portal/comprador/perfil");
+  return { success: true };
+}
+
 export async function changePassword(formData: FormData) {
   const session = await auth();
   if (!session?.user) return { error: "No autorizado" };
