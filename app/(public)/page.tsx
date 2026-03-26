@@ -4,13 +4,16 @@ import { FadeIn } from "@/components/shared/fade-in";
 import { ProductCard } from "@/components/products/product-card";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { Button } from "@/components/ui/button";
-import { getLatestProducts } from "@/lib/queries/products";
+import { getLatestProducts, getUserFavoriteIds } from "@/lib/queries/products";
 import { getFeaturedArtisans } from "@/lib/queries/artisans";
+import { auth } from "@/lib/auth";
 
 export default async function HomePage() {
-  const [products, artisans] = await Promise.all([
+  const session = await auth();
+  const [products, artisans, favoriteIds] = await Promise.all([
     getLatestProducts(8),
     getFeaturedArtisans(3),
+    getUserFavoriteIds(session?.user?.id),
   ]);
 
   return (
@@ -119,7 +122,7 @@ export default async function HomePage() {
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
             {products.map((product, i) => (
               <FadeIn key={product.id} delay={i * 80}>
-                <ProductCard product={product} />
+                <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} />
               </FadeIn>
             ))}
           </div>

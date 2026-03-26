@@ -1,10 +1,11 @@
 import { Suspense } from "react";
-import { getApprovedProducts, getAllMaterials } from "@/lib/queries/products";
+import { getApprovedProducts, getAllMaterials, getUserFavoriteIds } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { CatalogFilters } from "./catalog-filters";
+import { auth } from "@/lib/auth";
 import type { ProductCategory } from "@prisma/client";
 
 export const metadata = {
@@ -59,10 +60,12 @@ export default async function ColeccionPage({
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
 
-  const [products, materials, artisans] = await Promise.all([
+  const session = await auth();
+  const [products, materials, artisans, favoriteIds] = await Promise.all([
     getApprovedProducts({ category, material, minPrice, maxPrice, artisanSlug, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
+    getUserFavoriteIds(session?.user?.id),
   ]);
 
   const artisanOptions = artisans.map((a) => ({
@@ -87,7 +90,7 @@ export default async function ColeccionPage({
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
           {products.map((product, i) => (
             <FadeIn key={product.id} delay={i * 60}>
-              <ProductCard product={product} />
+              <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} />
             </FadeIn>
           ))}
         </div>

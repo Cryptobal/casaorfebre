@@ -74,6 +74,15 @@ export async function getLatestProducts(limit = 8) {
   });
 }
 
+export async function getUserFavoriteIds(userId?: string): Promise<Set<string>> {
+  if (!userId) return new Set();
+  const favorites = await prisma.favorite.findMany({
+    where: { userId },
+    select: { productId: true },
+  });
+  return new Set(favorites.map((f) => f.productId));
+}
+
 export async function getAllMaterials() {
   const products = await prisma.product.findMany({
     where: { status: "APPROVED" },

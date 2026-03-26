@@ -1,8 +1,11 @@
 "use client";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
+import { toggleFavorite } from "@/lib/actions/favorites";
 import type { Product, Artisan, ProductImage } from "@prisma/client";
 
 type ProductWithRelations = Product & {
@@ -12,9 +15,13 @@ type ProductWithRelations = Product & {
 
 interface ProductCardProps {
   product: ProductWithRelations;
+  isFavorited?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, isFavorited = false }: ProductCardProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const badge = product.isCustomMade
     ? "Personalizada"
     : product.isUnique
@@ -23,19 +30,37 @@ export function ProductCard({ product }: ProductCardProps) {
         ? `Ed. Limitada ${product.stock}/${product.editionSize}`
         : null;
 
+  function handleToggleFavorite(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    startTransition(async () => {
+      await toggleFavorite(product.id);
+      router.refresh();
+    });
+  }
+
   return (
     <Link href={`/coleccion/${product.slug}`} className="group block">
       {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
         <ImagePlaceholder name={product.name} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
 
-        {/* Favorite heart (visual only) */}
+        {/* Favorite heart */}
         <button
-          className="absolute right-3 top-3 rounded-full bg-surface/80 p-2 text-text-tertiary backdrop-blur-sm transition-colors hover:text-accent"
-          onClick={(e) => e.preventDefault()}
-          aria-label="Guardar en favoritos"
+          className={`absolute right-3 top-3 rounded-full bg-surface/80 p-2 backdrop-blur-sm transition-colors ${
+            isFavorited ? "text-accent" : "text-text-tertiary hover:text-accent"
+          } ${isPending ? "opacity-50" : ""}`}
+          onClick={handleToggleFavorite}
+          aria-label={isFavorited ? "Quitar de favoritos" : "Guardar en favoritos"}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill={isFavorited ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
           </svg>
         </button>
