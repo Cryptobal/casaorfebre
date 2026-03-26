@@ -44,7 +44,24 @@ export default async function ArtisanProfilePage({
     .join("")
     .slice(0, 2);
 
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: artisan.displayName,
+    description: artisan.bio,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: artisan.location,
+      addressCountry: "CL",
+    },
+  });
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
       {/* Hero Section */}
       <FadeIn>
@@ -137,5 +154,6 @@ export default async function ArtisanProfilePage({
         </div>
       </div>
     </div>
+    </>
   );
 }
