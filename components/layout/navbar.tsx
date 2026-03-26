@@ -12,13 +12,18 @@ const navLinks = [
 ];
 
 interface NavbarProps {
-  cartCount?: number;
   cartItems?: SerializedCartItem[];
   cartTotal?: number;
+  isLoggedIn?: boolean;
   user?: { name?: string | null; email?: string | null; image?: string | null; role?: string } | null;
 }
 
-export function Navbar({ cartCount = 0, cartItems = [], cartTotal = 0, user }: NavbarProps) {
+export function Navbar({
+  cartItems = [],
+  cartTotal = 0,
+  isLoggedIn = false,
+  user,
+}: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -38,9 +43,9 @@ export function Navbar({ cartCount = 0, cartItems = [], cartTotal = 0, user }: N
 
         <div className="flex items-center gap-4">
           <CartButton
-            initialCount={cartCount}
             initialItems={cartItems}
             initialTotal={cartTotal}
+            isLoggedIn={isLoggedIn}
           />
           {user ? (
             <UserMenu user={user} />

@@ -3,6 +3,11 @@
 import { useTransition } from "react";
 import { formatCLP } from "@/lib/utils";
 import { updateCartQuantity, removeFromCart } from "@/lib/actions/cart";
+import { validateGuestLineQuantity } from "@/lib/actions/guest-cart";
+import {
+  removeGuestCartLine,
+  setGuestLineQuantity,
+} from "@/lib/guest-cart-storage";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import Image from "next/image";
 
@@ -23,20 +28,35 @@ export interface SerializedCartItem {
 
 interface CartItemProps {
   item: SerializedCartItem;
+  isGuest?: boolean;
 }
 
-export function CartItem({ item }: CartItemProps) {
+export function CartItem({ item, isGuest = false }: CartItemProps) {
   const [isPending, startTransition] = useTransition();
   const { product } = item;
   const image = product.images[0];
 
   function handleUpdateQty(newQty: number) {
+    if (isGuest) {
+      startTransition(async () => {
+        const check = await validateGuestLineQuantity(product.id, newQty);
+        if (check && "error" in check) return;
+        setGuestLineQuantity(product.id, newQty);
+      });
+      return;
+    }
     startTransition(async () => {
       await updateCartQuantity(item.id, newQty);
     });
   }
 
   function handleRemove() {
+    if (isGuest) {
+      startTransition(async () => {
+        removeGuestCartLine(product.id);
+      });
+      return;
+    }
     startTransition(async () => {
       await removeFromCart(item.id);
     });

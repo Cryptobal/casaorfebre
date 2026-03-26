@@ -1,13 +1,24 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { loginWithGoogle, loginWithCredentials } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
-export default function LoginPage() {
+function safeCallbackUrl(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
+
+function LoginPageInner() {
+  const searchParams = useSearchParams();
+  const callbackUrl = useMemo(
+    () => safeCallbackUrl(searchParams.get("callbackUrl")),
+    [searchParams]
+  );
   const [state, formAction, pending] = useActionState(loginWithCredentials, null);
 
   return (
@@ -17,6 +28,7 @@ export default function LoginPage() {
 
       {/* Google OAuth */}
       <form action={loginWithGoogle} className="mt-8">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <Button variant="secondary" className="w-full gap-2" type="submit">
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -37,6 +49,7 @@ export default function LoginPage() {
 
       {/* Credentials form */}
       <form action={formAction} className="space-y-4">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         {state?.error && (
           <p className="rounded-md bg-error/10 px-3 py-2 text-sm text-error">{state.error}</p>
         )}
@@ -56,5 +69,13 @@ export default function LoginPage() {
         <Link href="/registro" className="text-accent hover:underline">Crear cuenta</Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-center text-sm text-text-tertiary">Cargando…</div>}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
