@@ -170,7 +170,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {product.isCustomMade ? (
                 <TrustItem icon={<NoReturnIcon />} text="Sin devoluci&oacute;n" />
               ) : (
-                <TrustItem icon={<ShieldIcon />} text="Garant&iacute;a 14 d&iacute;as" />
+                <Link href="/garantia" className="hover:opacity-80 transition-opacity">
+                  <TrustItem icon={<ShieldIcon />} text="Garant&iacute;a 14 d&iacute;as" />
+                </Link>
               )}
               <TrustItem icon={<CertificateIcon />} text="Certificado Digital" />
               <TrustItem icon={<TruckIcon />} text="Env&iacute;o 3-7 d&iacute;as" />
