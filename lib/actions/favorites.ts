@@ -14,14 +14,15 @@ export async function toggleFavorite(productId: string) {
 
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
-    revalidatePath("/portal/comprador/favoritos");
-    return { favorited: false };
+  } else {
+    await prisma.favorite.create({
+      data: { userId: session.user.id, productId },
+    });
   }
 
-  await prisma.favorite.create({
-    data: { userId: session.user.id, productId },
-  });
-
   revalidatePath("/portal/comprador/favoritos");
-  return { favorited: true };
+  revalidatePath("/coleccion");
+  revalidatePath("/orfebres");
+  revalidatePath("/");
+  return { favorited: !existing };
 }
