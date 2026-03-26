@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
 import { CartButton } from "./cart-button";
+import { UserMenu } from "./user-menu";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinks = [
@@ -14,9 +15,10 @@ interface NavbarProps {
   cartCount?: number;
   cartItems?: SerializedCartItem[];
   cartTotal?: number;
+  user?: { name?: string | null; email?: string | null; image?: string | null; role?: string } | null;
 }
 
-export function Navbar({ cartCount = 0, cartItems = [], cartTotal = 0 }: NavbarProps) {
+export function Navbar({ cartCount = 0, cartItems = [], cartTotal = 0, user }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -40,9 +42,13 @@ export function Navbar({ cartCount = 0, cartItems = [], cartTotal = 0 }: NavbarP
             initialItems={cartItems}
             initialTotal={cartTotal}
           />
-          <Link href="/login" className="hidden text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text md:block">
-            Ingresar
-          </Link>
+          {user ? (
+            <UserMenu user={user} />
+          ) : (
+            <Link href="/login" className="hidden text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text md:block">
+              Ingresar
+            </Link>
+          )}
           <MobileMenu links={navLinks} />
         </div>
       </nav>

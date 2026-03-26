@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { getCart, getCartCount, getCartTotal } from "@/lib/queries/cart";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
+export const dynamic = "force-dynamic";
+
 export default async function PublicLayout({
   children,
 }: {
@@ -52,6 +54,7 @@ export default async function PublicLayout({
         cartCount={cartCount}
         cartItems={cartItems}
         cartTotal={cartTotal}
+        user={session?.user ? { name: session.user.name, email: session.user.email, image: session.user.image, role: session.user.role } : null}
       />
       <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       <Footer />
