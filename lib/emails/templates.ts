@@ -234,25 +234,75 @@ export async function sendNewOrderToArtisanEmail(
 // ---------------------------------------------------------------------------
 // 6. Order Shipped
 // ---------------------------------------------------------------------------
+
+const CARRIER_TRACKING_URLS: Record<string, string> = {
+  "Chilexpress": "https://www.chilexpress.cl/estado-de-envio?tracking=",
+  "Starken": "https://www.starken.cl/seguimiento?codigo=",
+  "Correos de Chile": "https://www.correos.cl/web/guest/seguimiento-en-linea?tracking=",
+  "Blue Express": "https://www.blue.cl/seguimiento/?n=",
+};
+
+function getTrackingUrl(carrier: string, trackingNumber: string): string | null {
+  const base = CARRIER_TRACKING_URLS[carrier];
+  return base ? `${base}${encodeURIComponent(trackingNumber)}` : null;
+}
+
+function getEstimatedDelivery(shippedAt: Date): string {
+  const estimated = new Date(shippedAt.getTime() + 5 * 24 * 60 * 60 * 1000);
+  return estimated.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export async function sendOrderShippedEmail(
   to: string,
-  { name, orderNumber, trackingNumber, trackingCarrier }: {
+  { name, orderNumber, trackingNumber, trackingCarrier, shippedAt, items }: {
     name: string;
     orderNumber: string;
     trackingNumber: string;
     trackingCarrier: string;
+    shippedAt: Date;
+    items: { name: string; imageUrl?: string | null; quantity: number }[];
   },
 ) {
+  const base = appUrl();
+  const trackingUrl = getTrackingUrl(trackingCarrier, trackingNumber);
+  const estimatedDelivery = getEstimatedDelivery(shippedAt);
+
+  const trackingLink = trackingUrl
+    ? `<a href="${trackingUrl}" style="color:#8B7355;text-decoration:underline;" target="_blank">Seguir envío →</a>`
+    : "";
+
+  const itemRows = items
+    .map(
+      (i) =>
+        `<tr>
+          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;width:56px;vertical-align:middle;">
+            ${i.imageUrl ? `<img src="${i.imageUrl}" alt="${i.name}" width="48" height="48" style="border-radius:4px;object-fit:cover;">` : `<div style="width:48px;height:48px;background-color:#f5f3ef;border-radius:4px;"></div>`}
+          </td>
+          <td style="padding:8px 0 8px 12px;border-bottom:1px solid #e8e5df;vertical-align:middle;">
+            ${i.name}${i.quantity > 1 ? ` <span style="color:#9e9a90;">x${i.quantity}</span>` : ""}
+          </td>
+        </tr>`,
+    )
+    .join("");
+
   await sendEmail(
     to,
     `Tu pedido #${orderNumber} fue despachado`,
     `<p style="margin:0 0 16px;">Hola ${name},</p>
-     <p style="margin:0 0 16px;">Tu pedido <strong>#${orderNumber}</strong> ya fue despachado.</p>
+     <p style="margin:0 0 16px;">Tu pedido <strong>#${orderNumber}</strong> ya fue despachado. 🎉</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;">
        <strong>Courier:</strong> ${trackingCarrier}<br>
-       <strong>Número de seguimiento:</strong> ${trackingNumber}
+       <strong>Número de seguimiento:</strong> ${trackingNumber}<br>
+       <strong>Entrega estimada:</strong> ${estimatedDelivery}
+       ${trackingLink ? `<br><br>${trackingLink}` : ""}
      </p>
-     <p style="margin:0 0 16px;">Te notificaremos cuando sea entregado.</p>`,
+     ${items.length > 0 ? `
+     <p style="margin:0 0 8px;font-weight:bold;font-size:13px;color:#9e9a90;text-transform:uppercase;letter-spacing:0.5px;">Productos en tu envío</p>
+     <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">${itemRows}</table>` : ""}
+     <p style="margin:0 0 16px;font-size:13px;color:#9e9a90;">Te notificaremos cuando sea entregado.</p>
+     <p style="margin:0 0 0;">
+       <a href="${base}/portal/comprador/pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
+     </p>`,
   );
 }
 
@@ -261,17 +311,46 @@ export async function sendOrderShippedEmail(
 // ---------------------------------------------------------------------------
 export async function sendOrderDeliveredEmail(
   to: string,
-  { name, orderNumber }: { name: string; orderNumber: string },
+  { name, orderNumber, items }: {
+    name: string;
+    orderNumber: string;
+    items: { name: string; slug: string; imageUrl?: string | null; quantity: number }[];
+  },
 ) {
   const base = appUrl();
+
+  const itemRows = items
+    .map(
+      (i) =>
+        `<tr>
+          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;width:56px;vertical-align:middle;">
+            ${i.imageUrl ? `<img src="${i.imageUrl}" alt="${i.name}" width="48" height="48" style="border-radius:4px;object-fit:cover;">` : `<div style="width:48px;height:48px;background-color:#f5f3ef;border-radius:4px;"></div>`}
+          </td>
+          <td style="padding:8px 0 8px 12px;border-bottom:1px solid #e8e5df;vertical-align:middle;">
+            ${i.name}${i.quantity > 1 ? ` <span style="color:#9e9a90;">x${i.quantity}</span>` : ""}
+          </td>
+        </tr>`,
+    )
+    .join("");
+
+  const reviewUrl = items.length === 1
+    ? `${base}/coleccion/${items[0].slug}#opiniones`
+    : `${base}/portal/comprador/pedidos`;
+
   await sendEmail(
     to,
     `Tu pedido #${orderNumber} fue entregado`,
     `<p style="margin:0 0 16px;">Hola ${name},</p>
-     <p style="margin:0 0 16px;">Tu pedido <strong>#${orderNumber}</strong> fue entregado exitosamente.</p>
-     <p style="margin:0 0 16px;">En unos días te invitaremos a dejar una reseña sobre las piezas que recibiste. Tu opinión ayuda a otros compradores y a los artesanos.</p>
+     <p style="margin:0 0 16px;">Tu pedido <strong>#${orderNumber}</strong> fue entregado exitosamente. ✨</p>
+     ${items.length > 0 ? `
+     <p style="margin:0 0 8px;font-weight:bold;font-size:13px;color:#9e9a90;text-transform:uppercase;letter-spacing:0.5px;">Productos recibidos</p>
+     <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">${itemRows}</table>` : ""}
+     <p style="margin:0 0 16px;">En unos días te invitaremos a dejar una reseña. Tu opinión ayuda a otros compradores y a los artesanos.</p>
+     <p style="margin:0 0 12px;">
+       <a href="${reviewUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Dejar mi reseña</a>
+     </p>
      <p style="margin:0 0 0;">
-       <a href="${base}/portal/comprador/pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
+       <a href="${base}/portal/comprador/pedidos" style="color:#8B7355;font-size:13px;text-decoration:underline;">¿Algún problema? Solicita devolución</a>
      </p>`,
   );
 }
@@ -937,5 +1016,39 @@ export async function sendNewMessageEmail(
        <a href="${url}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Responder</a>
      </p>
      <p style="margin:0;font-size:13px;color:#9e9a90;">Recibirás un máximo de 1 notificación cada 5 minutos por conversación.</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Review Reminder (to buyer, 7 days after delivery)
+// ---------------------------------------------------------------------------
+export async function sendReviewReminderEmail(
+  to: string,
+  { buyerName, productName, productSlug, productImageUrl }: {
+    buyerName: string;
+    productName: string;
+    productSlug: string;
+    productImageUrl?: string | null;
+  },
+) {
+  const base = appUrl();
+  const reviewUrl = `${base}/coleccion/${productSlug}#opiniones`;
+
+  const imageBlock = productImageUrl
+    ? `<p style="margin:0 0 16px;text-align:center;">
+        <img src="${productImageUrl}" alt="${productName}" width="200" height="200" style="border-radius:8px;object-fit:cover;">
+      </p>`
+    : "";
+
+  await sendEmail(
+    to,
+    `¿Qué te pareció tu ${productName}?`,
+    `<p style="margin:0 0 16px;">Hola ${buyerName},</p>
+     ${imageBlock}
+     <p style="margin:0 0 16px;">Hace unos días recibiste tu <strong>${productName}</strong>. Nos encantaría saber qué te pareció.</p>
+     <p style="margin:0 0 16px;">Tu opinión ayuda a otros compradores a elegir y a los artesanos a seguir mejorando. Las reseñas con foto son especialmente valiosas.</p>
+     <p style="margin:0 0 0;text-align:center;">
+       <a href="${reviewUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Dejar mi reseña</a>
+     </p>`,
   );
 }
