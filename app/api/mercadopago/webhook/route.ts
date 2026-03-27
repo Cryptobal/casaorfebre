@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
+import { webhookLimiter } from "@/lib/rate-limit";
 import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
@@ -21,10 +22,10 @@ function validateSignature(
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
 
   if (!secret) {
-    console.warn(
-      "[webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — omitiendo validación de firma"
+    console.error(
+      "[webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — RECHAZANDO webhook por seguridad"
     );
-    return true; // Allow in development
+    return false;
   }
 
   if (!xSignature || !xRequestId) {
@@ -47,7 +48,11 @@ function validateSignature(
   const manifest = `id:${dataId ?? ""};request-id:${xRequestId};ts:${ts};`;
   const hmac = createHmac("sha256", secret).update(manifest).digest("hex");
 
-  return hmac === v1;
+  try {
+    return timingSafeEqual(Buffer.from(hmac), Buffer.from(v1));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -237,6 +242,13 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
 
 export async function POST(request: Request) {
   try {
+    // Rate limit: 100/min by IP to prevent abuse
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+    const { success: rlOk } = await webhookLimiter.limit(ip);
+    if (!rlOk) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const xSignature = request.headers.get("x-signature");
     const xRequestId = request.headers.get("x-request-id");
 
@@ -245,6 +257,12 @@ export async function POST(request: Request) {
     // MercadoPago sends different notification formats
     const paymentId = body.data?.id;
     const topic = body.type || body.action;
+
+    // Reject early if secret is not configured (server misconfiguration)
+    if (!process.env.MERCADOPAGO_WEBHOOK_SECRET) {
+      console.error("[webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado");
+      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+    }
 
     // Validate webhook signature
     if (!validateSignature(xSignature, xRequestId, paymentId?.toString())) {

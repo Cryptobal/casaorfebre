@@ -6,6 +6,7 @@ import { preferenceClient } from "@/lib/mercadopago";
 import { createArtisanPreference } from "@/lib/mercadopago-split";
 import { getCart } from "@/lib/queries/cart";
 import { validateDiscountCode, markRewardAsUsed } from "@/lib/actions/referral";
+import { checkoutLimiter } from "@/lib/rate-limit";
 
 function generateOrderNumber(): string {
   const year = new Date().getFullYear();
@@ -16,6 +17,12 @@ function generateOrderNumber(): string {
 export async function createCheckoutPreference(formData: FormData) {
   const session = await auth();
   if (!session?.user?.email) return { error: "No autorizado" };
+
+  // Rate limit: 3 checkout attempts/min per user
+  const { success: rlOk } = await checkoutLimiter.limit(session.user.id);
+  if (!rlOk) {
+    return { error: "Demasiados intentos. Espera un momento antes de reintentar." };
+  }
 
   // Block checkout if email is not verified (credentials users)
   const dbUser = await prisma.user.findUnique({

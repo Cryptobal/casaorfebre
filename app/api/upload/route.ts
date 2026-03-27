@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadToR2 } from "@/lib/r2";
 import { getArtisanPlanLimits } from "@/lib/plan-limits";
+import { uploadLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -11,6 +12,12 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  // Rate limit: 20 uploads/min per user
+  const { success } = await uploadLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Intenta en un momento." }, { status: 429 });
   }
 
   const formData = await request.formData();
@@ -36,6 +43,11 @@ export async function POST(request: Request) {
   });
   if (!product) {
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
+  }
+
+  // Ownership check: only the product's artisan can upload images
+  if (product.artisan.userId !== session.user.id) {
+    return NextResponse.json({ error: "No tienes permiso para subir imágenes a este producto" }, { status: 403 });
   }
   try {
     const limits = await getArtisanPlanLimits(product.artisanId);
