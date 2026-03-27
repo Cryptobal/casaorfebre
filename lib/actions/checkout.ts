@@ -134,8 +134,12 @@ export async function createCheckoutPreference(formData: FormData) {
       },
     });
 
-    // Prefer sandbox URL for testing, production init_point for live
-    const redirectUrl = preference.sandbox_init_point || preference.init_point;
+    // Use sandbox or production URL based on MP_SANDBOX env var
+    const useSandbox = process.env.MP_SANDBOX !== "false";
+    const redirectUrl = useSandbox
+      ? preference.sandbox_init_point || preference.init_point
+      : preference.init_point;
+    console.log(`[checkout] Usando ${useSandbox ? "sandbox_init_point" : "init_point"} (MP_SANDBOX=${process.env.MP_SANDBOX ?? "undefined"})`);
 
     return { success: true, redirectUrl };
   } catch (error) {
@@ -204,7 +208,11 @@ export async function resumeOrderPayment(orderId: string) {
       },
     });
 
-    const redirectUrl = preference.sandbox_init_point || preference.init_point;
+    const useSandbox = process.env.MP_SANDBOX !== "false";
+    const redirectUrl = useSandbox
+      ? preference.sandbox_init_point || preference.init_point
+      : preference.init_point;
+    console.log(`[checkout:resume] Usando ${useSandbox ? "sandbox_init_point" : "init_point"} (MP_SANDBOX=${process.env.MP_SANDBOX ?? "undefined"})`);
 
     return { success: true as const, redirectUrl };
   } catch (error) {

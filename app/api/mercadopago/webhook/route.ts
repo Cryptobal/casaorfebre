@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
 import {
@@ -6,13 +7,63 @@ import {
   sendNewOrderToArtisanEmail,
 } from "@/lib/emails/templates";
 
+/**
+ * Validates MercadoPago webhook signature (x-signature header).
+ * See: https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks#verificarsignature
+ */
+function validateSignature(
+  xSignature: string | null,
+  xRequestId: string | null,
+  dataId: string | undefined
+): boolean {
+  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+  if (!secret) {
+    console.warn(
+      "[webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado — omitiendo validación de firma"
+    );
+    return true; // Allow in development
+  }
+
+  if (!xSignature || !xRequestId) {
+    console.warn("[webhook] Faltan headers x-signature o x-request-id");
+    return false;
+  }
+
+  // Parse ts and v1 from x-signature: "ts=...,v1=..."
+  const parts: Record<string, string> = {};
+  for (const part of xSignature.split(",")) {
+    const [key, ...rest] = part.split("=");
+    parts[key.trim()] = rest.join("=").trim();
+  }
+
+  const ts = parts.ts;
+  const v1 = parts.v1;
+  if (!ts || !v1) return false;
+
+  // Build the manifest string
+  const manifest = `id:${dataId ?? ""};request-id:${xRequestId};ts:${ts};`;
+  const hmac = createHmac("sha256", secret).update(manifest).digest("hex");
+
+  return hmac === v1;
+}
+
 export async function POST(request: Request) {
   try {
+    const xSignature = request.headers.get("x-signature");
+    const xRequestId = request.headers.get("x-request-id");
+
     const body = await request.json();
 
     // MercadoPago sends different notification formats
     const paymentId = body.data?.id;
     const topic = body.type || body.action;
+
+    // Validate webhook signature
+    if (!validateSignature(xSignature, xRequestId, paymentId?.toString())) {
+      console.error("[webhook] Firma inválida — rechazando request");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
 
     if (!paymentId || !topic?.includes("payment")) {
       return NextResponse.json({ received: true });
