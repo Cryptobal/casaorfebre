@@ -11,6 +11,20 @@ const footerColumns = [
     ],
   },
   {
+    title: "Regalos Populares",
+    links: [
+      { href: "/coleccion/compromiso", label: "Compromiso" },
+      { href: "/coleccion/matrimonio", label: "Matrimonio" },
+      { href: "/coleccion/aniversario", label: "Aniversario" },
+      { href: "/coleccion/dia-de-la-madre", label: "Día de la Madre" },
+      { href: "/coleccion/graduacion", label: "Graduación" },
+      { href: "/coleccion/autorregalo", label: "Autorregalo" },
+      { href: "/regalos-bajo-30000", label: "Bajo $30.000" },
+      { href: "/regalos-bajo-50000", label: "Bajo $50.000" },
+      { href: "/regalos-bajo-100000", label: "Bajo $100.000" },
+    ],
+  },
+  {
     title: "Para Orfebres",
     links: [
       { href: "/postular", label: "Postular" },
@@ -33,7 +47,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2 md:col-span-1">
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={180} height={42} />
             <p className="mt-3 text-sm font-light text-text-tertiary">Joyería de Autor</p>

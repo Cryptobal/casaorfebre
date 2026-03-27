@@ -703,6 +703,7 @@ async function main() {
     { name: "Autoregalo", slug: "autoregalo" },
     { name: "Amistad", slug: "amistad" },
     { name: "Graduación", slug: "graduacion" },
+    { name: "Día de la Madre", slug: "dia-de-la-madre" },
     { name: "Nacimiento / Maternidad", slug: "nacimiento" },
     { name: "Protección / Amuleto", slug: "proteccion" },
     { name: "Significado especial", slug: "significado-especial" },

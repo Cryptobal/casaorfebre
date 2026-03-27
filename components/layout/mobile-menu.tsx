@@ -11,6 +11,22 @@ function useIsClient() {
   return useSyncExternalStore(emptySubscribe, () => true, () => false);
 }
 
+const regalarOcasionLinks = [
+  { href: "/coleccion/compromiso", label: "Compromiso" },
+  { href: "/coleccion/matrimonio", label: "Matrimonio" },
+  { href: "/coleccion/aniversario", label: "Aniversario" },
+  { href: "/coleccion/dia-de-la-madre", label: "Día de la Madre" },
+  { href: "/coleccion/graduacion", label: "Graduación" },
+  { href: "/coleccion/autorregalo", label: "Autorregalo" },
+  { href: "/coleccion/regalos", label: "Regalos" },
+];
+
+const regalarPresupuestoLinks = [
+  { href: "/regalos-bajo-30000", label: "Bajo $30.000" },
+  { href: "/regalos-bajo-50000", label: "Bajo $50.000" },
+  { href: "/regalos-bajo-100000", label: "Bajo $100.000" },
+];
+
 interface MobileMenuProps {
   links: { href: string; label: string }[];
   user?: { name?: string | null; email?: string | null; role?: string } | null;
@@ -18,6 +34,7 @@ interface MobileMenuProps {
 
 export function MobileMenu({ links, user }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const [regalarOpen, setRegalarOpen] = useState(false);
   const isClient = useIsClient();
 
   useEffect(() => {
@@ -64,6 +81,63 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
                 {link.label}
               </Link>
             ))}
+
+            {/* Regalar section */}
+            <div className="flex w-full flex-col items-center">
+              <button
+                type="button"
+                onClick={() => setRegalarOpen(!regalarOpen)}
+                className="flex items-center gap-2 font-serif text-2xl font-light text-text transition-colors hover:text-accent"
+              >
+                Regalar
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  className={`transition-transform ${regalarOpen ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              {regalarOpen && (
+                <div className="mt-4 grid w-full max-w-xs grid-cols-2 gap-x-6 gap-y-2">
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Por ocasión
+                    </p>
+                    {regalarOcasionLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Por presupuesto
+                    </p>
+                    {regalarPresupuestoLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {user ? (
               <>

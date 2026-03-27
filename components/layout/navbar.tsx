@@ -3,17 +3,23 @@ import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
 import { CartButton } from "./cart-button";
 import { UserMenu } from "./user-menu";
+import { RegalarDropdown } from "./regalar-dropdown";
 import { SearchModal } from "@/components/shared/search-modal";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
-const navLinks = [
+const navLinksLeft = [
   { href: "/coleccion", label: "Colección" },
   { href: "/lo-nuevo", label: "Lo Nuevo" },
   { href: "/seleccion-del-curador", label: "Selección del Curador" },
   { href: "/tesoros-de-chile", label: "Tesoros de Chile" },
+];
+
+const navLinksRight = [
   { href: "/orfebres", label: "Orfebres" },
   { href: "/postular", label: "Postular" },
 ];
+
+const navLinks = [...navLinksLeft, ...navLinksRight];
 
 interface NavbarProps {
   cartItems?: SerializedCartItem[];
@@ -36,7 +42,17 @@ export function Navbar({
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
+          {navLinksLeft.map((link) => (
+            <li key={link.href}>
+              <Link href={link.href} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
+                {link.label}
+              </Link>
+            </li>
+          ))}
+          <li>
+            <RegalarDropdown />
+          </li>
+          {navLinksRight.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
                 {link.label}

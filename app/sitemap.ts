@@ -11,6 +11,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/coleccion`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
     { url: `${baseUrl}/orfebres`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
+    { url: `${baseUrl}/lo-nuevo`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.8 },
+    { url: `${baseUrl}/seleccion-del-curador`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/tesoros-de-chile`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/nosotros`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
+    { url: `${baseUrl}/contacto`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
     { url: `${baseUrl}/garantia`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
     { url: `${baseUrl}/preguntas-frecuentes`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
     { url: `${baseUrl}/terminos`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
@@ -35,8 +40,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Occasion SEO pages
-  const occasionPages = ["compromiso", "matrimonio", "regalos"].map((occ) => ({
+  const occasionPages = [
+    "compromiso", "matrimonio", "regalos",
+    "graduacion", "dia-de-la-madre", "aniversario", "autorregalo",
+  ].map((occ) => ({
     url: `${baseUrl}/coleccion/${occ}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  // Budget SEO pages
+  const budgetPages = ["regalos-bajo-30000", "regalos-bajo-50000", "regalos-bajo-100000"].map((slug) => ({
+    url: `${baseUrl}/${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.7,
@@ -74,5 +90,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...categoryPages, ...materialPages, ...occasionPages, ...blogPosts, ...productPages, ...artisanPages];
+  return [...staticPages, ...categoryPages, ...materialPages, ...occasionPages, ...budgetPages, ...blogPosts, ...productPages, ...artisanPages];
 }
