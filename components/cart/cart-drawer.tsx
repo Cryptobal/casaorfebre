@@ -71,7 +71,7 @@ export function CartDrawer({
           <button
             onClick={onClose}
             aria-label="Cerrar carrito"
-            className="text-text-secondary transition-colors hover:text-text"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-background hover:text-text"
           >
             <svg
               width="20"

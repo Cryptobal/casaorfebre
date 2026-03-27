@@ -67,7 +67,7 @@ export default async function PedidosPage({
                   ? `/portal/admin/pedidos?status=${s.value}`
                   : "/portal/admin/pedidos"
               }
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-accent text-white"
                   : "bg-background text-text-secondary hover:bg-border"

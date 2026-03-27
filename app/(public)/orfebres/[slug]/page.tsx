@@ -343,7 +343,7 @@ async function ArtisanReviews({
                 )}
 
                 {review.response && (
-                  <div className="ml-8 mt-4 border-l-2 border-accent/20 pl-4">
+                  <div className="ml-4 mt-4 border-l-2 border-accent/20 pl-4 sm:ml-8">
                     <p className="text-xs font-medium text-text-tertiary">
                       Respuesta del orfebre:
                     </p>

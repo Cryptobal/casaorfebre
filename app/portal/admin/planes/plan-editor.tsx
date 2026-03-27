@@ -72,7 +72,7 @@ export function PlanEditor({ plan }: PlanEditorProps) {
       )}
 
       {!editing ? (
-        <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Precio mensual" value={`$${plan.price.toLocaleString("es-CL")}`} />
           <Stat label="Precio anual" value={plan.annualPrice ? `$${plan.annualPrice.toLocaleString("es-CL")}` : "—"} />
           <Stat label="Comisión" value={`${Math.round(plan.commissionRate * 100)}%`} />
@@ -90,7 +90,7 @@ export function PlanEditor({ plan }: PlanEditorProps) {
         </div>
       ) : (
         <form action={handleSubmit} className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Precio mensual (CLP)" name="price" type="number" defaultValue={plan.price} />
             <Field label="Precio anual (CLP)" name="annualPrice" type="number" defaultValue={plan.annualPrice ?? ""} />
             <Field label="Comisión (decimal)" name="commissionRate" type="number" step="0.01" defaultValue={plan.commissionRate} />

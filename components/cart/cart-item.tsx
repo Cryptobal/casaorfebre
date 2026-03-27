@@ -117,7 +117,7 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
               <button
                 onClick={() => handleUpdateQty(item.quantity - 1)}
                 disabled={isPending || item.quantity <= 1}
-                className="flex h-6 w-6 items-center justify-center rounded border border-border text-xs text-text-secondary transition-colors hover:bg-background disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded border border-border text-xs text-text-secondary transition-colors hover:bg-background disabled:opacity-40 sm:h-6 sm:w-6"
               >
                 -
               </button>
@@ -127,7 +127,7 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
               <button
                 onClick={() => handleUpdateQty(item.quantity + 1)}
                 disabled={isPending || item.quantity >= product.stock}
-                className="flex h-6 w-6 items-center justify-center rounded border border-border text-xs text-text-secondary transition-colors hover:bg-background disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded border border-border text-xs text-text-secondary transition-colors hover:bg-background disabled:opacity-40 sm:h-6 sm:w-6"
               >
                 +
               </button>

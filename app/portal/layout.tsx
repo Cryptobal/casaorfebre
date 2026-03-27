@@ -2,6 +2,39 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
+
+const ADMIN_LINKS = [
+  { href: "/portal/admin", label: "Dashboard" },
+  { href: "/portal/admin/postulaciones", label: "Postulaciones" },
+  { href: "/portal/admin/productos", label: "Productos" },
+  { href: "/portal/admin/fotos", label: "Fotos" },
+  { href: "/portal/admin/orfebres", label: "Orfebres" },
+  { href: "/portal/admin/planes", label: "Planes" },
+  { href: "/portal/admin/pedidos", label: "Pedidos" },
+  { href: "/portal/admin/disputas", label: "Disputas" },
+  { href: "/portal/admin/devoluciones", label: "Devoluciones" },
+  { href: "/portal/admin/catalogo", label: "Catálogo" },
+  { href: "/portal/admin/finanzas", label: "Finanzas" },
+];
+
+const ARTISAN_LINKS = [
+  { href: "/portal/orfebre", label: "Mi Taller" },
+  { href: "/portal/orfebre/productos", label: "Mis Piezas" },
+  { href: "/portal/orfebre/pedidos", label: "Pedidos" },
+  { href: "/portal/orfebre/preguntas", label: "Preguntas" },
+  { href: "/portal/orfebre/finanzas", label: "Finanzas" },
+  { href: "/portal/orfebre/estadisticas", label: "Estadísticas" },
+  { href: "/portal/orfebre/perfil", label: "Mi Perfil" },
+];
+
+const BUYER_LINKS = [
+  { href: "/portal/comprador/pedidos", label: "Mis Pedidos" },
+  { href: "/portal/comprador/favoritos", label: "Favoritos" },
+  { href: "/portal/comprador/listas", label: "Mis Listas" },
+  { href: "/portal/comprador/referidos", label: "Invita Amigos" },
+  { href: "/portal/comprador/perfil", label: "Mi Cuenta" },
+];
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -9,6 +42,17 @@ export default async function PortalLayout({ children }: { children: React.React
   if (!session?.user) {
     redirect("/login");
   }
+
+  const role = session.user.role;
+
+  const mobileTitle =
+    role === "ADMIN" ? "Admin" : role === "ARTISAN" ? "Mi Taller" : "Mi Cuenta";
+
+  const mobileLinks = [
+    ...(role === "ADMIN" ? ADMIN_LINKS : []),
+    ...(role === "ARTISAN" ? ARTISAN_LINKS : []),
+    ...BUYER_LINKS,
+  ];
 
   return (
     <div className="flex min-h-screen">
@@ -61,7 +105,18 @@ export default async function PortalLayout({ children }: { children: React.React
           </div>
         </nav>
       </aside>
-      <div className="flex-1 p-6 lg:p-8">{children}</div>
+
+      <div className="flex-1">
+        {/* Mobile header */}
+        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
+          <PortalMobileNav title={mobileTitle} links={mobileLinks} />
+          <Link href="/" className="flex items-center">
+            <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={90} height={20} />
+          </Link>
+        </div>
+
+        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+      </div>
     </div>
   );
 }

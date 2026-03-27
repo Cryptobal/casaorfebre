@@ -227,7 +227,9 @@ export default function ReferidosPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-4 overflow-hidden rounded-lg border border-border">
+          <>
+          {/* Desktop table */}
+          <div className="mt-4 hidden overflow-hidden rounded-lg border border-border md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-background">
@@ -264,6 +266,26 @@ export default function ReferidosPage() {
               </tbody>
             </table>
           </div>
+          {/* Mobile cards */}
+          <div className="mt-4 space-y-2 md:hidden">
+            {referrals.map((r) => {
+              const status = referralStatus(r);
+              return (
+                <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-text">{r.name}</p>
+                    <p className="text-xs text-text-tertiary">{formatDate(r.date)}</p>
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${status.color}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
 
@@ -273,7 +295,8 @@ export default function ReferidosPage() {
           <h2 className="font-serif text-lg font-light text-text">
             Historial de recompensas usadas
           </h2>
-          <div className="mt-4 overflow-hidden rounded-lg border border-border">
+          {/* Desktop table */}
+          <div className="mt-4 hidden overflow-hidden rounded-lg border border-border md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-background">
@@ -310,6 +333,21 @@ export default function ReferidosPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Mobile cards */}
+          <div className="mt-4 space-y-2 md:hidden">
+            {usedRewards.map((r) => (
+              <div key={r.id} className="rounded-lg border border-border bg-surface px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-text">{formatCLP(r.amount)}</p>
+                  <p className="font-mono text-xs text-text-tertiary">{r.code}</p>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-text-secondary">
+                  <span>Referido: {r.referredName}</span>
+                  <span>{r.usedAt ? formatDate(r.usedAt) : "—"}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

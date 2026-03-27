@@ -247,7 +247,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             />
 
             {/* Trust icons */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               {product.isCustomMade ? (
                 <TrustItem icon={<NoReturnIcon />} text="Sin devoluci&oacute;n" />
               ) : (
@@ -437,6 +437,7 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
   return (
     <div className="rounded-lg border border-border p-6">
       <h2 className="mb-4 font-serif text-lg">Detalles y Medidas</h2>
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <tbody>
           {rows.map((row) => (
@@ -447,6 +448,7 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

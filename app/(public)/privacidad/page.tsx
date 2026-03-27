@@ -15,7 +15,7 @@ export default function PrivacidadPage() {
           Última actualización: 26 de marzo de 2026
         </p>
 
-        <div className="mt-12 space-y-10 text-lg leading-relaxed">
+        <div className="mt-12 space-y-10 break-words text-base leading-relaxed sm:text-lg">
           {/* ── 1. Datos que recopilamos ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">

@@ -42,7 +42,7 @@ export default async function PlanPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="font-serif text-3xl font-semibold text-text">
             Mi Plan

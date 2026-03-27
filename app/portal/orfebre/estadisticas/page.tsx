@@ -353,7 +353,7 @@ export default async function EstadisticasPage() {
               <div>
                 <h3 className="font-serif text-lg font-semibold text-text">Tasa de conversión por producto</h3>
                 <p className="mt-1 text-sm text-text-tertiary">Visitas vs compras</p>
-                <div className="mt-4 overflow-hidden rounded-lg border border-border">
+                <div className="mt-4 overflow-x-auto overflow-hidden rounded-lg border border-border">
                   <table className="w-full text-left text-sm">
                     <thead className="border-b border-border bg-background">
                       <tr>
@@ -385,7 +385,7 @@ export default async function EstadisticasPage() {
                 <p className="mt-1 text-sm text-text-tertiary">
                   Productos que los compradores guardan pero aún no compran (últimos 90 días)
                 </p>
-                <div className="mt-4 overflow-hidden rounded-lg border border-border">
+                <div className="mt-4 overflow-x-auto overflow-hidden rounded-lg border border-border">
                   <table className="w-full text-left text-sm">
                     <thead className="border-b border-border bg-background">
                       <tr>

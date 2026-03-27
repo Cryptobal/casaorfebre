@@ -168,7 +168,8 @@ export default async function BuyerOrderDetailPage({
       {/* Timeline (visible except for cancelled/refunded) */}
       {!isCancelled && (
         <div className="mt-6">
-          <div className="flex items-center justify-between">
+          {/* Desktop: horizontal */}
+          <div className="hidden items-center justify-between md:flex">
             {TIMELINE_STEPS.map((step, i) => {
               const done = currentStep >= i;
               const active = currentStep === i;
@@ -209,6 +210,47 @@ export default async function BuyerOrderDetailPage({
                   >
                     {step.label}
                   </span>
+                </div>
+              );
+            })}
+          </div>
+          {/* Mobile: vertical */}
+          <div className="space-y-0 md:hidden">
+            {TIMELINE_STEPS.map((step, i) => {
+              const done = currentStep >= i;
+              const active = currentStep === i;
+              const Icon = step.icon;
+              return (
+                <div key={step.key} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        done
+                          ? "border-accent bg-accent text-white"
+                          : active
+                            ? "border-accent bg-surface text-accent"
+                            : "border-border bg-surface text-text-tertiary"
+                      }`}
+                    >
+                      <Icon />
+                    </div>
+                    {i < TIMELINE_STEPS.length - 1 && (
+                      <div
+                        className={`w-0.5 flex-1 ${
+                          currentStep > i ? "bg-accent" : "bg-border"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <div className="pb-6">
+                    <span
+                      className={`text-sm font-medium ${
+                        done ? "text-accent" : "text-text-tertiary"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
                 </div>
               );
             })}
@@ -447,7 +489,7 @@ export default async function BuyerOrderDetailPage({
                               !hasReturn && (
                                 <Link
                                   href={`/portal/comprador/pedidos/${order.id}/devolucion?item=${item.id}`}
-                                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
+                                  className="min-h-[44px] rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
                                 >
                                   Solicitar Devolución
                                 </Link>
@@ -461,7 +503,7 @@ export default async function BuyerOrderDetailPage({
                             {daysSinceDelivery <= 14 && !hasOpenDispute && (
                               <Link
                                 href={`/portal/comprador/pedidos/${order.id}/disputa`}
-                                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
+                                className="min-h-[44px] rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
                               >
                                 Abrir Disputa
                               </Link>
