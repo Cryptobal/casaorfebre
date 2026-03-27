@@ -173,7 +173,7 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
           return (
             <div
               key={plan.id}
-              className={`relative rounded-xl border p-6 transition-shadow hover:shadow-md ${
+              className={`relative flex flex-col rounded-xl border p-6 transition-shadow hover:shadow-md ${
                 isPopular
                   ? "border-accent shadow-sm"
                   : "border-border"
@@ -216,7 +216,7 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
                 </div>
               </div>
 
-              <ul className="mt-6 space-y-2.5">
+              <ul className="mt-6 flex-1 space-y-2.5">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-text-secondary">
                     <svg
@@ -233,19 +233,21 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
                 ))}
               </ul>
 
-              <button
-                type="button"
-                onClick={() => onSelectPlan(plan.name)}
-                className={`mt-6 w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                  isPopular
-                    ? "bg-accent text-white hover:bg-accent-dark"
-                    : isMaestro
-                      ? "bg-text text-background hover:bg-text/90"
-                      : "border border-border bg-surface text-text hover:bg-background"
-                }`}
-              >
-                {plan.price === 0 ? "Empezar gratis" : `Elegir ${PLAN_LABELS[plan.name]}`}
-              </button>
+              <div className="mt-auto pt-8">
+                <button
+                  type="button"
+                  onClick={() => onSelectPlan(plan.name)}
+                  className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                    isPopular
+                      ? "bg-accent text-white hover:bg-accent-dark"
+                      : isMaestro
+                        ? "bg-text text-background hover:bg-text/90"
+                        : "border border-border bg-surface text-text hover:bg-background"
+                  }`}
+                >
+                  {plan.price === 0 ? "Empezar gratis" : `Elegir ${PLAN_LABELS[plan.name]}`}
+                </button>
+              </div>
             </div>
           );
         })}
