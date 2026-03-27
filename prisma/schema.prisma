@@ -95,6 +95,7 @@ model Artisan {
   commissionOverride  Float?
   maxProductsOverride Int?
   maxPhotosOverride   Int?
+  homeHighlight       Boolean                  @default(false)
   status              ArtisanStatus            @default(PENDING)
   appliedAt           DateTime                 @default(now())
   approvedAt          DateTime?

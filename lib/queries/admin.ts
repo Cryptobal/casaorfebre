@@ -115,7 +115,7 @@ export async function getAllArtisans() {
     include: {
       subscriptions: {
         where: { status: "ACTIVE" },
-        include: { plan: { select: { name: true, badgeText: true, badgeType: true } } },
+        include: { plan: { select: { name: true, badgeText: true, badgeType: true, homeHighlight: true } } },
         orderBy: { startDate: "desc" },
         take: 1,
       },

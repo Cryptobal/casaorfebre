@@ -1,7 +1,9 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { ArtisanBadge } from "@/components/artisans/artisan-badge";
 import { MpConnectionBanner } from "./mp-connection-banner";
 
 export default async function ArtisanDashboard({
@@ -22,6 +24,24 @@ export default async function ArtisanDashboard({
       mpAccessToken: true,
       mpOnboarded: true,
       commissionRate: true,
+      commissionOverride: true,
+      maxProductsOverride: true,
+      subscriptions: {
+        where: { status: "ACTIVE" },
+        include: {
+          plan: {
+            select: {
+              name: true,
+              badgeText: true,
+              badgeType: true,
+              maxProducts: true,
+              commissionRate: true,
+            },
+          },
+        },
+        orderBy: { startDate: "desc" },
+        take: 1,
+      },
     },
   });
 
@@ -179,6 +199,14 @@ export default async function ArtisanDashboard({
         Bienvenida, {artisan.displayName}
       </p>
 
+      {/* Plan indicator */}
+      <PlanIndicator
+        subscription={artisan.subscriptions?.[0] ?? null}
+        activeProducts={activeProducts}
+        commissionRate={artisan.commissionOverride ?? artisan.commissionRate}
+        maxProductsOverride={artisan.maxProductsOverride}
+      />
+
       {/* Stats grid */}
       <div className="mt-8 grid grid-cols-2 gap-4">
         {stats.map((stat) => (
@@ -209,5 +237,107 @@ export default async function ArtisanDashboard({
         ))}
       </div>
     </div>
+  );
+}
+
+/* ─── Plan Indicator ─── */
+
+function PlanIndicator({
+  subscription,
+  activeProducts,
+  commissionRate,
+  maxProductsOverride,
+}: {
+  subscription: {
+    plan: {
+      name: string;
+      badgeText: string | null;
+      badgeType: string | null;
+      maxProducts: number;
+      commissionRate: number;
+    };
+  } | null;
+  activeProducts: number;
+  commissionRate: number;
+  maxProductsOverride: number | null;
+}) {
+  const plan = subscription?.plan;
+  const planLabel = plan
+    ? plan.name.charAt(0).toUpperCase() + plan.name.slice(1)
+    : "Esencial";
+
+  const maxProducts =
+    maxProductsOverride !== null && maxProductsOverride !== undefined
+      ? maxProductsOverride
+      : plan?.maxProducts ?? 10;
+  const isUnlimited = maxProducts === 0;
+  const usagePercent = isUnlimited
+    ? 0
+    : Math.min(Math.round((activeProducts / maxProducts) * 100), 100);
+  const nearLimit = !isUnlimited && usagePercent >= 80;
+
+  return (
+    <Card className="mt-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Plan badge + name */}
+        <div className="flex items-center gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-text">
+                Plan {planLabel}
+              </span>
+              {plan?.badgeType && (
+                <ArtisanBadge
+                  badgeType={plan.badgeType}
+                  badgeText={plan.badgeText}
+                />
+              )}
+            </div>
+            <p className="mt-0.5 text-xs text-text-tertiary">
+              Comisión: {Math.round(commissionRate * 100)}%
+            </p>
+          </div>
+        </div>
+
+        {/* Product usage */}
+        <div className="flex-1 sm:max-w-xs">
+          <div className="flex items-center justify-between text-xs text-text-secondary">
+            <span>Productos activos</span>
+            <span>
+              {activeProducts} de {isUnlimited ? "∞" : maxProducts}
+            </span>
+          </div>
+          {!isUnlimited && (
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-border">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  nearLimit ? "bg-amber-500" : "bg-accent"
+                }`}
+                style={{ width: `${usagePercent}%` }}
+              />
+            </div>
+          )}
+          {nearLimit && (
+            <p className="mt-1 text-xs text-amber-600">
+              Estás cerca del límite de tu plan.{" "}
+              <Link
+                href="/portal/orfebre/plan"
+                className="font-medium underline"
+              >
+                Sube de plan
+              </Link>
+            </p>
+          )}
+        </div>
+
+        {/* Link to plan page */}
+        <Link
+          href="/portal/orfebre/plan"
+          className="text-xs font-medium text-accent transition-colors hover:text-accent-dark"
+        >
+          Cambiar plan &rarr;
+        </Link>
+      </div>
+    </Card>
   );
 }

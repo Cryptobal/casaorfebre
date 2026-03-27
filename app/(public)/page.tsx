@@ -7,7 +7,8 @@ import { ProductCard } from "@/components/products/product-card";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { Button } from "@/components/ui/button";
 import { getLatestProducts, getUserFavoriteIds } from "@/lib/queries/products";
-import { getFeaturedArtisans } from "@/lib/queries/artisans";
+import { getFeaturedArtisans, getMaestroArtisans } from "@/lib/queries/artisans";
+import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
 import { auth } from "@/lib/auth";
 
 const jsonLd = JSON.stringify([
@@ -30,9 +31,10 @@ const jsonLd = JSON.stringify([
 
 export default async function HomePage() {
   const session = await auth();
-  const [products, artisans, favoriteIds] = await Promise.all([
+  const [products, artisans, maestros, favoriteIds] = await Promise.all([
     getLatestProducts(8),
     getFeaturedArtisans(3),
+    getMaestroArtisans(),
     getUserFavoriteIds(session?.user?.id),
   ]);
 
@@ -135,6 +137,26 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── 4.5. Orfebres Maestros ─── */}
+      {maestros.length > 0 && (
+        <section className="border-y border-border bg-surface/50 py-20 sm:py-28">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <FadeIn>
+              <SectionHeading
+                title="Orfebres Maestros"
+                subtitle="Los mejores artesanos de nuestra comunidad"
+              />
+            </FadeIn>
+
+            <div className="mt-12">
+              <FadeIn delay={120}>
+                <MaestroCarousel artisans={maestros} />
+              </FadeIn>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── 5. Latest Products ─── */}
       <section className="py-20 sm:py-28">

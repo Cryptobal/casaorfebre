@@ -2,6 +2,7 @@ import { getAllArtisans } from "@/lib/queries/admin";
 import { suspendArtisan } from "@/lib/actions/admin";
 import { Button } from "@/components/ui/button";
 import { OverrideEditor } from "./override-editor";
+import { HighlightToggle } from "./highlight-toggle";
 
 const statusStyles: Record<string, string> = {
   APPROVED: "bg-green-100 text-green-800",
@@ -49,6 +50,7 @@ export default async function OrfebresPage() {
                 <th className="pb-3 pr-4 font-medium">Productos</th>
                 <th className="pb-3 pr-4 font-medium">Comisión</th>
                 <th className="pb-3 pr-4 font-medium">Estado</th>
+                <th className="pb-3 pr-4 font-medium">Destacar</th>
                 <th className="pb-3 font-medium">Acciones</th>
               </tr>
             </thead>
@@ -96,6 +98,16 @@ export default async function OrfebresPage() {
                       >
                         {statusLabels[artisan.status] ?? artisan.status}
                       </span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      {artisan.subscriptions?.[0]?.plan?.homeHighlight ? (
+                        <HighlightToggle
+                          artisanId={artisan.id}
+                          initialValue={artisan.homeHighlight}
+                        />
+                      ) : (
+                        <span className="text-xs text-text-tertiary">—</span>
+                      )}
                     </td>
                     <td className="py-3">
                       <div className="flex items-center gap-2">

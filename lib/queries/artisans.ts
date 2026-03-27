@@ -52,6 +52,34 @@ export async function getFeaturedArtisans(limit = 3) {
   });
 }
 
+export async function getMaestroArtisans() {
+  return prisma.artisan.findMany({
+    where: {
+      status: "APPROVED",
+      homeHighlight: true,
+      subscriptions: {
+        some: {
+          status: "ACTIVE",
+          plan: { homeHighlight: true },
+        },
+      },
+    },
+    orderBy: { rating: "desc" },
+    include: {
+      ...activePlanInclude,
+      _count: { select: { products: true } },
+      products: {
+        where: { status: "APPROVED" },
+        orderBy: [{ viewCount: "desc" }, { publishedAt: "desc" }],
+        take: 1,
+        include: {
+          images: { orderBy: { position: "asc" }, take: 1 },
+        },
+      },
+    },
+  });
+}
+
 export async function getArtisanBySlug(slug: string) {
   return prisma.artisan.findUnique({
     where: { slug, status: "APPROVED" },

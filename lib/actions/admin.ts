@@ -459,7 +459,32 @@ export async function updateArtisanOverrides(
   return { success: true };
 }
 
-// 12. Suspend artisan
+// 12. Toggle home highlight
+export async function toggleHomeHighlight(
+  artisanId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: artisanId },
+    select: { homeHighlight: true },
+  });
+  if (!artisan) return { error: "Orfebre no encontrado" };
+
+  await prisma.artisan.update({
+    where: { id: artisanId },
+    data: { homeHighlight: !artisan.homeHighlight },
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
+
+// 13. Suspend artisan
 export async function suspendArtisan(
   artisanId: string
 ): Promise<{ error?: string; success?: boolean }> {
