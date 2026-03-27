@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createCheckoutPreference } from "@/lib/actions/checkout";
+import { validateGiftCard } from "@/lib/actions/gift-cards";
+import { formatCLP } from "@/lib/utils";
 import {
   CHILEAN_REGIONS,
   citiesForRegion,
@@ -85,6 +87,14 @@ export function CheckoutForm({
   const [discountApplied, setDiscountApplied] = useState(false);
   const [validatingCode, setValidatingCode] = useState(false);
 
+  // Gift card state
+  const [gcCode, setGcCode] = useState("");
+  const [gcBalance, setGcBalance] = useState(0);
+  const [gcApplied, setGcApplied] = useState(false);
+  const [gcNormalized, setGcNormalized] = useState("");
+  const [gcError, setGcError] = useState("");
+  const [gcValidating, setGcValidating] = useState(false);
+
   const cityOptions = useMemo(
     () => (region ? citiesForRegion(region) : []),
     [region]
@@ -133,6 +143,46 @@ export function CheckoutForm({
     setDiscountError("");
   }
 
+  function formatGcInput(value: string) {
+    const clean = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 16);
+    const parts = [];
+    for (let i = 0; i < clean.length; i += 4) {
+      parts.push(clean.slice(i, i + 4));
+    }
+    return parts.join("-");
+  }
+
+  async function handleApplyGiftCard() {
+    const raw = gcCode.replace(/-/g, "").trim();
+    if (!raw) return;
+    setGcError("");
+    setGcValidating(true);
+    try {
+      const result = await validateGiftCard(raw);
+      if (result.valid) {
+        setGcBalance(result.balance);
+        setGcNormalized(result.code);
+        setGcApplied(true);
+      } else {
+        setGcError(result.error);
+        setGcBalance(0);
+        setGcApplied(false);
+      }
+    } catch {
+      setGcError("Error al validar la Gift Card");
+    } finally {
+      setGcValidating(false);
+    }
+  }
+
+  function handleRemoveGiftCard() {
+    setGcCode("");
+    setGcBalance(0);
+    setGcNormalized("");
+    setGcApplied(false);
+    setGcError("");
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -174,6 +224,10 @@ export function CheckoutForm({
       if (giftWrapping) {
         formData.set("giftWrapping", "true");
       }
+    }
+    if (gcApplied && gcNormalized) {
+      formData.set("giftCardCode", gcNormalized);
+      formData.set("giftCardBalance", String(gcBalance));
     }
 
     startTransition(async () => {
@@ -521,6 +575,68 @@ export function CheckoutForm({
                   Tu mensaje aparecerá en una tarjeta dentro del paquete
                 </p>
               </div>
+            )}
+          </div>
+        )}
+      </fieldset>
+
+      {/* Gift Card */}
+      <fieldset className="rounded-lg border border-border bg-surface p-6">
+        <div className="mb-4 flex items-center gap-2.5">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+            <rect x="3" y="8" width="18" height="4" rx="1" />
+            <path d="M12 8v13" />
+            <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+            <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5" />
+          </svg>
+          <h2 className="text-lg font-medium text-text">
+            ¿Tienes una Gift Card?
+          </h2>
+        </div>
+
+        {gcApplied ? (
+          <div className="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-green-800">
+                Gift Card aplicada: -{formatCLP(Math.min(gcBalance, 999999))}
+              </p>
+              <p className="text-xs text-green-600">
+                Saldo disponible: {formatCLP(gcBalance)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveGiftCard}
+              className="text-sm text-green-700 underline hover:text-green-900"
+            >
+              Quitar
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex gap-3">
+              <Input
+                value={gcCode}
+                onChange={(e) => {
+                  setGcCode(formatGcInput(e.target.value));
+                  setGcError("");
+                }}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                className="flex-1 font-mono uppercase tracking-wider"
+                maxLength={19}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleApplyGiftCard}
+                loading={gcValidating}
+                disabled={gcCode.replace(/-/g, "").length < 16}
+              >
+                Aplicar
+              </Button>
+            </div>
+            {gcError && (
+              <p className="mt-2 text-sm text-red-600">{gcError}</p>
             )}
           </div>
         )}

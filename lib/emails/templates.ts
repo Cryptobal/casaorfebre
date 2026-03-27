@@ -1110,3 +1110,75 @@ export async function sendReviewReminderEmail(
      </p>`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Gift Card — Email to Recipient
+// ---------------------------------------------------------------------------
+export async function sendGiftCardRecipientEmail(
+  to: string,
+  { recipientName, purchaserName, amount, code, message, expiresAt }: {
+    recipientName: string | null;
+    purchaserName: string;
+    amount: number;
+    code: string;
+    message: string | null;
+    expiresAt: Date;
+  },
+) {
+  const base = appUrl();
+  const displayCode = `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
+  const greeting = recipientName ? `${recipientName}, ` : "";
+  const expiresLabel = expiresAt.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+
+  const messageBlock = message
+    ? `<p style="margin:16px 0;padding:16px 20px;background-color:#f5f3ef;border-radius:8px;font-style:italic;color:#4a4a4a;font-size:14px;line-height:1.5;">"${message}"</p>`
+    : "";
+
+  await sendEmail(
+    to,
+    `🎁 ${purchaserName} te regaló una Gift Card Casa Orfebre`,
+    `<p style="margin:0 0 16px;font-size:16px;">¡${greeting}tienes un regalo!</p>
+     <p style="margin:0 0 16px;"><strong>${purchaserName}</strong> te envió una Gift Card de <strong>Casa Orfebre</strong> para que elijas la joya artesanal que más te guste.</p>
+     ${messageBlock}
+     <div style="margin:24px 0;padding:24px;background:linear-gradient(135deg,#f5f3ef 0%,#ebe7e0 100%);border-radius:12px;text-align:center;">
+       <p style="margin:0 0 8px;font-size:13px;color:#9e9a90;text-transform:uppercase;letter-spacing:1px;">Tu Gift Card</p>
+       <p style="margin:0 0 16px;font-size:36px;font-weight:bold;color:#8B7355;">${formatCLP(amount)}</p>
+       <p style="margin:0 0 8px;font-size:13px;color:#9e9a90;">Código</p>
+       <p style="margin:0 0 16px;font-size:22px;font-weight:bold;letter-spacing:3px;color:#1a1a18;font-family:monospace;">${displayCode}</p>
+       <p style="margin:0;font-size:12px;color:#9e9a90;">Válida hasta ${expiresLabel}</p>
+     </div>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${base}/coleccion" style="display:inline-block;padding:14px 32px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Usar mi Gift Card →</a>
+     </p>
+     <p style="margin:0 0 0;font-size:13px;color:#9e9a90;text-align:center;">Ingresa el código al momento del pago en casaorfebre.cl</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Gift Card — Email to Purchaser (confirmation)
+// ---------------------------------------------------------------------------
+export async function sendGiftCardPurchaserEmail(
+  to: string,
+  { recipientEmail, amount, code, expiresAt }: {
+    recipientEmail: string;
+    amount: number;
+    code: string;
+    expiresAt: Date;
+  },
+) {
+  const displayCode = `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
+  const expiresLabel = expiresAt.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
+
+  await sendEmail(
+    to,
+    `Tu Gift Card fue enviada a ${recipientEmail}`,
+    `<p style="margin:0 0 16px;">¡Tu Gift Card fue enviada con éxito!</p>
+     <p style="margin:0 0 16px;">Enviamos una Gift Card de <strong>${formatCLP(amount)}</strong> a <strong>${recipientEmail}</strong>.</p>
+     <p style="margin:0 0 8px;">El destinatario recibirá un email con las instrucciones para usar su Gift Card.</p>
+     <div style="margin:24px 0;padding:20px;background-color:#f5f3ef;border-radius:8px;">
+       <p style="margin:0 0 4px;font-size:13px;color:#9e9a90;">Código (por si lo necesitas)</p>
+       <p style="margin:0 0 8px;font-size:18px;font-weight:bold;letter-spacing:2px;font-family:monospace;">${displayCode}</p>
+       <p style="margin:0;font-size:12px;color:#9e9a90;">Válida hasta ${expiresLabel}</p>
+     </div>`,
+  );
+}

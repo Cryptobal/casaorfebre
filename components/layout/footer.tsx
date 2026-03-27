@@ -7,6 +7,7 @@ const footerColumns = [
     links: [
       { href: "/coleccion", label: "Colección" },
       { href: "/orfebres", label: "Orfebres" },
+      { href: "/gift-cards", label: "Gift Cards" },
       { href: "/blog", label: "Blog" },
     ],
   },

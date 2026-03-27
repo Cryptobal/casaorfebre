@@ -22,6 +22,7 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/disputas", label: "Disputas" },
   { href: "/portal/admin/devoluciones", label: "Devoluciones" },
   { href: "/portal/admin/catalogo", label: "Catálogo" },
+  { href: "/portal/admin/gift-cards", label: "Gift Cards" },
   { href: "/portal/admin/finanzas", label: "Finanzas" },
   { href: "/portal/admin/mensajes", label: "Mensajes" },
 ];
@@ -39,6 +40,7 @@ const ARTISAN_LINKS = [
 
 const BUYER_LINKS = [
   { href: "/portal/comprador/pedidos", label: "Mis Pedidos" },
+  { href: "/portal/comprador/gift-cards", label: "Gift Cards" },
   { href: "/portal/comprador/mensajes", label: "Mensajes" },
   { href: "/portal/comprador/favoritos", label: "Favoritos" },
   { href: "/portal/comprador/listas", label: "Mis Listas" },
@@ -103,6 +105,7 @@ export default async function PortalLayout({ children }: { children: React.React
               <Link href="/portal/admin/devoluciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Devoluciones</Link>
               <Link href="/portal/admin/catalogo" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Catálogo</Link>
               <Link href="/portal/admin/compradores" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Compradores</Link>
+              <Link href="/portal/admin/gift-cards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
               <Link href="/portal/admin/finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
               <Link href="/portal/admin/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
             </>
@@ -125,6 +128,7 @@ export default async function PortalLayout({ children }: { children: React.React
                 <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-widest text-text-tertiary">Comprador</p>
               )}
               <Link href="/portal/comprador/pedidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Pedidos</Link>
+              <Link href="/portal/comprador/gift-cards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
               <Link href="/portal/comprador/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
               <Link href="/portal/comprador/favoritos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Favoritos</Link>
               <Link href="/portal/comprador/listas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Listas</Link>

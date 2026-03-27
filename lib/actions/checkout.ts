@@ -7,6 +7,11 @@ import { createArtisanPreference } from "@/lib/mercadopago-split";
 import { getCart } from "@/lib/queries/cart";
 import { validateDiscountCode, markRewardAsUsed } from "@/lib/actions/referral";
 import { checkoutLimiter } from "@/lib/rate-limit";
+import { normalizeGiftCardCode } from "@/lib/gift-cards";
+import {
+  sendPurchaseConfirmationEmail,
+  sendNewOrderToArtisanEmail,
+} from "@/lib/emails/templates";
 
 function generateOrderNumber(): string {
   const year = new Date().getFullYear();
@@ -112,7 +117,27 @@ export async function createCheckoutPreference(formData: FormData) {
     }
   }
 
-  const total = subtotal + shippingCost + giftWrappingPrice - discountAmount;
+  // Handle gift card
+  let giftCardDiscount = 0;
+  let giftCardCode: string | null = null;
+  const rawGiftCardCode = formData.get("giftCardCode") as string | null;
+
+  if (rawGiftCardCode) {
+    const normalized = normalizeGiftCardCode(rawGiftCardCode);
+    const gc = await prisma.giftCard.findUnique({ where: { code: normalized } });
+    if (
+      gc &&
+      (gc.status === "ACTIVE" || gc.status === "PARTIALLY_USED") &&
+      gc.balance > 0 &&
+      gc.expiresAt > new Date()
+    ) {
+      const preGcTotal = subtotal + shippingCost + giftWrappingPrice - discountAmount;
+      giftCardDiscount = Math.min(gc.balance, preGcTotal);
+      giftCardCode = normalized;
+    }
+  }
+
+  const total = Math.max(0, subtotal + shippingCost + giftWrappingPrice - discountAmount - giftCardDiscount);
 
   // Create order as PENDING_PAYMENT
   const orderNumber = generateOrderNumber();
@@ -133,6 +158,8 @@ export async function createCheckoutPreference(formData: FormData) {
       giftMessage,
       giftWrapping,
       giftWrappingPrice,
+      giftCardDiscount,
+      giftCardCode,
       total,
       status: "PENDING_PAYMENT",
       items: {
@@ -171,6 +198,111 @@ export async function createCheckoutPreference(formData: FormData) {
       shippingPostalCode,
     },
   });
+
+  // If gift card covers the full amount, no MP needed — mark as PAID directly
+  if (total === 0 && giftCardCode && giftCardDiscount > 0) {
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "PAID" },
+    });
+
+    // Destock products
+    await Promise.all(
+      cartItems.map(async (item: any) => {
+        const product = await prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (product.stock <= 0) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { status: "SOLD_OUT" },
+          });
+        }
+      })
+    );
+
+    // Deduct gift card balance
+    const gc = await prisma.giftCard.findUnique({ where: { code: giftCardCode } });
+    if (gc) {
+      const newBalance = gc.balance - giftCardDiscount;
+      await prisma.giftCard.update({
+        where: { code: giftCardCode },
+        data: {
+          balance: newBalance,
+          status: newBalance <= 0 ? "REDEEMED" : "PARTIALLY_USED",
+          redeemedAt: gc.redeemedAt ?? new Date(),
+        },
+      });
+      await prisma.giftCardUsage.create({
+        data: {
+          giftCardId: gc.id,
+          orderId: order.id,
+          amount: giftCardDiscount,
+        },
+      });
+    }
+
+    // Clear cart
+    await prisma.cartItem.deleteMany({ where: { userId: session.user.id } });
+
+    // Mark referral reward as used
+    if (discountRewardId) {
+      try { await markRewardAsUsed(discountRewardId, order.id); } catch {}
+    }
+
+    // Send emails
+    try {
+      await sendPurchaseConfirmationEmail(session.user.email, {
+        name: session.user.name || "Cliente",
+        orderNumber: order.orderNumber,
+        items: cartItems.map((i: any) => ({
+          name: i.product.name,
+          price: i.product.price,
+          quantity: i.quantity,
+        })),
+        total: 0,
+        isGift,
+        giftMessage,
+        giftWrapping,
+      });
+    } catch {}
+
+    const artisanIds = [...new Set(products.map((p: any) => p.artisan?.id).filter(Boolean))];
+    const artisans = await prisma.artisan.findMany({
+      where: { id: { in: artisanIds as string[] } },
+      include: { user: { select: { email: true } } },
+    });
+    for (const artisan of artisans) {
+      if (artisan?.user?.email) {
+        try {
+          const artisanItems = cartItems.filter(
+            (i: any) => productMap.get(i.productId)?.artisan?.id === artisan.id
+          );
+          await sendNewOrderToArtisanEmail(artisan.user.email, {
+            artisanName: artisan.displayName,
+            orderNumber: order.orderNumber,
+            orderId: order.id,
+            items: artisanItems.map((i: any) => ({
+              name: i.product.name,
+              price: i.product.price,
+              quantity: i.quantity,
+            })),
+            shippingName,
+            shippingAddress,
+            shippingCity,
+            shippingRegion,
+            isGift,
+            giftMessage,
+            giftWrapping,
+          });
+        } catch {}
+      }
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    return { success: true, redirectUrl: `${appUrl}/checkout/success` };
+  }
 
   // Determine if we can use split payment (artisan has MP OAuth connected)
   // Split only works for single-artisan carts where the artisan has mpAccessToken

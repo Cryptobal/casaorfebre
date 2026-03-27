@@ -54,6 +54,9 @@ model User {
   buyerConversations Conversation[] @relation("BuyerConversations")
   sentMessages       Message[]
 
+  // Gift cards
+  giftCardsPurchased GiftCard[] @relation("GiftCardsPurchased")
+
   @@map("users")
 }
 
@@ -261,10 +264,14 @@ model Order {
   giftMessage        String?
   giftWrapping       Boolean     @default(false)
   giftWrappingPrice  Int         @default(0)
+  giftCardDiscount   Int         @default(0)
+  giftCardCode       String?
   disputes           Dispute[]
   items              OrderItem[]
   referralRewards    ReferralReward[]
   user               User        @relation(fields: [userId], references: [id])
+  giftCard           GiftCard?   @relation("GiftCardOrder")
+  giftCardUsages     GiftCardUsage[]
 
   @@index([userId])
   @@map("orders")
@@ -658,6 +665,57 @@ enum MembershipStatus {
   ACTIVE
   CANCELLED
   EXPIRED
+}
+
+// ---------------------------------------------------------------------------
+// Gift Cards
+// ---------------------------------------------------------------------------
+
+enum GiftCardStatus {
+  ACTIVE
+  PARTIALLY_USED
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
+model GiftCard {
+  id             String         @id @default(cuid())
+  code           String         @unique
+  amount         Int
+  balance        Int
+  purchaserId    String
+  purchaser      User           @relation("GiftCardsPurchased", fields: [purchaserId], references: [id])
+  recipientEmail String
+  recipientName  String?
+  message        String?
+  status         GiftCardStatus @default(ACTIVE)
+  purchasedAt    DateTime       @default(now())
+  redeemedAt     DateTime?
+  expiresAt      DateTime
+  orderId        String?        @unique
+  order          Order?         @relation("GiftCardOrder", fields: [orderId], references: [id])
+  usedInOrders   GiftCardUsage[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([purchaserId])
+  @@index([recipientEmail])
+  @@map("gift_cards")
+}
+
+model GiftCardUsage {
+  id         String   @id @default(cuid())
+  giftCardId String
+  giftCard   GiftCard @relation(fields: [giftCardId], references: [id])
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  amount     Int
+  createdAt  DateTime @default(now())
+
+  @@index([giftCardId])
+  @@index([orderId])
+  @@map("gift_card_usages")
 }
 
 // ---------------------------------------------------------------------------

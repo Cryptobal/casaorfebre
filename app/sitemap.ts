@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/terminos`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
     { url: `${baseUrl}/privacidad`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
     { url: `${baseUrl}/postular`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${baseUrl}/gift-cards`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.7 },
   ];
 
   // Category SEO pages

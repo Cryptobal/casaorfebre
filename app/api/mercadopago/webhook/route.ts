@@ -7,8 +7,11 @@ import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
   sendSubscriptionActivatedEmail,
+  sendGiftCardRecipientEmail,
+  sendGiftCardPurchaserEmail,
 } from "@/lib/emails/templates";
 import { createReferralRewardIfApplicable } from "@/lib/actions/referral";
+import { generateGiftCardCode } from "@/lib/gift-cards";
 
 /**
  * Validates MercadoPago webhook signature (x-signature header).
@@ -168,6 +171,31 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
       })
     );
 
+    // Deduct gift card balance if used
+    if (order.giftCardCode && order.giftCardDiscount > 0) {
+      const gc = await prisma.giftCard.findUnique({
+        where: { code: order.giftCardCode },
+      });
+      if (gc) {
+        const newBalance = gc.balance - order.giftCardDiscount;
+        await prisma.giftCard.update({
+          where: { code: order.giftCardCode },
+          data: {
+            balance: Math.max(0, newBalance),
+            status: newBalance <= 0 ? "REDEEMED" : "PARTIALLY_USED",
+            redeemedAt: gc.redeemedAt ?? new Date(),
+          },
+        });
+        await prisma.giftCardUsage.create({
+          data: {
+            giftCardId: gc.id,
+            orderId: order.id,
+            amount: order.giftCardDiscount,
+          },
+        });
+      }
+    }
+
     // Clear cart for the buyer
     await prisma.cartItem.deleteMany({
       where: { userId: order.userId },
@@ -246,6 +274,101 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
   }
 }
 
+/**
+ * Handles gift card purchase payment.
+ */
+async function handleGiftCardPayment(payment: any, paymentId: string | number) {
+  if (payment.status !== "approved") return;
+
+  const metadata = payment.metadata as Record<string, unknown>;
+  const purchaserId = metadata?.purchaser_id as string;
+  const purchaserEmail = metadata?.purchaser_email as string;
+  const purchaserName = metadata?.purchaser_name as string || "Alguien especial";
+  const recipientEmail = metadata?.recipient_email as string;
+  const recipientName = (metadata?.recipient_name as string) || null;
+  const message = (metadata?.message as string) || null;
+  const amount = Number(metadata?.amount);
+
+  if (!purchaserId || !recipientEmail || !amount) {
+    console.error("[webhook] Gift card payment missing metadata", metadata);
+    return;
+  }
+
+  // Check if this payment was already processed (idempotency)
+  const existingOrder = await prisma.order.findUnique({
+    where: { mpPaymentId: String(paymentId) },
+  });
+  if (existingOrder) return;
+
+  // Generate unique code
+  const code = await generateGiftCardCode();
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+  // Create order for tracking
+  const orderNumber = `CO-GC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+  const order = await prisma.order.create({
+    data: {
+      orderNumber,
+      userId: purchaserId,
+      shippingName: "Gift Card Digital",
+      shippingAddress: "N/A",
+      shippingCity: "N/A",
+      shippingRegion: "N/A",
+      subtotal: amount,
+      total: amount,
+      status: "PAID",
+      mpPaymentId: String(paymentId),
+    },
+  });
+
+  // Create gift card
+  await prisma.giftCard.create({
+    data: {
+      code,
+      amount,
+      balance: amount,
+      purchaserId,
+      recipientEmail,
+      recipientName,
+      message,
+      status: "ACTIVE",
+      expiresAt,
+      orderId: order.id,
+    },
+  });
+
+  // Send emails
+  try {
+    await sendGiftCardRecipientEmail(recipientEmail, {
+      recipientName,
+      purchaserName,
+      amount,
+      code,
+      message,
+      expiresAt,
+    });
+  } catch (e) {
+    console.error("[webhook] Gift card recipient email failed:", e);
+  }
+
+  if (purchaserEmail) {
+    try {
+      await sendGiftCardPurchaserEmail(purchaserEmail, {
+        recipientEmail,
+        amount,
+        code,
+        expiresAt,
+      });
+    } catch (e) {
+      console.error("[webhook] Gift card purchaser email failed:", e);
+    }
+  }
+
+  console.log(`[webhook] Gift card created: ${code}, amount=${amount}, recipient=${recipientEmail}`);
+}
+
 export async function POST(request: Request) {
   try {
     // Rate limit: 100/min by IP to prevent abuse
@@ -287,12 +410,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // Distinguish between product payments and subscription payments
+    // Distinguish between product payments, subscription payments, and gift cards
     const metadata = payment.metadata as Record<string, unknown> | undefined;
     const isSubscription = metadata?.type === "subscription";
+    const isGiftCard = metadata?.type === "giftcard" ||
+      (typeof payment.external_reference === "string" && payment.external_reference.startsWith("giftcard_"));
 
     if (isSubscription) {
       await handleSubscriptionPayment(payment);
+    } else if (isGiftCard) {
+      await handleGiftCardPayment(payment, paymentId);
     } else {
       await handleProductPayment(payment, paymentId);
     }
