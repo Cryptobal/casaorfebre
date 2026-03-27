@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
@@ -18,6 +19,7 @@ export function CartButton({
   initialTotal,
   isLoggedIn,
 }: CartButtonProps) {
+  const pathname = usePathname();
   const { status } = useSession();
   const loggedIn =
     status === "authenticated" || (isLoggedIn && status === "loading");
@@ -25,6 +27,18 @@ export function CartButton({
   const [isOpen, setIsOpen] = useState(false);
   const [guestItems, setGuestItems] = useState<SerializedCartItem[]>([]);
   const [guestTotal, setGuestTotal] = useState(0);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function onCloseCart() {
+      setIsOpen(false);
+    }
+    window.addEventListener("casaorfebre:close-cart", onCloseCart);
+    return () => window.removeEventListener("casaorfebre:close-cart", onCloseCart);
+  }, []);
 
   const hydrateGuest = useCallback(async () => {
     const lines = readGuestCartLines();
@@ -69,6 +83,7 @@ export function CartButton({
   return (
     <>
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Carrito"
         className="relative text-text-secondary transition-colors hover:text-text"

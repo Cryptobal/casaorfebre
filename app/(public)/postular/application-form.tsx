@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { submitApplication } from "@/lib/actions/application";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,18 +51,26 @@ function stripNonDigits(value: string, maxLen: number) {
   return value.replace(/\D/g, "").slice(0, maxLen);
 }
 
+/** Orden alfabético para etiquetas en español (incluye tildes y ñ). */
+function sortAlphabeticalEs(items: string[]): string[] {
+  return [...items].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+}
+
 export function ApplicationForm({
   specialties: specialtiesProp,
   categories: categoriesProp,
   materials: materialsProp,
   selectedPlan,
 }: ApplicationFormProps) {
-  const opcionesEspecialidad =
-    specialtiesProp && specialtiesProp.length > 0 ? specialtiesProp : DEFAULT_ESPECIALIDADES;
-  const opcionesCategoria =
-    categoriesProp && categoriesProp.length > 0 ? categoriesProp : CATEGORIAS_FALLBACK;
-  const MATERIALES =
-    materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES;
+  const opcionesEspecialidad = sortAlphabeticalEs(
+    specialtiesProp && specialtiesProp.length > 0 ? specialtiesProp : DEFAULT_ESPECIALIDADES
+  );
+  const opcionesCategoria = sortAlphabeticalEs(
+    categoriesProp && categoriesProp.length > 0 ? categoriesProp : CATEGORIAS_FALLBACK
+  );
+  const MATERIALES = sortAlphabeticalEs(
+    materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES
+  );
   const [state, formAction, pending] = useActionState(submitApplication, null);
 
   const [firstName, setFirstName] = useState("");
@@ -84,6 +92,12 @@ export function ApplicationForm({
 
   const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
   const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
+
+  useEffect(() => {
+    if (state?.success) {
+      window.dispatchEvent(new CustomEvent("casaorfebre:close-cart"));
+    }
+  }, [state?.success]);
 
   if (state?.success) {
     return (

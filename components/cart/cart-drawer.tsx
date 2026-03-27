@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
 import { CartItem, type SerializedCartItem } from "./cart-item";
@@ -24,6 +25,10 @@ function groupByArtisan(items: SerializedCartItem[]) {
   return groups;
 }
 
+/** z-index por encima del header (z-50) y overlays habituales; portal a body evita bugs de stacking con backdrop-blur en el header. */
+const Z_BACKDROP = 200;
+const Z_PANEL = 210;
+
 export function CartDrawer({
   isOpen,
   onClose,
@@ -31,6 +36,12 @@ export function CartDrawer({
   total,
   isGuest = false,
 }: CartDrawerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
@@ -43,24 +54,35 @@ export function CartDrawer({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   const grouped = groupByArtisan(items);
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  return (
+  const drawer = (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-black/20 transition-opacity duration-300 ${
+        style={{ zIndex: Z_BACKDROP }}
+        className={`fixed inset-0 bg-black/20 transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel */}
+      {/* Panel: pointer-events y stacking explícitos para que el cierre funcione siempre */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-surface shadow-xl transition-transform duration-300 ease-in-out sm:w-96 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        style={{ zIndex: Z_PANEL }}
+        className={`pointer-events-auto fixed inset-y-0 right-0 flex w-full flex-col bg-surface shadow-xl transition-transform duration-300 ease-in-out sm:w-96 ${
+          isOpen ? "translate-x-0" : "pointer-events-none translate-x-full"
         }`}
       >
         {/* Header */}
@@ -69,9 +91,10 @@ export function CartDrawer({
             Tu Carrito ({count})
           </h2>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Cerrar carrito"
-            className="flex h-10 w-10 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-background hover:text-text"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-background hover:text-text"
           >
             <svg
               width="20"
@@ -150,4 +173,8 @@ export function CartDrawer({
       </div>
     </>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(drawer, document.body);
 }
