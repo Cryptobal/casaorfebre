@@ -33,3 +33,10 @@ export const webhookLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(100, "1 m"),
   prefix: "rl:webhook",
 });
+
+/** Fotos en formulario público de postulación (sin sesión) — por IP */
+export const applicationPhotoLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 h"),
+  prefix: "rl:app-photo",
+});
