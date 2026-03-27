@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAllArtisans } from "@/lib/queries/admin";
 import { suspendArtisan } from "@/lib/actions/admin";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,9 @@ export default async function OrfebresPage() {
                   return (
                     <tr key={artisan.id}>
                       <td className="py-3 pr-4 font-medium">
-                        {artisan.displayName}
+                        <Link href={`/portal/admin/orfebres/${artisan.id}`} className="text-accent hover:underline">
+                          {artisan.displayName}
+                        </Link>
                         {hasOverrides && (
                           <span className="ml-1.5 inline-block rounded bg-amber-50 px-1 py-0.5 text-[10px] text-amber-600">
                             override

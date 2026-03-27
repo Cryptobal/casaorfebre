@@ -35,6 +35,13 @@ model User {
   verificationToken        String?
   verificationTokenExpires DateTime?
 
+  // Password reset (credentials only)
+  passwordResetToken        String?
+  passwordResetExpires      DateTime?
+
+  // Role switcher for admins
+  activeRole String?
+
   // Saved shipping address
   shippingName       String?
   shippingAddress    String?
@@ -42,6 +49,10 @@ model User {
   shippingRegion     String?
   shippingPostalCode String?
   shippingPhone      String?
+
+  // Chat relations
+  buyerConversations Conversation[] @relation("BuyerConversations")
+  sentMessages       Message[]
 
   @@map("users")
 }
@@ -117,6 +128,7 @@ model Artisan {
   products            Product[]
   reviews             Review[]
   subscriptions       MembershipSubscription[]
+  conversations       Conversation[]
 
   @@map("artisans")
 }
@@ -171,6 +183,7 @@ model Product {
   artisan        Artisan           @relation(fields: [artisanId], references: [id])
   reviews        Review[]
   wishlistItems  WishlistItem[]
+  conversations  Conversation[]
 
   @@index([artisanId])
   @@index([category])
@@ -634,6 +647,61 @@ enum MembershipStatus {
   ACTIVE
   CANCELLED
   EXPIRED
+}
+
+// ---------------------------------------------------------------------------
+// Chat / Messaging
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id               String             @id @default(cuid())
+  buyerId          String
+  buyer            User               @relation("BuyerConversations", fields: [buyerId], references: [id])
+  artisanId        String
+  artisan          Artisan            @relation(fields: [artisanId], references: [id])
+  productId        String?
+  product          Product?           @relation(fields: [productId], references: [id])
+  status           ConversationStatus @default(ACTIVE)
+  hasBypassAttempt Boolean            @default(false)
+  lastMessageAt    DateTime           @default(now())
+  lastNotifiedBuyerAt  DateTime?
+  lastNotifiedArtisanAt DateTime?
+  messages         Message[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([buyerId, artisanId])
+  @@index([artisanId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String            @id @default(cuid())
+  conversationId String
+  conversation   Conversation      @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User              @relation(fields: [senderId], references: [id])
+  senderRole     MessageSenderRole
+  content        String
+  isRead         Boolean           @default(false)
+  isBlocked      Boolean           @default(false)
+  blockedReason  String?
+  createdAt      DateTime          @default(now())
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  BLOCKED
+}
+
+enum MessageSenderRole {
+  BUYER
+  ARTISAN
+  ADMIN
 }
 
 model Category {

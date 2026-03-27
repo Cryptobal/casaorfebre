@@ -11,6 +11,7 @@ import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart } from "./add-to-cart";
 import { ReviewList } from "@/components/reviews/review-list";
 import { ViewTracker } from "./view-tracker";
+import { MessageArtisanButton } from "./message-artisan-button";
 import { prisma } from "@/lib/prisma";
 
 interface PageProps {
@@ -285,6 +286,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 Ver perfil completo &rarr;
               </Link>
             </div>
+            <MessageArtisanButton artisanId={artisan.id} productId={product.id} />
           </div>
 
           {/* Story */}

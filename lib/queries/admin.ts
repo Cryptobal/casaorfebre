@@ -14,6 +14,10 @@ export async function getAdminDashboardStats() {
     pendingPhotos,
     openDisputes,
     pendingReturns,
+    registeredBuyers,
+    monthlyReviews,
+    bypassConversations,
+    expiringSubs,
   ] = await Promise.all([
     prisma.orderItem.findMany({
       where: {
@@ -32,6 +36,19 @@ export async function getAdminDashboardStats() {
     }),
     prisma.returnRequest.count({
       where: { status: { in: ["REQUESTED", "APPROVED"] } },
+    }),
+    prisma.user.count({ where: { role: "BUYER" } }),
+    prisma.review.count({ where: { createdAt: { gte: startOfMonth } } }),
+    prisma.conversation.count({ where: { hasBypassAttempt: true, status: "ACTIVE" } }),
+    prisma.membershipSubscription.findMany({
+      where: {
+        status: "ACTIVE",
+        endDate: { lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), gte: now },
+      },
+      include: {
+        artisan: { select: { displayName: true } },
+        plan: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -56,20 +73,164 @@ export async function getAdminDashboardStats() {
   const salesCount = monthlyOrders.length;
   const avgTicket = salesCount > 0 ? Math.round(gmv / salesCount) : 0;
 
+  // Subscription revenue estimate (sum of active subscriptions for this month)
+  const activeSubs = await prisma.membershipSubscription.findMany({
+    where: { status: "ACTIVE" },
+    include: { plan: { select: { price: true } } },
+  });
+  const subscriptionRevenue = activeSubs.reduce((s, sub) => s + sub.plan.price, 0);
+
+  // Monthly orders count (whole orders, not items)
+  const monthlyOrderCount = await prisma.order.count({
+    where: {
+      createdAt: { gte: startOfMonth },
+      status: { not: "PENDING_PAYMENT" },
+    },
+  });
+
   return {
     gmv,
     commissions,
+    subscriptionRevenue,
+    monthlyOrderCount,
     salesCount,
     avgTicket,
     activeArtisans,
     publishedProducts,
+    registeredBuyers,
+    monthlyReviews,
     pendingApplications,
     pendingProducts,
     pendingPhotos,
     openDisputes,
     pendingReturns,
     lateShipments,
+    bypassConversations,
+    expiringSubs,
   };
+}
+
+// Sales by month (last 6 months)
+export async function getSalesLast6Months() {
+  const now = new Date();
+  const months: { label: string; gmv: number }[] = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const items = await prisma.orderItem.findMany({
+      where: {
+        createdAt: { gte: start, lt: end },
+        order: { status: { not: "PENDING_PAYMENT" } },
+      },
+      select: { productPrice: true, quantity: true },
+    });
+    const gmv = items.reduce((s, i) => s + i.productPrice * i.quantity, 0);
+    months.push({
+      label: start.toLocaleDateString("es-CL", { month: "short" }),
+      gmv,
+    });
+  }
+
+  return months;
+}
+
+// Artisans by plan
+export async function getArtisansByPlan() {
+  const artisans = await prisma.artisan.findMany({
+    where: { status: "APPROVED" },
+    include: {
+      subscriptions: {
+        where: { status: "ACTIVE" },
+        include: { plan: { select: { name: true } } },
+        take: 1,
+      },
+    },
+  });
+
+  const counts: Record<string, number> = { Esencial: 0, Artesano: 0, Maestro: 0 };
+  for (const a of artisans) {
+    const planName = a.subscriptions?.[0]?.plan?.name || "esencial";
+    const label = planName.charAt(0).toUpperCase() + planName.slice(1);
+    counts[label] = (counts[label] || 0) + 1;
+  }
+
+  return Object.entries(counts).map(([name, value]) => ({ name, value }));
+}
+
+// Top artisans by sales this month
+export async function getTopArtisansMonth() {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const items = await prisma.orderItem.findMany({
+    where: {
+      createdAt: { gte: startOfMonth },
+      order: { status: { not: "PENDING_PAYMENT" } },
+    },
+    include: {
+      artisan: {
+        select: {
+          displayName: true,
+          subscriptions: {
+            where: { status: "ACTIVE" },
+            include: { plan: { select: { name: true } } },
+            take: 1,
+          },
+        },
+      },
+    },
+  });
+
+  const byArtisan: Record<string, { name: string; plan: string; total: number }> = {};
+  for (const item of items) {
+    const key = item.artisanId;
+    if (!byArtisan[key]) {
+      byArtisan[key] = {
+        name: item.artisan.displayName,
+        plan: item.artisan.subscriptions?.[0]?.plan?.name || "Esencial",
+        total: 0,
+      };
+    }
+    byArtisan[key].total += item.productPrice * item.quantity;
+  }
+
+  return Object.values(byArtisan)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+}
+
+// Top products by units sold this month
+export async function getTopProductsMonth() {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const items = await prisma.orderItem.findMany({
+    where: {
+      createdAt: { gte: startOfMonth },
+      order: { status: { not: "PENDING_PAYMENT" } },
+    },
+    select: {
+      productName: true,
+      quantity: true,
+      artisan: { select: { displayName: true } },
+    },
+  });
+
+  const byProduct: Record<string, { name: string; artisan: string; units: number }> = {};
+  for (const item of items) {
+    const key = item.productName;
+    if (!byProduct[key]) {
+      byProduct[key] = { name: item.productName, artisan: item.artisan.displayName, units: 0 };
+    }
+    byProduct[key].units += item.quantity;
+  }
+
+  return Object.values(byProduct)
+    .sort((a, b) => b.units - a.units)
+    .slice(0, 5);
 }
 
 // Applications

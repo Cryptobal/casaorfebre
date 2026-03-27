@@ -911,3 +911,31 @@ export async function sendSubscriptionActivatedEmail(
      </p>`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Chat: New message notification
+// ---------------------------------------------------------------------------
+export async function sendNewMessageEmail(
+  to: string,
+  recipientName: string,
+  senderName: string,
+  messagePreview: string,
+  conversationUrl: string,
+) {
+  const url = `${appUrl()}${conversationUrl}`;
+  const preview = messagePreview.length > 100 ? messagePreview.slice(0, 100) + "..." : messagePreview;
+
+  await sendEmail(
+    to,
+    `${senderName} te envió un mensaje — Casa Orfebre`,
+    `<p style="margin:0 0 16px;">Hola ${recipientName},</p>
+     <p style="margin:0 0 16px;"><strong>${senderName}</strong> te envió un mensaje:</p>
+     <div style="margin:0 0 16px;padding:12px 16px;background-color:#f5f5f0;border-radius:8px;border-left:3px solid #8B7355;">
+       <p style="margin:0;color:#555;font-style:italic;">"${preview}"</p>
+     </div>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${url}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Responder</a>
+     </p>
+     <p style="margin:0;font-size:13px;color:#9e9a90;">Recibirás un máximo de 1 notificación cada 5 minutos por conversación.</p>`,
+  );
+}

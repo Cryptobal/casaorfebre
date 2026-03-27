@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth-provider";
 import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
 import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
+import { RoleSwitcherWrapper } from "@/components/shared/role-switcher-wrapper";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -129,6 +130,7 @@ export default function RootLayout({
           <GuestCartMerge />
           <RefCatcher />
           {children}
+          <RoleSwitcherWrapper />
         </AuthProvider>
         <GoogleAnalytics />
       </body>
