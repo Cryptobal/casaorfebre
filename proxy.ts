@@ -15,7 +15,9 @@ export default auth((req) => {
   }
 
   if (!req.auth) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
+    const loginUrl = new URL("/login", req.nextUrl);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   const email = req.auth.user?.email || "";
