@@ -151,6 +151,72 @@ export async function getAllMaterials() {
   return Array.from(materials).sort();
 }
 
+export async function getNewProducts({
+  page = 1,
+  perPage = 12,
+  category,
+  material,
+  minPrice,
+  maxPrice,
+}: {
+  page?: number;
+  perPage?: number;
+  category?: ProductCategory;
+  material?: string;
+  minPrice?: number;
+  maxPrice?: number;
+} = {}) {
+  const now = new Date();
+  let cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const where: Record<string, unknown> = {
+    status: "APPROVED" as const,
+    createdAt: { gte: cutoff },
+  };
+  if (category) where.category = category;
+  if (material) where.materials = { has: material };
+  if (minPrice || maxPrice) {
+    where.price = {
+      ...(minPrice ? { gte: minPrice } : {}),
+      ...(maxPrice ? { lte: maxPrice } : {}),
+    };
+  }
+
+  let total = await prisma.product.count({ where });
+
+  // Expand to 60 days if nothing in 30
+  if (total === 0 && !category && !material && !minPrice && !maxPrice) {
+    cutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    where.createdAt = { gte: cutoff };
+    total = await prisma.product.count({ where });
+  }
+
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    skip: (page - 1) * perPage,
+    take: perPage,
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      images: { orderBy: { position: "asc" }, take: 1 },
+    },
+  });
+
+  return { products, total, totalPages: Math.ceil(total / perPage) };
+}
+
+export async function getCuratorPicks(limit?: number) {
+  return prisma.product.findMany({
+    where: { status: "APPROVED", isCuratorPick: true },
+    orderBy: { curatorPickAt: "desc" },
+    ...(limit ? { take: limit } : {}),
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      images: { orderBy: { position: "asc" }, take: 1 },
+    },
+  });
+}
+
 type SimilarProduct = Product & {
   artisan: Pick<Artisan, "displayName" | "slug">;
   images: ProductImage[];

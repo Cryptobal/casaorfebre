@@ -135,6 +135,16 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
+      {/* Quick Links */}
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link
+          href="/portal/admin/curaduria"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#8B7355]/30 bg-[#8B7355]/5 px-4 py-2 text-sm font-medium text-[#8B7355] transition-colors hover:bg-[#8B7355]/10"
+        >
+          ✦ Curaduría
+        </Link>
+      </div>
+
       {/* Charts */}
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SalesChart data={salesData} />

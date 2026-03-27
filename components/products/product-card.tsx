@@ -92,8 +92,15 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
           </svg>
         </button>
 
+        {/* Curator Pick Badge */}
+        {product.isCuratorPick && (
+          <span className="absolute left-3 top-3 z-10 rounded-full bg-[#8B7355]/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+            Selección del Curador ✦
+          </span>
+        )}
+
         {/* Badge */}
-        {badge && (
+        {badge && !product.isCuratorPick && (
           <span className="absolute left-3 top-3 rounded-full bg-surface/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-text-secondary backdrop-blur-sm">
             {badge}
           </span>

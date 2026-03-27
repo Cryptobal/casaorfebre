@@ -693,7 +693,55 @@ export async function processRefund(
   return { success: true };
 }
 
-// 15. Mark return as received by artisan
+// 15. Curate product (mark/unmark as curator pick)
+export async function curateProduct(
+  productId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const isCuratorPick = formData.get("isCuratorPick") === "true";
+  const curatorNote = (formData.get("curatorNote") as string)?.slice(0, 300) || null;
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { status: true },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+  if (product.status !== "APPROVED") return { error: "Solo se pueden curar productos aprobados" };
+
+  if (isCuratorPick) {
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        isCuratorPick: true,
+        curatorPickAt: new Date(),
+        curatorNote,
+      },
+    });
+  } else {
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        isCuratorPick: false,
+        curatorPickAt: null,
+        curatorNote: null,
+      },
+    });
+  }
+
+  revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/admin/curaduria");
+  revalidatePath("/seleccion-del-curador");
+  revalidatePath("/");
+  return { success: true };
+}
+
+// 16. Mark return as received by artisan
 export async function markReturnReceived(
   returnRequestId: string
 ): Promise<{ error?: string; success?: boolean }> {

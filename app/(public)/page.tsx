@@ -1,12 +1,13 @@
 export const revalidate = 60;
 
 import Link from "next/link";
+import Image from "next/image";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { ProductCard } from "@/components/products/product-card";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { Button } from "@/components/ui/button";
-import { getLatestProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getLatestProducts, getCuratorPicks, getUserFavoriteIds } from "@/lib/queries/products";
 import { getFeaturedArtisans, getMaestroArtisans } from "@/lib/queries/artisans";
 import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
 import { HeroSection } from "@/components/home/hero-section";
@@ -32,10 +33,11 @@ const jsonLd = JSON.stringify([
 
 export default async function HomePage() {
   const session = await auth();
-  const [products, artisans, maestros, favoriteIds] = await Promise.all([
+  const [products, artisans, maestros, curatorPicks, favoriteIds] = await Promise.all([
     getLatestProducts(8),
     getFeaturedArtisans(3),
     getMaestroArtisans(),
+    getCuratorPicks(4),
     getUserFavoriteIds(session?.user?.id),
   ]);
 
@@ -138,6 +140,72 @@ export default async function HomePage() {
               <FadeIn delay={120}>
                 <MaestroCarousel artisans={maestros} />
               </FadeIn>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── 4.7. Selección del Curador ─── */}
+      {curatorPicks.length > 0 && (
+        <section className="py-20 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <FadeIn>
+              <SectionHeading
+                title="Selección del Curador ✦"
+                subtitle="Elegidas a mano por nuestro equipo"
+              />
+            </FadeIn>
+
+            <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {curatorPicks.map((product, i) => (
+                <FadeIn key={product.id} delay={i * 100}>
+                  <Link href={`/coleccion/${product.slug}`} className="group block">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
+                      {product.images[0]?.url ? (
+                        <Image
+                          src={product.images[0].url}
+                          alt={product.images[0].altText ?? product.name}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-surface text-text-tertiary">
+                          {product.name}
+                        </div>
+                      )}
+                      <span className="absolute left-3 top-3 rounded-full bg-[#8B7355]/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+                        Selección ✦
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-1">
+                      <p className="text-xs font-light text-text-tertiary">
+                        {product.artisan.displayName}
+                      </p>
+                      <h3 className="font-serif text-base font-medium text-text">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm font-medium text-text">
+                        ${product.price.toLocaleString("es-CL")}
+                      </p>
+                    </div>
+                    {product.curatorNote && (
+                      <p className="mt-2 text-xs italic text-text-secondary line-clamp-2">
+                        「{product.curatorNote}」
+                      </p>
+                    )}
+                  </Link>
+                </FadeIn>
+              ))}
+            </div>
+
+            <div className="mt-10 text-center">
+              <Link
+                href="/seleccion-del-curador"
+                className="text-sm font-medium text-accent transition-colors hover:text-accent-dark"
+              >
+                Ver todas las selecciones &rarr;
+              </Link>
             </div>
           </div>
         </section>

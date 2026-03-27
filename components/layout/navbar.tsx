@@ -8,6 +8,8 @@ import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinks = [
   { href: "/coleccion", label: "Colección" },
+  { href: "/lo-nuevo", label: "Lo Nuevo" },
+  { href: "/seleccion-del-curador", label: "Selección del Curador" },
   { href: "/orfebres", label: "Orfebres" },
   { href: "/postular", label: "Postular" },
 ];
