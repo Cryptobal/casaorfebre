@@ -124,6 +124,53 @@ export default async function OrderDetailPage({
         </Card>
       </div>
 
+      {/* Gift info */}
+      {item.order.isGift && (
+        <Card className="mt-6 border-amber-200 bg-amber-50/60">
+          <div className="flex items-center gap-2">
+            <span className="text-lg" role="img" aria-label="Regalo">🎁</span>
+            <h2 className="text-sm font-semibold text-amber-900">
+              Este pedido es un regalo
+            </h2>
+          </div>
+
+          {item.order.giftMessage && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-white p-3">
+              <p className="text-xs font-medium text-text-secondary">
+                Mensaje del comprador para incluir en el paquete:
+              </p>
+              <p className="mt-1.5 text-sm italic text-text">
+                &ldquo;{item.order.giftMessage}&rdquo;
+              </p>
+            </div>
+          )}
+
+          {item.order.giftWrapping && (
+            <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-200 bg-white p-3">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mt-0.5 flex-shrink-0 text-amber-600"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+              <p className="text-xs text-amber-800">
+                El comprador solicitó empaque de regalo. Por favor incluye caja
+                de regalo y escribe el mensaje en una tarjeta.
+              </p>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Fulfillment actions */}
       <Card className="mt-6">
         <h2 className="text-sm font-medium text-text-secondary">Acciones</h2>

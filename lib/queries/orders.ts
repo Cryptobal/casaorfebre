@@ -29,6 +29,9 @@ export async function getArtisanOrderDetail(orderItemId: string, artisanId: stri
           shippingPostalCode: true,
           shippingCountry: true,
           createdAt: true,
+          isGift: true,
+          giftMessage: true,
+          giftWrapping: true,
           // NEVER include user email or phone
         },
       },

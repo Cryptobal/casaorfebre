@@ -114,12 +114,30 @@ export default async function PedidosPage({
                       <details>
                         <summary className="cursor-pointer font-medium">
                           {order.orderNumber}
+                          {order.isGift && (
+                            <span className="ml-1.5" title="Pedido regalo" role="img" aria-label="Regalo">🎁</span>
+                          )}
                           {hasLateItems && (
                             <span className="ml-2 text-xs text-red-600">
                               Atrasado
                             </span>
                           )}
                         </summary>
+                        {order.isGift && (
+                          <div className="mt-2 ml-2 rounded border border-amber-200 bg-amber-50 p-2 text-xs">
+                            <p className="font-medium text-amber-900">🎁 Pedido regalo</p>
+                            {order.giftMessage && (
+                              <p className="mt-1 italic text-amber-800">
+                                &ldquo;{order.giftMessage}&rdquo;
+                              </p>
+                            )}
+                            {order.giftWrapping && (
+                              <p className="mt-1 text-amber-700">
+                                Empaque de regalo solicitado
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <div className="mt-2 space-y-2 pl-2">
                           {order.items.map((item: any) => (
                             <div

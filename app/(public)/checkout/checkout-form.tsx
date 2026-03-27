@@ -72,6 +72,11 @@ export function CheckoutForm({
   const [cityChoice, setCityChoice] = useState(initialShipping.cityChoice);
   const [cityOther, setCityOther] = useState(initialShipping.cityOther);
 
+  // Gift state
+  const [isGift, setIsGift] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+  const [giftWrapping, setGiftWrapping] = useState(false);
+
   // Discount code state
   const [discountCode, setDiscountCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -160,6 +165,15 @@ export function CheckoutForm({
       formData.set("discountCode", discountCode.trim().toUpperCase());
       formData.set("discountRewardId", discountRewardId);
       formData.set("discountAmount", String(discountAmount));
+    }
+    if (isGift) {
+      formData.set("isGift", "true");
+      if (giftMessage.trim()) {
+        formData.set("giftMessage", giftMessage.trim().slice(0, 200));
+      }
+      if (giftWrapping) {
+        formData.set("giftWrapping", "true");
+      }
     }
 
     startTransition(async () => {
@@ -395,6 +409,119 @@ export function CheckoutForm({
             <p className="mt-2 text-xs text-text-tertiary">
               Si tienes un código de referido, ingrésalo aquí para obtener tu descuento.
             </p>
+          </div>
+        )}
+      </fieldset>
+
+      {/* Gift options */}
+      <fieldset className="rounded-lg border border-border bg-surface p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-accent"
+            >
+              <rect x="3" y="8" width="18" height="4" rx="1" />
+              <path d="M12 8v13" />
+              <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+              <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5" />
+            </svg>
+            <h2 className="text-lg font-medium text-text">
+              ¿Es un regalo?
+            </h2>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isGift}
+            aria-label={isGift ? "Desactivar opción de regalo" : "Activar opción de regalo"}
+            onClick={() => setIsGift(!isGift)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isGift ? "bg-accent" : "bg-border"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                isGift ? "translate-x-[24px]" : "translate-x-[3px]"
+              }`}
+            />
+          </button>
+        </div>
+
+        {isGift && (
+          <div className="mt-5 animate-in fade-in slide-in-from-top-2 space-y-4 duration-200">
+            <div>
+              <Label htmlFor="giftMessage">
+                Mensaje personal{" "}
+                <span className="font-normal text-text-tertiary">(opcional)</span>
+              </Label>
+              <textarea
+                id="giftMessage"
+                value={giftMessage}
+                onChange={(e) =>
+                  setGiftMessage(e.target.value.slice(0, 200))
+                }
+                placeholder="Escribe tu mensaje aquí..."
+                rows={3}
+                className="mt-1 w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              />
+              <p className="mt-1 text-right text-xs text-text-tertiary">
+                {giftMessage.length}/200
+              </p>
+            </div>
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition-colors hover:bg-background">
+              <input
+                type="checkbox"
+                checked={giftWrapping}
+                onChange={(e) => setGiftWrapping(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+              />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-text">
+                    Agregar empaque de regalo
+                  </span>
+                  <span className="text-sm font-medium text-green-700">
+                    Gratis
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-text-secondary">
+                  Incluye caja de regalo y tarjeta con tu mensaje escrito a mano
+                  por el orfebre
+                </p>
+              </div>
+            </label>
+
+            {giftMessage.trim() && (
+              <div className="flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2.5">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mt-0.5 flex-shrink-0 text-amber-600"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+                <p className="text-xs text-amber-800">
+                  Tu mensaje aparecerá en una tarjeta dentro del paquete
+                </p>
+              </div>
+            )}
           </div>
         )}
       </fieldset>

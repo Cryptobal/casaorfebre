@@ -82,6 +82,17 @@ export async function createCheckoutPreference(formData: FormData) {
   );
   const shippingCost = 0; // Free for MVP
 
+  // Parse gift options
+  const isGift = formData.get("isGift") === "true";
+  const rawGiftMessage = (formData.get("giftMessage") as string | null) ?? "";
+  // Sanitize: strip HTML tags and cap at 200 chars
+  const giftMessage = isGift
+    ? rawGiftMessage.replace(/<[^>]*>/g, "").trim().slice(0, 200) || null
+    : null;
+  const giftWrapping = isGift && formData.get("giftWrapping") === "true";
+  // Server-side price (0 for now, ready for future pricing)
+  const giftWrappingPrice = giftWrapping ? 0 : 0;
+
   // Handle discount code
   let discountAmount = 0;
   let discountCodeValue: string | null = null;
@@ -101,7 +112,7 @@ export async function createCheckoutPreference(formData: FormData) {
     }
   }
 
-  const total = subtotal + shippingCost - discountAmount;
+  const total = subtotal + shippingCost + giftWrappingPrice - discountAmount;
 
   // Create order as PENDING_PAYMENT
   const orderNumber = generateOrderNumber();
@@ -118,6 +129,10 @@ export async function createCheckoutPreference(formData: FormData) {
       shippingCost,
       discountCode: discountCodeValue,
       discountAmount,
+      isGift,
+      giftMessage,
+      giftWrapping,
+      giftWrappingPrice,
       total,
       status: "PENDING_PAYMENT",
       items: {

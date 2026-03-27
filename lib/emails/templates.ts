@@ -140,31 +140,66 @@ export async function sendApplicationRejectedEmail(
 // ---------------------------------------------------------------------------
 export async function sendPurchaseConfirmationEmail(
   to: string,
-  { name, orderNumber, items, total }: {
+  { name, orderNumber, items, total, isGift, giftMessage, giftWrapping }: {
     name: string;
     orderNumber: string;
     items: { name: string; quantity: number; price: number }[];
     total: number;
+    isGift?: boolean;
+    giftMessage?: string | null;
+    giftWrapping?: boolean;
   },
 ) {
-  const itemRows = items
-    .map(
-      (i) =>
-        `<tr>
-          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;">${i.name}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:center;">${i.quantity}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:right;">${formatCLP(i.price)}</td>
-        </tr>`,
-    )
-    .join("");
-
   const base = appUrl();
-  await sendEmail(
-    to,
-    `Confirmación de compra #${orderNumber}`,
-    `<p style="margin:0 0 16px;">Hola ${name},</p>
-     <p style="margin:0 0 16px;">Tu compra fue confirmada. Aquí está el resumen de tu pedido <strong>#${orderNumber}</strong>:</p>
-     <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+
+  // For gift orders: hide prices, show gift section
+  let itemsHtml: string;
+  if (isGift) {
+    const giftItemRows = items
+      .map(
+        (i) =>
+          `<tr>
+            <td style="padding:8px 0;border-bottom:1px solid #e8e5df;">${i.name}</td>
+            <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:center;">${i.quantity}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const giftIncludes: string[] = [];
+    if (giftMessage) giftIncludes.push("Tarjeta con tu mensaje personal");
+    if (giftWrapping) giftIncludes.push("Empaque de regalo especial");
+
+    const giftIncludesHtml = giftIncludes.length > 0
+      ? `<div style="margin:16px 0;padding:16px;background-color:#fef9ee;border-radius:8px;border:1px solid #f3e8d0;">
+           <p style="margin:0 0 8px;font-weight:bold;">🎁 Tu regalo incluye:</p>
+           <ul style="margin:0;padding-left:20px;">
+             ${giftIncludes.map((g) => `<li style="margin-bottom:4px;">${g}</li>`).join("")}
+           </ul>
+           <p style="margin:8px 0 0;font-size:13px;color:#9e9a90;">Los precios no aparecen en el paquete</p>
+         </div>`
+      : "";
+
+    itemsHtml = `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+       <tr style="font-size:13px;color:#9e9a90;">
+         <td style="padding:8px 0;border-bottom:1px solid #e8e5df;">Producto</td>
+         <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:center;">Cant.</td>
+       </tr>
+       ${giftItemRows}
+     </table>
+     ${giftIncludesHtml}`;
+  } else {
+    const itemRows = items
+      .map(
+        (i) =>
+          `<tr>
+            <td style="padding:8px 0;border-bottom:1px solid #e8e5df;">${i.name}</td>
+            <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:center;">${i.quantity}</td>
+            <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:right;">${formatCLP(i.price)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    itemsHtml = `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
        <tr style="font-size:13px;color:#9e9a90;">
          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;">Producto</td>
          <td style="padding:8px 0;border-bottom:1px solid #e8e5df;text-align:center;">Cant.</td>
@@ -175,7 +210,15 @@ export async function sendPurchaseConfirmationEmail(
          <td colspan="2" style="padding:12px 0;font-weight:bold;">Total</td>
          <td style="padding:12px 0;text-align:right;font-weight:bold;">${formatCLP(total)}</td>
        </tr>
-     </table>
+     </table>`;
+  }
+
+  await sendEmail(
+    to,
+    `Confirmación de compra #${orderNumber}`,
+    `<p style="margin:0 0 16px;">Hola ${name},</p>
+     <p style="margin:0 0 16px;">Tu compra fue confirmada. Aquí está el resumen de tu pedido <strong>#${orderNumber}</strong>:</p>
+     ${itemsHtml}
      <p style="margin:0 0 0;">
        <a href="${base}/portal/comprador/pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
      </p>`,
@@ -196,6 +239,9 @@ export async function sendNewOrderToArtisanEmail(
     shippingAddress,
     shippingCity,
     shippingRegion,
+    isGift,
+    giftMessage,
+    giftWrapping,
   }: {
     artisanName: string;
     orderNumber: string;
@@ -205,12 +251,23 @@ export async function sendNewOrderToArtisanEmail(
     shippingAddress: string;
     shippingCity: string;
     shippingRegion: string;
+    isGift?: boolean;
+    giftMessage?: string | null;
+    giftWrapping?: boolean;
   },
 ) {
   const base = appUrl();
   const itemList = items
     .map((i) => `<li style="margin-bottom:4px;">${i.name} x${i.quantity} — ${formatCLP(i.price)}</li>`)
     .join("");
+
+  const giftHtml = isGift
+    ? `<div style="margin:0 0 16px;padding:16px;background-color:#fef9ee;border-radius:8px;border:1px solid #f3e8d0;">
+         <p style="margin:0 0 8px;font-weight:bold;">🎁 Este pedido es un regalo</p>
+         ${giftMessage ? `<p style="margin:0 0 8px;font-style:italic;">Mensaje para incluir en tarjeta: &ldquo;${giftMessage}&rdquo;</p>` : ""}
+         ${giftWrapping ? `<p style="margin:0;font-size:13px;color:#92400e;">Por favor incluye caja de regalo y escribe el mensaje en una tarjeta.</p>` : ""}
+       </div>`
+    : "";
 
   await sendEmail(
     to,
@@ -219,6 +276,7 @@ export async function sendNewOrderToArtisanEmail(
      <p style="margin:0 0 16px;">Tienes un nuevo pedido <strong>#${orderNumber}</strong>.</p>
      <p style="margin:0 0 8px;font-weight:bold;">Productos:</p>
      <ul style="margin:0 0 16px;padding-left:20px;">${itemList}</ul>
+     ${giftHtml}
      <p style="margin:0 0 8px;font-weight:bold;">Dirección de envío:</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;">
        ${shippingName}<br>

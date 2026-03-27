@@ -64,6 +64,9 @@ export default async function BuyerOrdersPage() {
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-text">
                     Pedido #{order.orderNumber}
+                    {order.isGift && (
+                      <span className="ml-1.5" role="img" aria-label="Regalo">🎁</span>
+                    )}
                   </p>
                   <p className="text-xs text-text-tertiary">
                     {order.createdAt.toLocaleDateString("es-CL", {

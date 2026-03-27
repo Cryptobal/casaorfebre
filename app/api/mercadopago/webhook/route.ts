@@ -189,6 +189,9 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
             quantity: i.quantity,
           })),
           total: order.total,
+          isGift: order.isGift,
+          giftMessage: order.giftMessage,
+          giftWrapping: order.giftWrapping,
         });
       } catch (e) {
         console.error("Email failed:", e);
@@ -220,6 +223,9 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
             shippingAddress: order.shippingAddress,
             shippingCity: order.shippingCity,
             shippingRegion: order.shippingRegion,
+            isGift: order.isGift,
+            giftMessage: order.giftMessage,
+            giftWrapping: order.giftWrapping,
           });
         } catch (e) {
           console.error("Email failed:", e);

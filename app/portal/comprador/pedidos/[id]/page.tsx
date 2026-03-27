@@ -335,6 +335,28 @@ export default async function BuyerOrderDetailPage({
         </Card>
       )}
 
+      {/* Gift info */}
+      {order.isGift && (
+        <Card className="mt-6 border-amber-200 bg-amber-50/60">
+          <div className="flex items-center gap-2">
+            <span className="text-lg" role="img" aria-label="Regalo">🎁</span>
+            <p className="text-sm font-semibold text-amber-900">
+              Este pedido es un regalo
+            </p>
+          </div>
+          {order.giftMessage && (
+            <p className="mt-2 text-sm italic text-text-secondary">
+              Tu mensaje: &ldquo;{order.giftMessage}&rdquo;
+            </p>
+          )}
+          {order.giftWrapping && (
+            <p className="mt-1 text-xs text-amber-700">
+              Empaque de regalo incluido
+            </p>
+          )}
+        </Card>
+      )}
+
       {/* Items grouped by artisan */}
       <div className="mt-8 space-y-6">
         {[...grouped.entries()].map(([artisanName, items]) => (
