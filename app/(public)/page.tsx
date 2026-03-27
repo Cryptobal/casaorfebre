@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getLatestProducts, getUserFavoriteIds } from "@/lib/queries/products";
 import { getFeaturedArtisans, getMaestroArtisans } from "@/lib/queries/artisans";
 import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
+import { HeroSection } from "@/components/home/hero-section";
 import { auth } from "@/lib/auth";
 
 const jsonLd = JSON.stringify([
@@ -45,23 +46,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: jsonLd }}
       />
       {/* ─── 1. Hero Section ─── */}
-      <section className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
-        <FadeIn>
-          <span className="text-accent text-lg">◆</span>
-          <h1 className="mt-6 font-serif text-4xl font-light italic text-text sm:text-5xl lg:text-6xl">
-            Piezas únicas nacidas de manos chilenas
-          </h1>
-          <p className="mx-auto mt-6 max-w-lg text-base font-light text-text-secondary sm:text-lg">
-            Joyería artesanal de orfebres verificados. Cada pieza cuenta una
-            historia.
-          </p>
-          <div className="mt-10">
-            <Link href="/coleccion">
-              <Button size="lg">Explorar Colección</Button>
-            </Link>
-          </div>
-        </FadeIn>
-      </section>
+      <HeroSection />
 
       {/* ─── 2. Trust Bar ─── */}
       <section className="border-y border-border bg-surface">
