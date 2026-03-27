@@ -4,9 +4,15 @@ import { redirect } from "next/navigation";
 import { PlanSelector } from "./plan-selector";
 import Link from "next/link";
 
-export default async function PlanPage() {
+export default async function PlanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const params = await searchParams;
 
   const artisan = await prisma.artisan.findUnique({
     where: { userId: session.user.id },
@@ -80,12 +86,22 @@ export default async function PlanPage() {
         </div>
       )}
 
-      {/* Note about payment */}
-      <p className="mt-4 text-xs text-text-tertiary">
-        El cobro de la suscripción se gestiona de forma manual o vía link de
-        pago de Mercado Pago. La suscripción automática estará disponible
-        próximamente.
-      </p>
+      {/* Payment feedback */}
+      {params.sub_payment === "success" && (
+        <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Pago procesado exitosamente. Tu suscripción ha sido activada.
+        </div>
+      )}
+      {params.sub_payment === "failure" && (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          El pago no pudo ser procesado. Intenta nuevamente o elige otro medio de pago.
+        </div>
+      )}
+      {params.sub_payment === "pending" && (
+        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Tu pago está pendiente de confirmación. Te notificaremos por email cuando se confirme.
+        </div>
+      )}
 
       {/* Plan selector */}
       <div className="mt-8">

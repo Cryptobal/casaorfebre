@@ -2,6 +2,14 @@ import { resend, FROM_EMAIL } from "@/lib/resend";
 import { emailLayout } from "./base-layout";
 import { formatCLP } from "@/lib/utils";
 
+/** Base URL for links in transactional emails (no trailing slash). */
+function appUrl(): string {
+  return (process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl").replace(
+    /\/$/,
+    "",
+  );
+}
+
 async function sendEmail(to: string, subject: string, html: string) {
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -23,8 +31,7 @@ export async function sendVerificationEmail(
   to: string,
   { name, token }: { name: string; token: string },
 ) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
-  const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
+  const verifyUrl = `${appUrl()}/api/auth/verify?token=${token}`;
 
   await sendEmail(
     to,
@@ -39,12 +46,36 @@ export async function sendVerificationEmail(
 }
 
 // ---------------------------------------------------------------------------
+// 0b. Password reset
+// ---------------------------------------------------------------------------
+export async function sendPasswordResetEmail(
+  to: string,
+  { name, token }: { name: string; token: string },
+) {
+  const base = appUrl();
+  const resetUrl = `${base}/recuperar-contrasena/${encodeURIComponent(token)}`;
+
+  await sendEmail(
+    to,
+    "Contraseña — Casa Orfebre",
+    `<p style="margin:0 0 16px;">Hola ${name},</p>
+     <p style="margin:0 0 16px;">Recibimos una solicitud para <strong>crear o actualizar la contraseña</strong> de tu cuenta en <strong>Casa Orfebre</strong> (sirve también si es tu primer acceso con correo y contraseña).</p>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Definir contraseña</a>
+     </p>
+     <p style="margin:0 0 8px;font-size:13px;color:#9e9a90;">El enlace vence en 1 hora. Si no pediste este cambio, puedes ignorar este mensaje.</p>
+     <p style="margin:0;font-size:12px;color:#b5ad9e;word-break:break-all;">${resetUrl}</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 1. Buyer Welcome
 // ---------------------------------------------------------------------------
 export async function sendBuyerWelcomeEmail(
   to: string,
   { name }: { name: string },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     "Bienvenido a Casa Orfebre",
@@ -52,7 +83,7 @@ export async function sendBuyerWelcomeEmail(
      <p style="margin:0 0 16px;">Te damos la bienvenida a <strong>Casa Orfebre</strong>, tu espacio para descubrir joyería de autor hecha a mano por artesanos chilenos.</p>
      <p style="margin:0 0 16px;">Explora nuestro catálogo y encuentra piezas únicas creadas con dedicación y oficio.</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/explorar" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Explorar piezas</a>
+       <a href="${base}/coleccion" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Explorar piezas</a>
      </p>`,
   );
 }
@@ -64,18 +95,25 @@ export async function sendArtisanWelcomeEmail(
   to: string,
   { name }: { name: string },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     "¡Tu postulación fue aprobada!",
     `<p style="margin:0 0 16px;">Hola ${name},</p>
      <p style="margin:0 0 16px;">¡Felicidades! Tu postulación a <strong>Casa Orfebre</strong> ha sido aprobada. Ya formas parte de nuestra comunidad de artesanos.</p>
-     <p style="margin:0 0 16px;">Estos son tus próximos pasos:</p>
+     <p style="margin:0 0 8px;font-weight:bold;">¿Cómo ingresar al portal?</p>
+     <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;font-size:14px;line-height:1.5;">
+       Tu cuenta quedó asociada a <strong>este mismo correo</strong>. No recibiste una contraseña automática.<br><br>
+       <strong>Si usas Google</strong> (p. ej. Gmail) con este email: entra en <a href="${base}/login" style="color:#8B7355;">Iniciar sesión</a> y elige <strong>«Continuar con Google»</strong>.<br><br>
+       <strong>Si prefieres correo y contraseña:</strong> en la misma página de inicio de sesión abre <strong>«¿Olvidaste tu contraseña?»</strong>, ingresa este correo y te enviaremos un enlace para <strong>definir tu contraseña</strong> la primera vez (o cambiarla si ya tenías una).
+     </p>
+     <p style="margin:0 0 16px;">Luego, en el portal:</p>
      <ol style="margin:0 0 16px;padding-left:20px;">
        <li style="margin-bottom:8px;">Vincula tu cuenta de Mercado Pago para recibir pagos.</li>
        <li style="margin-bottom:8px;">Sube tus primeras piezas al catálogo.</li>
      </ol>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/panel" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ir a mi panel</a>
+       <a href="${base}/login" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ir a iniciar sesión</a>
      </p>`,
   );
 }
@@ -120,6 +158,7 @@ export async function sendPurchaseConfirmationEmail(
     )
     .join("");
 
+  const base = appUrl();
   await sendEmail(
     to,
     `Confirmación de compra #${orderNumber}`,
@@ -138,7 +177,7 @@ export async function sendPurchaseConfirmationEmail(
        </tr>
      </table>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/mis-pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
+       <a href="${base}/portal/comprador/pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
      </p>`,
   );
 }
@@ -148,9 +187,19 @@ export async function sendPurchaseConfirmationEmail(
 // ---------------------------------------------------------------------------
 export async function sendNewOrderToArtisanEmail(
   to: string,
-  { artisanName, orderNumber, items, shippingName, shippingAddress, shippingCity, shippingRegion }: {
+  {
+    artisanName,
+    orderNumber,
+    orderId,
+    items,
+    shippingName,
+    shippingAddress,
+    shippingCity,
+    shippingRegion,
+  }: {
     artisanName: string;
     orderNumber: string;
+    orderId: string;
     items: { name: string; quantity: number; price: number }[];
     shippingName: string;
     shippingAddress: string;
@@ -158,6 +207,7 @@ export async function sendNewOrderToArtisanEmail(
     shippingRegion: string;
   },
 ) {
+  const base = appUrl();
   const itemList = items
     .map((i) => `<li style="margin-bottom:4px;">${i.name} x${i.quantity} — ${formatCLP(i.price)}</li>`)
     .join("");
@@ -176,7 +226,7 @@ export async function sendNewOrderToArtisanEmail(
        ${shippingCity}, ${shippingRegion}
      </p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/pedidos/${orderNumber}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver pedido</a>
+       <a href="${base}/portal/orfebre/pedidos/${orderId}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver pedido</a>
      </p>`,
   );
 }
@@ -213,6 +263,7 @@ export async function sendOrderDeliveredEmail(
   to: string,
   { name, orderNumber }: { name: string; orderNumber: string },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Tu pedido #${orderNumber} fue entregado`,
@@ -220,7 +271,7 @@ export async function sendOrderDeliveredEmail(
      <p style="margin:0 0 16px;">Tu pedido <strong>#${orderNumber}</strong> fue entregado exitosamente.</p>
      <p style="margin:0 0 16px;">En unos días te invitaremos a dejar una reseña sobre las piezas que recibiste. Tu opinión ayuda a otros compradores y a los artesanos.</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/mis-pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
+       <a href="${base}/portal/comprador/pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
      </p>`,
   );
 }
@@ -236,6 +287,7 @@ export async function sendNewQuestionEmail(
     question: string;
   },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Nueva pregunta sobre ${productName}`,
@@ -243,7 +295,7 @@ export async function sendNewQuestionEmail(
      <p style="margin:0 0 16px;">Alguien hizo una pregunta sobre tu pieza <strong>${productName}</strong>:</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;font-style:italic;">"${question}"</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/preguntas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Responder</a>
+       <a href="${base}/portal/orfebre/preguntas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Responder</a>
      </p>`,
   );
 }
@@ -259,6 +311,7 @@ export async function sendQuestionAnsweredEmail(
     answer: string;
   },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Tu pregunta sobre ${productName} fue respondida`,
@@ -266,7 +319,7 @@ export async function sendQuestionAnsweredEmail(
      <p style="margin:0 0 16px;">El artesano respondió tu pregunta sobre <strong>${productName}</strong>:</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;">"${answer}"</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/explorar" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver producto</a>
+       <a href="${base}/coleccion" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver catálogo</a>
      </p>`,
   );
 }
@@ -278,6 +331,7 @@ export async function sendProductApprovedEmail(
   to: string,
   { artisanName, productName }: { artisanName: string; productName: string },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Tu pieza '${productName}' fue aprobada`,
@@ -285,7 +339,7 @@ export async function sendProductApprovedEmail(
      <p style="margin:0 0 16px;">Tu pieza <strong>${productName}</strong> fue aprobada y ya está publicada en el catálogo.</p>
      <p style="margin:0 0 16px;">Los compradores pueden verla y adquirirla desde ahora.</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/productos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis productos</a>
+       <a href="${base}/portal/orfebre/productos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis productos</a>
      </p>`,
   );
 }
@@ -301,6 +355,7 @@ export async function sendProductRejectedEmail(
     reason: string;
   },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Sobre tu pieza '${productName}'`,
@@ -309,7 +364,7 @@ export async function sendProductRejectedEmail(
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;"><strong>Motivo:</strong> ${reason}</p>
      <p style="margin:0 0 16px;">Puedes editar la publicación y enviarla nuevamente para revisión.</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/productos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Editar producto</a>
+       <a href="${base}/portal/orfebre/productos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Editar producto</a>
      </p>`,
   );
 }
@@ -319,12 +374,14 @@ export async function sendProductRejectedEmail(
 // ---------------------------------------------------------------------------
 export async function sendShipmentAlertEmail(
   to: string,
-  { artisanName, orderNumber, daysSince }: {
+  { artisanName, orderNumber, orderId, daysSince }: {
     artisanName: string;
     orderNumber: string;
+    orderId: string;
     daysSince: number;
   },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Alerta: pedido #${orderNumber} pendiente de despacho`,
@@ -332,7 +389,7 @@ export async function sendShipmentAlertEmail(
      <p style="margin:0 0 16px;">Tu pedido <strong>#${orderNumber}</strong> lleva <strong>${daysSince} días</strong> sin ser despachado.</p>
      <p style="margin:0 0 16px;">Por favor, procesa el envío lo antes posible para mantener una buena experiencia para el comprador.</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/pedidos/${orderNumber}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver pedido</a>
+       <a href="${base}/portal/orfebre/pedidos/${orderId}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver pedido</a>
      </p>`,
   );
 }
@@ -386,6 +443,7 @@ export async function sendPayoutReleasedEmail(
   to: string,
   { artisanName, amount }: { artisanName: string; amount: number },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Pago liberado: ${formatCLP(amount)}`,
@@ -393,7 +451,7 @@ export async function sendPayoutReleasedEmail(
      <p style="margin:0 0 16px;">Se ha liberado un pago por <strong>${formatCLP(amount)}</strong> a tu cuenta de Mercado Pago.</p>
      <p style="margin:0 0 16px;">El monto debería reflejarse en tu cuenta en las próximas horas.</p>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/artesano/pagos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pagos</a>
+       <a href="${base}/portal/orfebre/finanzas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver finanzas</a>
      </p>`,
   );
 }
@@ -426,6 +484,7 @@ export async function sendReturnApprovedEmail(
   to: string,
   { buyerName, productName }: { buyerName: string; productName: string },
 ) {
+  const base = appUrl();
   await sendEmail(
     to,
     `Devolución aprobada: ${productName}`,
@@ -438,7 +497,7 @@ export async function sendReturnApprovedEmail(
        <li style="margin-bottom:8px;">Ingresa el número de seguimiento en la plataforma.</li>
      </ol>
      <p style="margin:0 0 0;">
-       <a href="https://casaorfebre.cl/mis-pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
+       <a href="${base}/portal/comprador/pedidos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mis pedidos</a>
      </p>`,
   );
 }
@@ -519,7 +578,7 @@ export async function sendCertificateEmail(
     issuedDate: string;
   },
 ) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const baseUrl = appUrl();
   const verifyUrl = `${baseUrl}/verificar/${certCode}`;
   const pdfUrl = `${baseUrl}/api/certificates/${certCode}/pdf`;
   const qrUrl = `${baseUrl}/api/certificates/${certCode}/qr`;
@@ -649,7 +708,7 @@ export async function sendCertificateEmail(
             <a href="${verifyUrl}" style="color:#c9a96e;text-decoration:none;">${verifyUrl}</a>
           </p>
           <p style="font-size:11px;color:#4a4740;margin:0 0 4px;">
-            <a href="https://casaorfebre.cl" style="color:#8a8478;text-decoration:none;letter-spacing:1px;">casaorfebre.cl</a>
+            <a href="${baseUrl}" style="color:#8a8478;text-decoration:none;letter-spacing:1px;">casaorfebre.cl</a>
           </p>
           <p style="font-size:10px;color:#4a4740;margin:0;">
             Joyería de Autor &middot; Hecho a Mano en Chile
@@ -715,5 +774,140 @@ export async function sendReferralRewardEmail(
        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/coleccion" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ir a comprar</a>
      </p>
      <p style="margin:0;font-size:13px;color:#9e9a90;">V\u00e1lido hasta el ${formattedExpiry}. Aplica el c\u00f3digo en el checkout.</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 22. Subscription Renewal Request
+// ---------------------------------------------------------------------------
+export async function sendSubscriptionRenewalEmail(
+  to: string,
+  {
+    artisanName,
+    planName,
+    amount,
+    paymentUrl,
+  }: {
+    artisanName: string;
+    planName: string;
+    amount: number;
+    paymentUrl: string;
+  },
+) {
+  await sendEmail(
+    to,
+    `Tu suscripci\u00f3n al plan ${planName} se renueva hoy \u2014 Casa Orfebre`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">Tu suscripci\u00f3n al plan <strong>${planName}</strong> se renueva hoy. El monto a pagar es <strong>${formatCLP(amount)}</strong>.</p>
+     <p style="margin:0 0 16px;">Haz clic en el siguiente enlace para completar tu pago:</p>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Pagar suscripci\u00f3n</a>
+     </p>
+     <p style="margin:0;font-size:13px;color:#9e9a90;">Si no realizas el pago dentro de 10 d\u00edas, tu plan ser\u00e1 degradado a Esencial autom\u00e1ticamente.</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 23. Subscription Renewal Reminder (3 or 7 days overdue)
+// ---------------------------------------------------------------------------
+export async function sendSubscriptionReminderEmail(
+  to: string,
+  {
+    artisanName,
+    planName,
+    amount,
+    paymentUrl,
+    daysOverdue,
+  }: {
+    artisanName: string;
+    planName: string;
+    amount: number;
+    paymentUrl: string;
+    daysOverdue: number;
+  },
+) {
+  const isLastWarning = daysOverdue >= 7;
+  const subject = isLastWarning
+    ? `\u00daltimo aviso: tu plan ${planName} ser\u00e1 degradado \u2014 Casa Orfebre`
+    : `Recordatorio: renueva tu plan ${planName} \u2014 Casa Orfebre`;
+
+  await sendEmail(
+    to,
+    subject,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">${
+       isLastWarning
+         ? `Este es tu <strong>\u00faltimo aviso</strong>. Tu suscripci\u00f3n al plan <strong>${planName}</strong> venci\u00f3 hace ${daysOverdue} d\u00edas. Si no pagas en los pr\u00f3ximos d\u00edas, tu plan ser\u00e1 degradado a Esencial.`
+         : `Tu suscripci\u00f3n al plan <strong>${planName}</strong> venci\u00f3 hace ${daysOverdue} d\u00edas. Te recordamos renovar para mantener todos tus beneficios.`
+     }</p>
+     <p style="margin:0 0 16px;">Monto: <strong>${formatCLP(amount)}</strong></p>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Renovar ahora</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 24. Subscription Expired (downgraded to Esencial)
+// ---------------------------------------------------------------------------
+export async function sendSubscriptionExpiredEmail(
+  to: string,
+  {
+    artisanName,
+    planName,
+    pausedProducts,
+  }: {
+    artisanName: string;
+    planName: string;
+    pausedProducts: number;
+  },
+) {
+  const pausedMsg =
+    pausedProducts > 0
+      ? `<p style="margin:0 0 16px;">Adem\u00e1s, ${pausedProducts} producto${pausedProducts > 1 ? "s fueron pausados" : " fue pausado"} porque exced\u00edan el l\u00edmite del plan Esencial (10 productos).</p>`
+      : "";
+
+  await sendEmail(
+    to,
+    `Tu suscripci\u00f3n al plan ${planName} ha expirado \u2014 Casa Orfebre`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">Tu suscripci\u00f3n al plan <strong>${planName}</strong> ha expirado por falta de pago. Tu cuenta ha sido degradada al plan <strong>Esencial</strong> con una comisi\u00f3n del 18%.</p>
+     ${pausedMsg}
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/portal/orfebre/plan" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Renovar mi plan</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 25. Subscription Activated/Renewed Successfully
+// ---------------------------------------------------------------------------
+export async function sendSubscriptionActivatedEmail(
+  to: string,
+  {
+    artisanName,
+    planName,
+    endDate,
+  }: {
+    artisanName: string;
+    planName: string;
+    endDate: Date;
+  },
+) {
+  const formattedDate = endDate.toLocaleDateString("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  await sendEmail(
+    to,
+    `Tu plan ${planName} est\u00e1 activo \u2014 Casa Orfebre`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">Tu suscripci\u00f3n al plan <strong>${planName}</strong> ha sido activada exitosamente.</p>
+     <p style="margin:0 0 16px;">Tu plan estar\u00e1 activo hasta el <strong>${formattedDate}</strong>.</p>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/portal/orfebre" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ir a mi taller</a>
+     </p>`,
   );
 }

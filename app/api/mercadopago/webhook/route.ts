@@ -5,6 +5,7 @@ import { paymentClient } from "@/lib/mercadopago";
 import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
+  sendSubscriptionActivatedEmail,
 } from "@/lib/emails/templates";
 import { createReferralRewardIfApplicable } from "@/lib/actions/referral";
 
@@ -49,6 +50,191 @@ function validateSignature(
   return hmac === v1;
 }
 
+/**
+ * Handles subscription payment confirmation.
+ * Activates/renews the subscription and updates artisan commission.
+ */
+async function handleSubscriptionPayment(payment: any) {
+  const subscriptionId = payment.external_reference;
+  const metadata = payment.metadata as Record<string, unknown>;
+
+  if (payment.status === "approved") {
+    const sub = await prisma.membershipSubscription.findUnique({
+      where: { id: subscriptionId },
+      include: {
+        plan: true,
+        artisan: {
+          include: { user: { select: { email: true } } },
+        },
+      },
+    });
+
+    if (!sub) return;
+
+    const billingPeriod = metadata?.billing_period as string || "monthly";
+    const isAnnual = billingPeriod === "annual";
+    const durationDays = isAnnual ? 365 : 30;
+    const now = new Date();
+    const endDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    // Cancel any other ACTIVE subscriptions for this artisan
+    await prisma.membershipSubscription.updateMany({
+      where: {
+        artisanId: sub.artisanId,
+        status: "ACTIVE",
+        id: { not: sub.id },
+      },
+      data: { status: "CANCELLED", cancelledAt: now },
+    });
+
+    // Activate the subscription
+    await prisma.membershipSubscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: "ACTIVE",
+        startDate: now,
+        endDate,
+      },
+    });
+
+    // Update commission rate (unless artisan has an override)
+    const artisan = sub.artisan;
+    if (artisan.commissionOverride === null) {
+      await prisma.artisan.update({
+        where: { id: artisan.id },
+        data: { commissionRate: sub.plan.commissionRate },
+      });
+    }
+
+    // Send confirmation email
+    const email = artisan.user?.email;
+    if (email) {
+      try {
+        const planLabel =
+          sub.plan.name.charAt(0).toUpperCase() + sub.plan.name.slice(1);
+        await sendSubscriptionActivatedEmail(email, {
+          artisanName: artisan.displayName,
+          planName: planLabel,
+          endDate,
+        });
+      } catch (e) {
+        console.error("[webhook] Subscription email failed:", e);
+      }
+    }
+  }
+  // Rejected subscription payments are not acted on — the cron will handle expiry
+}
+
+/**
+ * Handles product purchase payment (existing flow).
+ */
+async function handleProductPayment(payment: any, paymentId: string | number) {
+  const orderId = payment.external_reference;
+
+  if (payment.status === "approved") {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order || order.status !== "PENDING_PAYMENT") return;
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: "PAID",
+        mpPaymentId: String(paymentId),
+      },
+    });
+
+    // Destock products (batch to avoid N+1)
+    await Promise.all(
+      order.items.map(async (item: any) => {
+        const product = await prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (product.stock <= 0) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { status: "SOLD_OUT" },
+          });
+        }
+      })
+    );
+
+    // Clear cart for the buyer
+    await prisma.cartItem.deleteMany({
+      where: { userId: order.userId },
+    });
+
+    // Send purchase confirmation to buyer
+    const buyer = await prisma.user.findUnique({
+      where: { id: order.userId },
+      select: { email: true, name: true },
+    });
+    if (buyer?.email) {
+      try {
+        await sendPurchaseConfirmationEmail(buyer.email, {
+          name: buyer.name || "Cliente",
+          orderNumber: order.orderNumber,
+          items: order.items.map((i: any) => ({
+            name: i.productName,
+            price: i.productPrice,
+            quantity: i.quantity,
+          })),
+          total: order.total,
+        });
+      } catch (e) {
+        console.error("Email failed:", e);
+      }
+    }
+
+    // Send new order notification to each artisan (pre-fetch to avoid N+1)
+    const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
+    const artisans = await prisma.artisan.findMany({
+      where: { id: { in: artisanIds as string[] } },
+      include: { user: { select: { email: true } } },
+    });
+    for (const artisan of artisans) {
+      const artisanItems = order.items.filter(
+        (i: any) => i.artisanId === artisan.id
+      );
+      if (artisan?.user?.email) {
+        try {
+          await sendNewOrderToArtisanEmail(artisan.user.email, {
+            artisanName: artisan.displayName,
+            orderNumber: order.orderNumber,
+            orderId: order.id,
+            items: artisanItems.map((i: any) => ({
+              name: i.productName,
+              price: i.productPrice,
+              quantity: i.quantity,
+            })),
+            shippingName: order.shippingName,
+            shippingAddress: order.shippingAddress,
+            shippingCity: order.shippingCity,
+            shippingRegion: order.shippingRegion,
+          });
+        } catch (e) {
+          console.error("Email failed:", e);
+        }
+      }
+    }
+    // Create referral reward if buyer was referred
+    try {
+      await createReferralRewardIfApplicable(order.userId);
+    } catch (e) {
+      console.error("Referral reward creation failed:", e);
+    }
+  } else if (payment.status === "rejected") {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "CANCELLED" },
+    });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const xSignature = request.headers.get("x-signature");
@@ -77,111 +263,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    const orderId = payment.external_reference;
+    // Distinguish between product payments and subscription payments
+    const metadata = payment.metadata as Record<string, unknown> | undefined;
+    const isSubscription = metadata?.type === "subscription";
 
-    if (payment.status === "approved") {
-      // Update order to PAID
-      const order = await prisma.order.findUnique({
-        where: { id: orderId },
-        include: { items: true },
-      });
-
-      if (!order || order.status !== "PENDING_PAYMENT") {
-        return NextResponse.json({ received: true });
-      }
-
-      await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          status: "PAID",
-          mpPaymentId: String(paymentId),
-        },
-      });
-
-      // Destock products (batch to avoid N+1)
-      await Promise.all(
-        order.items.map(async (item: any) => {
-          const product = await prisma.product.update({
-            where: { id: item.productId },
-            data: { stock: { decrement: item.quantity } },
-          });
-          if (product.stock <= 0) {
-            await prisma.product.update({
-              where: { id: item.productId },
-              data: { status: "SOLD_OUT" },
-            });
-          }
-        })
-      );
-
-      // Clear cart for the buyer
-      await prisma.cartItem.deleteMany({
-        where: { userId: order.userId },
-      });
-
-      // Send purchase confirmation to buyer
-      const buyer = await prisma.user.findUnique({
-        where: { id: order.userId },
-        select: { email: true, name: true },
-      });
-      if (buyer?.email) {
-        try {
-          await sendPurchaseConfirmationEmail(buyer.email, {
-            name: buyer.name || "Cliente",
-            orderNumber: order.orderNumber,
-            items: order.items.map((i: any) => ({
-              name: i.productName,
-              price: i.productPrice,
-              quantity: i.quantity,
-            })),
-            total: order.total,
-          });
-        } catch (e) {
-          console.error("Email failed:", e);
-        }
-      }
-
-      // Send new order notification to each artisan (pre-fetch to avoid N+1)
-      const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
-      const artisans = await prisma.artisan.findMany({
-        where: { id: { in: artisanIds as string[] } },
-        include: { user: { select: { email: true } } },
-      });
-      for (const artisan of artisans) {
-        const artisanItems = order.items.filter(
-          (i: any) => i.artisanId === artisan.id
-        );
-        if (artisan?.user?.email) {
-          try {
-            await sendNewOrderToArtisanEmail(artisan.user.email, {
-              artisanName: artisan.displayName,
-              orderNumber: order.orderNumber,
-              items: artisanItems.map((i: any) => ({
-                name: i.productName,
-                price: i.productPrice,
-                quantity: i.quantity,
-              })),
-              shippingName: order.shippingName,
-              shippingAddress: order.shippingAddress,
-              shippingCity: order.shippingCity,
-              shippingRegion: order.shippingRegion,
-            });
-          } catch (e) {
-            console.error("Email failed:", e);
-          }
-        }
-      }
-      // Create referral reward if buyer was referred
-      try {
-        await createReferralRewardIfApplicable(order.userId);
-      } catch (e) {
-        console.error("Referral reward creation failed:", e);
-      }
-    } else if (payment.status === "rejected") {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { status: "CANCELLED" },
-      });
+    if (isSubscription) {
+      await handleSubscriptionPayment(payment);
+    } else {
+      await handleProductPayment(payment, paymentId);
     }
 
     return NextResponse.json({ received: true });

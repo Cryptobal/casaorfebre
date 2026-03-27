@@ -10,6 +10,7 @@ interface Plan {
   id: string;
   name: string;
   price: number;
+  annualPrice: number | null;
   commissionRate: number;
   maxProducts: number;
   maxPhotosPerProduct: number;
@@ -66,6 +67,7 @@ export function PlanSelector({
     message: string;
   } | null>(null);
   const [confirmPlanId, setConfirmPlanId] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
 
   const currentPlan = plans.find((p) => p.id === currentPlanId);
   const sortedPlans = [...plans].sort(
@@ -77,11 +79,14 @@ export function PlanSelector({
     setResult(null);
     setConfirmPlanId(null);
 
-    const res = await changePlan(planId);
+    const res = await changePlan(planId, billingPeriod);
     setLoading(null);
 
     if (res.error) {
       setResult({ type: "error", message: res.error });
+    } else if (res.redirectUrl) {
+      // Redirect to MercadoPago for payment
+      window.location.href = res.redirectUrl;
     } else {
       setResult({
         type: "success",
@@ -167,6 +172,32 @@ export function PlanSelector({
         </div>
       )}
 
+      {/* Billing period toggle */}
+      <div className="mb-6 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            billingPeriod === "monthly"
+              ? "bg-accent text-white"
+              : "bg-surface-secondary text-text-secondary hover:text-text"
+          }`}
+          onClick={() => setBillingPeriod("monthly")}
+        >
+          Mensual
+        </button>
+        <button
+          type="button"
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            billingPeriod === "annual"
+              ? "bg-accent text-white"
+              : "bg-surface-secondary text-text-secondary hover:text-text"
+          }`}
+          onClick={() => setBillingPeriod("annual")}
+        >
+          Anual
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {sortedPlans.map((plan) => {
           const isCurrent = plan.id === currentPlanId;
@@ -202,9 +233,19 @@ export function PlanSelector({
                 ) : (
                   <div>
                     <span className="text-2xl font-semibold text-text">
-                      ${plan.price.toLocaleString("es-CL")}
+                      ${(billingPeriod === "annual" && plan.annualPrice
+                        ? plan.annualPrice
+                        : plan.price
+                      ).toLocaleString("es-CL")}
                     </span>
-                    <span className="text-sm text-text-tertiary"> /mes</span>
+                    <span className="text-sm text-text-tertiary">
+                      {billingPeriod === "annual" ? " /año" : " /mes"}
+                    </span>
+                    {billingPeriod === "annual" && plan.annualPrice && (
+                      <p className="mt-1 text-xs text-green-600">
+                        Ahorras ${(plan.price * 12 - plan.annualPrice).toLocaleString("es-CL")} al año
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

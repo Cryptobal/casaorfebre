@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createSubscriptionPreference } from "@/lib/subscription-payment";
 
 async function requireArtisan() {
   const session = await auth();
@@ -28,8 +29,9 @@ async function requireArtisan() {
 }
 
 export async function changePlan(
-  newPlanId: string
-): Promise<{ error?: string; success?: boolean; summary?: string }> {
+  newPlanId: string,
+  billingPeriod: "monthly" | "annual" = "monthly"
+): Promise<{ error?: string; success?: boolean; summary?: string; redirectUrl?: string }> {
   let artisan;
   try {
     artisan = await requireArtisan();
@@ -53,8 +55,56 @@ export async function changePlan(
     where: { artisanId: artisan.id, status: "APPROVED" },
   });
 
+  const PLAN_ORDER: Record<string, number> = {
+    esencial: 0,
+    artesano: 1,
+    maestro: 2,
+  };
+
+  const isUpgrade =
+    (PLAN_ORDER[newPlan.name] ?? 99) > (PLAN_ORDER[currentPlan?.name ?? ""] ?? -1);
+
   const isDowngrade =
     currentPlan && newPlan.maxProducts > 0 && newPlan.maxProducts < (currentPlan.maxProducts || Infinity);
+
+  // ── UPGRADE: requires payment first ──
+  if (isUpgrade && newPlan.price > 0) {
+    const amount =
+      billingPeriod === "annual" && newPlan.annualPrice
+        ? newPlan.annualPrice
+        : newPlan.price;
+
+    // Create a PENDING subscription that will be activated on payment
+    const pendingSub = await prisma.membershipSubscription.create({
+      data: {
+        artisanId: artisan.id,
+        planId: newPlanId,
+        status: "CANCELLED", // Will become ACTIVE on payment confirmation
+        startDate: new Date(),
+      },
+    });
+
+    try {
+      const { redirectUrl } = await createSubscriptionPreference({
+        artisanId: artisan.id,
+        subscriptionId: pendingSub.id,
+        planName: newPlan.name.charAt(0).toUpperCase() + newPlan.name.slice(1),
+        amount,
+        billingPeriod,
+      });
+
+      return { success: true, redirectUrl };
+    } catch (e) {
+      // Clean up pending subscription on failure
+      await prisma.membershipSubscription.delete({
+        where: { id: pendingSub.id },
+      });
+      console.error("[membership] Preference creation failed:", e);
+      return { error: "Error al crear el pago. Intenta nuevamente." };
+    }
+  }
+
+  // ── DOWNGRADE or FREE plan: apply immediately ──
 
   // If downgrading and over the new limit, pause excess products
   let pausedCount = 0;

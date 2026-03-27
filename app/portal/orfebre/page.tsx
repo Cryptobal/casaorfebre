@@ -28,7 +28,9 @@ export default async function ArtisanDashboard({
       maxProductsOverride: true,
       subscriptions: {
         where: { status: "ACTIVE" },
-        include: {
+        select: {
+          endDate: true,
+          startDate: true,
           plan: {
             select: {
               name: true,
@@ -249,6 +251,8 @@ function PlanIndicator({
   maxProductsOverride,
 }: {
   subscription: {
+    endDate: Date | null;
+    startDate: Date;
     plan: {
       name: string;
       badgeText: string | null;
@@ -276,6 +280,29 @@ function PlanIndicator({
     : Math.min(Math.round((activeProducts / maxProducts) * 100), 100);
   const nearLimit = !isUnlimited && usagePercent >= 80;
 
+  // Subscription time info
+  const endDate = subscription?.endDate;
+  const now = new Date();
+  const daysRemaining = endDate
+    ? Math.max(0, Math.ceil((new Date(endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    : null;
+  const totalDays =
+    subscription && endDate
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(endDate).getTime() - new Date(subscription.startDate).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        )
+      : null;
+  const timePercent =
+    daysRemaining !== null && totalDays
+      ? Math.min(Math.round(((totalDays - daysRemaining) / totalDays) * 100), 100)
+      : null;
+  const nearExpiry = daysRemaining !== null && daysRemaining <= 7;
+  const isExpired = daysRemaining !== null && daysRemaining === 0;
+
   return (
     <Card className="mt-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -296,48 +323,101 @@ function PlanIndicator({
             <p className="mt-0.5 text-xs text-text-tertiary">
               Comisión: {Math.round(commissionRate * 100)}%
             </p>
+            {/* Subscription status */}
+            {endDate && (
+              <p className={`mt-0.5 text-xs ${isExpired ? "text-red-600 font-medium" : nearExpiry ? "text-amber-600" : "text-text-tertiary"}`}>
+                {isExpired
+                  ? "Expirada"
+                  : `Activa hasta el ${new Date(endDate).toLocaleDateString("es-CL", { day: "numeric", month: "short", year: "numeric" })}`}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Product usage */}
-        <div className="flex-1 sm:max-w-xs">
-          <div className="flex items-center justify-between text-xs text-text-secondary">
-            <span>Productos activos</span>
-            <span>
-              {activeProducts} de {isUnlimited ? "∞" : maxProducts}
-            </span>
-          </div>
-          {!isUnlimited && (
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-border">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  nearLimit ? "bg-amber-500" : "bg-accent"
-                }`}
-                style={{ width: `${usagePercent}%` }}
-              />
+        {/* Product usage + subscription time */}
+        <div className="flex-1 sm:max-w-xs space-y-3">
+          {/* Product usage bar */}
+          <div>
+            <div className="flex items-center justify-between text-xs text-text-secondary">
+              <span>Productos activos</span>
+              <span>
+                {activeProducts} de {isUnlimited ? "∞" : maxProducts}
+              </span>
             </div>
-          )}
-          {nearLimit && (
-            <p className="mt-1 text-xs text-amber-600">
-              Estás cerca del límite de tu plan.{" "}
-              <Link
-                href="/portal/orfebre/plan"
-                className="font-medium underline"
-              >
-                Sube de plan
-              </Link>
-            </p>
+            {!isUnlimited && (
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-border">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    nearLimit ? "bg-amber-500" : "bg-accent"
+                  }`}
+                  style={{ width: `${usagePercent}%` }}
+                />
+              </div>
+            )}
+            {nearLimit && (
+              <p className="mt-1 text-xs text-amber-600">
+                Estás cerca del límite de tu plan.{" "}
+                <Link
+                  href="/portal/orfebre/plan"
+                  className="font-medium underline"
+                >
+                  Sube de plan
+                </Link>
+              </p>
+            )}
+          </div>
+
+          {/* Subscription time bar */}
+          {daysRemaining !== null && timePercent !== null && (
+            <div>
+              <div className="flex items-center justify-between text-xs text-text-secondary">
+                <span>Tiempo restante</span>
+                <span>
+                  {isExpired ? "Expirada" : `${daysRemaining} días`}
+                </span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-border">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    isExpired ? "bg-red-500" : nearExpiry ? "bg-amber-500" : "bg-accent"
+                  }`}
+                  style={{ width: `${timePercent}%` }}
+                />
+              </div>
+            </div>
           )}
         </div>
 
         {/* Link to plan page */}
-        <Link
-          href="/portal/orfebre/plan"
-          className="text-xs font-medium text-accent transition-colors hover:text-accent-dark"
-        >
-          Cambiar plan &rarr;
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          {(nearExpiry || isExpired) && (
+            <Link
+              href="/portal/orfebre/plan"
+              className="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-600"
+            >
+              {isExpired ? "Renovar ahora" : "Renovar plan"}
+            </Link>
+          )}
+          <Link
+            href="/portal/orfebre/plan"
+            className="text-xs font-medium text-accent transition-colors hover:text-accent-dark"
+          >
+            Cambiar plan &rarr;
+          </Link>
+        </div>
       </div>
+
+      {/* Renewal warning banner */}
+      {nearExpiry && !isExpired && (
+        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Tu suscripción se renueva pronto. Quedan <strong>{daysRemaining}</strong> día{daysRemaining !== 1 ? "s" : ""}.
+        </div>
+      )}
+      {isExpired && (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+          Tu suscripción ha expirado. <Link href="/portal/orfebre/plan" className="font-medium underline">Renueva tu plan</Link> para mantener tus beneficios.
+        </div>
+      )}
     </Card>
   );
 }
