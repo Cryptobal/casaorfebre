@@ -143,6 +143,12 @@ export default async function AdminDashboardPage() {
         >
           ✦ Curaduría
         </Link>
+        <Link
+          href="/portal/admin/blog"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#8B7355]/30 bg-[#8B7355]/5 px-4 py-2 text-sm font-medium text-[#8B7355] transition-colors hover:bg-[#8B7355]/10"
+        >
+          ✎ Blog
+        </Link>
       </div>
 
       {/* Charts */}
