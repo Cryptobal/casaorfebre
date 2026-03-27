@@ -2,13 +2,27 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { MpConnectionBanner } from "./mp-connection-banner";
 
-export default async function ArtisanDashboard() {
+export default async function ArtisanDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const params = await searchParams;
+
   const artisan = await prisma.artisan.findUnique({
     where: { userId: session.user.id },
+    select: {
+      id: true,
+      displayName: true,
+      mpAccessToken: true,
+      mpOnboarded: true,
+      commissionRate: true,
+    },
   });
 
   if (!artisan) redirect("/");
@@ -126,6 +140,23 @@ export default async function ArtisanDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
+      {/* MercadoPago OAuth feedback */}
+      {params.mp_success === "true" && (
+        <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Mercado Pago conectado exitosamente. Ahora recibirás tus pagos directamente.
+        </div>
+      )}
+      {params.mp_error && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Hubo un error al conectar Mercado Pago. Por favor intenta nuevamente.
+        </div>
+      )}
+
+      {/* MercadoPago connection status */}
+      <MpConnectionBanner
+        isConnected={artisan.mpOnboarded && !!artisan.mpAccessToken}
+      />
+
       {/* Alert banners */}
       {pendingOrders > 0 && (
         <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">

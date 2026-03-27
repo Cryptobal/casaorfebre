@@ -87,9 +87,10 @@ model Artisan {
   socialLinks    Json?
   rut            String?
   phone          String?
-  mpAccessToken  String?
-  mpUserId       String?           @unique
-  mpOnboarded    Boolean           @default(false)
+  mpAccessToken   String?
+  mpRefreshToken  String?
+  mpUserId        String?           @unique
+  mpOnboarded     Boolean           @default(false)
   commissionRate      Float                    @default(0.18)
   commissionOverride  Float?
   maxProductsOverride Int?
