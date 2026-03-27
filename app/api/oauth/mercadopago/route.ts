@@ -23,12 +23,17 @@ export async function GET() {
   }
 
   const appId = process.env.MP_APP_ID;
-  const redirectUri = process.env.MP_REDIRECT_URI;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  // Use MP_REDIRECT_URI if explicitly set, otherwise build from app URL
+  const redirectUri =
+    process.env.MP_REDIRECT_URI && !process.env.MP_REDIRECT_URI.includes("localhost")
+      ? process.env.MP_REDIRECT_URI
+      : `${appUrl}/api/oauth/mercadopago/callback`;
 
-  if (!appId || !redirectUri) {
-    console.error("[oauth/mp] MP_APP_ID or MP_REDIRECT_URI not configured");
+  if (!appId) {
+    console.error("[oauth/mp] MP_APP_ID not configured");
     return NextResponse.redirect(
-      new URL("/portal/orfebre?error=config", process.env.NEXT_PUBLIC_APP_URL)
+      new URL("/portal/orfebre?error=config", appUrl)
     );
   }
 

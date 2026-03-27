@@ -45,6 +45,7 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
     return 0;
   });
   const [copiedPrice, setCopiedPrice] = useState<number | null>(null);
+  const [customMult, setCustomMult] = useState<number>(0);
 
   useEffect(() => {
     if (hourlyRate > 0) {
@@ -70,11 +71,14 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
   const overhead = Math.round(totalCost * 0.1);
   const costWithOverhead = totalCost + overhead;
 
-  const multipliers = [
+  const fixedMultipliers = [
     { label: "Conservador", mult: 2.0 },
     { label: "Recomendado", mult: 2.5 },
     { label: "Premium", mult: 3.0 },
   ];
+  const multipliers = customMult > 0
+    ? [...fixedMultipliers, { label: "Personalizado", mult: customMult }]
+    : fixedMultipliers;
 
   const commissionPct = Math.round(commissionRate * 100);
 
@@ -304,7 +308,30 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
             </div>
           </div>
 
-          <div className="mt-6 border-t border-border pt-4">
+          {/* Custom multiplier input */}
+          <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+            <span className="text-sm text-text-secondary">Multiplicador personalizado:</span>
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-text-tertiary">×</span>
+              <Input
+                type="number"
+                min={0.5}
+                max={10}
+                step={0.1}
+                value={customMult || ""}
+                onChange={(e) => setCustomMult(parseFloat(e.target.value) || 0)}
+                placeholder="ej: 1.5"
+                className="w-24"
+              />
+            </div>
+            {customMult > 0 && (
+              <span className="text-sm font-medium text-accent">
+                = {formatCLP(Math.round(costWithOverhead * customMult))}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 border-t border-border pt-4">
             {/* Desktop table */}
             <div className="hidden sm:block">
               <table className="w-full text-sm">
