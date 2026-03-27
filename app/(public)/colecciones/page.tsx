@@ -1,6 +1,7 @@
 export const revalidate = 60;
 
 import Link from "next/link";
+import type { ProductCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveCategories, getActiveOccasions } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -77,15 +78,16 @@ export default async function ColeccionesPage() {
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {categories.map((cat, i) => {
-            const count = categoryCounts.get(cat.name.toUpperCase()) ?? 0;
+            const categoryKey = cat.name.toUpperCase() as ProductCategory;
+            const count = categoryCounts.get(categoryKey) ?? 0;
             return (
               <FadeIn key={cat.id} delay={i * 60}>
                 <Link
-                  href={`/coleccion?category=${cat.name.toUpperCase()}`}
+                  href={`/coleccion?category=${categoryKey}`}
                   className="group flex flex-col items-center rounded-lg border border-border bg-surface p-6 text-center transition-all hover:border-accent hover:shadow-sm"
                 >
                   <span className="font-serif text-lg font-light text-text group-hover:text-accent">
-                    {CATEGORY_LABELS[cat.name.toUpperCase()] ?? cat.name}
+                    {CATEGORY_LABELS[categoryKey] ?? cat.name}
                   </span>
                   <span className="mt-1 text-xs text-text-tertiary">
                     {count} {count === 1 ? "pieza" : "piezas"}
