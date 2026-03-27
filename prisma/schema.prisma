@@ -134,6 +134,18 @@ model Product {
   isUnique       Boolean           @default(true)
   editionSize    Int?
   stock          Int               @default(1)
+  coleccion      String?
+  tallas         String[]
+  guiaTallas     String?
+  largoCadenaCm  Float?
+  diametroMm     Float?
+  personalizable Boolean           @default(false)
+  detallePersonalizacion String?
+  tiempoElaboracionDias  Int?
+  cantidadEdicion        Int?
+  cuidados       String?
+  empaque        String?
+  garantia       String?
   isCustomMade   Boolean           @default(false)
   isReturnable   Boolean           @default(true)
   status         ProductStatus     @default(DRAFT)

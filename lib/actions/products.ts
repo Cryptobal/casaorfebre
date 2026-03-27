@@ -48,6 +48,27 @@ function parseFormData(formData: FormData) {
     ? occasionIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
     : [];
 
+  // New detail fields
+  const coleccion = (formData.get("coleccion") as string) || null;
+  const tallasRaw = formData.get("tallas") as string;
+  const tallas = tallasRaw
+    ? tallasRaw.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
+  const guiaTallas = (formData.get("guiaTallas") as string) || null;
+  const largoCadenaCmRaw = formData.get("largoCadenaCm") as string;
+  const largoCadenaCm = largoCadenaCmRaw ? parseFloat(largoCadenaCmRaw) : null;
+  const diametroMmRaw = formData.get("diametroMm") as string;
+  const diametroMm = diametroMmRaw ? parseFloat(diametroMmRaw) : null;
+  const personalizable = formData.get("personalizable") === "on";
+  const detallePersonalizacion = (formData.get("detallePersonalizacion") as string) || null;
+  const tiempoElaboracionDiasRaw = formData.get("tiempoElaboracionDias") as string;
+  const tiempoElaboracionDias = tiempoElaboracionDiasRaw ? parseInt(tiempoElaboracionDiasRaw, 10) : null;
+  const cantidadEdicionRaw = formData.get("cantidadEdicion") as string;
+  const cantidadEdicion = cantidadEdicionRaw ? parseInt(cantidadEdicionRaw, 10) : null;
+  const cuidados = (formData.get("cuidados") as string) || null;
+  const empaque = (formData.get("empaque") as string) || null;
+  const garantia = (formData.get("garantia") as string) || null;
+
   return {
     name,
     description,
@@ -66,6 +87,18 @@ function parseFormData(formData: FormData) {
     weight,
     specialtyId,
     occasionIds,
+    coleccion,
+    tallas,
+    guiaTallas,
+    largoCadenaCm,
+    diametroMm,
+    personalizable,
+    detallePersonalizacion,
+    tiempoElaboracionDias,
+    cantidadEdicion,
+    cuidados,
+    empaque,
+    garantia,
   };
 }
 
@@ -137,6 +170,18 @@ export async function createProduct(
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
+        coleccion: data.coleccion,
+        tallas: data.tallas,
+        guiaTallas: data.guiaTallas,
+        largoCadenaCm: data.largoCadenaCm,
+        diametroMm: data.diametroMm,
+        personalizable: data.personalizable,
+        detallePersonalizacion: data.detallePersonalizacion,
+        tiempoElaboracionDias: data.tiempoElaboracionDias,
+        cantidadEdicion: data.cantidadEdicion,
+        cuidados: data.cuidados,
+        empaque: data.empaque,
+        garantia: data.garantia,
         status: "DRAFT",
       },
     });
@@ -205,6 +250,18 @@ export async function updateProduct(
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
+        coleccion: data.coleccion,
+        tallas: data.tallas,
+        guiaTallas: data.guiaTallas,
+        largoCadenaCm: data.largoCadenaCm,
+        diametroMm: data.diametroMm,
+        personalizable: data.personalizable,
+        detallePersonalizacion: data.detallePersonalizacion,
+        tiempoElaboracionDias: data.tiempoElaboracionDias,
+        cantidadEdicion: data.cantidadEdicion,
+        cuidados: data.cuidados,
+        empaque: data.empaque,
+        garantia: data.garantia,
         status: newStatus,
       },
     });
@@ -237,6 +294,29 @@ export async function submitForReview(
 
   if (!product.name || !product.description || product.price <= 0) {
     return { error: "El producto debe tener nombre, descripcion y precio mayor a 0" };
+  }
+
+  // Validate mandatory measurements by category
+  const cat = product.category;
+  if (cat === "ANILLO") {
+    if (product.tallas.length === 0) {
+      return { error: "Los anillos requieren al menos una talla disponible para publicarse" };
+    }
+  }
+  if (cat === "COLLAR" || cat === "COLGANTE") {
+    if (!product.largoCadenaCm) {
+      return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
+    }
+  }
+  if (cat === "AROS") {
+    if (!product.diametroMm) {
+      return { error: "Los aros requieren el diámetro (mm) para publicarse" };
+    }
+  }
+  if (cat === "PULSERA") {
+    if (!product.diametroMm) {
+      return { error: "Las pulseras requieren el diámetro o largo (mm) para publicarse" };
+    }
   }
 
   try {

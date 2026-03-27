@@ -2,12 +2,15 @@ export const revalidate = 300;
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getProductBySlug } from "@/lib/queries/products";
+import { getProductBySlug, getSimilarProducts } from "@/lib/queries/products";
+import { ProductCard } from "@/components/products/product-card";
+import { buildBreadcrumbJsonLd, getCategoryLabel, getCategorySlug, canonicalUrl } from "@/lib/seo";
 import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart } from "./add-to-cart";
 import { ReviewList } from "@/components/reviews/review-list";
+import { prisma } from "@/lib/prisma";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -20,6 +23,7 @@ export async function generateMetadata({ params }: PageProps) {
   return {
     title: product.name,
     description: product.description.slice(0, 160),
+    alternates: { canonical: `/coleccion/${slug}` },
     openGraph: {
       title: `${product.name} | Casa Orfebre`,
       description: product.description.slice(0, 160),
@@ -34,6 +38,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   if (!product) notFound();
 
+  const similarProducts = await getSimilarProducts({
+    id: product.id,
+    category: product.category,
+    materials: product.materials,
+    price: product.price,
+    artisanId: product.artisanId,
+  });
+
   const artisan = product.artisan;
   const initials = artisan.displayName
     .split(" ")
@@ -42,12 +54,32 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .slice(0, 2)
     .toUpperCase();
 
+  const reviews = await prisma.review.aggregate({
+    where: { productId: product.id },
+    _avg: { rating: true },
+    _count: true,
+  });
+
+  const categoryLabel = getCategoryLabel(product.category);
+  const categorySlug = getCategorySlug(product.category);
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Colección", url: "/coleccion" },
+    { name: categoryLabel, url: `/coleccion/${categorySlug}` },
+    { name: product.name, url: `/coleccion/${slug}` },
+  ]);
+
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description,
     image: product.images.map((img: any) => img.url),
+    category: categoryLabel,
+    ...(product.materials.length > 0
+      ? { material: product.materials.join(", ") }
+      : {}),
     brand: {
       "@type": "Brand",
       name: "Casa Orfebre",
@@ -55,11 +87,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
     manufacturer: {
       "@type": "Person",
       name: artisan.displayName,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/orfebres/${artisan.slug}`,
     },
     offers: {
       "@type": "Offer",
       price: product.price,
       priceCurrency: "CLP",
+      url: canonicalUrl(`/coleccion/${slug}`),
       availability: product.stock > 0
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
@@ -68,6 +102,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
         name: "Casa Orfebre",
       },
     },
+    ...(reviews._count > 0 && reviews._avg.rating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviews._avg.rating,
+            reviewCount: reviews._count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   });
 
   return (
@@ -75,6 +120,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
       />
 
       <div className="mx-auto max-w-6xl px-4 pt-8 pb-20 sm:px-6 lg:px-8">
@@ -246,6 +295,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          {/* Detalles y medidas */}
+          <ProductDetails product={product} />
+
+          {/* Cuidados */}
+          {product.cuidados && (
+            <div className="rounded-lg border border-border p-6">
+              <h2 className="mb-3 font-serif text-lg">Cuidados</h2>
+              <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-line">{product.cuidados}</p>
+            </div>
+          )}
+
           {/* Q&A placeholder */}
           <div className="rounded-lg border border-border p-6">
             <h2 className="mb-2 font-serif text-lg">Preguntas y Respuestas</h2>
@@ -256,6 +316,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* Reviews */}
           <ReviewList productId={product.id} />
+
+          {/* Similar products */}
+          {similarProducts.length > 0 && (
+            <div>
+              <h2 className="mb-6 font-serif text-xl">También te puede gustar</h2>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {similarProducts.slice(0, 12).map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -310,5 +382,69 @@ function TruckIcon() {
       <circle cx="5.5" cy="18.5" r="2.5" />
       <circle cx="18.5" cy="18.5" r="2.5" />
     </svg>
+  );
+}
+
+/* ─── Product Details & Measurements ─── */
+
+const CATEGORY_LABELS: Record<string, string> = {
+  AROS: "Aros",
+  COLLAR: "Collar",
+  ANILLO: "Anillo",
+  PULSERA: "Pulsera",
+  BROCHE: "Broche",
+  COLGANTE: "Colgante",
+  OTRO: "Otro",
+};
+
+function ProductDetails({ product }: { product: Record<string, unknown> & { materials: string[]; tallas: string[]; category: string } }) {
+  const rows: { label: string; value: string }[] = [];
+
+  if (product.materials.length > 0)
+    rows.push({ label: "Materiales", value: product.materials.join(", ") });
+  if (product.technique)
+    rows.push({ label: "Técnica", value: product.technique as string });
+  if (product.weight)
+    rows.push({ label: "Peso", value: `${product.weight} g` });
+  if (product.dimensions)
+    rows.push({ label: "Dimensiones", value: product.dimensions as string });
+  if (product.tallas.length > 0)
+    rows.push({ label: "Tallas disponibles", value: product.tallas.join(", ") });
+  if (product.guiaTallas)
+    rows.push({ label: "Guía de tallas", value: product.guiaTallas as string });
+  if (product.largoCadenaCm)
+    rows.push({ label: "Largo de cadena", value: `${product.largoCadenaCm} cm` });
+  if (product.diametroMm)
+    rows.push({ label: "Diámetro", value: `${product.diametroMm} mm` });
+  if (product.coleccion)
+    rows.push({ label: "Colección", value: product.coleccion as string });
+  if (product.tiempoElaboracionDias)
+    rows.push({ label: "Tiempo de elaboración", value: `${product.tiempoElaboracionDias} días` });
+  if (product.empaque)
+    rows.push({ label: "Empaque", value: product.empaque as string });
+  if (product.garantia)
+    rows.push({ label: "Garantía", value: product.garantia as string });
+  if (product.personalizable)
+    rows.push({ label: "Personalizable", value: (product.detallePersonalizacion as string) || "Sí" });
+  if (product.cantidadEdicion)
+    rows.push({ label: "Edición", value: `${product.editionSize ?? "?"} de ${product.cantidadEdicion}` });
+  rows.push({ label: "Categoría", value: CATEGORY_LABELS[product.category] || product.category });
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-border p-6">
+      <h2 className="mb-4 font-serif text-lg">Detalles y Medidas</h2>
+      <table className="w-full text-sm">
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.label} className="border-b border-border/50 last:border-0">
+              <td className="py-2.5 pr-4 font-medium text-text">{row.label}</td>
+              <td className="py-2.5 text-text-secondary">{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -43,6 +43,18 @@ interface ProductFormProps {
     video?: { cloudflareStreamUid: string; status: string } | null;
     specialtyId: string | null;
     occasionIds: string[];
+    coleccion: string | null;
+    tallas: string[];
+    guiaTallas: string | null;
+    largoCadenaCm: number | null;
+    diametroMm: number | null;
+    personalizable: boolean;
+    detallePersonalizacion: string | null;
+    tiempoElaboracionDias: number | null;
+    cantidadEdicion: number | null;
+    cuidados: string | null;
+    empaque: string | null;
+    garantia: string | null;
   };
   artisanId: string;
   specialties?: { id: string; name: string }[];
@@ -61,6 +73,9 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const [isCustomMade, setIsCustomMade] = useState(product?.isCustomMade ?? false);
   const [specialtyId, setSpecialtyId] = useState(product?.specialtyId ?? "");
   const [selectedOccasionIds, setSelectedOccasionIds] = useState<string[]>(product?.occasionIds ?? []);
+  const [tallas, setTallas] = useState<string[]>(product?.tallas ?? []);
+  const [tallaInput, setTallaInput] = useState("");
+  const [personalizable, setPersonalizable] = useState(product?.personalizable ?? false);
   const [submitting, setSubmitting] = useState(false);
 
   const updateBound = product
@@ -98,6 +113,32 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
     },
     [addMaterial]
   );
+
+  const addTalla = useCallback(() => {
+    const value = tallaInput.trim();
+    if (value && !tallas.includes(value)) {
+      setTallas((prev) => [...prev, value]);
+    }
+    setTallaInput("");
+  }, [tallaInput, tallas]);
+
+  const removeTalla = useCallback((t: string) => {
+    setTallas((prev) => prev.filter((x) => x !== t));
+  }, []);
+
+  const handleTallaKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addTalla();
+      }
+    },
+    [addTalla]
+  );
+
+  const needsTallas = category === "ANILLO";
+  const needsLargoCadena = category === "COLLAR" || category === "COLGANTE";
+  const needsDiametro = category === "AROS" || category === "PULSERA";
 
   const handleSubmitForReview = async () => {
     if (!product) return;
@@ -411,6 +452,135 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
             />
           </div>
         </div>
+
+        {/* ── Measurements by category ── */}
+        {needsTallas && (
+          <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
+            <Label>Tallas disponibles <span className="text-red-500">*</span></Label>
+            <p className="text-xs text-text-secondary">Obligatorio para anillos. Agrega las tallas disponibles.</p>
+            <input type="hidden" name="tallas" value={tallas.join(",")} />
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                value={tallaInput}
+                onChange={(e) => setTallaInput(e.target.value)}
+                onKeyDown={handleTallaKeyDown}
+                placeholder="Ej: 5, 6, 7..."
+              />
+              <Button type="button" variant="secondary" size="sm" onClick={addTalla}>
+                Agregar
+              </Button>
+            </div>
+            {tallas.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {tallas.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent"
+                  >
+                    {t}
+                    <button type="button" onClick={() => removeTalla(t)} className="ml-0.5 text-accent/60 hover:text-accent" aria-label={`Eliminar talla ${t}`}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="space-y-1.5 pt-2">
+              <Label htmlFor="guiaTallas">Guía de tallas</Label>
+              <Input id="guiaTallas" name="guiaTallas" type="text" defaultValue={product?.guiaTallas ?? ""} placeholder="Link o instrucciones de tallas" />
+            </div>
+          </div>
+        )}
+
+        {needsLargoCadena && (
+          <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
+            <Label htmlFor="largoCadenaCm">Largo de cadena (cm) <span className="text-red-500">*</span></Label>
+            <p className="text-xs text-text-secondary">Obligatorio para collares y colgantes.</p>
+            <Input id="largoCadenaCm" name="largoCadenaCm" type="number" step="0.1" defaultValue={product?.largoCadenaCm ?? ""} placeholder="Ej: 45" />
+          </div>
+        )}
+
+        {needsDiametro && (
+          <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
+            <Label htmlFor="diametroMm">Diámetro / largo (mm) <span className="text-red-500">*</span></Label>
+            <p className="text-xs text-text-secondary">Obligatorio para {category === "AROS" ? "aros" : "pulseras"}.</p>
+            <Input id="diametroMm" name="diametroMm" type="number" step="0.1" defaultValue={product?.diametroMm ?? ""} placeholder="Ej: 25" />
+          </div>
+        )}
+
+        {/* ── Additional detail fields ── */}
+        <div className="space-y-1.5">
+          <Label htmlFor="coleccion">Colección</Label>
+          <Input id="coleccion" name="coleccion" type="text" defaultValue={product?.coleccion ?? ""} placeholder='Ej: "Raíces", "Luna Austral"' />
+        </div>
+
+        <div className="space-y-3">
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="personalizable"
+              checked={personalizable}
+              onChange={(e) => setPersonalizable(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+            />
+            <span className="text-sm font-medium text-text">Personalizable (acepta grabado o modificación)</span>
+          </label>
+          {personalizable && (
+            <div className="space-y-1.5 pl-7">
+              <Label htmlFor="detallePersonalizacion">Detalle de personalización</Label>
+              <textarea
+                id="detallePersonalizacion"
+                name="detallePersonalizacion"
+                defaultValue={product?.detallePersonalizacion ?? ""}
+                rows={2}
+                className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                placeholder="Qué se puede personalizar..."
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="tiempoElaboracionDias">Tiempo de elaboración (días)</Label>
+          <Input id="tiempoElaboracionDias" name="tiempoElaboracionDias" type="number" min={1} defaultValue={product?.tiempoElaboracionDias ?? ""} placeholder="Ej: 7" />
+        </div>
+
+        {!isUnique && (
+          <div className="space-y-1.5">
+            <Label htmlFor="cantidadEdicion">Cantidad de edición</Label>
+            <p className="text-xs text-text-secondary">Ej: "5 de 20" — el total de la edición</p>
+            <Input id="cantidadEdicion" name="cantidadEdicion" type="number" min={1} defaultValue={product?.cantidadEdicion ?? ""} placeholder="Ej: 20" />
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <Label htmlFor="cuidados">Cuidados</Label>
+          <textarea
+            id="cuidados"
+            name="cuidados"
+            defaultValue={product?.cuidados ?? ""}
+            rows={2}
+            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+            placeholder="Instrucciones de cuidado de la pieza..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="empaque">Empaque</Label>
+            <Input id="empaque" name="empaque" type="text" defaultValue={product?.empaque ?? ""} placeholder="Descripción del empaque" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="garantia">Garantía</Label>
+            <Input id="garantia" name="garantia" type="text" defaultValue={product?.garantia ?? ""} placeholder="Política de garantía" />
+          </div>
+        </div>
+
+        {/* Measurement validation warning */}
+        {needsTallas && tallas.length === 0 && (
+          <p className="text-sm text-amber-600">⚠ Debes agregar al menos una talla para poder enviar a revisión.</p>
+        )}
 
         {/* Images */}
         <div className="space-y-1.5">

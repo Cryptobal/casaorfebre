@@ -94,6 +94,18 @@ export default async function EditProductPage({
             : null,
           specialtyId: product.specialtyId,
           occasionIds: product.occasions.map((o) => o.id),
+          coleccion: product.coleccion,
+          tallas: product.tallas,
+          guiaTallas: product.guiaTallas,
+          largoCadenaCm: product.largoCadenaCm,
+          diametroMm: product.diametroMm,
+          personalizable: product.personalizable,
+          detallePersonalizacion: product.detallePersonalizacion,
+          tiempoElaboracionDias: product.tiempoElaboracionDias,
+          cantidadEdicion: product.cantidadEdicion,
+          cuidados: product.cuidados,
+          empaque: product.empaque,
+          garantia: product.garantia,
         }}
       />
     </div>
