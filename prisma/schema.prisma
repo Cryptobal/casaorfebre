@@ -25,6 +25,8 @@ model User {
   questions      ProductQuestion[]
   referralCode   String?           @unique
   referredBy     String?
+  referralRewardsEarned  ReferralReward[] @relation("ReferrerRewards")
+  referralRewardsGiven   ReferralReward[] @relation("ReferredRewards")
   reviews        Review[]
   sessions       Session[]
   wishlists      Wishlist[]
@@ -235,8 +237,11 @@ model Order {
   status             OrderStatus @default(PENDING_PAYMENT)
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
+  discountCode       String?
+  discountAmount     Int         @default(0)
   disputes           Dispute[]
   items              OrderItem[]
+  referralRewards    ReferralReward[]
   user               User        @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -589,6 +594,40 @@ enum ArtisanApplicationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum RewardType {
+  DISCOUNT
+  CREDIT
+}
+
+enum RewardStatus {
+  PENDING
+  ACTIVATED
+  USED
+  EXPIRED
+}
+
+model ReferralReward {
+  id           String       @id @default(cuid())
+  referrerId   String
+  referredId   String
+  rewardType   RewardType   @default(DISCOUNT)
+  rewardAmount Int          @default(5000)
+  code         String       @unique
+  status       RewardStatus @default(ACTIVATED)
+  activatedAt  DateTime     @default(now())
+  usedAt       DateTime?
+  expiresAt    DateTime
+  orderId      String?
+  referrer     User         @relation("ReferrerRewards", fields: [referrerId], references: [id])
+  referred     User         @relation("ReferredRewards", fields: [referredId], references: [id])
+  order        Order?       @relation(fields: [orderId], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@index([referrerId])
+  @@index([code])
+  @@map("referral_rewards")
 }
 
 enum MembershipStatus {

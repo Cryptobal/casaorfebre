@@ -6,6 +6,7 @@ import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
 } from "@/lib/emails/templates";
+import { createReferralRewardIfApplicable } from "@/lib/actions/referral";
 
 /**
  * Validates MercadoPago webhook signature (x-signature header).
@@ -169,6 +170,12 @@ export async function POST(request: Request) {
             console.error("Email failed:", e);
           }
         }
+      }
+      // Create referral reward if buyer was referred
+      try {
+        await createReferralRewardIfApplicable(order.userId);
+      } catch (e) {
+        console.error("Referral reward creation failed:", e);
       }
     } else if (payment.status === "rejected") {
       await prisma.order.update({

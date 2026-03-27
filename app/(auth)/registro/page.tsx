@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { loginWithGoogle, register } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,15 @@ import Link from "next/link";
 
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, null);
+  const searchParams = useSearchParams();
+  const [ref, setRef] = useState(searchParams.get("ref") || "");
+
+  useEffect(() => {
+    if (!ref) {
+      const stored = localStorage.getItem("casa_ref");
+      if (stored) setRef(stored);
+    }
+  }, [ref]);
 
   return (
     <div>
@@ -37,6 +47,7 @@ export default function RegisterPage() {
 
       {/* Registration form */}
       <form action={formAction} className="space-y-4">
+        {ref && <input type="hidden" name="ref" value={ref} />}
         {state?.error && (
           <p className="rounded-md bg-error/10 px-3 py-2 text-sm text-error">{state.error}</p>
         )}

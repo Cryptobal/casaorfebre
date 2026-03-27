@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { sendBuyerWelcomeEmail, sendVerificationEmail } from "@/lib/emails/templates";
+import { generateUniqueReferralCode, trackReferral } from "@/lib/actions/referral";
 import crypto from "crypto";
 
 export async function resendVerificationEmail() {
@@ -92,8 +93,9 @@ export async function register(
   const hashedPassword = await bcrypt.hash(password, 12);
   const verificationToken = crypto.randomUUID();
   const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const referralCode = await generateUniqueReferralCode(name);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name,
       email,
@@ -101,8 +103,15 @@ export async function register(
       role: "BUYER",
       verificationToken,
       verificationTokenExpires,
+      referralCode,
     },
   });
+
+  // Track referral if ref code was provided
+  const refCode = formData.get("ref") as string | null;
+  if (refCode) {
+    await trackReferral(refCode, user.id);
+  }
 
   // Send welcome + verification emails (non-blocking)
   try {

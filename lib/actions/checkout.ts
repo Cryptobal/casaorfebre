@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { preferenceClient } from "@/lib/mercadopago";
 import { createArtisanPreference } from "@/lib/mercadopago-split";
 import { getCart } from "@/lib/queries/cart";
+import { validateDiscountCode, markRewardAsUsed } from "@/lib/actions/referral";
 
 function generateOrderNumber(): string {
   const year = new Date().getFullYear();
@@ -73,7 +74,27 @@ export async function createCheckoutPreference(formData: FormData) {
     0
   );
   const shippingCost = 0; // Free for MVP
-  const total = subtotal + shippingCost;
+
+  // Handle discount code
+  let discountAmount = 0;
+  let discountCodeValue: string | null = null;
+  let discountRewardId: string | null = null;
+  const rawDiscountCode = formData.get("discountCode") as string | null;
+  const rawDiscountRewardId = formData.get("discountRewardId") as string | null;
+
+  if (rawDiscountCode && rawDiscountRewardId) {
+    const validation = await validateDiscountCode(rawDiscountCode);
+    if (validation.valid && validation.reward) {
+      // Ensure the reward belongs to this user
+      if (validation.reward.referrerId === session.user.id) {
+        discountAmount = Math.min(validation.reward.rewardAmount, subtotal);
+        discountCodeValue = rawDiscountCode;
+        discountRewardId = validation.reward.id;
+      }
+    }
+  }
+
+  const total = subtotal + shippingCost - discountAmount;
 
   // Create order as PENDING_PAYMENT
   const orderNumber = generateOrderNumber();
@@ -88,6 +109,8 @@ export async function createCheckoutPreference(formData: FormData) {
       shippingPostalCode,
       subtotal,
       shippingCost,
+      discountCode: discountCodeValue,
+      discountAmount,
       total,
       status: "PENDING_PAYMENT",
       items: {
@@ -203,6 +226,15 @@ export async function createCheckoutPreference(formData: FormData) {
     }
 
     console.log(`[checkout] Usando ${useSandbox ? "sandbox_init_point" : "init_point"} (MP_SANDBOX=${process.env.MP_SANDBOX ?? "undefined"})`);
+
+    // Mark referral reward as used (link to order)
+    if (discountRewardId) {
+      try {
+        await markRewardAsUsed(discountRewardId, order.id);
+      } catch (e) {
+        console.error("Failed to mark reward as used:", e);
+      }
+    }
 
     return { success: true, redirectUrl };
   } catch (error) {

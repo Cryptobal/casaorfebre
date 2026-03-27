@@ -674,3 +674,46 @@ export async function sendCertificateEmail(
   }
   return data;
 }
+
+// ---------------------------------------------------------------------------
+// Referral Reward Notification
+// ---------------------------------------------------------------------------
+export async function sendReferralRewardEmail(
+  to: string,
+  {
+    referrerName,
+    referredName,
+    rewardAmount,
+    discountCode,
+    expiresAt,
+  }: {
+    referrerName: string;
+    referredName: string;
+    rewardAmount: number;
+    discountCode: string;
+    expiresAt: Date;
+  },
+) {
+  const formattedAmount = formatCLP(rewardAmount);
+  const formattedExpiry = expiresAt.toLocaleDateString("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  await sendEmail(
+    to,
+    `\u00a1Ganaste ${formattedAmount} de descuento! \u2014 Casa Orfebre`,
+    `<p style="margin:0 0 16px;">Hola ${referrerName},</p>
+     <p style="margin:0 0 16px;">\u00a1Tu amigo/a <strong>${referredName}</strong> hizo su primera compra en Casa Orfebre gracias a tu invitaci\u00f3n!</p>
+     <p style="margin:0 0 16px;">Como agradecimiento, tienes <strong>${formattedAmount} de descuento</strong> en tu pr\u00f3xima compra.</p>
+     <div style="margin:0 0 20px;padding:16px;background-color:#f5f0eb;border-radius:8px;text-align:center;">
+       <p style="margin:0 0 4px;font-size:12px;color:#8a8478;text-transform:uppercase;letter-spacing:1px;">Tu c\u00f3digo de descuento</p>
+       <p style="margin:0;font-size:24px;font-weight:600;color:#8B7355;letter-spacing:2px;">${discountCode}</p>
+     </div>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/coleccion" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ir a comprar</a>
+     </p>
+     <p style="margin:0;font-size:13px;color:#9e9a90;">V\u00e1lido hasta el ${formattedExpiry}. Aplica el c\u00f3digo en el checkout.</p>`,
+  );
+}

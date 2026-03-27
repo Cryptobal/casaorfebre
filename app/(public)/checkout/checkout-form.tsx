@@ -72,6 +72,14 @@ export function CheckoutForm({
   const [cityChoice, setCityChoice] = useState(initialShipping.cityChoice);
   const [cityOther, setCityOther] = useState(initialShipping.cityOther);
 
+  // Discount code state
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountRewardId, setDiscountRewardId] = useState("");
+  const [discountError, setDiscountError] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [validatingCode, setValidatingCode] = useState(false);
+
   const cityOptions = useMemo(
     () => (region ? citiesForRegion(region) : []),
     [region]
@@ -81,6 +89,43 @@ export function CheckoutForm({
     setRegion(value);
     setCityChoice("");
     setCityOther("");
+  }
+
+  async function handleApplyDiscount() {
+    const code = discountCode.trim().toUpperCase();
+    if (!code) return;
+    setDiscountError("");
+    setValidatingCode(true);
+    try {
+      const res = await fetch("/api/referrals/validate-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setDiscountAmount(data.discountAmount);
+        setDiscountRewardId(data.rewardId);
+        setDiscountApplied(true);
+      } else {
+        setDiscountError(data.error || "Código no válido");
+        setDiscountAmount(0);
+        setDiscountRewardId("");
+        setDiscountApplied(false);
+      }
+    } catch {
+      setDiscountError("Error al validar el código");
+    } finally {
+      setValidatingCode(false);
+    }
+  }
+
+  function handleRemoveDiscount() {
+    setDiscountCode("");
+    setDiscountAmount(0);
+    setDiscountRewardId("");
+    setDiscountApplied(false);
+    setDiscountError("");
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -111,6 +156,11 @@ export function CheckoutForm({
     const formData = new FormData(e.currentTarget);
     formData.set("shippingRegion", region);
     formData.set("shippingCity", shippingCity);
+    if (discountApplied && discountRewardId) {
+      formData.set("discountCode", discountCode.trim().toUpperCase());
+      formData.set("discountRewardId", discountRewardId);
+      formData.set("discountAmount", String(discountAmount));
+    }
 
     startTransition(async () => {
       const result = await createCheckoutPreference(formData);
@@ -273,6 +323,80 @@ export function CheckoutForm({
             />
           </div>
         </div>
+      </fieldset>
+
+      {/* Discount code */}
+      <fieldset className="rounded-lg border border-border bg-surface p-6">
+        <div className="mb-4 flex items-center gap-2.5">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-accent"
+          >
+            <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+            <path d="M13 5v2" />
+            <path d="M13 17v2" />
+            <path d="M13 11v2" />
+          </svg>
+          <h2 className="text-lg font-medium text-text">
+            Código de descuento
+          </h2>
+        </div>
+
+        {discountApplied ? (
+          <div className="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-green-800">
+                Descuento aplicado: -${discountAmount.toLocaleString("es-CL")}
+              </p>
+              <p className="text-xs text-green-600">
+                Código: {discountCode.toUpperCase()}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveDiscount}
+              className="text-sm text-green-700 underline hover:text-green-900"
+            >
+              Quitar
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex gap-3">
+              <Input
+                value={discountCode}
+                onChange={(e) => {
+                  setDiscountCode(e.target.value);
+                  setDiscountError("");
+                }}
+                placeholder="Ej: REF-ABC123"
+                className="flex-1 uppercase"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleApplyDiscount}
+                loading={validatingCode}
+                disabled={!discountCode.trim()}
+              >
+                Aplicar
+              </Button>
+            </div>
+            {discountError && (
+              <p className="mt-2 text-sm text-red-600">{discountError}</p>
+            )}
+            <p className="mt-2 text-xs text-text-tertiary">
+              Si tienes un código de referido, ingrésalo aquí para obtener tu descuento.
+            </p>
+          </div>
+        )}
       </fieldset>
 
       {/* Custom-made warning */}
