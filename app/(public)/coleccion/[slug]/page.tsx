@@ -10,6 +10,7 @@ import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart } from "./add-to-cart";
 import { ReviewList } from "@/components/reviews/review-list";
+import { ViewTracker } from "./view-tracker";
 import { prisma } from "@/lib/prisma";
 
 interface PageProps {
@@ -117,6 +118,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <ViewTracker slug={slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd }}

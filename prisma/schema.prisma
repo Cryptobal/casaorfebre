@@ -148,6 +148,7 @@ model Product {
   garantia       String?
   isCustomMade   Boolean           @default(false)
   isReturnable   Boolean           @default(true)
+  viewCount      Int               @default(0)
   status         ProductStatus     @default(DRAFT)
   adminNotes     String?
   publishedAt    DateTime?
