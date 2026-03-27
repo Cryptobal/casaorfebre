@@ -13,6 +13,7 @@ import { ReviewList } from "@/components/reviews/review-list";
 import { ViewTracker } from "./view-tracker";
 import { MessageArtisanButton } from "./message-artisan-button";
 import { ProductQuestions } from "./product-questions";
+import { SizeGuide } from "@/components/products/size-guide";
 import { prisma } from "@/lib/prisma";
 
 interface PageProps {
@@ -255,6 +256,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
               </div>
             )}
+
+            {/* Size guide */}
+            <SizeGuide
+              category={product.category}
+              tallas={product.tallas}
+              guiaTallas={product.guiaTallas}
+              largoCadenaCm={product.largoCadenaCm}
+              diametroMm={product.diametroMm}
+            />
 
             {/* Description */}
             <p className="font-light leading-relaxed text-text-secondary">
