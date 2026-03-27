@@ -26,6 +26,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Material SEO landing pages
+  const materialPages = ["plata-925", "oro", "cobre", "piedras-naturales", "lapislazuli"].map((mat) => ({
+    url: `${baseUrl}/coleccion/${mat}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  // Occasion SEO pages
+  const occasionPages = ["compromiso", "matrimonio", "regalos"].map((occ) => ({
+    url: `${baseUrl}/coleccion/${occ}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   // Blog posts
   const blogPosts = getAllPosts().map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
@@ -58,5 +74,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...categoryPages, ...blogPosts, ...productPages, ...artisanPages];
+  return [...staticPages, ...categoryPages, ...materialPages, ...occasionPages, ...blogPosts, ...productPages, ...artisanPages];
 }

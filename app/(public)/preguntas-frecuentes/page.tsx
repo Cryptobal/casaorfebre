@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Preguntas Frecuentes | Casa Orfebre",
   description:
     "Resuelve tus dudas sobre compras, envíos, devoluciones, garantía y más en Casa Orfebre. Joyería artesanal chilena con certificado de autenticidad.",
+  alternates: { canonical: "/preguntas-frecuentes" },
 };
 
 interface FaqItem {

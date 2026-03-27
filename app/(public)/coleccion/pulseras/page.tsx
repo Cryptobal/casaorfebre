@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
+import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { ProductCard } from "@/components/products/product-card";
 import type { Metadata } from "next";
 
@@ -8,7 +9,14 @@ export const metadata: Metadata = {
   title: "Pulseras Artesanales | Casa Orfebre",
   description:
     "Pulseras artesanales de autor hechas a mano por orfebres chilenos. Brazaletes, cadenas y pulseras rígidas en plata 950, cobre y materiales nobles. Envío a todo Chile.",
+  alternates: { canonical: "/coleccion/pulseras" },
 };
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: "Inicio", url: "/" },
+  { name: "Colección", url: "/coleccion" },
+  { name: "Pulseras", url: "/coleccion/pulseras" },
+]);
 
 const jsonLd = JSON.stringify({
   "@context": "https://schema.org",
@@ -40,6 +48,10 @@ export default async function PulserasPage() {
         type="application/ld+json"
         // Static JSON-LD structured data — no user input, safe to inject
         dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
       />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-10 max-w-2xl">

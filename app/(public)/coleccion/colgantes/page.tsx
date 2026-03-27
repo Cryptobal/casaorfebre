@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
+import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { ProductCard } from "@/components/products/product-card";
 import type { Metadata } from "next";
 
@@ -8,7 +9,14 @@ export const metadata: Metadata = {
   title: "Colgantes de Autor | Casa Orfebre",
   description:
     "Colgantes artesanales diseñados por orfebres chilenos. Dijes, medallas y colgantes de autor en plata 950, oro y piedras naturales. Piezas únicas con certificado de autenticidad.",
+  alternates: { canonical: "/coleccion/colgantes" },
 };
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: "Inicio", url: "/" },
+  { name: "Colección", url: "/coleccion" },
+  { name: "Colgantes", url: "/coleccion/colgantes" },
+]);
 
 const jsonLd = JSON.stringify({
   "@context": "https://schema.org",
@@ -40,6 +48,10 @@ export default async function ColgantesPage() {
         type="application/ld+json"
         // Static JSON-LD structured data — no user input, safe to inject
         dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
       />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-10 max-w-2xl">

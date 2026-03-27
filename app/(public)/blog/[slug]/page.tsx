@@ -15,6 +15,20 @@ const contentModules: Record<
     ),
   "guia-elegir-cuidar-joyas-artesanales-plata": () =>
     import("@/content/blog/guia-elegir-cuidar-joyas-artesanales-plata"),
+  "anillo-compromiso-artesanal-hecho-a-mano-chile": () =>
+    import("@/content/blog/anillo-compromiso-artesanal-hecho-a-mano-chile"),
+  "joyeria-sustentable-slow-fashion-chile": () =>
+    import("@/content/blog/joyeria-sustentable-slow-fashion-chile"),
+  "lapislazuli-piedra-nacional-chile-joyas": () =>
+    import("@/content/blog/lapislazuli-piedra-nacional-chile-joyas"),
+  "guia-regalar-joyeria-artesanal-mujer-chile": () =>
+    import("@/content/blog/guia-regalar-joyeria-artesanal-mujer-chile"),
+  "como-vender-joyeria-artesanal-online-chile": () =>
+    import("@/content/blog/como-vender-joyeria-artesanal-online-chile"),
+  "joyas-con-significado-simbolismo-joyeria-artesanal": () =>
+    import("@/content/blog/joyas-con-significado-simbolismo-joyeria-artesanal"),
+  "piedras-naturales-chilenas-joyeria-cuarzo-turquesa": () =>
+    import("@/content/blog/piedras-naturales-chilenas-joyeria-cuarzo-turquesa"),
 };
 
 /* ─── Helpers ─── */

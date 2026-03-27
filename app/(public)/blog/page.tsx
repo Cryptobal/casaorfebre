@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Blog",
+  alternates: { canonical: "/blog" },
   description:
     "Artículos sobre joyería artesanal chilena, orfebrería, cuidado de plata y el movimiento de joyería de autor en Chile.",
 };

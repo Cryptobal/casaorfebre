@@ -15,6 +15,7 @@ export const metadata = {
   title: "Colección",
   description:
     "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
+  alternates: { canonical: "/coleccion" },
 };
 
 const VALID_CATEGORIES = new Set([

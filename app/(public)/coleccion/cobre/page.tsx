@@ -1,0 +1,94 @@
+export const revalidate = 300;
+
+import { prisma } from "@/lib/prisma";
+import { ProductCard } from "@/components/products/product-card";
+import { FadeIn } from "@/components/shared/fade-in";
+import { auth } from "@/lib/auth";
+import { getUserFavoriteIds } from "@/lib/queries/products";
+import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Joyería en Cobre Artesanal | Casa Orfebre",
+  description:
+    "Joyas artesanales en cobre hechas a mano por orfebres chilenos. Piezas únicas con pátinas naturales, texturas orgánicas y diseño de autor. Chile, tierra del cobre.",
+  alternates: { canonical: "/coleccion/cobre" },
+  openGraph: {
+    title: "Joyería en Cobre Artesanal | Casa Orfebre",
+    description:
+      "Joyas artesanales en cobre hechas a mano por orfebres chilenos. Piezas únicas con pátinas naturales, texturas orgánicas y diseño de autor. Chile, tierra del cobre.",
+  },
+};
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: "Inicio", url: "/" },
+  { name: "Colección", url: "/coleccion" },
+  { name: "Cobre", url: "/coleccion/cobre" },
+]);
+
+export default async function CobrePage() {
+  const session = await auth();
+  const [products, favoriteIds] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        status: "APPROVED",
+        materials: { hasSome: ["Cobre"] },
+      },
+      include: {
+        artisan: { select: { displayName: true, slug: true } },
+        images: { orderBy: { position: "asc" }, take: 1 },
+        specialty: { select: { id: true, name: true, slug: true } },
+        occasions: { select: { id: true, name: true, slug: true } },
+      },
+      orderBy: { publishedAt: "desc" },
+    }),
+    getUserFavoriteIds(session?.user?.id),
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // Static JSON-LD structured data — no user input, safe to inject
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
+      />
+      <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
+          <h1 className="font-serif text-3xl font-light sm:text-4xl">
+            Joyería en Cobre
+          </h1>
+          <p className="mt-4 text-text-secondary leading-relaxed">
+            Chile es la tierra del cobre, y nuestros orfebres lo transforman en
+            joyas extraordinarias. El cobre permite texturas orgánicas,
+            pátinas naturales que evolucionan con el tiempo y un carácter cálido
+            que ningún otro metal puede igualar. Descubre piezas que honran la
+            tradición minera chilena con diseño contemporáneo.
+          </p>
+        </div>
+
+        {products.length > 0 ? (
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
+            {products.map((product, i) => (
+              <FadeIn key={product.id} delay={i * 60}>
+                <ProductCard
+                  product={product}
+                  isFavorited={favoriteIds.has(product.id)}
+                />
+              </FadeIn>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-16 text-center">
+            <p className="text-sm text-text-secondary">
+              Pronto tendremos piezas en cobre disponibles. Explora nuestra{" "}
+              <a href="/coleccion" className="text-accent hover:underline">
+                colección completa
+              </a>
+              .
+            </p>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}

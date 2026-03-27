@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Postular como Orfebre",
   description:
     "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
+  alternates: { canonical: "/postular" },
 };
 
 export default async function PostularPage({

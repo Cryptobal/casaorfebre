@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getArtisanBySlug } from "@/lib/queries/artisans";
 import { getUserFavoriteIds } from "@/lib/queries/products";
 import { auth } from "@/lib/auth";
+import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { MaterialBadge } from "@/components/shared/material-badge";
@@ -23,6 +24,7 @@ export async function generateMetadata({
   return {
     title: artisan.displayName,
     description: artisan.bio.slice(0, 160),
+    alternates: { canonical: `/orfebres/${slug}` },
     openGraph: {
       title: `${artisan.displayName} | Casa Orfebre`,
       description: artisan.bio.slice(0, 160),
@@ -50,6 +52,12 @@ export default async function ArtisanProfilePage({
     .join("")
     .slice(0, 2);
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Orfebres", url: "/orfebres" },
+    { name: artisan.displayName, url: `/orfebres/${slug}` },
+  ]);
+
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -61,6 +69,29 @@ export default async function ArtisanProfilePage({
       ...(artisan.region ? { addressRegion: artisan.region } : {}),
       addressCountry: "CL",
     },
+    ...(artisan.rating > 0 && artisan._count.reviews > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: artisan.rating,
+            reviewCount: artisan._count.reviews,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+    ...(artisan.products.length > 0
+      ? {
+          makesOffer: artisan.products.slice(0, 10).map((p: any) => ({
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Product",
+              name: p.name,
+              url: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/coleccion/${p.slug}`,
+            },
+          })),
+        }
+      : {}),
   });
 
   return (
@@ -68,6 +99,10 @@ export default async function ArtisanProfilePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
       />
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
       {/* Hero Section */}

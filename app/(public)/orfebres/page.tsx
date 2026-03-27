@@ -13,6 +13,7 @@ export const metadata = {
   title: "Orfebres",
   description:
     "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
+  alternates: { canonical: "/orfebres" },
 };
 
 export default async function OrfebresPage({
