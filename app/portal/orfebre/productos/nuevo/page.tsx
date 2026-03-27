@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { ProductForm } from "../product-form";
 import { getActiveSpecialties, getActiveOccasions } from "@/lib/queries/catalog";
+import { getCloudflareStreamCustomerHost } from "@/lib/cloudflare-stream";
 
 export default async function NuevoProductoPage() {
   const session = await auth();

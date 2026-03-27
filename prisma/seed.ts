@@ -797,6 +797,27 @@ async function main() {
     console.log("✅ Products connected to occasions");
   }
 
+  // ─── Material Reference Prices ───
+  const materialPrices = [
+    { name: "Plata 950", pricePerGram: 850, unit: "gramo" },
+    { name: "Plata 925", pricePerGram: 800, unit: "gramo" },
+    { name: "Oro 18k", pricePerGram: 42000, unit: "gramo" },
+    { name: "Oro 14k", pricePerGram: 32000, unit: "gramo" },
+    { name: "Cobre", pricePerGram: 15, unit: "gramo" },
+    { name: "Bronce", pricePerGram: 20, unit: "gramo" },
+    { name: "Alpaca", pricePerGram: 25, unit: "gramo" },
+  ];
+
+  for (const mp of materialPrices) {
+    await prisma.materialPrice.upsert({
+      where: { name: mp.name },
+      update: { pricePerGram: mp.pricePerGram, unit: mp.unit },
+      create: mp,
+    });
+  }
+
+  console.log(`✅ Material reference prices: ${materialPrices.length} seeded`);
+
   console.log("🌱 Seed complete!");
 }
 

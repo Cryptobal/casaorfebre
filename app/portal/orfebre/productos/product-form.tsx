@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,6 +64,8 @@ interface ProductFormProps {
 
 export function ProductForm({ product, artisanId, specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const precioFromCalculadora = searchParams.get("precio");
   const isEditing = !!product;
 
   const [category, setCategory] = useState(product?.category ?? "ANILLO");
@@ -345,14 +347,24 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
         {/* Price row */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="price">Precio (CLP)</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="price">Precio (CLP)</Label>
+              <a
+                href="/portal/orfebre/herramientas/calculadora"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-accent hover:underline"
+              >
+                ¿No sabes qué precio poner? Usa la calculadora →
+              </a>
+            </div>
             <Input
               id="price"
               name="price"
               type="number"
               required
               min={1000}
-              defaultValue={product?.price ?? ""}
+              defaultValue={precioFromCalculadora || product?.price || ""}
               placeholder="50000"
             />
           </div>

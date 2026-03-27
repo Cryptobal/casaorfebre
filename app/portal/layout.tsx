@@ -25,6 +25,7 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/gift-cards", label: "Gift Cards" },
   { href: "/portal/admin/finanzas", label: "Finanzas" },
   { href: "/portal/admin/mensajes", label: "Mensajes" },
+  { href: "/portal/admin/materiales-precio", label: "Materiales Ref." },
 ];
 
 const ARTISAN_LINKS = [
@@ -35,6 +36,7 @@ const ARTISAN_LINKS = [
   { href: "/portal/orfebre/mensajes", label: "Mensajes" },
   { href: "/portal/orfebre/finanzas", label: "Finanzas" },
   { href: "/portal/orfebre/estadisticas", label: "Estadísticas" },
+  { href: "/portal/orfebre/herramientas/calculadora", label: "Calculadora" },
   { href: "/portal/orfebre/perfil", label: "Mi Perfil" },
 ];
 
@@ -108,6 +110,7 @@ export default async function PortalLayout({ children }: { children: React.React
               <Link href="/portal/admin/gift-cards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
               <Link href="/portal/admin/finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
               <Link href="/portal/admin/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
+              <Link href="/portal/admin/materiales-precio" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Materiales Ref.</Link>
             </>
           )}
           {role === "ARTISAN" && (
@@ -119,6 +122,7 @@ export default async function PortalLayout({ children }: { children: React.React
               <Link href="/portal/orfebre/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
               <Link href="/portal/orfebre/finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
               <Link href="/portal/orfebre/estadisticas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Estadísticas</Link>
+              <Link href="/portal/orfebre/herramientas/calculadora" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Calculadora</Link>
               <Link href="/portal/orfebre/perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Perfil</Link>
             </>
           )}
