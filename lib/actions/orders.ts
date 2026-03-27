@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import {
   sendOrderShippedEmail,
   sendOrderDeliveredEmail,
+  sendCertificateEmail,
 } from "@/lib/emails/templates";
 import { createCertificate } from "@/lib/certificates";
 
@@ -106,21 +107,51 @@ export async function markAsDelivered(orderItemId: string) {
   });
 
   // Auto-create certificate
+  let cert: Awaited<ReturnType<typeof createCertificate>> = null;
   try {
-    await createCertificate(orderItemId);
+    cert = await createCertificate(orderItemId);
   } catch (e) {
     console.error("Certificate creation failed:", e);
   }
 
   // Send delivery email
   if (item.order.user?.email) {
+    const buyerEmail = item.order.user.email;
+    const buyerName = item.order.user.name || "Cliente";
+
     try {
-      await sendOrderDeliveredEmail(item.order.user.email, {
-        name: item.order.user.name || "Cliente",
+      await sendOrderDeliveredEmail(buyerEmail, {
+        name: buyerName,
         orderNumber: item.order.orderNumber,
       });
     } catch (e) {
-      console.error("Email failed:", e);
+      console.error("Delivery email failed:", e);
+    }
+
+    // Send certificate email
+    if (cert) {
+      try {
+        const issuedDate = cert.issuedAt.toLocaleDateString("es-CL", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+        const product = await prisma.product.findUnique({
+          where: { id: cert.productId },
+          select: { name: true },
+        });
+        await sendCertificateEmail(buyerEmail, {
+          buyerName,
+          productName: product?.name || "Pieza artesanal",
+          certCode: cert.code,
+          materials: cert.materials,
+          technique: cert.technique,
+          artisanName: cert.artisanName,
+          issuedDate,
+        });
+      } catch (e) {
+        console.error("Certificate email failed:", e);
+      }
     }
   }
 

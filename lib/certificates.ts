@@ -48,3 +48,15 @@ export async function generateQRCodeSVG(code: string): Promise<string> {
   const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/verificar/${code}`;
   return QRCode.toString(url, { type: "svg", margin: 1, width: 150 });
 }
+
+/** Returns a base64 data URI PNG */
+export async function generateQRCodeDataURI(code: string): Promise<string> {
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/verificar/${code}`;
+  return QRCode.toDataURL(url, { margin: 1, width: 300, color: { dark: "#2c2a26", light: "#ffffff" } });
+}
+
+/** Returns raw PNG Buffer — for CID inline email attachments */
+export async function generateQRCodeBuffer(code: string): Promise<Buffer> {
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/verificar/${code}`;
+  return QRCode.toBuffer(url, { margin: 1, width: 300, color: { dark: "#2c2a26", light: "#ffffff" } });
+}
