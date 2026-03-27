@@ -1,7 +1,9 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { EmailVerificationBanner } from "@/components/shared/email-verification-banner";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getCart, getCartTotal } from "@/lib/queries/cart";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
@@ -17,11 +19,22 @@ export default async function PublicLayout({
   let cartItems: SerializedCartItem[] = [];
   let cartTotal = 0;
 
+  let showVerificationBanner = false;
+
   if (session?.user?.id) {
-    const [items, total] = await Promise.all([
+    const [items, total, dbUser] = await Promise.all([
       getCart(session.user.id),
       getCartTotal(session.user.id),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { emailVerified: true, hashedPassword: true },
+      }),
     ]);
+
+    // Show banner only for credentials users (have password) with unverified email
+    if (dbUser?.hashedPassword && !dbUser.emailVerified) {
+      showVerificationBanner = true;
+    }
     cartTotal = total;
     // Serialize Prisma objects to plain data for client components
     cartItems = items.map((item: CartRow) => ({
@@ -55,6 +68,7 @@ export default async function PublicLayout({
         isLoggedIn={!!session?.user?.id}
         user={session?.user ? { name: session.user.name, email: session.user.email, image: session.user.image, role: session.user.role } : null}
       />
+      {showVerificationBanner && <EmailVerificationBanner />}
       <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       <Footer />
       <WhatsAppButton />

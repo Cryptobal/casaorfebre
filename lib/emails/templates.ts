@@ -17,6 +17,28 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 // ---------------------------------------------------------------------------
+// 0. Email Verification
+// ---------------------------------------------------------------------------
+export async function sendVerificationEmail(
+  to: string,
+  { name, token }: { name: string; token: string },
+) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
+
+  await sendEmail(
+    to,
+    "Verifica tu email — Casa Orfebre",
+    `<p style="margin:0 0 16px;">Hola ${name},</p>
+     <p style="margin:0 0 16px;">Confirma tu email haciendo clic en el siguiente enlace para completar tu registro en <strong>Casa Orfebre</strong>.</p>
+     <p style="margin:0 0 16px;text-align:center;">
+       <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Verificar mi email</a>
+     </p>
+     <p style="margin:0 0 0;font-size:13px;color:#9e9a90;">Este enlace expira en 24 horas.</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 1. Buyer Welcome
 // ---------------------------------------------------------------------------
 export async function sendBuyerWelcomeEmail(

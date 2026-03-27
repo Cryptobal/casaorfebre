@@ -5,7 +5,35 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { sendBuyerWelcomeEmail } from "@/lib/emails/templates";
+import { sendBuyerWelcomeEmail, sendVerificationEmail } from "@/lib/emails/templates";
+import crypto from "crypto";
+
+export async function resendVerificationEmail() {
+  const { auth: getSession } = await import("@/lib/auth");
+  const session = await getSession();
+  if (!session?.user?.id) return { error: "No autorizado" };
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user) return { error: "Usuario no encontrado" };
+  if (user.emailVerified) return { error: "Tu email ya está verificado" };
+
+  const token = crypto.randomUUID();
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { verificationToken: token, verificationTokenExpires: expires },
+  });
+
+  try {
+    await sendVerificationEmail(user.email, { name: user.name || "Usuario", token });
+  } catch (e) {
+    console.error("Resend verification email failed:", e);
+    return { error: "Error al enviar el email. Intenta nuevamente." };
+  }
+
+  return { success: true };
+}
 
 function safeInternalPath(url: string | null | undefined): string {
   if (!url || typeof url !== "string") return "/";
@@ -62,6 +90,8 @@ export async function register(
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
+  const verificationToken = crypto.randomUUID();
+  const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   await prisma.user.create({
     data: {
@@ -69,12 +99,15 @@ export async function register(
       email,
       hashedPassword,
       role: "BUYER",
+      verificationToken,
+      verificationTokenExpires,
     },
   });
 
-  // Send welcome email (non-blocking)
+  // Send welcome + verification emails (non-blocking)
   try {
     await sendBuyerWelcomeEmail(email, { name });
+    await sendVerificationEmail(email, { name, token: verificationToken });
   } catch (e) {
     console.error("Email failed:", e);
   }

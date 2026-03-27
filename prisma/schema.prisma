@@ -29,6 +29,10 @@ model User {
   sessions       Session[]
   wishlists      Wishlist[]
 
+  // Email verification
+  verificationToken        String?
+  verificationTokenExpires DateTime?
+
   // Saved shipping address
   shippingName       String?
   shippingAddress    String?

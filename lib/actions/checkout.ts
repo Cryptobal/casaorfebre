@@ -16,6 +16,15 @@ export async function createCheckoutPreference(formData: FormData) {
   const session = await auth();
   if (!session?.user?.email) return { error: "No autorizado" };
 
+  // Block checkout if email is not verified (credentials users)
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { emailVerified: true, hashedPassword: true },
+  });
+  if (dbUser?.hashedPassword && !dbUser.emailVerified) {
+    return { error: "Debes verificar tu email antes de comprar. Revisa tu bandeja de entrada." };
+  }
+
   const cartItems = await getCart(session.user.id);
   if (cartItems.length === 0) return { error: "Tu carrito está vacío" };
 
