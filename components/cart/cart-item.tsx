@@ -9,6 +9,7 @@ import {
   setGuestLineQuantity,
 } from "@/lib/guest-cart-storage";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
+import { trackRemoveFromCart } from "@/lib/analytics-events";
 import Image from "next/image";
 
 export interface SerializedCartItem {
@@ -51,6 +52,14 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
   }
 
   function handleRemove() {
+    trackRemoveFromCart({
+      item_id: product.id,
+      item_name: product.name,
+      item_category: "",
+      item_brand: product.artisan.displayName,
+      price: product.price,
+      quantity: item.quantity,
+    });
     if (isGuest) {
       startTransition(async () => {
         removeGuestCartLine(product.id);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
+import { PurchaseTracker } from "./purchase-tracker";
 
 export const metadata = {
   title: "Compra Exitosa — Casa Orfebre",
@@ -33,6 +34,21 @@ export default async function CheckoutSuccessPage({
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+      {order && (
+        <PurchaseTracker
+          transactionId={externalReference!}
+          items={order.items.map((item, i) => ({
+            item_id: `item-${i}`,
+            item_name: item.productName,
+            item_category: "",
+            item_brand: "",
+            price: item.productPrice,
+            quantity: item.quantity,
+          }))}
+          value={order.total}
+          shipping={0}
+        />
+      )}
       <div className="w-full max-w-lg text-center">
         {/* Animated checkmark */}
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">

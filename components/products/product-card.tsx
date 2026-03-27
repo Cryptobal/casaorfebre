@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { toggleFavorite } from "@/lib/actions/favorites";
+import { trackAddToWishlist, trackSelectItem } from "@/lib/analytics-events";
 import type { Product, Artisan, ProductImage } from "@prisma/client";
 
 type ProductWithRelations = Product & {
@@ -17,9 +18,10 @@ type ProductWithRelations = Product & {
 interface ProductCardProps {
   product: ProductWithRelations;
   isFavorited?: boolean;
+  listName?: string;
 }
 
-export function ProductCard({ product, isFavorited = false }: ProductCardProps) {
+export function ProductCard({ product, isFavorited = false, listName }: ProductCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -31,17 +33,31 @@ export function ProductCard({ product, isFavorited = false }: ProductCardProps) 
         ? `Ed. Limitada ${product.stock}/${product.editionSize}`
         : null;
 
+  const ga4Item = {
+    item_id: product.id,
+    item_name: product.name,
+    item_category: product.category,
+    item_brand: product.artisan.displayName,
+    price: product.price,
+    quantity: 1,
+  };
+
   function handleToggleFavorite(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (!isFavorited) trackAddToWishlist(ga4Item);
     startTransition(async () => {
       await toggleFavorite(product.id);
       router.refresh();
     });
   }
 
+  function handleSelectItem() {
+    if (listName) trackSelectItem(listName, ga4Item);
+  }
+
   return (
-    <Link href={`/coleccion/${product.slug}`} className="group block">
+    <Link href={`/coleccion/${product.slug}`} className="group block" onClick={handleSelectItem}>
       {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
         {product.images[0]?.url ? (

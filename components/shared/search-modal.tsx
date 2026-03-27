@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn, formatCLP } from "@/lib/utils";
+import { trackSearch } from "@/lib/analytics-events";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -146,6 +147,7 @@ export function SearchModal() {
         .then((data: SearchResults) => {
           setResults(data);
           setLoading(false);
+          trackSearch(query.trim());
         })
         .catch((err) => {
           if (err.name !== "AbortError") setLoading(false);

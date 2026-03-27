@@ -8,15 +8,17 @@ import { addToCart } from "@/lib/actions/cart";
 import { validateGuestAddToCart } from "@/lib/actions/guest-cart";
 import { addGuestCartLine, readGuestCartLines } from "@/lib/guest-cart-storage";
 import { formatCLP } from "@/lib/utils";
+import { trackAddToCart, type GA4Item } from "@/lib/analytics-events";
 
 interface AddToCartProps {
   productId: string;
   price: number;
   isUnique: boolean;
   stock: number;
+  ga4Item?: Omit<GA4Item, "quantity">;
 }
 
-export function AddToCart({ productId, price, isUnique, stock }: AddToCartProps) {
+export function AddToCart({ productId, price, isUnique, stock, ga4Item }: AddToCartProps) {
   const router = useRouter();
   const { status } = useSession();
   const [isPending, startTransition] = useTransition();
@@ -44,6 +46,7 @@ export function AddToCart({ productId, price, isUnique, stock }: AddToCartProps)
         if (result?.error) {
           setErrorMsg(result.error);
         } else {
+          if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
           setSuccessMsg("¡Agregado al carrito!");
           router.refresh();
           setTimeout(() => setSuccessMsg(null), 2000);
@@ -61,6 +64,7 @@ export function AddToCart({ productId, price, isUnique, stock }: AddToCartProps)
         return;
       }
       addGuestCartLine(productId, quantity);
+      if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
       setSuccessMsg("¡Agregado al carrito!");
       setTimeout(() => setSuccessMsg(null), 2000);
     });

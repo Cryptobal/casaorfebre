@@ -8,6 +8,7 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { CatalogFilters } from "./catalog-filters";
+import { ListTracker } from "./list-tracker";
 import { auth } from "@/lib/auth";
 import type { ProductCategory } from "@prisma/client";
 
@@ -114,13 +115,26 @@ export default async function ColeccionPage({
       </div>
 
       {products.length > 0 ? (
+        <>
+        <ListTracker
+          listName={category ?? "Colección"}
+          items={products.slice(0, 20).map((p) => ({
+            item_id: p.id,
+            item_name: p.name,
+            item_category: p.category,
+            item_brand: p.artisan.displayName,
+            price: p.price,
+            quantity: 1,
+          }))}
+        />
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
           {products.map((product, i) => (
             <FadeIn key={product.id} delay={i * 60}>
-              <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} />
+              <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} listName={category ?? "Colección"} />
             </FadeIn>
           ))}
         </div>
+        </>
       ) : (
         <div className="mt-16 text-center">
           <p className="text-sm text-text-secondary">

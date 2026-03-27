@@ -4,6 +4,7 @@ import { getCart, getCartTotal } from "@/lib/queries/cart";
 import { getUserShippingAddress } from "@/lib/queries/users";
 import { formatCLP } from "@/lib/utils";
 import { CheckoutForm } from "./checkout-form";
+import { CheckoutTracker } from "./checkout-tracker";
 import Image from "next/image";
 
 export default async function CheckoutPage() {
@@ -75,6 +76,18 @@ export default async function CheckoutPage() {
           <li className="text-text-tertiary">Confirmación</li>
         </ol>
       </nav>
+
+      <CheckoutTracker
+        items={cartItems.map((item: any) => ({
+          item_id: item.product.id,
+          item_name: item.product.name,
+          item_category: "",
+          item_brand: item.product.artisan?.displayName ?? "",
+          price: item.product.price,
+          quantity: item.quantity,
+        }))}
+        value={cartTotal}
+      />
 
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">

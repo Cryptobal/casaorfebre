@@ -138,7 +138,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <ViewTracker slug={slug} />
+      <ViewTracker
+        slug={slug}
+        ga4Item={{
+          item_id: product.id,
+          item_name: product.name,
+          item_category: categoryLabel,
+          item_brand: artisan.displayName,
+          price: product.price,
+          quantity: 1,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd }}
@@ -264,6 +274,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
               price={product.price}
               isUnique={product.isUnique}
               stock={product.stock}
+              ga4Item={{
+                item_id: product.id,
+                item_name: product.name,
+                item_category: categoryLabel,
+                item_brand: artisan.displayName,
+                price: product.price,
+              }}
             />
 
             {/* Trust icons */}

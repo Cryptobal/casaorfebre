@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { createWishlist, deleteWishlist, removeFromWishlist } from "@/lib/actions/wishlist";
+import { trackShare } from "@/lib/analytics-events";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -75,6 +76,7 @@ export default function ListasPage() {
   function handleCopy(code: string) {
     const url = `https://casaorfebre.cl/wishlist/${code}`;
     navigator.clipboard.writeText(url);
+    trackShare("copy_link", "wishlist", code);
     setCopied(code);
     setTimeout(() => setCopied(null), 2000);
   }
@@ -82,6 +84,7 @@ export default function ListasPage() {
   function handleShareWhatsApp(name: string, code: string) {
     const url = `https://casaorfebre.cl/wishlist/${code}`;
     const text = encodeURIComponent(`Mira mi lista de deseos "${name}" en Casa Orfebre: ${url}`);
+    trackShare("whatsapp", "wishlist", code);
     window.open(`https://wa.me/?text=${text}`, "_blank");
   }
 
