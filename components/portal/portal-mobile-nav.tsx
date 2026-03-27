@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 
 interface PortalMobileNavProps {
   title: string;
-  links: { href: string; label: string }[];
+  links: { href: string; label: string; badge?: number }[];
 }
 
 export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
@@ -65,13 +65,18 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`block rounded-md px-3 py-2.5 text-sm transition-colors ${
+                    className={`flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
                       isActive
                         ? "bg-accent/10 font-medium text-accent"
                         : "text-text-secondary hover:bg-background hover:text-text"
                     }`}
                   >
-                    {link.label}
+                    <span>{link.label}</span>
+                    {link.badge != null && link.badge > 0 && (
+                      <span className="min-w-[1.25rem] rounded-full bg-accent px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
+                        {link.badge > 99 ? "99+" : link.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

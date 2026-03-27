@@ -57,6 +57,13 @@ export default async function PortalLayout({ children }: { children: React.React
     redirect("/login");
   }
 
+  let pendingPostulaciones = 0;
+  if (session.user.role === "ADMIN") {
+    pendingPostulaciones = await prisma.artisanApplication.count({
+      where: { status: "PENDING" },
+    });
+  }
+
   // Determine effective role (consider activeRole for admin testers)
   const realRole = session.user.role;
   let role = realRole;
@@ -81,7 +88,13 @@ export default async function PortalLayout({ children }: { children: React.React
     role === "ADMIN" ? "Admin" : role === "ARTISAN" ? "Mi Taller" : "Mi Cuenta";
 
   const mobileLinks = [
-    ...(role === "ADMIN" ? ADMIN_LINKS : []),
+    ...(role === "ADMIN"
+      ? ADMIN_LINKS.map((l) =>
+          l.href === "/portal/admin/postulaciones"
+            ? { ...l, badge: pendingPostulaciones }
+            : l
+        )
+      : []),
     ...(role === "ARTISAN" ? ARTISAN_LINKS : []),
     ...(showBuyerSection ? BUYER_LINKS : []),
   ];
@@ -97,7 +110,17 @@ export default async function PortalLayout({ children }: { children: React.React
           {role === "ADMIN" && (
             <>
               <Link href="/portal/admin" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Dashboard</Link>
-              <Link href="/portal/admin/postulaciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Postulaciones</Link>
+              <Link
+                href="/portal/admin/postulaciones"
+                className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
+              >
+                <span>Postulaciones</span>
+                {pendingPostulaciones > 0 && (
+                  <span className="min-w-[1.25rem] rounded-full bg-accent px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
+                    {pendingPostulaciones > 99 ? "99+" : pendingPostulaciones}
+                  </span>
+                )}
+              </Link>
               <Link href="/portal/admin/productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Productos</Link>
               <Link href="/portal/admin/fotos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Fotos</Link>
               <Link href="/portal/admin/orfebres" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Orfebres</Link>

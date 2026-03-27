@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getAllArtisans } from "@/lib/queries/admin";
-import { suspendArtisan } from "@/lib/actions/admin";
-import { Button } from "@/components/ui/button";
 import { OverrideEditor } from "./override-editor";
 import { HighlightToggle } from "./highlight-toggle";
+import { ArtisanAccountActions } from "./artisan-account-actions";
 
 const statusStyles: Record<string, string> = {
   APPROVED: "bg-green-100 text-green-800",
@@ -123,23 +122,7 @@ export default async function OrfebresPage() {
                             maxProductsOverride={artisan.maxProductsOverride}
                             maxPhotosOverride={artisan.maxPhotosOverride}
                           />
-                          {artisan.status === "APPROVED" && (
-                            <form
-                              action={async () => {
-                                "use server";
-                                await suspendArtisan(artisan.id);
-                              }}
-                            >
-                              <Button
-                                type="submit"
-                                size="sm"
-                                variant="secondary"
-                                className="border-red-300 text-red-700 hover:bg-red-50"
-                              >
-                                Suspender
-                              </Button>
-                            </form>
-                          )}
+                          <ArtisanAccountActions artisanId={artisan.id} status={artisan.status} />
                         </div>
                       </td>
                     </tr>
@@ -212,23 +195,7 @@ export default async function OrfebresPage() {
                       maxProductsOverride={artisan.maxProductsOverride}
                       maxPhotosOverride={artisan.maxPhotosOverride}
                     />
-                    {artisan.status === "APPROVED" && (
-                      <form
-                        action={async () => {
-                          "use server";
-                          await suspendArtisan(artisan.id);
-                        }}
-                      >
-                        <Button
-                          type="submit"
-                          size="sm"
-                          variant="secondary"
-                          className="border-red-300 text-red-700 hover:bg-red-50"
-                        >
-                          Suspender
-                        </Button>
-                      </form>
-                    )}
+                    <ArtisanAccountActions artisanId={artisan.id} status={artisan.status} />
                   </div>
                 </div>
               );

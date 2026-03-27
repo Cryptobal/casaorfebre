@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
+import { BuyerRowDelete } from "./buyer-row-delete";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; verified?: string; withOrders?: string; sort?: string }>;
@@ -35,6 +36,9 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
       referralRewardsEarned: {
         select: { referred: { select: { name: true } } },
       },
+      _count: {
+        select: { giftCardsPurchased: true },
+      },
     },
     orderBy:
       sort === "spent"
@@ -55,6 +59,8 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
     totalOrders: b.orders.length,
     totalSpent: b.orders.reduce((s, o) => s + o.total, 0),
     referredBy: b.referredBy,
+    giftCardPurchases: b._count.giftCardsPurchased,
+    canDelete: b.orders.length === 0 && b._count.giftCardsPurchased === 0,
   }));
 
   // Filter by orders
@@ -116,7 +122,8 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
               <th className="pb-2 pr-4">Pedidos</th>
               <th className="pb-2 pr-4">Total gastado</th>
               <th className="pb-2 pr-4">Verificado</th>
-              <th className="pb-2">Referido</th>
+              <th className="pb-2 pr-4">Referido</th>
+              <th className="pb-2 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -138,7 +145,21 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
                     {b.emailVerified ? "Sí" : "No"}
                   </span>
                 </td>
-                <td className="py-3">{b.referredBy || "—"}</td>
+                <td className="py-3 pr-4">{b.referredBy || "—"}</td>
+                <td className="py-3 text-right">
+                  <BuyerRowDelete
+                    buyerId={b.id}
+                    canDelete={b.canDelete}
+                    compact
+                    blockReason={
+                      b.canDelete
+                        ? undefined
+                        : b.totalOrders > 0
+                          ? "Tiene pedidos"
+                          : "Tiene gift cards"
+                    }
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -148,26 +169,37 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
       {/* Mobile cards */}
       <div className="mt-6 space-y-2 sm:hidden">
         {buyerList.map((b) => (
-          <Link
-            key={b.id}
-            href={`/portal/admin/compradores/${b.id}`}
-            className="block rounded-lg border border-border p-4"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-medium">{b.name || "Sin nombre"}</p>
-                <p className="text-sm text-text-secondary">{b.email}</p>
+          <div key={b.id} className="rounded-lg border border-border p-4">
+            <Link href={`/portal/admin/compradores/${b.id}`} className="block">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-medium">{b.name || "Sin nombre"}</p>
+                  <p className="text-sm text-text-secondary">{b.email}</p>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${b.emailVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                  {b.emailVerified ? "Verificado" : "No verificado"}
+                </span>
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-xs ${b.emailVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                {b.emailVerified ? "Verificado" : "No verificado"}
-              </span>
+              <div className="mt-2 flex gap-4 text-xs text-text-tertiary">
+                <span>{b.totalOrders} pedidos</span>
+                <span>{formatCLP(b.totalSpent)}</span>
+                <span>{new Date(b.createdAt).toLocaleDateString("es-CL")}</span>
+              </div>
+            </Link>
+            <div className="mt-3 flex justify-end border-t border-border pt-3">
+              <BuyerRowDelete
+                buyerId={b.id}
+                canDelete={b.canDelete}
+                blockReason={
+                  b.canDelete
+                    ? undefined
+                    : b.totalOrders > 0
+                      ? "Tiene pedidos"
+                      : "Tiene gift cards"
+                }
+              />
             </div>
-            <div className="mt-2 flex gap-4 text-xs text-text-tertiary">
-              <span>{b.totalOrders} pedidos</span>
-              <span>{formatCLP(b.totalSpent)}</span>
-              <span>{new Date(b.createdAt).toLocaleDateString("es-CL")}</span>
-            </div>
-          </Link>
+          </div>
         ))}
       </div>
 

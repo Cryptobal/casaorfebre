@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { TagSelect } from "@/components/ui/tag-select";
 import { CHILEAN_REGIONS, citiesForRegion } from "@/lib/chile-cities";
+import { ApplicationPhotoUpload } from "@/components/postular/application-photo-upload";
 
 /** Especialidades técnicas / de oficio (catálogo `specialties`). */
 const DEFAULT_ESPECIALIDADES = [
@@ -89,6 +90,7 @@ export function ApplicationForm({
   const [materiales, setMateriales] = useState<string[]>([]);
   const [premios, setPremios] = useState<string[]>([]);
   const [premioInput, setPremioInput] = useState("");
+  const [portfolioUrls, setPortfolioUrls] = useState<string[]>([]);
 
   const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
   const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
@@ -406,7 +408,12 @@ export function ApplicationForm({
 
           <div>
             <Label>Fotos de tu trabajo (opcional)</Label>
-            <p className="mt-1 text-sm text-text-tertiary italic">Próximamente</p>
+            <p className="mt-1 text-sm text-text-tertiary">
+              Sube hasta 6 imágenes de tu taller o piezas representativas.
+            </p>
+            <div className="mt-2">
+              <ApplicationPhotoUpload urls={portfolioUrls} onChange={setPortfolioUrls} />
+            </div>
           </div>
         </div>
       </div>

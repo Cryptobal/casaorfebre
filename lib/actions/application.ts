@@ -30,6 +30,25 @@ export async function submitApplication(
   const awardsRaw = (formData.get("awards") as string) || "";
   const awards = awardsRaw.split("|||").filter(Boolean);
 
+  const categoriesRaw = (formData.get("categories") as string) || "";
+  const categories = categoriesRaw
+    .split(",")
+    .map((c: string) => c.trim())
+    .filter(Boolean);
+
+  let portfolioImages: string[] = [];
+  const portfolioImageUrlsRaw = (formData.get("portfolioImageUrls") as string) || "[]";
+  try {
+    const parsed = JSON.parse(portfolioImageUrlsRaw) as unknown;
+    if (Array.isArray(parsed)) {
+      portfolioImages = parsed
+        .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u))
+        .slice(0, 6);
+    }
+  } catch {
+    portfolioImages = [];
+  }
+
   if (
     !firstName ||
     !lastName ||
@@ -80,7 +99,8 @@ export async function submitApplication(
       experience,
       portfolioUrl,
       phone,
-      portfolioImages: [],
+      categories,
+      portfolioImages,
       selectedPlan,
       yearsExperience: yearsExperience !== null && !isNaN(yearsExperience) ? yearsExperience : null,
       awards,
@@ -133,5 +153,6 @@ export async function submitApplication(
   }
 
   revalidatePath("/portal/admin/postulaciones");
+  revalidatePath("/portal");
   return { success: true };
 }

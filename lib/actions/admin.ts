@@ -77,9 +77,14 @@ export async function approveApplication(
       displayName: application.name,
       bio: application.bio,
       location: application.location,
+      region: application.region,
       specialty: application.specialty,
       materials: application.materials,
       phone: application.phone,
+      workshopImages:
+        application.portfolioImages.length > 0 ? application.portfolioImages : [],
+      yearsExperience: application.yearsExperience,
+      awards: application.awards,
       status: "APPROVED",
       approvedAt: new Date(),
     },
@@ -100,6 +105,7 @@ export async function approveApplication(
   }
 
   revalidatePath("/portal/admin/postulaciones");
+  revalidatePath("/portal");
   return { success: true };
 }
 
@@ -140,6 +146,7 @@ export async function rejectApplication(
   }
 
   revalidatePath("/portal/admin/postulaciones");
+  revalidatePath("/portal");
   return { success: true };
 }
 
@@ -503,6 +510,92 @@ export async function suspendArtisan(
   return { success: true };
 }
 
+/**
+ * Intenta eliminar la cuenta del orfebre (usuario + perfil) solo si no hay actividad comercial.
+ * Si hay productos, ventas u órdenes (como comprador), no elimina: deja la cuenta suspendida.
+ */
+export async function removeOrSuspendArtisanAccount(
+  artisanId: string
+): Promise<{
+  error?: string;
+  outcome?: "deleted" | "suspended";
+  message?: string;
+}> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: artisanId },
+    select: {
+      id: true,
+      userId: true,
+      totalSales: true,
+      _count: { select: { products: true, orderItems: true } },
+    },
+  });
+  if (!artisan) return { error: "Orfebre no encontrado" };
+
+  const userId = artisan.userId;
+
+  const [buyerOrders, giftPurchases] = await Promise.all([
+    prisma.order.count({ where: { userId } }),
+    prisma.giftCard.count({ where: { purchaserId: userId } }),
+  ]);
+
+  const hasSellerActivity =
+    artisan._count.products > 0 ||
+    artisan._count.orderItems > 0 ||
+    artisan.totalSales > 0;
+  const hasBuyerActivity = buyerOrders > 0 || giftPurchases > 0;
+
+  if (hasSellerActivity || hasBuyerActivity) {
+    await prisma.artisan.update({
+      where: { id: artisanId },
+      data: { status: "SUSPENDED" },
+    });
+    revalidatePath("/portal/admin/orfebres");
+    return {
+      outcome: "suspended",
+      message:
+        "Esta cuenta tiene productos, ventas u historial de compras. No se puede eliminar por trazabilidad; quedó suspendida.",
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.message.deleteMany({
+      where: { conversation: { artisanId } },
+    });
+    await tx.conversation.deleteMany({ where: { artisanId } });
+    await tx.membershipSubscription.deleteMany({ where: { artisanId } });
+    await tx.artisanMaterial.deleteMany({ where: { artisanId } });
+    await tx.artisan.update({
+      where: { id: artisanId },
+      data: { specialties: { set: [] } },
+    });
+    await tx.artisan.delete({ where: { id: artisanId } });
+
+    await tx.message.deleteMany({
+      where: { conversation: { buyerId: userId } },
+    });
+    await tx.conversation.deleteMany({ where: { buyerId: userId } });
+    await tx.productQuestion.deleteMany({ where: { userId } });
+    await tx.review.deleteMany({ where: { userId } });
+    await tx.dispute.deleteMany({ where: { userId } });
+    await tx.returnRequest.deleteMany({ where: { userId } });
+    await tx.referralReward.deleteMany({
+      where: { OR: [{ referrerId: userId }, { referredId: userId }] },
+    });
+    await tx.blogPost.deleteMany({ where: { authorId: userId } });
+    await tx.user.delete({ where: { id: userId } });
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { outcome: "deleted" };
+}
+
 // 11. Resolve dispute
 export async function resolveDispute(
   disputeId: string,
@@ -800,6 +893,7 @@ export async function deleteArtisanApplication(
   });
 
   revalidatePath("/portal/admin/postulaciones");
+  revalidatePath("/portal");
   return { success: true };
 }
 
