@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { sendBuyerWelcomeEmail, sendVerificationEmail } from "@/lib/emails/templates";
+import {
+  sendBuyerWelcomeEmail,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@/lib/emails/templates";
 import { generateUniqueReferralCode, trackReferral } from "@/lib/actions/referral";
 import crypto from "crypto";
 
@@ -45,6 +49,101 @@ function safeInternalPath(url: string | null | undefined): string {
 export async function loginWithGoogle(formData?: FormData) {
   const callbackUrl = safeInternalPath(formData?.get("callbackUrl") as string | undefined);
   await signIn("google", { redirectTo: callbackUrl });
+}
+
+const GENERIC_RESET_MSG =
+  "Si existe una cuenta con ese correo, te enviamos un enlace para crear o cambiar tu contraseña.";
+
+export async function requestPasswordReset(
+  _prevState: { error?: string; success?: boolean; message?: string } | null,
+  formData: FormData,
+) {
+  const emailRaw = formData.get("email") as string | null;
+  const email = emailRaw?.trim().toLowerCase();
+  if (!email) {
+    return { error: "Ingresa tu correo electrónico" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true, name: true },
+  });
+
+  if (!user) {
+    return { success: true, message: GENERIC_RESET_MSG };
+  }
+
+  const token = crypto.randomUUID();
+  const passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordResetToken: token, passwordResetExpires },
+  });
+
+  try {
+    await sendPasswordResetEmail(user.email, {
+      name: user.name || "Usuario",
+      token,
+    });
+  } catch (e) {
+    console.error("Password reset email failed:", e);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetToken: null, passwordResetExpires: null },
+    });
+    return { error: "No pudimos enviar el correo. Intenta de nuevo más tarde." };
+  }
+
+  return { success: true, message: GENERIC_RESET_MSG };
+}
+
+export async function resetPasswordWithToken(
+  _prevState: { error?: string } | null,
+  formData: FormData,
+) {
+  const token = formData.get("token") as string | null;
+  const password = formData.get("password") as string | null;
+  const confirmPassword = formData.get("confirmPassword") as string | null;
+
+  if (!token?.trim()) {
+    return { error: "Enlace inválido" };
+  }
+  if (!password || password.length < 8) {
+    return { error: "La contraseña debe tener al menos 8 caracteres" };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Las contraseñas no coinciden" };
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      passwordResetToken: token.trim(),
+      passwordResetExpires: { gt: new Date() },
+    },
+    select: { id: true },
+  });
+
+  if (!user) {
+    return {
+      error:
+        "El enlace expiró o no es válido. Solicita un nuevo correo desde «Olvidé mi contraseña».",
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+    },
+  });
+
+  revalidatePath("/", "layout");
+  redirect("/login?reset=success");
 }
 
 export async function loginWithCredentials(

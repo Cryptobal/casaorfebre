@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  async redirects() {
+    return [
+      { source: "/artesano/panel", destination: "/portal/orfebre", permanent: true },
+      { source: "/artesano/productos", destination: "/portal/orfebre/productos", permanent: true },
+      { source: "/artesano/preguntas", destination: "/portal/orfebre/preguntas", permanent: true },
+      { source: "/artesano/pagos", destination: "/portal/orfebre/finanzas", permanent: true },
+      { source: "/artesano/pedidos/:path*", destination: "/portal/orfebre/pedidos", permanent: true },
+      { source: "/mis-pedidos", destination: "/portal/comprador/pedidos", permanent: true },
+      { source: "/explorar", destination: "/coleccion", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

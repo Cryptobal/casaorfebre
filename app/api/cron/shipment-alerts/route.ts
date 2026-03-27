@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       artisan: {
         include: { user: { select: { email: true } } },
       },
-      order: { select: { orderNumber: true } },
+      order: { select: { orderNumber: true, id: true } },
     },
   });
 
@@ -41,6 +41,7 @@ export async function GET(request: Request) {
       await sendShipmentAlertEmail(item.artisan.user.email, {
         artisanName: item.artisan.displayName,
         orderNumber: item.order.orderNumber,
+        orderId: item.order.id,
         daysSince,
       });
       alertsSent++;
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
           await sendShipmentAlertEmail(admin.email, {
             artisanName: `URGENTE - ${item.artisan.displayName}`,
             orderNumber: item.order.orderNumber,
+            orderId: item.order.id,
             daysSince,
           });
         } catch (e) {

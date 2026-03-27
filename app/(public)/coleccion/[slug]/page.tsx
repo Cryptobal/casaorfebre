@@ -12,6 +12,7 @@ import { AddToCart } from "./add-to-cart";
 import { ReviewList } from "@/components/reviews/review-list";
 import { ViewTracker } from "./view-tracker";
 import { MessageArtisanButton } from "./message-artisan-button";
+import { ProductQuestions } from "./product-questions";
 import { prisma } from "@/lib/prisma";
 
 interface PageProps {
@@ -56,11 +57,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .slice(0, 2)
     .toUpperCase();
 
-  const reviews = await prisma.review.aggregate({
-    where: { productId: product.id },
-    _avg: { rating: true },
-    _count: true,
-  });
+  const [reviews, questions] = await Promise.all([
+    prisma.review.aggregate({
+      where: { productId: product.id },
+      _avg: { rating: true },
+      _count: true,
+    }),
+    prisma.productQuestion.findMany({
+      where: { productId: product.id, isPublic: true, isBlocked: false },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { name: true } },
+        artisan: { select: { displayName: true } },
+      },
+    }),
+  ]);
 
   const categoryLabel = getCategoryLabel(product.category);
   const categorySlug = getCategorySlug(product.category);
@@ -310,13 +321,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Q&A placeholder */}
-          <div className="rounded-lg border border-border p-6">
-            <h2 className="mb-2 font-serif text-lg">Preguntas y Respuestas</h2>
-            <p className="text-sm text-text-tertiary">
-              Las preguntas estar&aacute;n disponibles pr&oacute;ximamente
-            </p>
-          </div>
+          {/* Q&A */}
+          <ProductQuestions
+            productId={product.id}
+            artisanId={artisan.id}
+            questions={questions}
+          />
 
           {/* Reviews */}
           <ReviewList productId={product.id} />

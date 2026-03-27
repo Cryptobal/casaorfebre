@@ -20,11 +20,17 @@ function LoginPageInner() {
     [searchParams]
   );
   const [state, formAction, pending] = useActionState(loginWithCredentials, null);
+  const passwordResetOk = searchParams.get("reset") === "success";
 
   return (
     <div>
       <h1 className="text-center font-serif text-2xl font-light">Iniciar Sesión</h1>
       <p className="mt-2 text-center text-sm text-text-tertiary">Bienvenido a Casa Orfebre</p>
+      {passwordResetOk && (
+        <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-center text-sm text-green-800">
+          Contraseña actualizada. Ya puedes iniciar sesión.
+        </p>
+      )}
 
       {/* Google OAuth */}
       <form action={loginWithGoogle} className="mt-8">
@@ -58,7 +64,15 @@ function LoginPageInner() {
           <Input id="email" name="email" type="email" required className="mt-1" placeholder="tu@email.com" />
         </div>
         <div>
-          <Label htmlFor="password">Contraseña</Label>
+          <div className="flex items-baseline justify-between gap-2">
+            <Label htmlFor="password">Contraseña</Label>
+            <Link
+              href="/recuperar-contrasena"
+              className="text-xs text-accent hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
           <Input id="password" name="password" type="password" required className="mt-1" placeholder="••••••••" />
         </div>
         <Button type="submit" className="w-full" loading={pending}>Ingresar</Button>
