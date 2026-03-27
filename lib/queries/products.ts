@@ -70,6 +70,7 @@ export async function getProductBySlug(slug: string) {
         },
       },
       images: { orderBy: { position: "asc" } },
+      video: true,
       specialty: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
     },

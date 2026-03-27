@@ -146,6 +146,7 @@ model Product {
   favorites      Favorite[]
   orderItems     OrderItem[]
   images         ProductImage[]
+  video          ProductVideo?
   questions      ProductQuestion[]
   artisan        Artisan           @relation(fields: [artisanId], references: [id])
   reviews        Review[]
@@ -171,6 +172,18 @@ model ProductImage {
 
   @@index([productId])
   @@map("product_images")
+}
+
+model ProductVideo {
+  id                  String      @id @default(cuid())
+  productId           String      @unique
+  cloudflareStreamUid String
+  status              VideoStatus @default(PROCESSING)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  product             Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_videos")
 }
 
 model CartItem {
@@ -479,6 +492,12 @@ enum ImageStatus {
   APPROVED
   REJECTED
   REPLACED
+}
+
+enum VideoStatus {
+  PROCESSING
+  READY
+  ERROR
 }
 
 enum OrderStatus {

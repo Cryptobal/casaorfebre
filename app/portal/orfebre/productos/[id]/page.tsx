@@ -20,11 +20,19 @@ export default async function EditProductPage({
 
   if (!artisan) redirect("/");
 
+  // Get artisan's active plan to check videoEnabled
+  const activeSub = await prisma.membershipSubscription.findFirst({
+    where: { artisanId: artisan.id, status: "ACTIVE" },
+    include: { plan: true },
+    orderBy: { startDate: "desc" },
+  });
+
   const [product, specialties, occasions] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: {
         images: { orderBy: { position: "asc" } },
+        video: true,
         occasions: { select: { id: true } },
       },
     }),
@@ -53,6 +61,7 @@ export default async function EditProductPage({
         artisanId={artisan.id}
         specialties={specialties}
         occasions={occasions}
+        videoEnabled={activeSub?.plan?.videoEnabled ?? false}
         product={{
           id: product.id,
           name: product.name,
@@ -77,6 +86,12 @@ export default async function EditProductPage({
             altText: img.altText,
             position: img.position,
           })),
+          video: product.video
+            ? {
+                cloudflareStreamUid: product.video.cloudflareStreamUid,
+                status: product.video.status,
+              }
+            : null,
           specialtyId: product.specialtyId,
           occasionIds: product.occasions.map((o) => o.id),
         }}

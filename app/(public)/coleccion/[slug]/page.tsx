@@ -82,7 +82,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12">
           {/* Left column — gallery */}
           <div className="lg:col-span-3">
-            <ImageGallery images={product.images} productName={product.name} />
+            <ImageGallery images={product.images} productName={product.name} video={product.video} />
           </div>
 
           {/* Right column — info */}

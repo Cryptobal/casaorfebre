@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/products/image-upload";
+import { VideoUploader } from "@/components/products/video-uploader";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { createProduct, updateProduct, submitForReview } from "@/lib/actions/products";
 
@@ -39,15 +40,17 @@ interface ProductFormProps {
     status: string;
     adminNotes: string | null;
     images: { id: string; url: string; altText: string | null; position: number }[];
+    video?: { cloudflareStreamUid: string; status: string } | null;
     specialtyId: string | null;
     occasionIds: string[];
   };
   artisanId: string;
   specialties?: { id: string; name: string }[];
   occasions?: { id: string; name: string }[];
+  videoEnabled?: boolean;
 }
 
-export function ProductForm({ product, artisanId, specialties = [], occasions = [] }: ProductFormProps) {
+export function ProductForm({ product, artisanId, specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!product;
 
@@ -419,6 +422,21 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           ) : (
             <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-sm text-text-secondary">
               Guarda el borrador primero para subir imagenes
+            </div>
+          )}
+        </div>
+
+        {/* Video */}
+        <div className="space-y-1.5">
+          {product?.id ? (
+            <VideoUploader
+              productId={product.id}
+              videoEnabled={videoEnabled}
+              existingVideo={product.video}
+            />
+          ) : (
+            <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-sm text-text-secondary">
+              Guarda el borrador primero para subir un video
             </div>
           )}
         </div>
