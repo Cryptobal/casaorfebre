@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-provider";
 import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
@@ -128,7 +129,9 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <GuestCartMerge />
-          <RefCatcher />
+          <Suspense fallback={null}>
+            <RefCatcher />
+          </Suspense>
           {children}
           <RoleSwitcherWrapper />
         </AuthProvider>
