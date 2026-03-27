@@ -10,6 +10,19 @@ export const metadata: Metadata = {
   description:
     "Anillos artesanales de autor hechos a mano en Chile. Alianzas, anillos statement y piezas únicas en plata 950, oro y piedras naturales. Certificado de autenticidad incluido.",
   alternates: { canonical: "/coleccion/anillos" },
+  openGraph: {
+    title: "Anillos Artesanales | Casa Orfebre",
+    description:
+      "Anillos artesanales de autor hechos a mano en Chile. Alianzas, anillos statement y piezas únicas en plata 950, oro y piedras naturales.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Anillos Artesanales | Casa Orfebre",
+    description:
+      "Anillos artesanales de autor hechos a mano en Chile. Alianzas, anillos statement y piezas únicas en plata 950, oro y piedras naturales.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([

@@ -10,6 +10,12 @@ import type { SerializedCartItem } from "@/components/cart/cart-item";
 export const metadata = {
   title: "Carrito",
   description: "Revisa tu carrito de compras en Casa Orfebre.",
+  alternates: { canonical: "/carrito" },
+  twitter: {
+    card: "summary" as const,
+    title: "Carrito | Casa Orfebre",
+    description: "Revisa tu carrito de compras en Casa Orfebre.",
+  },
 };
 
 type CartRow = Awaited<ReturnType<typeof getCart>>[number];

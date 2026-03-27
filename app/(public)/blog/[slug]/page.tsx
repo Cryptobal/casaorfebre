@@ -58,12 +58,18 @@ export async function generateMetadata({
   return {
     title: post.seoTitle,
     description: post.seoDescription,
+    alternates: { canonical: `/blog/${slug}` },
     openGraph: {
       title: post.seoTitle,
       description: post.seoDescription,
       type: "article",
       publishedTime: post.publishedAt,
       authors: [post.author],
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: post.seoTitle,
+      description: post.seoDescription,
     },
   };
 }

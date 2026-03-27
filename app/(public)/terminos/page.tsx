@@ -2,6 +2,13 @@ export const metadata = {
   title: "Términos y Condiciones",
   description:
     "Términos y condiciones de uso de Casa Orfebre, marketplace de joyería artesanal chilena. Conoce tus derechos y obligaciones como usuario.",
+  alternates: { canonical: "/terminos" },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Términos y Condiciones | Casa Orfebre",
+    description:
+      "Términos y condiciones de uso de Casa Orfebre, marketplace de joyería artesanal chilena.",
+  },
 };
 
 export default function TerminosPage() {

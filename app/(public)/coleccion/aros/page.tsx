@@ -10,6 +10,19 @@ export const metadata: Metadata = {
   description:
     "Descubre aros artesanales únicos hechos a mano por orfebres chilenos. Plata 950, cobre y piedras naturales. Piezas de autor con certificado de autenticidad.",
   alternates: { canonical: "/coleccion/aros" },
+  openGraph: {
+    title: "Aros Artesanales | Casa Orfebre",
+    description:
+      "Aros artesanales únicos hechos a mano por orfebres chilenos. Plata 950, cobre y piedras naturales. Piezas de autor con certificado.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aros Artesanales | Casa Orfebre",
+    description:
+      "Aros artesanales únicos hechos a mano por orfebres chilenos. Plata 950, cobre y piedras naturales. Piezas de autor con certificado.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([

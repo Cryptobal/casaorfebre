@@ -5,6 +5,7 @@ import { formatCLP } from "@/lib/utils";
 export const metadata = {
   title: "Compra Exitosa — Casa Orfebre",
   description: "Tu compra en Casa Orfebre fue procesada exitosamente.",
+  alternates: { canonical: "/checkout/success" },
 };
 
 export default async function CheckoutSuccessPage({

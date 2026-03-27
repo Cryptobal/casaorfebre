@@ -97,6 +97,16 @@ export const metadata: Metadata = {
     type: "website",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Casa Orfebre — Joyería de Autor",
+    description:
+      "Piezas únicas de orfebres chilenos verificados. Certificado de autenticidad digital con cada compra.",
+    images: ["/casaorfebre-og-image.png"],
+  },
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

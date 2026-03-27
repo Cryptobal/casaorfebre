@@ -16,6 +16,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Certificado ${cert.code}`,
     description: `Certificado de autenticidad Casa Orfebre - Pieza artesanal verificada. Orfebre: ${cert.artisanName}.`,
+    alternates: { canonical: `/verificar/${code}` },
+    twitter: {
+      card: "summary" as const,
+      title: `Certificado ${cert.code} | Casa Orfebre`,
+      description: `Certificado de autenticidad Casa Orfebre - Pieza artesanal verificada. Orfebre: ${cert.artisanName}.`,
+    },
   };
 }
 

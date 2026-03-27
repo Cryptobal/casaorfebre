@@ -6,6 +6,7 @@ export const metadata = {
   title: "Pago no completado — Casa Orfebre",
   description:
     "Volviste desde Mercado Pago o el pago no se completó. Puedes reintentar.",
+  alternates: { canonical: "/checkout/failure" },
 };
 
 function isNullishParam(v: string | undefined): boolean {

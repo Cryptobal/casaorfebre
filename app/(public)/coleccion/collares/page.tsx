@@ -10,6 +10,19 @@ export const metadata: Metadata = {
   description:
     "Explora collares artesanales diseñados por orfebres chilenos. Cadenas, gargantillas y collares de autor en plata, cobre y piedras naturales con certificado de autenticidad.",
   alternates: { canonical: "/coleccion/collares" },
+  openGraph: {
+    title: "Collares de Autor | Casa Orfebre",
+    description:
+      "Collares artesanales diseñados por orfebres chilenos. Cadenas, gargantillas y collares de autor en plata, cobre y piedras naturales.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Collares de Autor | Casa Orfebre",
+    description:
+      "Collares artesanales diseñados por orfebres chilenos. Cadenas, gargantillas y collares de autor en plata, cobre y piedras naturales.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([

@@ -10,6 +10,19 @@ export const metadata: Metadata = {
   description:
     "Pulseras artesanales de autor hechas a mano por orfebres chilenos. Brazaletes, cadenas y pulseras rígidas en plata 950, cobre y materiales nobles. Envío a todo Chile.",
   alternates: { canonical: "/coleccion/pulseras" },
+  openGraph: {
+    title: "Pulseras Artesanales | Casa Orfebre",
+    description:
+      "Pulseras artesanales de autor hechas a mano por orfebres chilenos. Brazaletes, cadenas y pulseras rígidas en plata 950, cobre y materiales nobles.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pulseras Artesanales | Casa Orfebre",
+    description:
+      "Pulseras artesanales de autor hechas a mano por orfebres chilenos. Brazaletes, cadenas y pulseras rígidas en plata 950, cobre y materiales nobles.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([

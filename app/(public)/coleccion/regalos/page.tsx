@@ -10,10 +10,19 @@ export const metadata = {
   title: "Joyas para Regalar | Casa Orfebre",
   description:
     "Encuentra la joya artesanal perfecta para regalar. Piezas únicas hechas a mano por orfebres chilenos verificados. Envío a todo Chile.",
+  alternates: { canonical: "/coleccion/regalos" },
   openGraph: {
     title: "Joyas para Regalar | Casa Orfebre",
     description:
       "Encuentra la joya artesanal perfecta para regalar. Piezas únicas hechas a mano por orfebres chilenos verificados.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Joyas para Regalar | Casa Orfebre",
+    description:
+      "Encuentra la joya artesanal perfecta para regalar. Piezas únicas hechas a mano por orfebres chilenos verificados.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

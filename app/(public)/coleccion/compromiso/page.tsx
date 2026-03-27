@@ -10,10 +10,19 @@ export const metadata = {
   title: "Anillos de Compromiso Artesanales | Casa Orfebre",
   description:
     "Anillos de compromiso únicos, hechos a mano por orfebres chilenos. Piezas artesanales que sellan tu historia de amor.",
+  alternates: { canonical: "/coleccion/compromiso" },
   openGraph: {
     title: "Anillos de Compromiso Artesanales | Casa Orfebre",
     description:
       "Anillos de compromiso únicos, hechos a mano por orfebres chilenos. Piezas artesanales que sellan tu historia de amor.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Anillos de Compromiso Artesanales | Casa Orfebre",
+    description:
+      "Anillos de compromiso únicos, hechos a mano por orfebres chilenos. Piezas artesanales que sellan tu historia de amor.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

@@ -10,6 +10,19 @@ export const metadata: Metadata = {
   description:
     "Colgantes artesanales diseñados por orfebres chilenos. Dijes, medallas y colgantes de autor en plata 950, oro y piedras naturales. Piezas únicas con certificado de autenticidad.",
   alternates: { canonical: "/coleccion/colgantes" },
+  openGraph: {
+    title: "Colgantes de Autor | Casa Orfebre",
+    description:
+      "Colgantes artesanales diseñados por orfebres chilenos. Dijes, medallas y colgantes de autor en plata 950, oro y piedras naturales.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Colgantes de Autor | Casa Orfebre",
+    description:
+      "Colgantes artesanales diseñados por orfebres chilenos. Dijes, medallas y colgantes de autor en plata 950, oro y piedras naturales.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([

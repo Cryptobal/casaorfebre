@@ -9,6 +9,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/blog" },
   description:
     "Artículos sobre joyería artesanal chilena, orfebrería, cuidado de plata y el movimiento de joyería de autor en Chile.",
+  openGraph: {
+    title: "Blog | Casa Orfebre",
+    description:
+      "Artículos sobre joyería artesanal chilena, orfebrería, cuidado de plata y el movimiento de joyería de autor en Chile.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog | Casa Orfebre",
+    description:
+      "Artículos sobre joyería artesanal chilena, orfebrería, cuidado de plata y el movimiento de joyería de autor en Chile.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 function formatDate(dateStr: string): string {

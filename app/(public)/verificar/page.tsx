@@ -4,6 +4,7 @@ import { ResendVerificationButton } from "./resend-button";
 
 export const metadata: Metadata = {
   title: "Verificar email — Casa Orfebre",
+  alternates: { canonical: "/verificar" },
 };
 
 interface Props {

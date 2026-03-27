@@ -12,6 +12,19 @@ export const metadata: Metadata = {
   description:
     "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
   alternates: { canonical: "/postular" },
+  openGraph: {
+    title: "Postular como Orfebre | Casa Orfebre",
+    description:
+      "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Postular como Orfebre | Casa Orfebre",
+    description:
+      "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 export default async function PostularPage({

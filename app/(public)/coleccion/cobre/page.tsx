@@ -16,7 +16,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Joyería en Cobre Artesanal | Casa Orfebre",
     description:
-      "Joyas artesanales en cobre hechas a mano por orfebres chilenos. Piezas únicas con pátinas naturales, texturas orgánicas y diseño de autor. Chile, tierra del cobre.",
+      "Joyas artesanales en cobre hechas a mano por orfebres chilenos. Piezas únicas con pátinas naturales, texturas orgánicas y diseño de autor.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Joyería en Cobre Artesanal | Casa Orfebre",
+    description:
+      "Joyas artesanales en cobre hechas a mano por orfebres chilenos. Piezas únicas con pátinas naturales, texturas orgánicas y diseño de autor.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

@@ -20,6 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Lista de Deseos: ${wishlist.name} | Casa Orfebre`,
     description: `Lista de deseos "${wishlist.name}" creada por ${wishlist.user.name ?? "un usuario"} en Casa Orfebre.`,
+    alternates: { canonical: `/wishlist/${code}` },
+    twitter: {
+      card: "summary" as const,
+      title: `Lista de Deseos: ${wishlist.name} | Casa Orfebre`,
+      description: `Lista de deseos "${wishlist.name}" creada por ${wishlist.user.name ?? "un usuario"} en Casa Orfebre.`,
+    },
   };
 }
 

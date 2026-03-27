@@ -5,6 +5,13 @@ export const metadata = {
   title: "Garantía",
   description:
     "Garantía de compra segura, envío protegido y política de devoluciones de Casa Orfebre.",
+  alternates: { canonical: "/garantia" },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Garantía | Casa Orfebre",
+    description:
+      "Garantía de compra segura, envío protegido y política de devoluciones de Casa Orfebre.",
+  },
 };
 
 export default function GarantiaPage() {

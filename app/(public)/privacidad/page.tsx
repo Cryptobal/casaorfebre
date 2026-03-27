@@ -2,6 +2,13 @@ export const metadata = {
   title: "Política de Privacidad",
   description:
     "Política de privacidad de Casa Orfebre. Conoce cómo recopilamos, usamos y protegemos tus datos personales en nuestro marketplace de joyería artesanal.",
+  alternates: { canonical: "/privacidad" },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Política de Privacidad | Casa Orfebre",
+    description:
+      "Política de privacidad de Casa Orfebre. Conoce cómo protegemos tus datos personales.",
+  },
 };
 
 export default function PrivacidadPage() {

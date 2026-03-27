@@ -11,6 +11,20 @@ export const metadata = {
   title: "Colecciones",
   description:
     "Explora nuestras colecciones de joyería artesanal chilena por categoría y ocasión.",
+  alternates: { canonical: "/colecciones" },
+  openGraph: {
+    title: "Colecciones | Casa Orfebre",
+    description:
+      "Explora nuestras colecciones de joyería artesanal chilena por categoría y ocasión.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Colecciones | Casa Orfebre",
+    description:
+      "Explora nuestras colecciones de joyería artesanal chilena por categoría y ocasión.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {

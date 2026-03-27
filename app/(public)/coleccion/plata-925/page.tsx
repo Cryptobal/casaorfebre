@@ -16,7 +16,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Joyería en Plata 925 | Casa Orfebre",
     description:
-      "Joyas artesanales en plata 925 y plata 950 hechas a mano por orfebres chilenos. Anillos, collares, aros y pulseras con certificado de autenticidad. Envío a todo Chile.",
+      "Joyas artesanales en plata 925 y plata 950 hechas a mano por orfebres chilenos. Anillos, collares, aros y pulseras con certificado de autenticidad.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Joyería en Plata 925 | Casa Orfebre",
+    description:
+      "Joyas artesanales en plata 925 y plata 950 hechas a mano por orfebres chilenos. Anillos, collares, aros y pulseras con certificado de autenticidad.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

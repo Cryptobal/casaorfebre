@@ -14,6 +14,19 @@ export const metadata = {
   description:
     "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
   alternates: { canonical: "/orfebres" },
+  openGraph: {
+    title: "Orfebres | Casa Orfebre",
+    description:
+      "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Orfebres | Casa Orfebre",
+    description:
+      "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 export default async function OrfebresPage({

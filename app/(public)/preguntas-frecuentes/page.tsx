@@ -5,6 +5,19 @@ export const metadata: Metadata = {
   description:
     "Resuelve tus dudas sobre compras, envíos, devoluciones, garantía y más en Casa Orfebre. Joyería artesanal chilena con certificado de autenticidad.",
   alternates: { canonical: "/preguntas-frecuentes" },
+  openGraph: {
+    title: "Preguntas Frecuentes | Casa Orfebre",
+    description:
+      "Resuelve tus dudas sobre compras, envíos, devoluciones, garantía y más en Casa Orfebre.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Preguntas Frecuentes | Casa Orfebre",
+    description:
+      "Resuelve tus dudas sobre compras, envíos, devoluciones, garantía y más en Casa Orfebre.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 interface FaqItem {

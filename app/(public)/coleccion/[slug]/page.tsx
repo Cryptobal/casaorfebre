@@ -23,14 +23,22 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
+  const desc = product.description.slice(0, 160);
+  const images = product.images?.[0]?.url ? [{ url: product.images[0].url }] : undefined;
   return {
     title: product.name,
-    description: product.description.slice(0, 160),
+    description: desc,
     alternates: { canonical: `/coleccion/${slug}` },
     openGraph: {
       title: `${product.name} | Casa Orfebre`,
-      description: product.description.slice(0, 160),
-      images: product.images?.[0]?.url ? [{ url: product.images[0].url }] : undefined,
+      description: desc,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: `${product.name} | Casa Orfebre`,
+      description: desc,
+      images: product.images?.[0]?.url ? [product.images[0].url] : undefined,
     },
   };
 }

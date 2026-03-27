@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { cn } from "@/lib/utils";
+import { Lightbox } from "./lightbox";
 
 interface ImageGalleryProps {
   images: { id: string; url: string; altText: string | null }[];
@@ -13,6 +14,7 @@ interface ImageGalleryProps {
 
 export function ImageGallery({ images, productName, video }: ImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const hasReadyVideo = video?.status === "READY";
   const totalSlides = images.length + (hasReadyVideo ? 1 : 0);
@@ -31,14 +33,19 @@ export function ImageGallery({ images, productName, video }: ImageGalleryProps) 
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-background">
+      <button
+        type="button"
+        onClick={() => setLightboxOpen(true)}
+        className="relative aspect-[3/4] w-full cursor-zoom-in overflow-hidden rounded-lg bg-background"
+        aria-label="Ampliar imagen"
+      >
         {isVideoSlide && cfCustomerCode ? (
           <iframe
             src={`https://${cfCustomerCode}/${video.cloudflareStreamUid}/iframe?autoplay=true&muted=true&loop=true&controls=true`}
             allow="autoplay"
             allowFullScreen
             style={{ border: "none", width: "100%", height: "100%" }}
-            className="absolute inset-0"
+            className="absolute inset-0 pointer-events-none"
           />
         ) : images[selectedIndex] ? (
           <Image
@@ -50,7 +57,17 @@ export function ImageGallery({ images, productName, video }: ImageGalleryProps) 
             priority
           />
         ) : null}
-      </div>
+
+        {/* Zoom hint */}
+        <div className="absolute bottom-3 right-3 rounded-full bg-black/40 p-1.5 text-white/80 backdrop-blur-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+        </div>
+      </button>
 
       {totalSlides > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -92,6 +109,16 @@ export function ImageGallery({ images, productName, video }: ImageGalleryProps) 
             </button>
           )}
         </div>
+      )}
+
+      {lightboxOpen && (
+        <Lightbox
+          images={images}
+          video={video}
+          productName={productName}
+          initialIndex={selectedIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
     </div>
   );

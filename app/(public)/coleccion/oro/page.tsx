@@ -17,6 +17,14 @@ export const metadata: Metadata = {
     title: "Joyería en Oro Artesanal | Casa Orfebre",
     description:
       "Joyas artesanales en oro 18k y oro amarillo hechas a mano por orfebres chilenos verificados. Anillos de compromiso, alianzas y piezas únicas con certificado de autenticidad.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Joyería en Oro Artesanal | Casa Orfebre",
+    description:
+      "Joyas artesanales en oro 18k y oro amarillo hechas a mano por orfebres chilenos verificados. Anillos de compromiso, alianzas y piezas únicas.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

@@ -21,14 +21,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const artisan = await getArtisanBySlug(slug);
   if (!artisan) return { title: "Orfebre no encontrado" };
+  const desc = artisan.bio.slice(0, 160);
   return {
     title: artisan.displayName,
-    description: artisan.bio.slice(0, 160),
+    description: desc,
     alternates: { canonical: `/orfebres/${slug}` },
     openGraph: {
       title: `${artisan.displayName} | Casa Orfebre`,
-      description: artisan.bio.slice(0, 160),
+      description: desc,
       images: artisan.profileImage ? [{ url: artisan.profileImage }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: `${artisan.displayName} | Casa Orfebre`,
+      description: desc,
+      images: artisan.profileImage ? [artisan.profileImage] : undefined,
     },
   };
 }

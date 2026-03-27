@@ -16,7 +16,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Joyería con Lapislázuli | Casa Orfebre",
     description:
-      "Joyas artesanales con lapislázuli chileno, piedra nacional de Chile. Anillos, collares y aros con engaste artesanal por orfebres verificados. Envío a todo Chile.",
+      "Joyas artesanales con lapislázuli chileno, piedra nacional de Chile. Anillos, collares y aros con engaste artesanal por orfebres verificados.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Joyería con Lapislázuli | Casa Orfebre",
+    description:
+      "Joyas artesanales con lapislázuli chileno, piedra nacional de Chile. Anillos, collares y aros con engaste artesanal por orfebres verificados.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

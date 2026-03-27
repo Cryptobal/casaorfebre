@@ -10,10 +10,19 @@ export const metadata = {
   title: "Joyería para Matrimonio | Casa Orfebre",
   description:
     "Joyería artesanal para tu matrimonio. Argollas, aros y accesorios únicos hechos a mano por orfebres chilenos verificados.",
+  alternates: { canonical: "/coleccion/matrimonio" },
   openGraph: {
     title: "Joyería para Matrimonio | Casa Orfebre",
     description:
       "Joyería artesanal para tu matrimonio. Argollas, aros y accesorios únicos hechos a mano por orfebres chilenos verificados.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Joyería para Matrimonio | Casa Orfebre",
+    description:
+      "Joyería artesanal para tu matrimonio. Argollas, aros y accesorios únicos hechos a mano por orfebres chilenos verificados.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 

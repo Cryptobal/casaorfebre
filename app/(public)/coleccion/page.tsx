@@ -16,6 +16,19 @@ export const metadata = {
   description:
     "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
   alternates: { canonical: "/coleccion" },
+  openGraph: {
+    title: "Colección | Casa Orfebre",
+    description:
+      "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Colección | Casa Orfebre",
+    description:
+      "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
+    images: ["/casaorfebre-og-image.png"],
+  },
 };
 
 const VALID_CATEGORIES = new Set([

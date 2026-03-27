@@ -16,7 +16,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Joyas con Piedras Naturales | Casa Orfebre",
     description:
-      "Joyería artesanal con piedras naturales chilenas: lapislázuli, cuarzo, turquesa y más. Engaste artesanal por orfebres verificados. Piezas únicas con certificado.",
+      "Joyería artesanal con piedras naturales chilenas: lapislázuli, cuarzo, turquesa y más. Engaste artesanal por orfebres verificados.",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Joyas con Piedras Naturales | Casa Orfebre",
+    description:
+      "Joyería artesanal con piedras naturales chilenas: lapislázuli, cuarzo, turquesa y más. Engaste artesanal por orfebres verificados.",
+    images: ["/casaorfebre-og-image.png"],
   },
 };
 
