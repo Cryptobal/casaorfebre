@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { MaterialBadge } from "@/components/shared/material-badge";
+import { ArtisanBadge } from "@/components/artisans/artisan-badge";
 import type { Artisan } from "@prisma/client";
 
-type ArtisanWithCount = Artisan & { _count: { products: number } };
+type ArtisanWithCount = Artisan & {
+  _count: { products: number };
+  subscriptions?: Array<{
+    plan: { name: string; badgeText: string | null; badgeType: string | null };
+  }>;
+};
 
 interface ArtisanCardProps {
   artisan: ArtisanWithCount;
@@ -14,6 +20,8 @@ export function ArtisanCard({ artisan }: ArtisanCardProps) {
     .map((w: string) => w[0])
     .join("")
     .slice(0, 2);
+
+  const activePlan = artisan.subscriptions?.[0]?.plan;
 
   return (
     <Link
@@ -32,6 +40,17 @@ export function ArtisanCard({ artisan }: ArtisanCardProps) {
         <h3 className="font-serif text-xl font-medium text-text">
           {artisan.displayName}
         </h3>
+
+        {/* Badge */}
+        {activePlan?.badgeType && (
+          <div className="mt-1.5 flex justify-center">
+            <ArtisanBadge
+              badgeType={activePlan.badgeType}
+              badgeText={activePlan.badgeText}
+            />
+          </div>
+        )}
+
         <p className="mt-1 text-sm text-text-tertiary">
           {artisan.location} · {artisan.specialty}
         </p>

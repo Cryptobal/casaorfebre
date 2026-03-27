@@ -43,3 +43,16 @@ export async function getAllOccasions() {
 export async function getAllSpecialties() {
   return prisma.specialty.findMany({ orderBy: { position: "asc" } });
 }
+
+export async function getActivePlans() {
+  return prisma.membershipPlan.findMany({
+    where: { isActive: true },
+    orderBy: { price: "asc" },
+  });
+}
+
+export async function getAllPlans() {
+  return prisma.membershipPlan.findMany({
+    orderBy: { price: "asc" },
+  });
+}

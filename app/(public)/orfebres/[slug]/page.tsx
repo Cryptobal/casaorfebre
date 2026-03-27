@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { MaterialBadge } from "@/components/shared/material-badge";
+import { ArtisanBadge } from "@/components/artisans/artisan-badge";
 import { ProductCard } from "@/components/products/product-card";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
@@ -79,10 +80,19 @@ export default async function ArtisanProfilePage({
             </span>
           </div>
 
-          {/* Name */}
+          {/* Name + Badge */}
           <h1 className="mt-6 font-serif text-3xl sm:text-4xl font-light text-text">
             {artisan.displayName}
           </h1>
+          {artisan.subscriptions?.[0]?.plan && (
+            <div className="mt-2">
+              <ArtisanBadge
+                badgeType={artisan.subscriptions[0].plan.badgeType}
+                badgeText={artisan.subscriptions[0].plan.badgeText}
+                size="md"
+              />
+            </div>
+          )}
 
           {/* Location + Region */}
           <p className="mt-2 text-text-secondary">

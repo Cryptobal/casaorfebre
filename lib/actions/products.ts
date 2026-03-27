@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { deleteFromR2 } from "@/lib/r2";
 import { slugify } from "@/lib/utils";
+import { getArtisanPlanLimits } from "@/lib/plan-limits";
 import { revalidatePath } from "next/cache";
 
 async function getArtisan() {
@@ -83,6 +84,26 @@ export async function createProduct(
 
   if (data.price < 1000) {
     return { error: "El precio minimo es $1.000 CLP" };
+  }
+
+  // ── Enforce product limit by plan ──
+  const limits = await getArtisanPlanLimits(artisan.id);
+  if (limits.maxProducts > 0) {
+    const activeCount = await prisma.product.count({
+      where: {
+        artisanId: artisan.id,
+        status: { in: ["DRAFT", "PENDING_REVIEW", "APPROVED"] },
+      },
+    });
+    if (activeCount >= limits.maxProducts) {
+      const planLabel = limits.planName.charAt(0).toUpperCase() + limits.planName.slice(1);
+      const upgradeMsg = limits.nextPlanName
+        ? ` Actualiza a ${limits.nextPlanName} para publicar más piezas.`
+        : "";
+      return {
+        error: `Has alcanzado el límite de ${limits.maxProducts} productos de tu plan ${planLabel}.${upgradeMsg}`,
+      };
+    }
   }
 
   let slug = slugify(data.name);

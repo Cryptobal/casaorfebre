@@ -113,6 +113,12 @@ export async function getAllArtisans() {
   return prisma.artisan.findMany({
     orderBy: { createdAt: "desc" },
     include: {
+      subscriptions: {
+        where: { status: "ACTIVE" },
+        include: { plan: { select: { name: true, badgeText: true, badgeType: true } } },
+        orderBy: { startDate: "desc" },
+        take: 1,
+      },
       _count: { select: { products: true, orderItems: true, reviews: true } },
     },
   });

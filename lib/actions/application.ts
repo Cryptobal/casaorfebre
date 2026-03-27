@@ -20,6 +20,7 @@ export async function submitApplication(
   const portfolioUrl = (formData.get("portfolioUrl") as string) || null;
   const phoneRaw = (formData.get("phone") as string) || null;
   const phone = phoneRaw ? `+569${phoneRaw.replace(/\D/g, "")}` : null;
+  const selectedPlan = (formData.get("selectedPlan") as string) || null;
 
   if (!name || !email || !region || !location || !specialty || !bio || !materialsRaw || !phoneRaw) {
     return { error: "Todos los campos marcados son requeridos" };
@@ -63,6 +64,7 @@ export async function submitApplication(
       portfolioUrl,
       phone,
       portfolioImages: [],
+      selectedPlan,
       status: "PENDING",
     },
   });

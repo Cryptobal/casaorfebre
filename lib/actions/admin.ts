@@ -361,7 +361,105 @@ export async function updateArtisanCommission(
   return { success: true };
 }
 
-// 10. Suspend artisan
+// 10. Update membership plan
+export async function updatePlan(
+  planId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
+  if (!plan) return { error: "Plan no encontrado" };
+
+  const price = parseInt(formData.get("price") as string, 10);
+  const annualPriceRaw = formData.get("annualPrice") as string;
+  const annualPrice = annualPriceRaw ? parseInt(annualPriceRaw, 10) : null;
+  const commissionRate = parseFloat(formData.get("commissionRate") as string);
+  const maxProducts = parseInt(formData.get("maxProducts") as string, 10);
+  const maxPhotosPerProduct = parseInt(formData.get("maxPhotosPerProduct") as string, 10);
+  const videoEnabled = formData.get("videoEnabled") === "true";
+  const badgeText = (formData.get("badgeText") as string) || null;
+  const badgeType = (formData.get("badgeType") as string) || null;
+  const searchWeight = parseFloat(formData.get("searchWeight") as string);
+  const payoutFrequency = formData.get("payoutFrequency") as string;
+  const socialPostsPerMonth = parseInt(formData.get("socialPostsPerMonth") as string, 10);
+  const supportLevel = formData.get("supportLevel") as string;
+  const hasCertificate = formData.get("hasCertificate") === "true";
+  const homeHighlight = formData.get("homeHighlight") === "true";
+  const hasBasicStats = formData.get("hasBasicStats") === "true";
+  const hasAdvancedStats = formData.get("hasAdvancedStats") === "true";
+
+  if (isNaN(commissionRate) || commissionRate < 0 || commissionRate >= 1) {
+    return { error: "La comisión debe ser un valor entre 0 y 1" };
+  }
+
+  await prisma.membershipPlan.update({
+    where: { id: planId },
+    data: {
+      price,
+      annualPrice,
+      commissionRate,
+      maxProducts,
+      maxPhotosPerProduct,
+      videoEnabled,
+      badgeText,
+      badgeType,
+      searchWeight,
+      payoutFrequency,
+      socialPostsPerMonth,
+      supportLevel,
+      hasCertificate,
+      homeHighlight,
+      hasBasicStats,
+      hasAdvancedStats,
+    },
+  });
+
+  revalidatePath("/portal/admin/planes");
+  return { success: true };
+}
+
+// 11. Update artisan overrides
+export async function updateArtisanOverrides(
+  artisanId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const commissionOverrideRaw = formData.get("commissionOverride") as string;
+  const maxProductsOverrideRaw = formData.get("maxProductsOverride") as string;
+  const maxPhotosOverrideRaw = formData.get("maxPhotosOverride") as string;
+
+  const commissionOverride = commissionOverrideRaw ? parseFloat(commissionOverrideRaw) : null;
+  const maxProductsOverride = maxProductsOverrideRaw ? parseInt(maxProductsOverrideRaw, 10) : null;
+  const maxPhotosOverride = maxPhotosOverrideRaw ? parseInt(maxPhotosOverrideRaw, 10) : null;
+
+  if (commissionOverride !== null && (commissionOverride < 0 || commissionOverride >= 1)) {
+    return { error: "La comisión debe ser un valor entre 0 y 1" };
+  }
+
+  await prisma.artisan.update({
+    where: { id: artisanId },
+    data: {
+      commissionOverride,
+      maxProductsOverride,
+      maxPhotosOverride,
+    },
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
+
+// 12. Suspend artisan
 export async function suspendArtisan(
   artisanId: string
 ): Promise<{ error?: string; success?: boolean }> {

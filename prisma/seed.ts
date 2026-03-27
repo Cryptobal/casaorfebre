@@ -14,6 +14,106 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("🌱 Seeding database...");
 
+  // ─── Membership Plans ───
+  const planEsencial = await prisma.membershipPlan.upsert({
+    where: { name: "esencial" },
+    update: {},
+    create: {
+      name: "esencial",
+      price: 0,
+      annualPrice: null,
+      commissionRate: 0.18,
+      features: ["10 productos activos", "3 fotos por pieza", "Soporte email", "Pago quincenal"],
+      maxProducts: 10,
+      maxPhotosPerProduct: 3,
+      videoEnabled: false,
+      badgeText: null,
+      badgeType: null,
+      searchWeight: 1.0,
+      payoutFrequency: "quincenal",
+      socialPostsPerMonth: 0,
+      supportLevel: "email",
+      hasCertificate: false,
+      homeHighlight: false,
+      hasBasicStats: false,
+      hasAdvancedStats: false,
+    },
+  });
+
+  const planArtesano = await prisma.membershipPlan.upsert({
+    where: { name: "artesano" },
+    update: {},
+    create: {
+      name: "artesano",
+      price: 19990,
+      annualPrice: 199990,
+      commissionRate: 0.12,
+      features: [
+        "40 productos activos",
+        "6 fotos por pieza",
+        "Badge Artesano Verificado",
+        "Estadísticas básicas",
+        "Certificado de autenticidad",
+        "Prioridad en búsqueda (1.5x)",
+        "Soporte chat",
+        "Pago semanal",
+        "1 post redes sociales/mes",
+      ],
+      maxProducts: 40,
+      maxPhotosPerProduct: 6,
+      videoEnabled: false,
+      badgeText: "Artesano Verificado",
+      badgeType: "verificado",
+      searchWeight: 1.5,
+      payoutFrequency: "semanal",
+      socialPostsPerMonth: 1,
+      supportLevel: "chat",
+      hasCertificate: true,
+      homeHighlight: false,
+      hasBasicStats: true,
+      hasAdvancedStats: false,
+    },
+  });
+
+  const planMaestro = await prisma.membershipPlan.upsert({
+    where: { name: "maestro" },
+    update: {},
+    create: {
+      name: "maestro",
+      price: 49990,
+      annualPrice: 499990,
+      commissionRate: 0.09,
+      features: [
+        "Productos ilimitados",
+        "Fotos ilimitadas por pieza",
+        "Video por pieza",
+        "Badge Maestro Orfebre",
+        "Estadísticas avanzadas",
+        "Certificado de autenticidad",
+        "Destaque en home",
+        "Máxima prioridad búsqueda (2x)",
+        "Soporte dedicado",
+        "Pago en 48h",
+        "4 posts redes sociales/mes",
+      ],
+      maxProducts: 0,
+      maxPhotosPerProduct: 0,
+      videoEnabled: true,
+      badgeText: "Maestro Orfebre",
+      badgeType: "maestro",
+      searchWeight: 2.0,
+      payoutFrequency: "48h",
+      socialPostsPerMonth: 4,
+      supportLevel: "dedicado",
+      hasCertificate: true,
+      homeHighlight: true,
+      hasBasicStats: true,
+      hasAdvancedStats: true,
+    },
+  });
+
+  console.log(`✅ Membership Plans: ${planEsencial.name}, ${planArtesano.name}, ${planMaestro.name}`);
+
   // ─── Admin Users ───
   const adminCarlos = await prisma.user.upsert({
     where: { email: "carlos.irigoyen@gmail.com" },

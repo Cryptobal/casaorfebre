@@ -90,21 +90,25 @@ model Artisan {
   mpAccessToken  String?
   mpUserId       String?           @unique
   mpOnboarded    Boolean           @default(false)
-  commissionRate Float             @default(0.18)
-  status         ArtisanStatus     @default(PENDING)
-  appliedAt      DateTime          @default(now())
-  approvedAt     DateTime?
-  rejectedReason String?
-  rating         Float             @default(0)
-  reviewCount    Int               @default(0)
-  totalSales     Int               @default(0)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  user           User              @relation(fields: [userId], references: [id])
-  orderItems     OrderItem[]
-  questions      ProductQuestion[]
-  products       Product[]
-  reviews        Review[]
+  commissionRate      Float                    @default(0.18)
+  commissionOverride  Float?
+  maxProductsOverride Int?
+  maxPhotosOverride   Int?
+  status              ArtisanStatus            @default(PENDING)
+  appliedAt           DateTime                 @default(now())
+  approvedAt          DateTime?
+  rejectedReason      String?
+  rating              Float                    @default(0)
+  reviewCount         Int                      @default(0)
+  totalSales          Int                      @default(0)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  user                User                     @relation(fields: [userId], references: [id])
+  orderItems          OrderItem[]
+  questions           ProductQuestion[]
+  products            Product[]
+  reviews             Review[]
+  subscriptions       MembershipSubscription[]
 
   @@map("artisans")
 }
@@ -357,6 +361,7 @@ model ArtisanApplication {
   materials       String[]
   experience      String?
   phone           String?
+  selectedPlan    String?
   status          ArtisanApplicationStatus @default(PENDING)
   reviewedAt      DateTime?
   reviewNotes     String?
@@ -366,14 +371,29 @@ model ArtisanApplication {
 }
 
 model MembershipPlan {
-  id             String                   @id @default(cuid())
-  name           String
-  price          Int
-  commissionRate Float
-  features       String[]
-  isActive       Boolean                  @default(true)
-  createdAt      DateTime                 @default(now())
-  subscriptions  MembershipSubscription[]
+  id                  String                   @id @default(cuid())
+  name                String                   @unique
+  price               Int
+  annualPrice         Int?
+  commissionRate      Float
+  features            String[]
+  maxProducts         Int                      @default(10)
+  maxPhotosPerProduct Int                      @default(3)
+  videoEnabled        Boolean                  @default(false)
+  badgeText           String?
+  badgeType           String?
+  searchWeight        Float                    @default(1.0)
+  payoutFrequency     String                   @default("quincenal")
+  socialPostsPerMonth Int                      @default(0)
+  supportLevel        String                   @default("email")
+  hasCertificate      Boolean                  @default(false)
+  homeHighlight       Boolean                  @default(false)
+  hasBasicStats       Boolean                  @default(false)
+  hasAdvancedStats    Boolean                  @default(false)
+  isActive            Boolean                  @default(true)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  subscriptions       MembershipSubscription[]
 
   @@map("membership_plans")
 }
@@ -388,6 +408,7 @@ model MembershipSubscription {
   cancelledAt DateTime?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  artisan     Artisan          @relation(fields: [artisanId], references: [id])
   plan        MembershipPlan   @relation(fields: [planId], references: [id])
 
   @@map("membership_subscriptions")

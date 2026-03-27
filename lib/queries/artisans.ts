@@ -6,6 +6,15 @@ interface ArtisanFilters {
   material?: string;
 }
 
+const activePlanInclude = {
+  subscriptions: {
+    where: { status: "ACTIVE" as const },
+    include: { plan: { select: { name: true, badgeText: true, badgeType: true } } },
+    orderBy: { startDate: "desc" as const },
+    take: 1,
+  },
+} as const;
+
 export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
   const where: Record<string, unknown> = { status: "APPROVED" as const };
 
@@ -24,6 +33,7 @@ export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
     orderBy: { totalSales: "desc" },
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
+      ...activePlanInclude,
       _count: { select: { products: true } },
     },
   });
@@ -36,6 +46,7 @@ export async function getFeaturedArtisans(limit = 3) {
     take: limit,
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
+      ...activePlanInclude,
       _count: { select: { products: true } },
     },
   });
@@ -46,6 +57,7 @@ export async function getArtisanBySlug(slug: string) {
     where: { slug, status: "APPROVED" },
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
+      ...activePlanInclude,
       products: {
         where: { status: "APPROVED" },
         orderBy: { publishedAt: "desc" },

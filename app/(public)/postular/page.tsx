@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { ApplicationForm } from "./application-form";
+import { PostularFlow } from "./postular-flow";
 import {
   getActiveCategories,
   getActiveMaterials,
   getActiveSpecialties,
+  getActivePlans,
 } from "@/lib/queries/catalog";
 
 export const metadata: Metadata = {
@@ -12,15 +13,21 @@ export const metadata: Metadata = {
     "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
 };
 
-export default async function PostularPage() {
-  const [categories, materials, specialties] = await Promise.all([
+export default async function PostularPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plan?: string }>;
+}) {
+  const { plan: preselectedPlan } = await searchParams;
+  const [categories, materials, specialties, plans] = await Promise.all([
     getActiveCategories(),
     getActiveMaterials(),
     getActiveSpecialties(),
+    getActivePlans(),
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
         <h1 className="font-serif text-3xl font-light sm:text-4xl">
           Postula como Orfebre
@@ -32,7 +39,9 @@ export default async function PostularPage() {
       </div>
 
       <div className="mt-12">
-        <ApplicationForm
+        <PostularFlow
+          plans={plans}
+          preselectedPlan={preselectedPlan || null}
           specialties={specialties.map((s) => s.name)}
           categories={categories.map((c) => c.name)}
           materials={materials.map((m) => m.name)}

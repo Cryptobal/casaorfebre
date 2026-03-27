@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadToR2 } from "@/lib/r2";
+import { getArtisanPlanLimits } from "@/lib/plan-limits";
 import { NextResponse } from "next/server";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -26,6 +27,30 @@ export async function POST(request: Request) {
 
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: "La imagen no debe superar 10 MB" }, { status: 400 });
+  }
+
+  // ── Enforce photo limit by plan ──
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { artisan: true, _count: { select: { images: true } } },
+  });
+  if (!product) {
+    return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
+  }
+  try {
+    const limits = await getArtisanPlanLimits(product.artisanId);
+    if (limits.maxPhotosPerProduct > 0 && product._count.images >= limits.maxPhotosPerProduct) {
+      const planLabel = limits.planName.charAt(0).toUpperCase() + limits.planName.slice(1);
+      const upgradeMsg = limits.nextPlanName
+        ? ` Actualiza a ${limits.nextPlanName} para subir más fotos.`
+        : "";
+      return NextResponse.json(
+        { error: `Has alcanzado el límite de ${limits.maxPhotosPerProduct} fotos por pieza de tu plan ${planLabel}.${upgradeMsg}` },
+        { status: 400 }
+      );
+    }
+  } catch {
+    // If plan limits fail, allow upload (graceful degradation)
   }
 
   try {

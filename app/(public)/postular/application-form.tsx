@@ -43,12 +43,15 @@ interface ApplicationFormProps {
   /** Nombres de categorías de pieza (tabla `categories`). */
   categories?: string[];
   materials?: string[];
+  /** Plan seleccionado en el paso de pricing */
+  selectedPlan?: string;
 }
 
 export function ApplicationForm({
   specialties: specialtiesProp,
   categories: categoriesProp,
   materials: materialsProp,
+  selectedPlan,
 }: ApplicationFormProps) {
   const opcionesEspecialidad =
     specialtiesProp && specialtiesProp.length > 0 ? specialtiesProp : DEFAULT_ESPECIALIDADES;
@@ -107,6 +110,7 @@ export function ApplicationForm({
       <input type="hidden" name="region" value={region} />
       <input type="hidden" name="location" value={ciudad} />
       <input type="hidden" name="categories" value={categorias.join(",")} />
+      {selectedPlan && <input type="hidden" name="selectedPlan" value={selectedPlan} />}
 
       {/* ─── Section 1: Datos personales ─── */}
       <div>
