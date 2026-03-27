@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { ApplicationForm } from "./application-form";
-import { getActiveCategories, getActiveMaterials } from "@/lib/queries/catalog";
+import {
+  getActiveCategories,
+  getActiveMaterials,
+  getActiveSpecialties,
+} from "@/lib/queries/catalog";
 
 export const metadata: Metadata = {
   title: "Postular como Orfebre",
@@ -9,9 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PostularPage() {
-  const [categories, materials] = await Promise.all([
+  const [categories, materials, specialties] = await Promise.all([
     getActiveCategories(),
     getActiveMaterials(),
+    getActiveSpecialties(),
   ]);
 
   return (
@@ -28,6 +33,7 @@ export default async function PostularPage() {
 
       <div className="mt-12">
         <ApplicationForm
+          specialties={specialties.map((s) => s.name)}
           categories={categories.map((c) => c.name)}
           materials={materials.map((m) => m.name)}
         />

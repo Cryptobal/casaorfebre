@@ -9,6 +9,7 @@ import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { TagSelect } from "@/components/ui/tag-select";
 import { CHILEAN_REGIONS, citiesForRegion } from "@/lib/chile-cities";
 
+/** Especialidades técnicas / de oficio (catálogo `specialties`). */
 const DEFAULT_ESPECIALIDADES = [
   "Joyería de autor",
   "Engastado de piedras",
@@ -18,7 +19,8 @@ const DEFAULT_ESPECIALIDADES = [
   "Joyería contemporánea",
 ];
 
-const CATEGORIAS = [
+/** Tipos de pieza (catálogo `categories`); fallback si no hay BD. */
+const CATEGORIAS_FALLBACK = [
   "Aros",
   "Collar",
   "Anillo",
@@ -36,13 +38,24 @@ const DEFAULT_MATERIALES = [
 ];
 
 interface ApplicationFormProps {
+  /** Nombres de especialidades de orfebrería (tabla `specialties`). */
+  specialties?: string[];
+  /** Nombres de categorías de pieza (tabla `categories`). */
   categories?: string[];
   materials?: string[];
 }
 
-export function ApplicationForm({ categories, materials: materialsProp }: ApplicationFormProps) {
-  const ESPECIALIDADES = categories && categories.length > 0 ? categories : DEFAULT_ESPECIALIDADES;
-  const MATERIALES = materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES;
+export function ApplicationForm({
+  specialties: specialtiesProp,
+  categories: categoriesProp,
+  materials: materialsProp,
+}: ApplicationFormProps) {
+  const opcionesEspecialidad =
+    specialtiesProp && specialtiesProp.length > 0 ? specialtiesProp : DEFAULT_ESPECIALIDADES;
+  const opcionesCategoria =
+    categoriesProp && categoriesProp.length > 0 ? categoriesProp : CATEGORIAS_FALLBACK;
+  const MATERIALES =
+    materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES;
   const [state, formAction, pending] = useActionState(submitApplication, null);
   const [region, setRegion] = useState("");
   const [ciudad, setCiudad] = useState("");
@@ -160,7 +173,7 @@ export function ApplicationForm({ categories, materials: materialsProp }: Applic
           <div>
             <Label>Especialidad en orfebrería *</Label>
             <TagSelect
-              options={ESPECIALIDADES}
+              options={opcionesEspecialidad}
               selected={especialidades}
               onChange={setEspecialidades}
               name="specialty"
@@ -172,7 +185,7 @@ export function ApplicationForm({ categories, materials: materialsProp }: Applic
           <div>
             <Label>Categorías de piezas que produces *</Label>
             <TagSelect
-              options={CATEGORIAS}
+              options={opcionesCategoria}
               selected={categorias}
               onChange={setCategorias}
               name="_categories_display"
