@@ -40,7 +40,31 @@ export default async function PostulacionesPage() {
                     <span>{app.phone}</span>
                   </div>
                 )}
+                {app.yearsExperience != null && (
+                  <div>
+                    <span className="text-text-tertiary">Experiencia: </span>
+                    <span>{app.yearsExperience} {app.yearsExperience === 1 ? "año" : "años"}</span>
+                  </div>
+                )}
               </div>
+
+              {app.awards.length > 0 && (
+                <div>
+                  <p className="mb-1 text-xs uppercase tracking-widest text-text-tertiary">
+                    Premios y reconocimientos
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {app.awards.map((award: string) => (
+                      <span
+                        key={award}
+                        className="inline-block rounded-full bg-accent/10 border border-accent/20 px-3 py-1 text-xs text-accent"
+                      >
+                        {award}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <p className="text-sm text-text-secondary">

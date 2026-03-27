@@ -136,9 +136,12 @@ export default async function ArtisanProfilePage({
             </div>
           )}
 
-          {/* Location + Region */}
+          {/* Location + Region + Experience */}
           <p className="mt-2 text-text-secondary">
             {artisan.region ? `${artisan.location}, ${artisan.region}` : artisan.location}
+            {artisan.yearsExperience != null && (
+              <span> · {artisan.yearsExperience} {artisan.yearsExperience === 1 ? "año" : "años"} de experiencia</span>
+            )}
           </p>
 
           {/* Specialties */}
@@ -196,6 +199,25 @@ export default async function ArtisanProfilePage({
               {artisan.story}
             </p>
           </blockquote>
+        </FadeIn>
+      )}
+
+      {/* Awards Section */}
+      {artisan.awards && artisan.awards.length > 0 && (
+        <FadeIn delay={200} className="mt-10">
+          <h2 className="text-center font-serif text-lg font-light text-text">
+            Premios y reconocimientos
+          </h2>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {artisan.awards.map((award: string) => (
+              <span
+                key={award}
+                className="inline-block rounded-full bg-accent/10 border border-accent/20 px-4 py-1.5 text-xs font-medium text-accent"
+              >
+                {award}
+              </span>
+            ))}
+          </div>
         </FadeIn>
       )}
 

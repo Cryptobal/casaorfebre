@@ -32,6 +32,8 @@ export default async function PerfilPage() {
             videoUrl: artisan.videoUrl,
             profileImage: artisan.profileImage,
             slug: artisan.slug,
+            yearsExperience: artisan.yearsExperience,
+            awards: artisan.awards,
           }}
         />
       </div>

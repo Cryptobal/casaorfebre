@@ -19,6 +19,8 @@ interface ProfileFormProps {
     videoUrl: string | null;
     profileImage: string | null;
     slug: string;
+    yearsExperience: number | null;
+    awards: string[];
   };
 }
 
@@ -27,6 +29,8 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
   const [imageStatus, setImageStatus] = useState<{ success?: boolean; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [awards, setAwards] = useState<string[]>(artisan.awards);
+  const [awardInput, setAwardInput] = useState("");
 
   async function handleProfileSubmit(formData: FormData) {
     setSaving(true);
@@ -159,6 +163,75 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
               placeholder="Plata 950, Cobre, Piedras naturales"
               className="mt-1"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="yearsExperience">¿Cuántos años llevas en la orfebrería?</Label>
+            <Input
+              id="yearsExperience"
+              name="yearsExperience"
+              type="number"
+              min={0}
+              max={80}
+              defaultValue={artisan.yearsExperience ?? ""}
+              placeholder="Ej: 12"
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label>Premios, sellos de excelencia, certificaciones</Label>
+            <input type="hidden" name="awards" value={awards.join("|||")} />
+            <div className="mt-1 flex gap-2">
+              <Input
+                value={awardInput}
+                onChange={(e) => setAwardInput(e.target.value)}
+                placeholder="Ej: Sello de Excelencia Artesanías de Chile 2023"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = awardInput.trim();
+                    if (val && !awards.includes(val)) {
+                      setAwards([...awards, val]);
+                      setAwardInput("");
+                    }
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const val = awardInput.trim();
+                  if (val && !awards.includes(val)) {
+                    setAwards([...awards, val]);
+                    setAwardInput("");
+                  }
+                }}
+              >
+                Agregar
+              </Button>
+            </div>
+            {awards.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {awards.map((award) => (
+                  <span
+                    key={award}
+                    className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-xs text-accent"
+                  >
+                    {award}
+                    <button
+                      type="button"
+                      onClick={() => setAwards(awards.filter((a) => a !== award))}
+                      className="ml-1 text-accent/60 hover:text-accent"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

@@ -100,8 +100,10 @@ model Artisan {
   materials      String[]
   profileImage   String?
   workshopImages String[]
-  videoUrl       String?
-  socialLinks    Json?
+  videoUrl         String?
+  yearsExperience  Int?
+  awards           String[]
+  socialLinks      Json?
   rut            String?
   phone          String?
   mpAccessToken   String?
@@ -416,8 +418,10 @@ model ArtisanApplication {
   portfolioImages String[]
   portfolioUrl    String?
   materials       String[]
-  experience      String?
-  phone           String?
+  experience        String?
+  yearsExperience   Int?
+  awards            String[]
+  phone             String?
   selectedPlan    String?
   status          ArtisanApplicationStatus @default(PENDING)
   reviewedAt      DateTime?

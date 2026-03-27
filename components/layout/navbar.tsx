@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/coleccion", label: "Colección" },
   { href: "/lo-nuevo", label: "Lo Nuevo" },
   { href: "/seleccion-del-curador", label: "Selección del Curador" },
+  { href: "/tesoros-de-chile", label: "Tesoros de Chile" },
   { href: "/orfebres", label: "Orfebres" },
   { href: "/postular", label: "Postular" },
 ];

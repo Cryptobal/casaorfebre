@@ -292,3 +292,38 @@ export async function getSimilarProducts(product: {
 
   return results;
 }
+
+/**
+ * Get products for Tesoros de Chile editorial sections.
+ * Flexible search: matches materials array OR name/description ILIKE.
+ */
+export async function getTesorosProducts(
+  materialKeywords: string[],
+  textKeywords: string[],
+  limit = 4
+) {
+  const orConditions: Record<string, unknown>[] = [];
+
+  for (const mat of materialKeywords) {
+    orConditions.push({ materials: { has: mat } });
+  }
+  for (const kw of textKeywords) {
+    orConditions.push({ name: { contains: kw, mode: "insensitive" } });
+    orConditions.push({ description: { contains: kw, mode: "insensitive" } });
+  }
+
+  if (orConditions.length === 0) return [];
+
+  return prisma.product.findMany({
+    where: {
+      status: "APPROVED",
+      OR: orConditions,
+    },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      images: { orderBy: { position: "asc" }, take: 1 },
+    },
+  });
+}

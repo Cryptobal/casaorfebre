@@ -21,6 +21,10 @@ export async function submitApplication(
   const phoneRaw = (formData.get("phone") as string) || null;
   const phone = phoneRaw ? `+569${phoneRaw.replace(/\D/g, "")}` : null;
   const selectedPlan = (formData.get("selectedPlan") as string) || null;
+  const yearsExperienceRaw = formData.get("yearsExperience") as string;
+  const yearsExperience = yearsExperienceRaw ? parseInt(yearsExperienceRaw, 10) : null;
+  const awardsRaw = (formData.get("awards") as string) || "";
+  const awards = awardsRaw.split("|||").filter(Boolean);
 
   if (!name || !email || !region || !location || !specialty || !bio || !materialsRaw || !phoneRaw) {
     return { error: "Todos los campos marcados son requeridos" };
@@ -65,6 +69,8 @@ export async function submitApplication(
       phone,
       portfolioImages: [],
       selectedPlan,
+      yearsExperience: yearsExperience !== null && !isNaN(yearsExperience) ? yearsExperience : null,
+      awards,
       status: "PENDING",
     },
   });

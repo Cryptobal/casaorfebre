@@ -65,6 +65,8 @@ export function ApplicationForm({
   const [especialidades, setEspecialidades] = useState<string[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
   const [materiales, setMateriales] = useState<string[]>([]);
+  const [premios, setPremios] = useState<string[]>([]);
+  const [premioInput, setPremioInput] = useState("");
 
   const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
   const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
@@ -238,6 +240,76 @@ export function ApplicationForm({
               className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
               placeholder="Años de experiencia, formación, exposiciones, premios..."
             />
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="yearsExperience">Años de experiencia (opcional)</Label>
+              <Input
+                id="yearsExperience"
+                name="yearsExperience"
+                type="number"
+                min={0}
+                max={80}
+                className="mt-1"
+                placeholder="Ej: 12"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Premios y reconocimientos (opcional)</Label>
+            <input type="hidden" name="awards" value={premios.join("|||")} />
+            <div className="mt-1 flex gap-2">
+              <Input
+                value={premioInput}
+                onChange={(e) => setPremioInput(e.target.value)}
+                placeholder="Ej: Sello de Excelencia Artesanías de Chile 2023"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = premioInput.trim();
+                    if (val && !premios.includes(val)) {
+                      setPremios([...premios, val]);
+                      setPremioInput("");
+                    }
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const val = premioInput.trim();
+                  if (val && !premios.includes(val)) {
+                    setPremios([...premios, val]);
+                    setPremioInput("");
+                  }
+                }}
+              >
+                Agregar
+              </Button>
+            </div>
+            {premios.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {premios.map((p) => (
+                  <span
+                    key={p}
+                    className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-xs text-accent"
+                  >
+                    {p}
+                    <button
+                      type="button"
+                      onClick={() => setPremios(premios.filter((x) => x !== p))}
+                      className="ml-1 text-accent/60 hover:text-accent"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
