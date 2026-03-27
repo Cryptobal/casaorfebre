@@ -57,6 +57,9 @@ model User {
   // Gift cards
   giftCardsPurchased GiftCard[] @relation("GiftCardsPurchased")
 
+  // Blog
+  blogPosts BlogPost[]
+
   @@map("users")
 }
 
@@ -652,6 +655,49 @@ enum ArtisanApplicationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// ---------------------------------------------------------------------------
+// Blog
+// ---------------------------------------------------------------------------
+
+enum BlogCategory {
+  GUIAS
+  TENDENCIAS
+  ORFEBRES
+  CUIDADOS
+  MATERIALES
+  CULTURA
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model BlogPost {
+  id             String       @id @default(cuid())
+  slug           String       @unique
+  title          String
+  excerpt        String
+  content        String
+  coverImage     String?
+  category       BlogCategory
+  tags           String[]
+  authorId       String
+  author         User         @relation(fields: [authorId], references: [id])
+  status         BlogStatus   @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  readingTime    Int?
+  featured       Boolean      @default(false)
+  viewCount      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("blog_posts")
 }
 
 enum RewardType {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { DeleteBuyerButton } from "../delete-buyer-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -69,6 +70,11 @@ export default async function AdminBuyerDetailPage({ params }: PageProps) {
   const totalSpent = buyer.orders
     .filter((o) => o.status !== "PENDING_PAYMENT" && o.status !== "CANCELLED")
     .reduce((s, o) => s + o.total, 0);
+
+  const giftCardPurchases = await prisma.giftCard.count({
+    where: { purchaserId: id },
+  });
+  const canDeleteBuyer = buyer.orders.length === 0 && giftCardPurchases === 0;
 
   return (
     <div>
@@ -249,6 +255,18 @@ export default async function AdminBuyerDetailPage({ params }: PageProps) {
           </div>
         )}
       </Card>
+
+      <DeleteBuyerButton
+        buyerId={buyer.id}
+        canDelete={canDeleteBuyer}
+        blockReason={
+          !canDeleteBuyer
+            ? buyer.orders.length > 0
+              ? "Este comprador tiene pedidos registrados. Por trazabilidad no se puede eliminar la cuenta desde el panel."
+              : "Tiene gift cards asociadas como comprador; no se puede eliminar la cuenta."
+            : undefined
+        }
+      />
     </div>
   );
 }

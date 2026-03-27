@@ -47,6 +47,10 @@ interface ApplicationFormProps {
   selectedPlan?: string;
 }
 
+function stripNonDigits(value: string, maxLen: number) {
+  return value.replace(/\D/g, "").slice(0, maxLen);
+}
+
 export function ApplicationForm({
   specialties: specialtiesProp,
   categories: categoriesProp,
@@ -60,6 +64,16 @@ export function ApplicationForm({
   const MATERIALES =
     materialsProp && materialsProp.length > 0 ? materialsProp : DEFAULT_MATERIALES;
   const [state, formAction, pending] = useActionState(submitApplication, null);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+  const [experience, setExperience] = useState("");
+  const [yearsExperience, setYearsExperience] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+
   const [region, setRegion] = useState("");
   const [ciudad, setCiudad] = useState("");
   const [especialidades, setEspecialidades] = useState<string[]>([]);
@@ -121,15 +135,34 @@ export function ApplicationForm({
         <div className="space-y-6">
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <Label htmlFor="name">Nombre completo *</Label>
+              <Label htmlFor="firstName">Nombre *</Label>
               <Input
-                id="name"
-                name="name"
+                id="firstName"
+                name="firstName"
                 required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 className="mt-1"
-                placeholder="Tu nombre artístico o real"
+                placeholder="Nombre"
+                autoComplete="given-name"
               />
             </div>
+            <div>
+              <Label htmlFor="lastName">Apellido *</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="mt-1"
+                placeholder="Apellido"
+                autoComplete="family-name"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -137,9 +170,33 @@ export function ApplicationForm({
                 name="email"
                 type="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
                 placeholder="tu@email.com"
+                autoComplete="email"
               />
+            </div>
+            <div>
+              <Label htmlFor="phone">Celular *</Label>
+              <Input
+                id="phone"
+                name="phone"
+                required
+                pattern="[0-9]{9}"
+                title="9 dígitos, sin espacios"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                value={phone}
+                onChange={(e) => setPhone(stripNonDigits(e.target.value, 9))}
+                className="mt-1"
+                placeholder="912345678"
+                maxLength={9}
+                aria-invalid={phone.length > 0 && phone.length !== 9}
+              />
+              <p className="mt-1 text-xs text-text-tertiary">
+                Ingresa 9 dígitos (ej. 912345678)
+              </p>
             </div>
           </div>
 
@@ -155,6 +212,7 @@ export function ApplicationForm({
                 }}
                 placeholder="Selecciona tu región..."
                 className="mt-1"
+                searchable
               />
             </div>
             <div>
@@ -165,6 +223,7 @@ export function ApplicationForm({
                 onChange={setCiudad}
                 placeholder={region ? "Selecciona tu ciudad..." : "Selecciona una región primero"}
                 className="mt-1"
+                searchable
               />
             </div>
           </div>
@@ -226,6 +285,8 @@ export function ApplicationForm({
               name="bio"
               required
               rows={4}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
               className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
               placeholder="Cuéntanos sobre tu trayectoria, tu inspiración y qué hace únicas tus piezas..."
             />
@@ -237,6 +298,8 @@ export function ApplicationForm({
               id="experience"
               name="experience"
               rows={3}
+              value={experience}
+              onChange={(e) => setExperience(e.target.value)}
               className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
               placeholder="Años de experiencia, formación, exposiciones, premios..."
             />
@@ -251,6 +314,8 @@ export function ApplicationForm({
                 type="number"
                 min={0}
                 max={80}
+                value={yearsExperience}
+                onChange={(e) => setYearsExperience(e.target.value)}
                 className="mt-1"
                 placeholder="Ej: 12"
               />
@@ -318,6 +383,8 @@ export function ApplicationForm({
               id="portfolioUrl"
               name="portfolioUrl"
               type="url"
+              value={portfolioUrl}
+              onChange={(e) => setPortfolioUrl(e.target.value)}
               className="mt-1"
               placeholder="https://tu-portafolio.com o Instagram"
             />

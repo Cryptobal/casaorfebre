@@ -9,7 +9,9 @@ export async function submitApplication(
   _prevState: { error?: string; success?: boolean } | null,
   formData: FormData
 ) {
-  const name = formData.get("name") as string;
+  const firstName = (formData.get("firstName") as string)?.trim() ?? "";
+  const lastName = (formData.get("lastName") as string)?.trim() ?? "";
+  const name = `${firstName} ${lastName}`.trim();
   const email = formData.get("email") as string;
   const region = (formData.get("region") as string) || null;
   const location = formData.get("location") as string;
@@ -18,20 +20,31 @@ export async function submitApplication(
   const materialsRaw = formData.get("materials") as string;
   const experience = (formData.get("experience") as string) || null;
   const portfolioUrl = (formData.get("portfolioUrl") as string) || null;
-  const phoneRaw = (formData.get("phone") as string) || null;
-  const phone = phoneRaw ? `+569${phoneRaw.replace(/\D/g, "")}` : null;
+  const phoneRaw = (formData.get("phone") as string) || "";
+  const phoneDigits = phoneRaw.replace(/\D/g, "");
+  /** Chile: celular sin código de país = 9 dígitos (ej. 912345678) → E.164 +56912345678 */
+  const phone = phoneDigits.length === 9 ? `+56${phoneDigits}` : null;
   const selectedPlan = (formData.get("selectedPlan") as string) || null;
   const yearsExperienceRaw = formData.get("yearsExperience") as string;
   const yearsExperience = yearsExperienceRaw ? parseInt(yearsExperienceRaw, 10) : null;
   const awardsRaw = (formData.get("awards") as string) || "";
   const awards = awardsRaw.split("|||").filter(Boolean);
 
-  if (!name || !email || !region || !location || !specialty || !bio || !materialsRaw || !phoneRaw) {
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !region ||
+    !location ||
+    !specialty ||
+    !bio ||
+    !materialsRaw
+  ) {
     return { error: "Todos los campos marcados son requeridos" };
   }
 
-  if (phoneRaw && phoneRaw.replace(/\D/g, "").length !== 8) {
-    return { error: "El teléfono debe tener 8 dígitos después del +56 9" };
+  if (phoneDigits.length !== 9 || !phone) {
+    return { error: "El celular debe tener exactamente 9 dígitos" };
   }
 
   if (!email.includes("@")) {

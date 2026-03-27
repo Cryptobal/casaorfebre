@@ -779,3 +779,80 @@ export async function markReturnReceived(
   revalidatePath("/portal/admin/devoluciones");
   return { success: true };
 }
+
+/** Elimina una postulación (registro en `artisan_applications`). Borrado real en base de datos. */
+export async function deleteArtisanApplication(
+  applicationId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const app = await prisma.artisanApplication.findUnique({
+    where: { id: applicationId },
+  });
+  if (!app) return { error: "Postulación no encontrada" };
+
+  await prisma.artisanApplication.delete({
+    where: { id: applicationId },
+  });
+
+  revalidatePath("/portal/admin/postulaciones");
+  return { success: true };
+}
+
+/**
+ * Elimina un comprador (usuario BUYER) y datos no vinculados a pedidos.
+ * No elimina si hay pedidos o gift cards compradas: los datos deben conservarse por trazabilidad.
+ */
+export async function deleteBuyerUser(
+  userId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId, role: "BUYER" },
+  });
+  if (!user) return { error: "Comprador no encontrado" };
+
+  const orderCount = await prisma.order.count({ where: { userId } });
+  if (orderCount > 0) {
+    return {
+      error:
+        "No se puede eliminar: este comprador tiene pedidos asociados. Por trazabilidad, los datos deben conservarse en el sistema.",
+    };
+  }
+
+  const giftCount = await prisma.giftCard.count({ where: { purchaserId: userId } });
+  if (giftCount > 0) {
+    return {
+      error:
+        "No se puede eliminar: tiene gift cards registradas como comprador.",
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.message.deleteMany({
+      where: { conversation: { buyerId: userId } },
+    });
+    await tx.conversation.deleteMany({ where: { buyerId: userId } });
+    await tx.productQuestion.deleteMany({ where: { userId } });
+    await tx.review.deleteMany({ where: { userId } });
+    await tx.dispute.deleteMany({ where: { userId } });
+    await tx.returnRequest.deleteMany({ where: { userId } });
+    await tx.referralReward.deleteMany({
+      where: { OR: [{ referrerId: userId }, { referredId: userId }] },
+    });
+    await tx.blogPost.deleteMany({ where: { authorId: userId } });
+    await tx.user.delete({ where: { id: userId } });
+  });
+
+  revalidatePath("/portal/admin/compradores");
+  return { success: true };
+}

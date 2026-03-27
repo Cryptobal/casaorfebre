@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { approveApplication, rejectApplication } from "@/lib/actions/admin";
+import {
+  approveApplication,
+  rejectApplication,
+  deleteArtisanApplication,
+} from "@/lib/actions/admin";
+import { ConfirmDestructiveModal } from "@/components/shared/confirm-destructive-modal";
 
 interface ApplicationActionsProps {
   applicationId: string;
@@ -11,12 +17,15 @@ interface ApplicationActionsProps {
 export function ApplicationActions({
   applicationId,
 }: ApplicationActionsProps) {
+  const router = useRouter();
   const [showReject, setShowReject] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const [reason, setReason] = useState("");
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleApprove() {
@@ -26,6 +35,7 @@ export function ApplicationActions({
         setFeedback({ type: "error", message: result.error });
       } else {
         setFeedback({ type: "success", message: "Postulacion aprobada" });
+        router.refresh();
       }
     });
   }
@@ -40,6 +50,21 @@ export function ApplicationActions({
       } else {
         setFeedback({ type: "success", message: "Postulacion rechazada" });
         setShowReject(false);
+        router.refresh();
+      }
+    });
+  }
+
+  function handleDelete() {
+    setDeleteError(null);
+    startTransition(async () => {
+      const result = await deleteArtisanApplication(applicationId);
+      if (result.error) {
+        setDeleteError(result.error);
+        setShowDelete(false);
+      } else {
+        setShowDelete(false);
+        router.refresh();
       }
     });
   }
@@ -58,7 +83,20 @@ export function ApplicationActions({
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
+      {deleteError && (
+        <p className="text-sm text-red-700">{deleteError}</p>
+      )}
+      <ConfirmDestructiveModal
+        open={showDelete}
+        title="Eliminar postulación"
+        description="Se eliminarán de forma permanente todos los datos de esta postulación en el servidor (nombre, contacto, biografía, materiales, etc.). Esta acción no se puede deshacer."
+        confirmLabel="Sí, eliminar"
+        onCancel={() => setShowDelete(false)}
+        onConfirm={handleDelete}
+        pending={isPending}
+      />
+
+      <div className="flex flex-wrap gap-2">
         <Button
           size="sm"
           className="bg-green-700 text-white hover:bg-green-800"
@@ -75,6 +113,15 @@ export function ApplicationActions({
           disabled={isPending}
         >
           Rechazar
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="border-red-300 text-red-700 hover:bg-red-50"
+          onClick={() => setShowDelete(true)}
+          disabled={isPending}
+        >
+          Eliminar
         </Button>
       </div>
       {showReject && (
