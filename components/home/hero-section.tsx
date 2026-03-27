@@ -13,9 +13,9 @@ export function HeroSection() {
     : null;
 
   return (
-    <section className="relative flex min-h-[80vh] flex-col items-center justify-center overflow-hidden px-4 text-center">
+    <section className="relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden text-center">
       {iframeSrc && (
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 -z-10 w-full">
           <iframe
             src={iframeSrc}
             allow="autoplay; encrypted-media"
@@ -24,9 +24,9 @@ export function HeroSection() {
               position: "absolute",
               top: "50%",
               left: "50%",
-              width: "177.78vh",
-              minWidth: "100%",
-              minHeight: "100%",
+              /* Cover 16:9 en cualquier aspect ratio (ultrawide incluido) */
+              width: "max(177.78vh, 100%)",
+              height: "max(56.25vw, 100%)",
               transform: "translate(-50%, -50%)",
             }}
             title="Video de fondo - joyería artesanal"
@@ -35,7 +35,7 @@ export function HeroSection() {
         </div>
       )}
 
-      <FadeIn>
+      <FadeIn className="px-4">
         <span className="text-accent text-lg">◆</span>
         <h1 className="mt-6 font-serif text-4xl font-light italic text-white drop-shadow-sm sm:text-5xl lg:text-6xl">
           Piezas únicas nacidas de manos chilenas
