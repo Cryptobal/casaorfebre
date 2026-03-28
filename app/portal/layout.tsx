@@ -6,6 +6,7 @@ import Image from "next/image";
 import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
 import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
+import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
 
 const ROLE_SWITCHER_EMAILS = [
   "carlos.irigoyen@gmail.com",
@@ -192,18 +193,19 @@ export default async function PortalLayout({ children }: { children: React.React
               {(role === "ADMIN" || role === "ARTISAN") && (
                 <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-widest text-text-tertiary">Comprador</p>
               )}
-              <Link href="/portal/comprador/pedidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Pedidos</Link>
-              <Link href="/portal/comprador/gift-cards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
-              <Link href="/portal/comprador/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
-              <Link href="/portal/comprador/favoritos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Favoritos</Link>
-              <Link href="/portal/comprador/listas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Listas</Link>
-              <Link href="/portal/comprador/referidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Invita Amigos</Link>
-              <Link href="/portal/comprador/perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Cuenta</Link>
+              <Link href="/portal/comprador/pedidos" data-tour="buyer-pedidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Pedidos</Link>
+              <Link href="/portal/comprador/gift-cards" data-tour="buyer-giftcards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
+              <Link href="/portal/comprador/mensajes" data-tour="buyer-mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
+              <Link href="/portal/comprador/favoritos" data-tour="buyer-favoritos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Favoritos</Link>
+              <Link href="/portal/comprador/listas" data-tour="buyer-listas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Listas</Link>
+              <Link href="/portal/comprador/referidos" data-tour="buyer-referidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Invita Amigos</Link>
+              <Link href="/portal/comprador/perfil" data-tour="buyer-perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Cuenta</Link>
             </>
           )}
 
           <div className="mt-6 border-t border-border pt-4 space-y-2">
             {role === "ARTISAN" && <OrfebreTour />}
+            {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
             <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-text-tertiary transition-colors hover:text-accent">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -222,6 +224,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={90} height={20} />
           </Link>
           {role === "ARTISAN" && <OrfebreTour />}
+          {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
         </div>
 
         <div className="max-w-full min-w-0 p-4 sm:p-6 lg:p-8">{children}</div>
