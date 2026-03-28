@@ -463,10 +463,26 @@ export async function adminDeleteProduct(
   if (!product) return { error: "Producto no encontrado" };
 
   if (product._count.orderItems > 0) {
-    return { error: "No se puede eliminar un producto con ventas. Suspéndelo en su lugar." };
+    return { error: "No se puede eliminar un producto con ventas. Suspende o pausa el producto en su lugar." };
   }
 
-  await prisma.product.delete({ where: { id: productId } });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.review.deleteMany({ where: { productId } });
+      await tx.certificate.deleteMany({ where: { productId } });
+      await tx.conversation.updateMany({
+        where: { productId },
+        data: { productId: null },
+      });
+      await tx.product.delete({ where: { id: productId } });
+    });
+  } catch (e) {
+    console.error("[adminDeleteProduct]", productId, e);
+    return {
+      error:
+        "No se pudo eliminar el producto (puede haber datos vinculados). Recarga la p?gina e intenta de nuevo.",
+    };
+  }
 
   revalidatePath("/portal/admin/productos");
   revalidatePath("/portal/orfebre/productos");

@@ -5,7 +5,6 @@ import { MaterialBadge } from "@/components/shared/material-badge";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { ProductModerationActions } from "./product-moderation-actions";
 import { AdminProductActions } from "./admin-product-actions";
-import Image from "next/image";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 
@@ -36,6 +35,13 @@ const STATUS_LABELS: Record<string, string> = {
   PAUSED: "Pausado",
   SOLD_OUT: "Agotado",
 };
+
+/** Miniatura en admin: evita next/image con dominios no listados (500 en producción). */
+function canShowProductThumbUrl(url: string | undefined): boolean {
+  if (!url || url.startsWith("r2://")) return false;
+  if (url.includes("placeholder-ring")) return false;
+  return true;
+}
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (!value) return null;
@@ -256,12 +262,19 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                   <tbody className="divide-y divide-border">
                     {allProducts.map((product) => {
                       const thumb = product.images[0];
+                      const showThumb = thumb && canShowProductThumbUrl(thumb.url);
                       return (
                         <tr key={product.id}>
                           <td className="py-3 pr-3">
-                            <div className="relative h-12 w-12 overflow-hidden rounded-md border border-border">
-                              {thumb && !thumb.url.startsWith("r2://") ? (
-                                <Image src={thumb.url} alt={product.name} fill className="object-cover" sizes="48px" />
+                            <div className="h-12 w-12 overflow-hidden rounded-md border border-border">
+                              {showThumb ? (
+                                // eslint-disable-next-line @next/next/no-img-element -- admin: URLs de R2/CDN sin depender de remotePatterns
+                                <img
+                                  src={thumb!.url}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
                               ) : (
                                 <ImagePlaceholder name={product.name} className="h-full w-full text-[8px]" />
                               )}
@@ -298,12 +311,19 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
               <div className="mt-4 space-y-3 md:hidden">
                 {allProducts.map((product) => {
                   const thumb = product.images[0];
+                  const showThumb = thumb && canShowProductThumbUrl(thumb.url);
                   return (
                     <div key={product.id} className="rounded-lg border border-border bg-surface p-4">
                       <div className="flex gap-3">
-                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border">
-                          {thumb && !thumb.url.startsWith("r2://") ? (
-                            <Image src={thumb.url} alt={product.name} fill className="object-cover" sizes="64px" />
+                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border">
+                          {showThumb ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- admin: URLs de R2/CDN sin depender de remotePatterns
+                            <img
+                              src={thumb!.url}
+                              alt=""
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
                           ) : (
                             <ImagePlaceholder name={product.name} className="h-full w-full text-[8px]" />
                           )}
