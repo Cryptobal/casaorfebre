@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import {
   resendInvitation,
   deactivateInvitation,
+  deleteInvitation,
 } from "@/lib/actions/invitations";
 import { NewInvitationModal } from "@/components/admin/new-invitation-modal";
 import { CsvImportModal } from "@/components/admin/csv-import-modal";
@@ -109,6 +110,18 @@ export function InvitacionesClient({
     setActionId(null);
   }
 
+  async function handleDelete(id: string) {
+    if (!confirm("¿Eliminar esta invitación? Se borrará permanentemente."))
+      return;
+    setActionId(id);
+    try {
+      await deleteInvitation(id);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Error al eliminar");
+    }
+    setActionId(null);
+  }
+
   return (
     <>
       {/* Action bar */}
@@ -207,6 +220,8 @@ export function InvitacionesClient({
                 const canDeactivate =
                   inv.isActive &&
                   ["DRAFT", "SENT", "OPENED"].includes(inv.invitationStatus);
+                const canDelete =
+                  inv.invitationStatus !== "REDEEMED";
                 const loading = actionId === inv.id;
 
                 return (
@@ -267,6 +282,15 @@ export function InvitacionesClient({
                             className="rounded border border-red-200 px-2 py-1 text-xs text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
                           >
                             Desactivar
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            disabled={loading}
+                            onClick={() => handleDelete(inv.id)}
+                            className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"
+                          >
+                            Eliminar
                           </button>
                         )}
                       </div>

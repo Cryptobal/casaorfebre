@@ -247,6 +247,25 @@ export async function deactivateInvitation(promoCodeId: string) {
 }
 
 // ============================================================
+// ELIMINAR INVITACIÓN
+// ============================================================
+
+export async function deleteInvitation(promoCodeId: string) {
+  const promo = await prisma.promoCode.findUnique({
+    where: { id: promoCodeId },
+    include: { redemptions: true },
+  });
+
+  if (!promo) throw new Error("Código no encontrado");
+  if (promo.redemptions.length > 0) {
+    throw new Error("No se puede eliminar: este código ya tiene redenciones");
+  }
+
+  await prisma.promoCode.delete({ where: { id: promoCodeId } });
+  revalidatePath("/portal/admin/invitaciones");
+}
+
+// ============================================================
 // OBTENER INVITACIONES
 // ============================================================
 
