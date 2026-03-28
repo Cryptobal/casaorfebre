@@ -29,7 +29,7 @@ export function PhotographyGuide() {
           <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
           <circle cx="12" cy="13" r="3" />
         </svg>
-        Guia de Fotografia
+        Guia de Fotos y Video
       </Button>
 
       {open && (
@@ -64,9 +64,12 @@ export function PhotographyGuide() {
             </button>
 
             <h2 className="mb-4 font-serif text-xl font-semibold text-text">
-              Guia de Fotografia
+              Guia de Fotografia y Video
             </h2>
 
+            <h3 className="mb-2 font-serif text-base font-semibold text-text">
+              Fotografia
+            </h3>
             <ul className="space-y-3 text-sm text-text-secondary">
               <li>
                 <strong className="text-text">Resolucion minima:</strong> 1200 x
@@ -92,6 +95,46 @@ export function PhotographyGuide() {
               <li>
                 <strong className="text-text">Prohibido:</strong> filtros de
                 Instagram, logos, marcas de agua, texto sobre imagen
+              </li>
+            </ul>
+
+            <hr className="my-5 border-border" />
+
+            <h3 className="mb-2 font-serif text-base font-semibold text-text">
+              Video
+            </h3>
+            <ul className="space-y-3 text-sm text-text-secondary">
+              <li>
+                <strong className="text-text">Duracion:</strong> entre 10 y 30
+                segundos
+              </li>
+              <li>
+                <strong className="text-text">Formato:</strong> MP4, orientacion
+                vertical (9:16) o cuadrado (1:1)
+              </li>
+              <li>
+                <strong className="text-text">Resolucion minima:</strong> 720p
+                (1080p recomendado)
+              </li>
+              <li>
+                <strong className="text-text">Peso maximo:</strong> 50 MB
+              </li>
+              <li>
+                <strong className="text-text">Contenido sugerido:</strong>
+                <ol className="mt-1 ml-4 list-decimal space-y-1">
+                  <li>Pieza girando lentamente sobre fondo neutro</li>
+                  <li>Detalle del brillo y textura en movimiento</li>
+                  <li>Pieza puesta (en mano, cuello, oreja) para mostrar escala</li>
+                </ol>
+              </li>
+              <li>
+                <strong className="text-text">Iluminacion:</strong> misma regla
+                que fotos — luz natural o difusa, sin flash
+              </li>
+              <li>
+                <strong className="text-text">Prohibido:</strong> musica con
+                copyright, voz en off, filtros, marcas de agua, movimientos
+                bruscos de camara
               </li>
             </ul>
 
