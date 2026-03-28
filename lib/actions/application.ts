@@ -125,6 +125,20 @@ export async function submitApplication(
     },
   });
 
+  // Track invitation funnel: mark code as APPLIED
+  if (promoCodeRaw) {
+    await prisma.promoCode.updateMany({
+      where: {
+        code: promoCodeRaw,
+        invitationStatus: { in: ["SENT", "OPENED"] },
+      },
+      data: {
+        appliedAt: new Date(),
+        invitationStatus: "APPLIED",
+      },
+    });
+  }
+
   // Send confirmation email to applicant
   try {
     await resend.emails.send({

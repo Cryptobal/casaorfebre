@@ -1319,6 +1319,49 @@ export async function sendDowngradeCompletedEmail(
 // ---------------------------------------------------------------------------
 // Pioneer Invitation (for mail merge / manual send)
 // ---------------------------------------------------------------------------
+
+const PLAN_BENEFITS: Record<string, {
+  displayName: string;
+  price: number;
+  commission: string;
+  features: string[];
+}> = {
+  maestro: {
+    displayName: "Maestro",
+    price: 49990,
+    commission: "9%",
+    features: [
+      "Productos ilimitados",
+      "Fotos ilimitadas por pieza",
+      "Video por pieza",
+      "Badge Maestro Orfebre",
+      "Estadísticas avanzadas",
+      "Certificado de autenticidad",
+      "Destaque en página principal",
+      "Máxima prioridad en búsqueda (2x)",
+      "Soporte dedicado",
+      "Pago en 48h",
+      "4 posts en redes sociales/mes",
+    ],
+  },
+  artesano: {
+    displayName: "Artesano",
+    price: 19990,
+    commission: "12%",
+    features: [
+      "Hasta 40 productos activos",
+      "6 fotos por pieza",
+      "Badge Artesano Verificado",
+      "Estadísticas básicas",
+      "Certificado de autenticidad",
+      "Prioridad en búsqueda (1.5x)",
+      "Soporte por chat",
+      "Pago semanal",
+      "1 post en redes sociales/mes",
+    ],
+  },
+};
+
 export async function sendPioneerInvitationEmail(
   to: string,
   {
@@ -1335,24 +1378,62 @@ export async function sendPioneerInvitationEmail(
 ) {
   const base = appUrl();
   const registerUrl = `${base}/postular?code=${encodeURIComponent(code)}`;
-  const freeMonths = Math.round(durationDays / 30);
-  const planLabel = planName.charAt(0).toUpperCase() + planName.slice(1);
+  const months = Math.round(durationDays / 30);
+  const plan = PLAN_BENEFITS[planName.toLowerCase()] ?? PLAN_BENEFITS.maestro;
+  const totalValue = `$${(plan.price * months).toLocaleString("es-CL")}`;
+
+  const featuresHtml = plan.features
+    .map(
+      (f) =>
+        `<div style="font-size:14px;color:#4a4a48;padding:6px 0;border-bottom:1px solid #f0ece6;">
+           <span style="color:#8B7355;margin-right:8px;">&#10003;</span> ${f}
+         </div>`,
+    )
+    .join("");
 
   await sendEmail(
     to,
-    "Has sido seleccionado — Programa Pioneros Casa Orfebre",
-    `<p style="margin:0 0 16px;">Hola ${name},</p>
-     <p style="margin:0 0 16px;"><strong>Casa Orfebre</strong> es el primer marketplace exclusivo para orfebres en Chile — un espacio curado donde artesanos verificados muestran y venden sus creaciones.</p>
-     <p style="margin:0 0 16px;">Has sido seleccionado como parte de nuestro grupo de <strong>orfebres fundadores</strong>.</p>
-     <div style="margin:0 0 20px;padding:20px;background-color:#f0ebe3;border-radius:8px;border-left:4px solid #8B7355;text-align:center;">
-       <p style="margin:0 0 8px;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#8B7355;">Programa Pioneros</p>
-       <p style="margin:0 0 4px;font-size:20px;font-weight:bold;color:#1a1a18;">${freeMonths} meses de Plan ${planLabel} gratis</p>
-       <p style="margin:0;font-size:14px;color:#6b6050;">Productos ilimitados · Fotos ilimitadas · Comisión 9% · Badge Maestro · Destaque en home</p>
+    `${name}, has sido seleccionado — Programa Pioneros Casa Orfebre`,
+    `<!-- Badge Pionero -->
+     <div style="text-align:center;margin:0 0 24px;">
+       <span style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:6px 20px;border-radius:20px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Programa Pioneros</span>
      </div>
-     <p style="margin:0 0 16px;">Tu código personal es <strong style="font-family:monospace;font-size:16px;background:#f5f3ef;padding:4px 8px;border-radius:4px;">${code}</strong></p>
-     <p style="margin:0 0 20px;text-align:center;">
-       <a href="${registerUrl}" style="display:inline-block;padding:14px 32px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:16px;font-weight:bold;">Postular como Pionero</a>
+
+     <!-- Saludo -->
+     <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1a18;text-align:center;margin:0 0 16px;line-height:1.3;">
+       ${name}, has sido seleccionado
+     </h1>
+
+     <p style="font-size:15px;color:#4a4a48;text-align:center;line-height:1.6;margin:0 0 28px;">
+       Casa Orfebre es el primer marketplace exclusivo para orfebres y joyeros de autor en Chile.
+       Estamos seleccionando un grupo reducido de artesanos para formar parte de nuestra comunidad fundadora.
      </p>
-     <p style="margin:0 0 0;font-size:13px;color:#9e9a90;">Cupos limitados para los primeros orfebres. Tu código expira en 3 meses.</p>`,
+
+     <!-- Beneficio principal -->
+     <div style="background:#FAFAF8;border:1px solid #e8e4de;border-radius:12px;padding:28px 24px;margin:0 0 28px;text-align:center;">
+       <p style="font-size:12px;color:#8B7355;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;">Tu beneficio exclusivo</p>
+       <p style="font-family:Georgia,serif;font-size:28px;font-weight:600;color:#1a1a18;margin:0 0 4px;">${months} meses de Plan ${plan.displayName}</p>
+       <p style="font-size:14px;color:#8B7355;margin:0 0 4px;">Completamente gratis</p>
+       <p style="font-size:14px;color:#999;margin:0 0 4px;text-decoration:line-through;">Valor: ${totalValue}</p>
+       <p style="font-size:14px;color:#1a1a18;margin:0 0 20px;">Comisión por venta: solo ${plan.commission}</p>
+       <div style="text-align:left;max-width:320px;margin:0 auto;">${featuresHtml}</div>
+     </div>
+
+     <!-- CTA -->
+     <p style="text-align:center;margin:0 0 24px;">
+       <a href="${registerUrl}" style="display:inline-block;background:#1a1a18;color:#FAFAF8;padding:14px 40px;border-radius:8px;font-size:16px;font-weight:500;text-decoration:none;letter-spacing:0.5px;">Postular como Pionero</a>
+     </p>
+
+     <p style="font-size:13px;color:#999;text-align:center;margin:0 0 8px;">Tu código personal:</p>
+     <p style="font-family:monospace;font-size:18px;color:#8B7355;text-align:center;letter-spacing:2px;margin:0 0 28px;font-weight:600;">${code}</p>
+
+     <!-- Nota -->
+     <div style="background:#f8f6f2;border-radius:8px;padding:16px 20px;margin:0 0 8px;">
+       <p style="font-size:13px;color:#6a6a68;margin:0;line-height:1.6;">
+         Este código es personal e intransferible. Cupos limitados para el grupo fundador.
+         Al postular, tu solicitud será revisada por nuestro equipo para verificar tu trabajo.
+         Una vez aprobado, tu Plan ${plan.displayName} se activará automáticamente.
+       </p>
+     </div>`,
   );
 }

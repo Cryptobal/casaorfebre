@@ -13,6 +13,7 @@ const ROLE_SWITCHER_EMAILS = [
 
 const ADMIN_LINKS = [
   { href: "/portal/admin", label: "Dashboard" },
+  { href: "/portal/admin/invitaciones", label: "Invitaciones" },
   { href: "/portal/admin/postulaciones", label: "Postulaciones" },
   { href: "/portal/admin/productos", label: "Productos" },
   { href: "/portal/admin/fotos", label: "Fotos" },
@@ -144,6 +145,7 @@ export default async function PortalLayout({ children }: { children: React.React
           {role === "ADMIN" && (
             <>
               <Link href="/portal/admin" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Dashboard</Link>
+              <Link href="/portal/admin/invitaciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Invitaciones</Link>
               <Link
                 href="/portal/admin/postulaciones"
                 className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"

@@ -29,6 +29,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ valid: false, reason: "used" });
   }
 
+  // Track open (first visit with this code — fire-and-forget)
+  prisma.promoCode
+    .updateMany({
+      where: { code, openedAt: null, invitationStatus: "SENT" },
+      data: { openedAt: new Date(), invitationStatus: "OPENED" },
+    })
+    .catch(() => {});
+
   // Fetch the plan to show benefits
   const plan = await prisma.membershipPlan.findFirst({
     where: { name: { equals: promo.planName, mode: "insensitive" } },

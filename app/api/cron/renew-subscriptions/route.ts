@@ -181,6 +181,20 @@ export async function GET(request: Request) {
       }
     }
 
+    // ── PASO 1b: Marcar invitaciones expiradas ──
+    await prisma.promoCode.updateMany({
+      where: {
+        expiresAt: { lt: now },
+        invitationStatus: { in: ["DRAFT", "SENT", "OPENED"] },
+        isActive: true,
+        currentUses: 0,
+      },
+      data: {
+        invitationStatus: "EXPIRED",
+        isActive: false,
+      },
+    });
+
     // ── PASO 2: Grace periods que terminaron → ejecutar downgrade ──
     const expiredGrace = await prisma.membershipSubscription.findMany({
       where: {

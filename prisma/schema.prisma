@@ -538,6 +538,15 @@ model PromoCode {
   updatedAt    DateTime            @updatedAt
   redemptions  PromoCodeRedemption[]
 
+  // Invitation tracking
+  recipientName    String?
+  recipientEmail   String?
+  invitationStatus InvitationStatus @default(DRAFT)
+  sentAt           DateTime?
+  openedAt         DateTime?
+  appliedAt        DateTime?
+  redeemedAt       DateTime?
+
   @@index([campaign])
   @@index([code])
   @@map("promo_codes")
@@ -803,6 +812,15 @@ enum ProductPauseReason {
   MANUAL
   ADMIN
   MODERATION
+}
+
+enum InvitationStatus {
+  DRAFT
+  SENT
+  OPENED
+  APPLIED
+  REDEEMED
+  EXPIRED
 }
 
 // ---------------------------------------------------------------------------

@@ -112,6 +112,14 @@ export async function approveApplication(
       if (promo) {
         promoEndDate = new Date();
         promoEndDate.setDate(promoEndDate.getDate() + promo.durationDays);
+        // Track invitation funnel: mark as REDEEMED
+        await prisma.promoCode.update({
+          where: { id: promo.id },
+          data: {
+            redeemedAt: new Date(),
+            invitationStatus: "REDEEMED",
+          },
+        });
       }
     } catch (e) {
       console.error("Promo code redemption failed:", e);
