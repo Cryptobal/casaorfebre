@@ -42,16 +42,30 @@ export async function GET(request: Request) {
 
   // Exchange authorization code for tokens
   try {
+    // Use the same redirect_uri as the authorization step
+    const redirectUri = process.env.MP_REDIRECT_URI?.includes("localhost")
+      ? `${appUrl}/api/oauth/mercadopago/callback`
+      : (process.env.MP_REDIRECT_URI || `${appUrl}/api/oauth/mercadopago/callback`);
+
+    const tokenPayload = {
+      client_id: process.env.MP_APP_ID,
+      client_secret: process.env.MP_APP_SECRET,
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: redirectUri,
+    };
+
+    console.log("[oauth/mp/callback] Token exchange request:", {
+      client_id: tokenPayload.client_id,
+      redirect_uri: tokenPayload.redirect_uri,
+      code: code?.slice(0, 10) + "...",
+      has_secret: !!tokenPayload.client_secret,
+    });
+
     const tokenResponse = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: process.env.MP_APP_ID,
-        client_secret: process.env.MP_APP_SECRET,
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: process.env.MP_REDIRECT_URI,
-      }),
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(tokenPayload),
     });
 
     if (!tokenResponse.ok) {
