@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getMessages } from "@/lib/actions/chat";
-import { ChatMessages } from "@/components/chat/chat-messages";
+import { AdminChat } from "./admin-chat";
 import { AdminConversationActions } from "./admin-actions";
 
 interface PageProps {
@@ -97,7 +97,7 @@ export default async function AdminConversationPage({ params }: PageProps) {
 
         {/* Chat */}
         <div className="flex h-[500px] flex-col rounded-lg border border-border">
-          <ChatMessages messages={messages} />
+          <AdminChat messages={messages} />
         </div>
 
         {/* Admin actions */}

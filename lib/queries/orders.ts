@@ -1,6 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import type { FulfillmentStatus } from "@prisma/client";
 
+/** Ítems de pedido que aún no han sido despachados (para KPI, alertas y badges del portal). */
+export async function getArtisanPendingFulfillmentCount(artisanId: string) {
+  return prisma.orderItem.count({
+    where: {
+      artisanId,
+      fulfillmentStatus: { in: ["PENDING", "PREPARING"] },
+    },
+  });
+}
+
 export async function getArtisanOrders(artisanId: string, status?: FulfillmentStatus) {
   return prisma.orderItem.findMany({
     where: {

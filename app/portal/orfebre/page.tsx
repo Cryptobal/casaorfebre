@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { ArtisanBadge } from "@/components/artisans/artisan-badge";
 import { MpConnectionBanner } from "./mp-connection-banner";
+import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
+import { cn } from "@/lib/utils";
 
 export default async function ArtisanDashboard({
   searchParams,
@@ -58,9 +60,7 @@ export default async function ArtisanDashboard({
       prisma.product.count({
         where: { artisanId: artisan.id, status: "APPROVED" },
       }),
-      prisma.orderItem.count({
-        where: { artisanId: artisan.id, fulfillmentStatus: "PENDING" },
-      }),
+      getArtisanPendingFulfillmentCount(artisan.id),
       prisma.productQuestion.count({
         where: { artisanId: artisan.id, answer: null },
       }),
@@ -77,6 +77,7 @@ export default async function ArtisanDashboard({
       label: "Productos Activos",
       value: activeProducts,
       highlight: false,
+      href: "/portal/orfebre/productos",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -98,6 +99,7 @@ export default async function ArtisanDashboard({
       label: "Pedidos Pendientes",
       value: pendingOrders,
       highlight: pendingOrders > 0,
+      href: "/portal/orfebre/pedidos",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -121,6 +123,7 @@ export default async function ArtisanDashboard({
       label: "Ventas del Mes",
       value: monthlySales,
       highlight: false,
+      href: "/portal/orfebre/finanzas",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -142,6 +145,7 @@ export default async function ArtisanDashboard({
       label: "Preguntas sin Responder",
       value: unansweredQuestions,
       highlight: unansweredQuestions > 0,
+      href: "/portal/orfebre/preguntas",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -185,17 +189,23 @@ export default async function ArtisanDashboard({
 
       {/* Alert banners */}
       {pendingOrders > 0 && (
-        <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <Link
+          href="/portal/orfebre/pedidos"
+          className="mb-4 block cursor-pointer rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 no-underline transition-colors hover:bg-amber-100"
+        >
           Tienes <strong>{pendingOrders}</strong> pedido
           {pendingOrders > 1 ? "s" : ""} pendiente
-          {pendingOrders > 1 ? "s" : ""} de envio.
-        </div>
+          {pendingOrders > 1 ? "s" : ""} de envío (por preparar o despachar).
+        </Link>
       )}
       {unansweredQuestions > 0 && (
-        <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <Link
+          href="/portal/orfebre/preguntas"
+          className="mb-4 block cursor-pointer rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 no-underline transition-colors hover:bg-amber-100"
+        >
           Tienes <strong>{unansweredQuestions}</strong> pregunta
           {unansweredQuestions > 1 ? "s" : ""} sin responder.
-        </div>
+        </Link>
       )}
 
       <h1 className="font-serif text-3xl font-semibold text-text">
@@ -213,33 +223,37 @@ export default async function ArtisanDashboard({
         maxProductsOverride={artisan.maxProductsOverride}
       />
 
-      {/* Stats grid */}
+      {/* Stats grid: un solo <a> con estilos de tarjeta para toda el área sea clicable */}
       <div className="mt-8 grid grid-cols-2 gap-4">
         {stats.map((stat) => (
-          <Card
+          <Link
             key={stat.label}
-            className={`flex flex-col items-start gap-3 ${
-              stat.highlight ? "border-amber-300 bg-amber-50/50" : ""
-            }`}
+            href={stat.href}
+            className={cn(
+              "flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-6 no-underline transition-colors hover:border-accent/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+              stat.highlight && "border-amber-300 bg-amber-50/50"
+            )}
+            aria-label={`${stat.label}: ${stat.value}`}
           >
             <div
-              className={`${
+              className={cn(
                 stat.highlight ? "text-amber-600" : "text-text-secondary"
-              }`}
+              )}
             >
               {stat.icon}
             </div>
             <div>
               <p
-                className={`text-2xl font-semibold ${
+                className={cn(
+                  "text-2xl font-semibold",
                   stat.highlight ? "text-amber-700" : "text-text"
-                }`}
+                )}
               >
                 {stat.value}
               </p>
               <p className="text-sm text-text-secondary">{stat.label}</p>
             </div>
-          </Card>
+          </Link>
         ))}
       </div>
     </div>

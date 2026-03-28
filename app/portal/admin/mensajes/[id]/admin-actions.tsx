@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { adminBlockConversation, adminSendWarning } from "@/lib/actions/chat";
+import { adminBlockConversation, adminSendWarning, adminDeleteConversation, adminDeleteMessage } from "@/lib/actions/chat";
 import { useRouter } from "next/navigation";
 
 export function AdminConversationActions({
@@ -18,6 +18,7 @@ export function AdminConversationActions({
   const [warningTarget, setWarningTarget] = useState<"BUYER" | "ARTISAN" | null>(null);
   const [warningText, setWarningText] = useState("");
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function handleBlock() {
     if (!confirmBlock) {
@@ -103,6 +104,31 @@ export function AdminConversationActions({
         >
           Suspender orfebre
         </button>
+        <button
+          onClick={() => {
+            if (!confirmDelete) { setConfirmDelete(true); return; }
+            startTransition(async () => {
+              await adminDeleteConversation(conversationId);
+              router.push("/portal/admin/mensajes");
+            });
+          }}
+          disabled={isPending}
+          className={`rounded-md px-4 py-2.5 text-sm font-medium min-h-[44px] ${
+            confirmDelete
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "border border-border text-text-secondary hover:bg-background"
+          } disabled:opacity-50`}
+        >
+          {confirmDelete ? "Confirmar eliminación" : "Eliminar conversación"}
+        </button>
+        {confirmDelete && (
+          <button
+            onClick={() => setConfirmDelete(false)}
+            className="rounded-md border border-border px-4 py-2.5 text-sm min-h-[44px]"
+          >
+            Cancelar
+          </button>
+        )}
       </div>
 
       {warningTarget && (

@@ -168,7 +168,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </div>
 
           {/* Right column — info */}
-          <div className="space-y-6 lg:sticky lg:top-24 lg:col-span-2 lg:self-start">
+          <div className="space-y-6 lg:col-span-2">
             {/* Type badge */}
             {product.isCustomMade && (
               <span className="inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium text-accent">

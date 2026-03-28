@@ -205,6 +205,7 @@ export async function getConversations() {
 
   const conversations = await prisma.conversation.findMany({
     where: {
+      deletedAt: null,
       OR: [
         { buyerId: user.id },
         ...(artisan ? [{ artisanId: artisan.id }] : []),
@@ -282,18 +283,32 @@ export async function getMessages(conversationId: string) {
     return { error: "No tienes acceso", messages: [] };
   }
 
+  // Determine viewer role for visibility filtering
+  const viewerRole = isAdmin(user.role) ? null : isBuyer ? "BUYER" : "ARTISAN";
+
   // Mark messages from the other person as read
   await prisma.message.updateMany({
     where: {
       conversationId,
       senderId: { not: user.id },
       isRead: false,
+      deletedAt: null,
     },
     data: { isRead: true },
   });
 
   const messages = await prisma.message.findMany({
-    where: { conversationId },
+    where: {
+      conversationId,
+      deletedAt: null,
+      // Non-admin users only see messages visible to them
+      ...(viewerRole ? {
+        OR: [
+          { visibleTo: null },
+          { visibleTo: viewerRole },
+        ],
+      } : {}),
+    },
     orderBy: { createdAt: "asc" },
     include: {
       sender: { select: { id: true, name: true, image: true } },
@@ -313,6 +328,7 @@ export async function getMessages(conversationId: string) {
       isRead: m.isRead,
       createdAt: m.createdAt,
       isOwn: m.senderId === user.id,
+      visibleTo: m.visibleTo,
     })),
   };
 }
@@ -370,7 +386,7 @@ export async function adminBlockConversation(conversationId: string, message?: s
 
 export async function adminSendWarning(
   conversationId: string,
-  _toRole: "BUYER" | "ARTISAN",
+  toRole: "BUYER" | "ARTISAN",
   message: string,
 ) {
   const user = await requireUser();
@@ -382,6 +398,7 @@ export async function adminSendWarning(
       senderId: user.id,
       senderRole: "ADMIN",
       content: message,
+      visibleTo: toRole,
     },
   });
 
@@ -391,6 +408,8 @@ export async function adminSendWarning(
   });
 
   revalidatePath(`/portal/admin/mensajes/${conversationId}`);
+  revalidatePath(`/portal/comprador/mensajes/${conversationId}`);
+  revalidatePath(`/portal/orfebre/mensajes/${conversationId}`);
   return { success: true };
 }
 
@@ -406,7 +425,7 @@ export async function adminGetConversations(filters?: {
   const user = await requireUser();
   if (!isAdmin(user.role)) return [];
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { deletedAt: null };
   if (filters?.bypass) where.hasBypassAttempt = true;
   if (filters?.status) where.status = filters.status;
 
@@ -489,4 +508,46 @@ export async function getBypassConversationCount() {
   return prisma.conversation.count({
     where: { hasBypassAttempt: true, status: "ACTIVE" },
   });
+}
+
+// ---------------------------------------------------------------------------
+// Admin: delete message (soft)
+// ---------------------------------------------------------------------------
+
+export async function adminDeleteMessage(messageId: string) {
+  const user = await requireUser();
+  if (!isAdmin(user.role)) return { error: "No autorizado" };
+
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: { conversationId: true },
+  });
+  if (!message) return { error: "Mensaje no encontrado" };
+
+  await prisma.message.update({
+    where: { id: messageId },
+    data: { deletedAt: new Date() },
+  });
+
+  revalidatePath(`/portal/admin/mensajes/${message.conversationId}`);
+  revalidatePath(`/portal/comprador/mensajes/${message.conversationId}`);
+  revalidatePath(`/portal/orfebre/mensajes/${message.conversationId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Admin: delete conversation (soft)
+// ---------------------------------------------------------------------------
+
+export async function adminDeleteConversation(conversationId: string) {
+  const user = await requireUser();
+  if (!isAdmin(user.role)) return { error: "No autorizado" };
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { deletedAt: new Date() },
+  });
+
+  revalidatePath("/portal/admin/mensajes");
+  return { success: true };
 }

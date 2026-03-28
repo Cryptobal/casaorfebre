@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
+import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 
 const ROLE_SWITCHER_EMAILS = [
   "carlos.irigoyen@gmail.com",
@@ -58,6 +59,10 @@ export default async function PortalLayout({ children }: { children: React.React
   }
 
   let pendingPostulaciones = 0;
+  let artisanPendingOrders = 0;
+  let artisanUnansweredQuestions = 0;
+  let artisanUnreadMessages = 0;
+
   if (session.user.role === "ADMIN") {
     pendingPostulaciones = await prisma.artisanApplication.count({
       where: { status: "PENDING" },
@@ -84,6 +89,27 @@ export default async function PortalLayout({ children }: { children: React.React
   // When NOT role-switching (normal user), show role links + buyer links.
   const showBuyerSection = !isRoleSwitcher || role === "BUYER";
 
+  // Fetch artisan counters for sidebar badges
+  if (role === "ARTISAN") {
+    const artisan = await prisma.artisan.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+    if (artisan) {
+      [artisanPendingOrders, artisanUnansweredQuestions, artisanUnreadMessages] = await Promise.all([
+        getArtisanPendingFulfillmentCount(artisan.id),
+        prisma.productQuestion.count({ where: { artisanId: artisan.id, answer: null } }),
+        prisma.message.count({
+          where: {
+            conversation: { artisanId: artisan.id },
+            senderId: { not: session.user.id },
+            isRead: false,
+          },
+        }),
+      ]);
+    }
+  }
+
   const mobileTitle =
     role === "ADMIN" ? "Admin" : role === "ARTISAN" ? "Mi Taller" : "Mi Cuenta";
 
@@ -95,7 +121,14 @@ export default async function PortalLayout({ children }: { children: React.React
             : l
         )
       : []),
-    ...(role === "ARTISAN" ? ARTISAN_LINKS : []),
+    ...(role === "ARTISAN"
+      ? ARTISAN_LINKS.map((l) => {
+          if (l.href === "/portal/orfebre/pedidos") return { ...l, badge: artisanPendingOrders };
+          if (l.href === "/portal/orfebre/preguntas") return { ...l, badge: artisanUnansweredQuestions };
+          if (l.href === "/portal/orfebre/mensajes") return { ...l, badge: artisanUnreadMessages };
+          return l;
+        })
+      : []),
     ...(showBuyerSection ? BUYER_LINKS : []),
   ];
 
@@ -140,9 +173,9 @@ export default async function PortalLayout({ children }: { children: React.React
             <>
               <Link href="/portal/orfebre" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Taller</Link>
               <Link href="/portal/orfebre/productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Piezas</Link>
-              <Link href="/portal/orfebre/pedidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Pedidos</Link>
-              <Link href="/portal/orfebre/preguntas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Preguntas</Link>
-              <Link href="/portal/orfebre/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
+              <SidebarLink href="/portal/orfebre/pedidos" label="Pedidos" count={artisanPendingOrders} />
+              <SidebarLink href="/portal/orfebre/preguntas" label="Preguntas" count={artisanUnansweredQuestions} />
+              <SidebarLink href="/portal/orfebre/mensajes" label="Mensajes" count={artisanUnreadMessages} />
               <Link href="/portal/orfebre/finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
               <Link href="/portal/orfebre/estadisticas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Estadísticas</Link>
               <Link href="/portal/orfebre/herramientas/calculadora" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Calculadora</Link>
@@ -187,5 +220,21 @@ export default async function PortalLayout({ children }: { children: React.React
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </div>
     </div>
+  );
+}
+
+function SidebarLink({ href, label, count }: { href: string; label: string; count: number }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
+    >
+      <span>{label}</span>
+      {count > 0 && (
+        <span className="min-w-[1.25rem] rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </Link>
   );
 }

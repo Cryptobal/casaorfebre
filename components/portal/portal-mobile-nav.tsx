@@ -61,6 +61,10 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
             <div className="space-y-1">
               {links.map((link) => {
                 const isActive = pathname === link.href;
+                const badgeBg =
+                  link.href.startsWith("/portal/orfebre") && link.badge != null && link.badge > 0
+                    ? "bg-amber-500"
+                    : "bg-accent";
                 return (
                   <Link
                     key={link.href}
@@ -73,7 +77,9 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
                   >
                     <span>{link.label}</span>
                     {link.badge != null && link.badge > 0 && (
-                      <span className="min-w-[1.25rem] rounded-full bg-accent px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
+                      <span
+                        className={`min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ${badgeBg}`}
+                      >
                         {link.badge > 99 ? "99+" : link.badge}
                       </span>
                     )}

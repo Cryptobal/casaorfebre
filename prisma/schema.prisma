@@ -811,6 +811,7 @@ model Conversation {
   lastNotifiedBuyerAt  DateTime?
   lastNotifiedArtisanAt DateTime?
   messages         Message[]
+  deletedAt        DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
@@ -820,17 +821,19 @@ model Conversation {
 }
 
 model Message {
-  id             String            @id @default(cuid())
+  id             String             @id @default(cuid())
   conversationId String
-  conversation   Conversation      @relation(fields: [conversationId], references: [id])
+  conversation   Conversation       @relation(fields: [conversationId], references: [id])
   senderId       String
-  sender         User              @relation(fields: [senderId], references: [id])
+  sender         User               @relation(fields: [senderId], references: [id])
   senderRole     MessageSenderRole
   content        String
-  isRead         Boolean           @default(false)
-  isBlocked      Boolean           @default(false)
+  isRead         Boolean            @default(false)
+  isBlocked      Boolean            @default(false)
   blockedReason  String?
-  createdAt      DateTime          @default(now())
+  visibleTo      MessageSenderRole? // null = visible to all, BUYER/ARTISAN = only that role sees it
+  deletedAt      DateTime?          // soft delete for admin
+  createdAt      DateTime           @default(now())
 
   @@index([conversationId])
   @@map("messages")
