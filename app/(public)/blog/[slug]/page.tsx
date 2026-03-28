@@ -136,7 +136,7 @@ export default async function BlogPostPage({
       <BlogImage
         src={post.coverImage}
         alt={post.title}
-        className="w-full aspect-[21/9] object-cover"
+        className="w-full aspect-[2/1] object-cover"
       />
 
       <article className="mx-auto max-w-4xl px-4 pb-24 sm:px-6 lg:px-8">
