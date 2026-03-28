@@ -78,30 +78,35 @@ export function ArtisanAccountActions({ artisanId, status, className }: ArtisanA
       {error && (
         <p className="max-w-md rounded-md bg-error/10 px-3 py-2 text-xs text-error">{error}</p>
       )}
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-1">
         {status === "APPROVED" && (
-          <Button
+          <button
             type="button"
-            size="sm"
-            variant="secondary"
-            className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
+            title="Suspender orfebre"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
             disabled={pending}
             onClick={onSuspend}
           >
-            Suspender
-          </Button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="10" y1="15" x2="10" y2="9" />
+              <line x1="14" y1="15" x2="14" y2="9" />
+            </svg>
+          </button>
         )}
         {status === "SUSPENDED" && (
-          <Button
+          <button
             type="button"
-            size="sm"
-            variant="secondary"
-            className="shrink-0 border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
+            title="Reactivar orfebre"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-50"
             disabled={pending}
             onClick={onReactivate}
           >
-            Reactivar
-          </Button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="10 8 16 12 10 16 10 8" />
+            </svg>
+          </button>
         )}
         <ConfirmDestructiveModal
           open={open}
@@ -112,15 +117,17 @@ export function ArtisanAccountActions({ artisanId, status, className }: ArtisanA
           onConfirm={onConfirm}
           pending={pending}
         />
-        <Button
+        <button
           type="button"
-          size="sm"
-          variant="secondary"
-          className="shrink-0 border-border whitespace-nowrap"
+          title="Eliminar cuenta"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-text-tertiary transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
           onClick={() => setOpen(true)}
         >
-          Eliminar cuenta…
-        </Button>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+          </svg>
+        </button>
       </div>
     </div>
   );

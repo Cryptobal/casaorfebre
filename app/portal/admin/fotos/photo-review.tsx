@@ -266,10 +266,10 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                 )}
 
                 {/* Actions */}
-                {!feedback[photo.id] && (activeTab === "PENDING_REVIEW" || activeTab === "APPROVED") && (
+                {!feedback[photo.id] && (activeTab === "PENDING_REVIEW" || activeTab === "APPROVED" || activeTab === "REJECTED") && (
                   <div className="space-y-2 pt-1">
                     <div className="flex flex-wrap gap-1.5">
-                      {activeTab === "PENDING_REVIEW" && (
+                      {(activeTab === "PENDING_REVIEW" || activeTab === "REJECTED") && (
                         <Button
                           size="sm"
                           className="bg-green-700 text-white hover:bg-green-800"
@@ -279,18 +279,20 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                           Aprobar
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          setRejectingId(
-                            rejectingId === photo.id ? null : photo.id
-                          )
-                        }
-                        disabled={isPending}
-                      >
-                        Rechazar
-                      </Button>
+                      {(activeTab === "PENDING_REVIEW" || activeTab === "APPROVED") && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            setRejectingId(
+                              rejectingId === photo.id ? null : photo.id
+                            )
+                          }
+                          disabled={isPending}
+                        >
+                          Rechazar
+                        </Button>
+                      )}
                       {!photo.url.startsWith("r2://") && (
                         <a
                           href={photo.url}
@@ -301,28 +303,32 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                           Descargar
                         </a>
                       )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          fileInputRefs.current[photo.id]?.click()
-                        }
-                        disabled={isPending}
-                      >
-                        Reemplazar
-                      </Button>
-                      <input
-                        ref={(el) => {
-                          fileInputRefs.current[photo.id] = el;
-                        }}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleReplace(photo.id, file);
-                        }}
-                      />
+                      {(activeTab === "PENDING_REVIEW" || activeTab === "APPROVED") && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              fileInputRefs.current[photo.id]?.click()
+                            }
+                            disabled={isPending}
+                          >
+                            Reemplazar
+                          </Button>
+                          <input
+                            ref={(el) => {
+                              fileInputRefs.current[photo.id] = el;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleReplace(photo.id, file);
+                            }}
+                          />
+                        </>
+                      )}
                       <Button
                         size="sm"
                         variant="secondary"
