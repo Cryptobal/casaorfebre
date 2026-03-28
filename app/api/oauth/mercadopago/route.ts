@@ -26,11 +26,11 @@ export async function GET() {
 
   const appId = process.env.MP_APP_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
-  // Use MP_REDIRECT_URI if explicitly set, otherwise build from app URL
-  const redirectUri =
-    process.env.MP_REDIRECT_URI && !process.env.MP_REDIRECT_URI.includes("localhost")
-      ? process.env.MP_REDIRECT_URI
-      : `${appUrl}/api/oauth/mercadopago/callback`;
+  // MP OAuth does not allow localhost redirect URIs — always use production URL.
+  // The redirect_uri must match what's registered in the MP app settings.
+  const redirectUri = process.env.MP_REDIRECT_URI?.includes("localhost")
+    ? `${appUrl}/api/oauth/mercadopago/callback`
+    : (process.env.MP_REDIRECT_URI || `${appUrl}/api/oauth/mercadopago/callback`);
 
   if (!appId) {
     console.error("[oauth/mp] MP_APP_ID not configured");

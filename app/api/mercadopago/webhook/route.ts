@@ -428,9 +428,101 @@ async function handleGiftCardPayment(payment: any, paymentId: string | number) {
   console.log(`[webhook] Gift card created: ${code}, amount=${amount}, recipient=${recipientEmail}`);
 }
 
+/**
+ * Fetches a payment from MP, trying marketplace token first, then artisan fallback.
+ */
+async function fetchPayment(paymentId: string | number): Promise<any> {
+  try {
+    return await paymentClient.get({ id: paymentId });
+  } catch (err: any) {
+    console.warn('[MP Webhook] Marketplace token fetch failed, trying artisan fallback', {
+      paymentId, error: err?.message,
+    });
+
+    const recentOrders = await prisma.order.findMany({
+      where: { status: 'PENDING_PAYMENT' },
+      include: { items: { select: { artisanId: true }, take: 1 } },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    for (const order of recentOrders) {
+      const artisanId = order.items[0]?.artisanId;
+      if (!artisanId) continue;
+      const artisan = await prisma.artisan.findUnique({
+        where: { id: artisanId },
+        select: { mpAccessToken: true },
+      });
+      if (!artisan?.mpAccessToken) continue;
+      try {
+        const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+          headers: { Authorization: `Bearer ${artisan.mpAccessToken}` },
+        });
+        if (res.ok) {
+          console.log('[MP Webhook] Payment fetched via artisan fallback', { paymentId, artisanId });
+          return res.json();
+        }
+      } catch {}
+    }
+
+    console.error('[MP Webhook] Could not fetch payment with any token', { paymentId });
+    return null;
+  }
+}
+
+/**
+ * Fetches a merchant_order from MP API.
+ */
+async function fetchMerchantOrder(merchantOrderId: string): Promise<any> {
+  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const res = await fetch(`https://api.mercadopago.com/merchant_orders/${merchantOrderId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.ok) return res.json();
+  console.error('[MP Webhook] Failed to fetch merchant_order', {
+    merchantOrderId, status: res.status,
+  });
+  return null;
+}
+
+/**
+ * Processes a single payment: fetches details from MP, dispatches to the right handler.
+ */
+async function processPayment(paymentId: string | number) {
+  console.log('[MP Webhook] Fetching payment', { paymentId, timestamp: new Date().toISOString() });
+
+  const payment = await fetchPayment(paymentId);
+  if (!payment || !payment.external_reference) {
+    console.warn('[MP Webhook] Payment not found or missing external_reference', { paymentId });
+    return;
+  }
+
+  console.log('[MP Webhook] Payment data', {
+    id: payment.id,
+    status: payment.status,
+    transaction_amount: payment.transaction_amount,
+    fee_details: payment.fee_details,
+    external_reference: payment.external_reference,
+    collector_id: payment.collector_id,
+  });
+
+  const metadata = payment.metadata as Record<string, unknown> | undefined;
+  const isSubscription = metadata?.type === "subscription";
+  const isGiftCard = metadata?.type === "giftcard" ||
+    (typeof payment.external_reference === "string" && payment.external_reference.startsWith("giftcard_"));
+
+  if (isSubscription) {
+    await handleSubscriptionPayment(payment);
+  } else if (isGiftCard) {
+    await handleGiftCardPayment(payment, paymentId);
+  } else {
+    await handleProductPayment(payment, paymentId);
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    // Rate limit: 100/min by IP to prevent abuse
+    // Rate limit: 100/min by IP
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
     const { success: rlOk } = await webhookLimiter.limit(ip);
     if (!rlOk) {
@@ -440,119 +532,104 @@ export async function POST(request: Request) {
     const xSignature = request.headers.get("x-signature");
     const xRequestId = request.headers.get("x-request-id");
 
+    // --- IPN fallback: query-param format without signature ---
+    const url = new URL(request.url);
+    const topicParam = url.searchParams.get("topic") || url.searchParams.get("type");
+    const idParam = url.searchParams.get("id") || url.searchParams.get("data.id");
+
+    if (!xSignature && topicParam && idParam) {
+      console.log('[MP Webhook] IPN format received', { topic: topicParam, id: idParam });
+      if (topicParam === "payment") {
+        await processPayment(idParam);
+      } else if (topicParam === "merchant_order") {
+        const mo = await fetchMerchantOrder(idParam);
+        if (mo) {
+          for (const p of (mo.payments || []).filter((p: any) => p.status === "approved")) {
+            await processPayment(p.id);
+          }
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // --- Standard webhook format (JSON body with signature) ---
     const body = await request.json();
+    const eventType = body.type || body.action || "";
 
-    // MercadoPago sends different notification formats
-    const paymentId = body.data?.id;
-    const topic = body.type || body.action;
+    // Extract the correct data ID for HMAC validation:
+    // - "payment" events: body.data.id (the payment ID)
+    // - "topic_merchant_order_wh": body.data.id (the merchant_order ID)
+    // - fallback: body.id
+    const dataId = body.data?.id ?? body.id;
 
-    // Reject early if secret is not configured (server misconfiguration)
+    console.log('[MP Webhook] Request received', {
+      format: xSignature ? 'webhook_signed' : 'webhook_unsigned',
+      type: eventType,
+      resourceId: dataId,
+      action: body.action,
+      hasSignature: !!xSignature,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Reject if secret not configured
     if (!process.env.MERCADOPAGO_WEBHOOK_SECRET) {
       console.error("[webhook] MERCADOPAGO_WEBHOOK_SECRET no configurado");
       return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
     }
 
-    // Validate webhook signature
-    if (!validateSignature(xSignature, xRequestId, paymentId?.toString())) {
-      console.error("[webhook] Firma inválida — rechazando request");
+    // Validate HMAC signature
+    if (!validateSignature(xSignature, xRequestId, dataId?.toString())) {
+      console.error("[webhook] Firma inválida", {
+        type: eventType,
+        dataId,
+        bodyDataId: body.data?.id,
+        bodyId: body.id,
+      });
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    if (!paymentId || !topic?.includes("payment")) {
-      return NextResponse.json({ received: true });
-    }
+    // --- Handle "topic_merchant_order_wh" ---
+    if (eventType === "topic_merchant_order_wh") {
+      const merchantOrderId = String(dataId);
+      console.log('[MP Webhook] Processing merchant_order', { merchantOrderId });
 
-    // Fetch payment details from MercadoPago
-    console.log('[MP Webhook] Fetching payment', {
-      paymentId,
-      usingToken: 'marketplace',
-      timestamp: new Date().toISOString(),
-    });
-
-    let payment: any;
-    try {
-      payment = await paymentClient.get({ id: paymentId });
-    } catch (err: any) {
-      // If marketplace token can't access this payment (split), try artisan's token
-      console.warn('[MP Webhook] Marketplace token fetch failed, attempting artisan fallback', {
-        paymentId,
-        error: err?.message,
-      });
-
-      // Look up order by scanning recent pending orders for this payment
-      const recentOrders = await prisma.order.findMany({
-        where: { status: 'PENDING_PAYMENT' },
-        include: {
-          items: {
-            select: { artisanId: true },
-            take: 1,
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      });
-
-      for (const order of recentOrders) {
-        const artisanId = order.items[0]?.artisanId;
-        if (!artisanId) continue;
-
-        const artisan = await prisma.artisan.findUnique({
-          where: { id: artisanId },
-          select: { mpAccessToken: true },
-        });
-
-        if (artisan?.mpAccessToken) {
-          try {
-            const res = await fetch(
-              `https://api.mercadopago.com/v1/payments/${paymentId}`,
-              {
-                headers: { Authorization: `Bearer ${artisan.mpAccessToken}` },
-              }
-            );
-            if (res.ok) {
-              payment = await res.json();
-              console.log('[MP Webhook] Payment fetched via artisan token fallback', {
-                paymentId,
-                artisanId,
-              });
-              break;
-            }
-          } catch {}
-        }
-      }
-
-      if (!payment) {
-        console.error('[MP Webhook] Could not fetch payment with any token', { paymentId });
+      const mo = await fetchMerchantOrder(merchantOrderId);
+      if (!mo) {
         return NextResponse.json({ received: true });
       }
-    }
 
-    console.log('[MP Webhook] Payment data', {
-      id: payment.id,
-      status: payment.status,
-      transaction_amount: payment.transaction_amount,
-      fee_details: payment.fee_details,
-      external_reference: payment.external_reference,
-      collector_id: payment.collector_id,
-    });
+      const approvedPayments = (mo.payments || []).filter((p: any) => p.status === "approved");
+      console.log('[MP Webhook] Merchant order payments', {
+        merchantOrderId,
+        moStatus: mo.status,
+        totalPayments: mo.payments?.length || 0,
+        approvedCount: approvedPayments.length,
+        externalReference: mo.external_reference,
+      });
 
-    if (!payment || !payment.external_reference) {
+      // Also save the merchant_order_id on the order if we can find it
+      if (mo.external_reference) {
+        await prisma.order.updateMany({
+          where: { id: mo.external_reference, mpMerchantOrderId: null },
+          data: { mpMerchantOrderId: merchantOrderId },
+        });
+      }
+
+      for (const p of approvedPayments) {
+        await processPayment(p.id);
+      }
+
       return NextResponse.json({ received: true });
     }
 
-    // Distinguish between product payments, subscription payments, and gift cards
-    const metadata = payment.metadata as Record<string, unknown> | undefined;
-    const isSubscription = metadata?.type === "subscription";
-    const isGiftCard = metadata?.type === "giftcard" ||
-      (typeof payment.external_reference === "string" && payment.external_reference.startsWith("giftcard_"));
-
-    if (isSubscription) {
-      await handleSubscriptionPayment(payment);
-    } else if (isGiftCard) {
-      await handleGiftCardPayment(payment, paymentId);
-    } else {
-      await handleProductPayment(payment, paymentId);
+    // --- Handle standard "payment" events ---
+    const paymentId = body.data?.id;
+    if (!paymentId || !eventType.includes("payment")) {
+      console.log('[MP Webhook] Ignoring non-payment event', { type: eventType, dataId });
+      return NextResponse.json({ received: true });
     }
+
+    await processPayment(paymentId);
 
     return NextResponse.json({ received: true });
   } catch (error) {
