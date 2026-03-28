@@ -487,7 +487,10 @@ async function fetchPayment(paymentId: string | number): Promise<any> {
  * Fetches a merchant_order from MP API.
  */
 async function fetchMerchantOrder(merchantOrderId: string): Promise<any> {
-  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const sandbox = process.env.MP_SANDBOX !== "false";
+  const token = sandbox
+    ? (process.env.MERCADOPAGO_TEST_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN)
+    : process.env.MERCADOPAGO_ACCESS_TOKEN;
   const res = await fetch(`https://api.mercadopago.com/merchant_orders/${merchantOrderId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
