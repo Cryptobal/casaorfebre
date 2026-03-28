@@ -45,6 +45,7 @@ export default async function OrfebresPage() {
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-widest text-text-tertiary">
                   <th className="pb-3 pr-4 font-medium">Orfebre</th>
+                  <th className="pb-3 pr-4 font-medium">Email</th>
                   <th className="pb-3 pr-4 font-medium">Ubicación</th>
                   <th className="pb-3 pr-4 font-medium">Plan</th>
                   <th className="pb-3 pr-4 font-medium">Rating</th>
@@ -75,6 +76,9 @@ export default async function OrfebresPage() {
                             override
                           </span>
                         )}
+                      </td>
+                      <td className="py-3 pr-4 text-text-secondary">
+                        <span className="break-all font-mono text-xs">{artisan.user.email}</span>
                       </td>
                       <td className="py-3 pr-4 text-text-secondary">
                         {artisan.location}
@@ -153,6 +157,7 @@ export default async function OrfebresPage() {
                           </span>
                         )}
                       </p>
+                      <p className="break-all font-mono text-xs text-text-secondary">{artisan.user.email}</p>
                       <p className="text-sm text-text-secondary">{artisan.location}</p>
                     </div>
                     <span

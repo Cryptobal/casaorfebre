@@ -274,6 +274,7 @@ export async function getAllArtisans() {
   return prisma.artisan.findMany({
     orderBy: { createdAt: "desc" },
     include: {
+      user: { select: { email: true } },
       subscriptions: {
         where: { status: "ACTIVE" },
         include: { plan: { select: { name: true, badgeText: true, badgeType: true, homeHighlight: true } } },

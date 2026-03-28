@@ -554,6 +554,34 @@ export async function suspendArtisan(
   return { success: true };
 }
 
+// 13b. Reactivar orfebre suspendido (vuelve a estado aprobado)
+export async function reactivateArtisan(
+  artisanId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: artisanId },
+    select: { status: true },
+  });
+  if (!artisan) return { error: "Orfebre no encontrado" };
+  if (artisan.status !== "SUSPENDED") {
+    return { error: "Solo se pueden reactivar cuentas suspendidas" };
+  }
+
+  await prisma.artisan.update({
+    where: { id: artisanId },
+    data: { status: "APPROVED" },
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
+
 /**
  * Intenta eliminar la cuenta del orfebre (usuario + perfil) solo si no hay actividad comercial.
  * Si hay productos, ventas u órdenes (como comprador), no elimina: deja la cuenta suspendida.

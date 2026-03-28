@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { removeOrSuspendArtisanAccount, suspendArtisan } from "@/lib/actions/admin";
+import {
+  reactivateArtisan,
+  removeOrSuspendArtisanAccount,
+  suspendArtisan,
+} from "@/lib/actions/admin";
 import { ConfirmDestructiveModal } from "@/components/shared/confirm-destructive-modal";
 
 interface ArtisanAccountActionsProps {
@@ -23,6 +27,16 @@ export function ArtisanAccountActions({ artisanId, status }: ArtisanAccountActio
     setInfo(null);
     startTransition(async () => {
       const r = await suspendArtisan(artisanId);
+      if (r.error) setError(r.error);
+      router.refresh();
+    });
+  }
+
+  function onReactivate() {
+    setError(null);
+    setInfo(null);
+    startTransition(async () => {
+      const r = await reactivateArtisan(artisanId);
       if (r.error) setError(r.error);
       router.refresh();
     });
@@ -72,6 +86,18 @@ export function ArtisanAccountActions({ artisanId, status }: ArtisanAccountActio
           onClick={onSuspend}
         >
           Suspender
+        </Button>
+      )}
+      {status === "SUSPENDED" && (
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
+          disabled={pending}
+          onClick={onReactivate}
+        >
+          Reactivar
         </Button>
       )}
       <ConfirmDestructiveModal
