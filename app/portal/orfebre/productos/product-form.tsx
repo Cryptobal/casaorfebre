@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useCallback } from "react";
+import { useActionState, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/products/image-upload";
 import { VideoUploader } from "@/components/products/video-uploader";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
-import { createProduct, updateProduct, submitForReview } from "@/lib/actions/products";
+import { createProduct, updateProduct, saveAndSubmitForReview } from "@/lib/actions/products";
 
 const CATEGORY_LABELS: Record<string, string> = {
   AROS: "Aros",
@@ -79,6 +79,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const [tallaInput, setTallaInput] = useState("");
   const [personalizable, setPersonalizable] = useState(product?.personalizable ?? false);
   const [submitting, setSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const updateBound = product
     ? updateProduct.bind(null, product.id)
@@ -143,9 +144,10 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const needsDiametro = category === "AROS" || category === "PULSERA";
 
   const handleSubmitForReview = async () => {
-    if (!product) return;
+    if (!product || !formRef.current) return;
     setSubmitting(true);
-    const result = await submitForReview(product.id);
+    const formData = new FormData(formRef.current);
+    const result = await saveAndSubmitForReview(product.id, formData);
     setSubmitting(false);
     if (result.error) {
       alert(result.error);
@@ -176,7 +178,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
         </div>
       )}
 
-      <form action={formAction} className="space-y-6">
+      <form ref={formRef} action={formAction} className="space-y-6">
         {/* Name */}
         <div className="space-y-1.5">
           <Label htmlFor="name">Nombre</Label>

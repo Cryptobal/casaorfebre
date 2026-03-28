@@ -332,6 +332,94 @@ export async function submitForReview(
   }
 }
 
+export async function saveAndSubmitForReview(
+  productId: string,
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  const artisan = await getArtisan();
+  if (!artisan) return { error: "No tienes permisos" };
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { images: true },
+  });
+
+  if (!product || product.artisanId !== artisan.id) {
+    return { error: "Producto no encontrado" };
+  }
+
+  const data = parseFormData(formData);
+
+  if (!data.name || !data.description || !data.price) {
+    return { error: "Nombre, descripcion y precio son requeridos" };
+  }
+
+  if (data.price < 1000) {
+    return { error: "El precio minimo es $1.000 CLP" };
+  }
+
+  if (product.images.length === 0) {
+    return { error: "El producto debe tener al menos 1 imagen" };
+  }
+
+  const cat = data.category;
+  if (cat === "ANILLO" && data.tallas.length === 0) {
+    return { error: "Los anillos requieren al menos una talla disponible para publicarse" };
+  }
+  if ((cat === "COLLAR" || cat === "COLGANTE") && !data.largoCadenaCm) {
+    return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
+  }
+  if (cat === "AROS" && !data.diametroMm) {
+    return { error: "Los aros requieren el diámetro (mm) para publicarse" };
+  }
+  if (cat === "PULSERA" && !data.diametroMm) {
+    return { error: "Las pulseras requieren el diámetro o largo (mm) para publicarse" };
+  }
+
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        name: data.name,
+        description: data.description,
+        story: data.story,
+        category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
+        materials: data.materials,
+        specialtyId: data.specialtyId,
+        occasions: { set: data.occasionIds.map((id) => ({ id })) },
+        technique: data.technique,
+        price: data.price,
+        compareAtPrice: data.compareAtPrice,
+        isUnique: data.isUnique,
+        editionSize: data.editionSize,
+        stock: data.isUnique ? 1 : data.stock,
+        isCustomMade: data.isCustomMade,
+        isReturnable: !data.isCustomMade,
+        dimensions: data.dimensions,
+        weight: data.weight,
+        coleccion: data.coleccion,
+        tallas: data.tallas,
+        guiaTallas: data.guiaTallas,
+        largoCadenaCm: data.largoCadenaCm,
+        diametroMm: data.diametroMm,
+        personalizable: data.personalizable,
+        detallePersonalizacion: data.detallePersonalizacion,
+        tiempoElaboracionDias: data.tiempoElaboracionDias,
+        cantidadEdicion: data.cantidadEdicion,
+        cuidados: data.cuidados,
+        empaque: data.empaque,
+        garantia: data.garantia,
+        status: "PENDING_REVIEW",
+      },
+    });
+
+    revalidatePath("/portal/orfebre/productos");
+    return { success: true };
+  } catch {
+    return { error: "Error al enviar a revision" };
+  }
+}
+
 export async function togglePauseProduct(
   productId: string
 ): Promise<{ error?: string; success?: boolean }> {
