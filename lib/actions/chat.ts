@@ -292,7 +292,6 @@ export async function getMessages(conversationId: string) {
       conversationId,
       senderId: { not: user.id },
       isRead: false,
-      deletedAt: null,
     },
     data: { isRead: true },
   });

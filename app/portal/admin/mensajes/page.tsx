@@ -37,6 +37,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
       prisma.conversation.count({ where: { hasBypassAttempt: true } }),
       prisma.conversation.findMany({
         where: {
+          deletedAt: null,
           ...(bypassFilter ? { hasBypassAttempt: true } : {}),
           ...(statusFilter ? { status: statusFilter as "ACTIVE" | "BLOCKED" } : {}),
         },

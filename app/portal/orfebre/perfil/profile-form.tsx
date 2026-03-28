@@ -40,11 +40,24 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
     setSaving(false);
   }
 
-  async function handleImageSubmit(formData: FormData) {
-    setUploading(true);
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    setPreviewUrl(URL.createObjectURL(file));
     setImageStatus(null);
-    const result = await updateProfileImage(formData);
-    setImageStatus(result);
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await updateProfileImage(formData);
+      setImageStatus(result);
+    } catch {
+      setImageStatus({ error: "Error de conexión al subir la imagen." });
+    }
     setUploading(false);
   }
 
@@ -55,7 +68,13 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
         <h2 className="text-sm font-medium text-text-secondary">Foto de perfil</h2>
         <div className="mt-3 flex items-center gap-4">
           <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-border bg-background">
-            {previewUrl || artisan.profileImage ? (
+            {uploading ? (
+              <div className="flex h-full w-full items-center justify-center text-text-tertiary">
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+              </div>
+            ) : previewUrl || artisan.profileImage ? (
               <img
                 src={previewUrl || artisan.profileImage!}
                 alt={artisan.displayName}
@@ -70,27 +89,20 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
               </div>
             )}
           </div>
-          <form action={handleImageSubmit} className="flex items-center gap-3">
-            <Input
-              type="file"
-              name="file"
-              accept="image/jpeg,image/png,image/webp"
-              required
-              className="max-w-xs text-sm"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (previewUrl) URL.revokeObjectURL(previewUrl);
-                setPreviewUrl(file ? URL.createObjectURL(file) : null);
-                setImageStatus(null);
-              }}
-            />
-            <Button type="submit" size="sm" variant="secondary" loading={uploading}>
-              Subir
-            </Button>
-          </form>
+          <div>
+            <label className="cursor-pointer rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-background">
+              Cambiar foto
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </label>
+          </div>
         </div>
         {imageStatus?.success && (
-          <p className="mt-2 text-sm text-green-700">Imagen actualizada</p>
+          <p className="mt-2 text-sm text-green-700">Foto actualizada</p>
         )}
         {imageStatus?.error && (
           <p className="mt-2 text-sm text-red-600">{imageStatus.error}</p>

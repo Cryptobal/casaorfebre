@@ -59,14 +59,21 @@ export async function updateProfileImage(formData: FormData) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const url = await uploadToR2(buffer, key, file.type);
 
+    console.log("[updateProfileImage] artisanId:", artisan.id, "url:", url);
+
     await prisma.artisan.update({
       where: { id: artisan.id },
       data: { profileImage: url },
     });
 
+    // Verify it was saved
+    const check = await prisma.artisan.findUnique({ where: { id: artisan.id }, select: { profileImage: true } });
+    console.log("[updateProfileImage] saved in DB:", check?.profileImage);
+
     revalidatePath("/portal/orfebre/perfil");
     return { success: true };
-  } catch {
+  } catch (e) {
+    console.error("[updateProfileImage] Error:", e);
     return { error: "Error al subir la imagen. Intenta de nuevo." };
   }
 }
