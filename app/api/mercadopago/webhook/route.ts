@@ -14,6 +14,18 @@ import { createReferralRewardIfApplicable } from "@/lib/actions/referral";
 import { generateGiftCardCode } from "@/lib/gift-cards";
 
 /**
+ * Mercado Pago: el manifest HMAC usa el `data.id` de los **query params** de la URL
+ * (no solo del JSON). Si es alfanumérico, debe ir en minúsculas.
+ * @see https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks#verificarsignature
+ */
+function normalizeMercadoPagoManifestId(id: string): string {
+  const t = id.trim();
+  if (!t) return "";
+  if (/^[a-zA-Z0-9]+$/.test(t)) return t.toLowerCase();
+  return t;
+}
+
+/**
  * Validates MercadoPago webhook signature (x-signature header).
  * See: https://www.mercadopago.cl/developers/es/docs/your-integrations/notifications/webhooks#verificarsignature
  */
@@ -48,7 +60,8 @@ function validateSignature(
   if (!ts || !v1) return false;
 
   // Build the manifest string
-  const manifest = `id:${dataId ?? ""};request-id:${xRequestId};ts:${ts};`;
+  const idPart = dataId != null && dataId !== "" ? normalizeMercadoPagoManifestId(String(dataId)) : "";
+  const manifest = `id:${idPart};request-id:${xRequestId};ts:${ts};`;
   const hmac = createHmac("sha256", secret).update(manifest).digest("hex");
 
   try {
@@ -554,18 +567,22 @@ export async function POST(request: Request) {
 
     // --- Standard webhook format (JSON body with signature) ---
     const body = await request.json();
-    const eventType = body.type || body.action || "";
+    const topicFromQuery = url.searchParams.get("topic") || "";
+    const eventType =
+      body.type || body.action || topicFromQuery || "";
 
-    // Extract the correct data ID for HMAC validation:
-    // - "payment" events: body.data.id (the payment ID)
-    // - "topic_merchant_order_wh": body.data.id (the merchant_order ID)
-    // - fallback: body.id
-    const dataId = body.data?.id ?? body.id;
+    // ID para HMAC: MP documenta `data.id` en query string de la URL (prioridad), luego body.
+    const queryDataId = url.searchParams.get("data.id");
+    const dataId =
+      queryDataId ??
+      (body.data?.id != null ? String(body.data.id) : undefined) ??
+      (body.id != null ? String(body.id) : undefined);
 
     console.log('[MP Webhook] Request received', {
-      format: xSignature ? 'webhook_signed' : 'webhook_unsigned',
+      format: xSignature ? "webhook_signed" : "webhook_unsigned",
       type: eventType,
       resourceId: dataId,
+      dataIdSource: queryDataId ? "query" : body.data?.id != null ? "body.data" : body.id != null ? "body.id" : "none",
       action: body.action,
       hasSignature: !!xSignature,
       timestamp: new Date().toISOString(),
@@ -577,19 +594,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
     }
 
-    // Validate HMAC signature
-    if (!validateSignature(xSignature, xRequestId, dataId?.toString())) {
+    // Validate HMAC signature (data.id del manifest = query primero, ver docs MP)
+    if (!validateSignature(xSignature, xRequestId, dataId)) {
       console.error("[webhook] Firma inválida", {
         type: eventType,
         dataId,
+        queryDataId,
         bodyDataId: body.data?.id,
         bodyId: body.id,
       });
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
+    const isMerchantOrderEvent =
+      eventType === "topic_merchant_order_wh" ||
+      topicFromQuery === "merchant_order";
+
     // --- Handle "topic_merchant_order_wh" ---
-    if (eventType === "topic_merchant_order_wh") {
+    if (isMerchantOrderEvent) {
       const merchantOrderId = String(dataId);
       console.log('[MP Webhook] Processing merchant_order', { merchantOrderId });
 
@@ -623,9 +645,17 @@ export async function POST(request: Request) {
     }
 
     // --- Handle standard "payment" events ---
-    const paymentId = body.data?.id;
-    if (!paymentId || !eventType.includes("payment")) {
-      console.log('[MP Webhook] Ignoring non-payment event', { type: eventType, dataId });
+    const paymentId =
+      body.data?.id ?? body.id ?? (queryDataId ? queryDataId : undefined);
+    const isPaymentEvent =
+      eventType.includes("payment") || topicFromQuery === "payment";
+
+    if (!paymentId || !isPaymentEvent) {
+      console.log("[MP Webhook] Ignoring non-payment event", {
+        type: eventType,
+        topicFromQuery,
+        dataId,
+      });
       return NextResponse.json({ received: true });
     }
 
