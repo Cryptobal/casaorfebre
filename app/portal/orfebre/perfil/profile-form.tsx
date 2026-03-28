@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +30,7 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
   const [uploading, setUploading] = useState(false);
   const [awards, setAwards] = useState<string[]>(artisan.awards);
   const [awardInput, setAwardInput] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function handleProfileSubmit(formData: FormData) {
     setSaving(true);
@@ -55,12 +55,10 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
         <h2 className="text-sm font-medium text-text-secondary">Foto de perfil</h2>
         <div className="mt-3 flex items-center gap-4">
           <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-border bg-background">
-            {artisan.profileImage ? (
-              <Image
-                src={artisan.profileImage}
+            {previewUrl || artisan.profileImage ? (
+              <img
+                src={previewUrl || artisan.profileImage!}
                 alt={artisan.displayName}
-                width={64}
-                height={64}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -76,9 +74,15 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
             <Input
               type="file"
               name="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               required
               className="max-w-xs text-sm"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewUrl(file ? URL.createObjectURL(file) : null);
+                setImageStatus(null);
+              }}
             />
             <Button type="submit" size="sm" variant="secondary" loading={uploading}>
               Subir

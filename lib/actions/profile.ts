@@ -32,6 +32,9 @@ export async function updateArtisanProfile(formData: FormData) {
   return { success: true };
 }
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+
 export async function updateProfileImage(formData: FormData) {
   const session = await auth();
   if (!session?.user) return { error: "No autorizado" };
@@ -40,18 +43,30 @@ export async function updateProfileImage(formData: FormData) {
   if (!artisan) return { error: "No autorizado" };
 
   const file = formData.get("file") as File | null;
-  if (!file) return { error: "Archivo requerido" };
+  if (!file || file.size === 0) return { error: "Archivo requerido" };
 
-  const ext = file.name.split(".").pop() || "jpg";
-  const key = `artisans/${artisan.id}/profile.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const url = await uploadToR2(buffer, key, file.type);
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return { error: "Formato no soportado. Usa JPG, PNG o WebP." };
+  }
 
-  await prisma.artisan.update({
-    where: { id: artisan.id },
-    data: { profileImage: url },
-  });
+  if (file.size > MAX_IMAGE_SIZE) {
+    return { error: "La imagen no debe superar los 5 MB." };
+  }
 
-  revalidatePath("/portal/orfebre/perfil");
-  return { success: true };
+  try {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const key = `artisans/${artisan.id}/profile.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const url = await uploadToR2(buffer, key, file.type);
+
+    await prisma.artisan.update({
+      where: { id: artisan.id },
+      data: { profileImage: url },
+    });
+
+    revalidatePath("/portal/orfebre/perfil");
+    return { success: true };
+  } catch {
+    return { error: "Error al subir la imagen. Intenta de nuevo." };
+  }
 }
