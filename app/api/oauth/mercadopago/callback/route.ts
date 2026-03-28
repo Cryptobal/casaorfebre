@@ -42,30 +42,43 @@ export async function GET(request: Request) {
 
   // Exchange authorization code for tokens
   try {
+    const appId = process.env.MP_APP_ID;
+    const appSecret = process.env.MP_APP_SECRET;
+    if (!appId || !appSecret) {
+      console.error("[oauth/mp/callback] MP_APP_ID or MP_APP_SECRET missing");
+      return NextResponse.redirect(
+        new URL("/portal/orfebre?mp_error=config", appUrl)
+      );
+    }
+
     // Use the same redirect_uri as the authorization step
     const redirectUri = process.env.MP_REDIRECT_URI?.includes("localhost")
       ? `${appUrl}/api/oauth/mercadopago/callback`
       : (process.env.MP_REDIRECT_URI || `${appUrl}/api/oauth/mercadopago/callback`);
 
-    const tokenPayload = {
-      client_id: process.env.MP_APP_ID,
-      client_secret: process.env.MP_APP_SECRET,
+    // Mercado Pago exige body application/x-www-form-urlencoded (no JSON) — ver referencia OAuth.
+    const tokenBody = new URLSearchParams({
+      client_id: appId,
+      client_secret: appSecret,
       code,
       grant_type: "authorization_code",
       redirect_uri: redirectUri,
-    };
+    });
 
     console.log("[oauth/mp/callback] Token exchange request:", {
-      client_id: tokenPayload.client_id,
-      redirect_uri: tokenPayload.redirect_uri,
+      client_id: appId,
+      redirect_uri: redirectUri,
       code: code?.slice(0, 10) + "...",
-      has_secret: !!tokenPayload.client_secret,
+      has_secret: true,
     });
 
     const tokenResponse = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(tokenPayload),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: tokenBody.toString(),
     });
 
     if (!tokenResponse.ok) {
@@ -73,10 +86,9 @@ export async function GET(request: Request) {
       console.error("[oauth/mp/callback] Token exchange FAILED", {
         status: tokenResponse.status,
         body: errorBody,
-        client_id: tokenPayload.client_id,
-        redirect_uri: tokenPayload.redirect_uri,
-        has_secret: !!tokenPayload.client_secret,
-        secret_prefix: tokenPayload.client_secret?.slice(0, 15) + "...",
+        client_id: appId,
+        redirect_uri: redirectUri,
+        has_secret: true,
         code_prefix: code?.slice(0, 10) + "...",
       });
       return NextResponse.redirect(

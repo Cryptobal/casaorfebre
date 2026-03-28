@@ -16,15 +16,20 @@ export async function refreshArtisanToken(artisanId: string): Promise<boolean> {
   }
 
   try {
+    const refreshBody = new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: process.env.MP_APP_ID!,
+      client_secret: process.env.MP_APP_SECRET!,
+      refresh_token: artisan.mpRefreshToken,
+    });
+
     const res = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grant_type: "refresh_token",
-        client_id: process.env.MP_APP_ID,
-        client_secret: process.env.MP_APP_SECRET,
-        refresh_token: artisan.mpRefreshToken,
-      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: refreshBody.toString(),
     });
 
     if (!res.ok) {
