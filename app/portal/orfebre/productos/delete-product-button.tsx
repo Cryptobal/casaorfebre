@@ -22,7 +22,16 @@ export function DeleteProductButton({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  if (hasSales) return null;
+  if (hasSales) {
+    return (
+      <span
+        className={`cursor-not-allowed text-xs text-text-tertiary ${className ?? ""}`}
+        title="No se puede eliminar un producto con ventas. Puedes pausarlo en su lugar."
+      >
+        Eliminar
+      </span>
+    );
+  }
 
   function handleDelete() {
     setError(null);
