@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
-import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 import { ProductCard } from "@/components/products/product-card";
 import type { Metadata } from "next";
 
@@ -31,14 +31,6 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: "Collares", url: "/coleccion/collares" },
 ]);
 
-const jsonLd = JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  name: "Collares de Autor",
-  description: "Colección de collares artesanales de joyería de autor chilena",
-  url: "https://casaorfebre.cl/coleccion/collares",
-});
-
 export default async function CollaresPage() {
   const session = await auth();
   const favoriteIds = session?.user?.id
@@ -52,6 +44,13 @@ export default async function CollaresPage() {
       images: { orderBy: { position: "asc" }, take: 1 },
     },
     orderBy: { publishedAt: "desc" },
+  });
+
+  const jsonLd = buildCollectionWithItemsJsonLd({
+    name: "Collares de Autor",
+    description: "Colección de collares artesanales de joyería de autor chilena",
+    url: "/coleccion/collares",
+    products,
   });
 
   return (

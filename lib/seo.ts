@@ -49,3 +49,49 @@ export function getCategorySlug(category: string): string {
 export function canonicalUrl(path: string): string {
   return `${BASE_URL}${path}`;
 }
+
+interface ProductItem {
+  name: string;
+  slug: string;
+  images?: { url: string }[];
+  price?: number;
+}
+
+export function buildCollectionWithItemsJsonLd(opts: {
+  name: string;
+  description: string;
+  url: string;
+  products: ProductItem[];
+}): string {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: opts.name,
+    description: opts.description,
+    url: opts.url.startsWith("http") ? opts.url : `${BASE_URL}${opts.url}`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: opts.products.length,
+      itemListElement: opts.products.slice(0, 30).map((p, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Product",
+          name: p.name,
+          url: `${BASE_URL}/coleccion/${p.slug}`,
+          ...(p.images?.[0]?.url ? { image: p.images[0].url } : {}),
+          ...(p.price
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  price: p.price,
+                  priceCurrency: "CLP",
+                  availability: "https://schema.org/InStock",
+                },
+              }
+            : {}),
+        },
+      })),
+    },
+  });
+}

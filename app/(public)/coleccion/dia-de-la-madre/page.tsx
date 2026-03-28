@@ -6,6 +6,7 @@ import { FadeIn } from "@/components/shared/fade-in";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
+import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 
 export const metadata = {
   title: "Día de la Madre — Joyería Artesanal | Casa Orfebre",
@@ -27,6 +28,7 @@ export const metadata = {
   },
 };
 
+
 export default async function DiaDeLaMadrePage() {
   const session = await auth();
   const [products, favoriteIds] = await Promise.all([
@@ -46,8 +48,24 @@ export default async function DiaDeLaMadrePage() {
     getUserFavoriteIds(session?.user?.id),
   ]);
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Colección", url: "/coleccion" },
+    { name: "Día de la Madre", url: "/coleccion/dia-de-la-madre" },
+  ]);
+  const jsonLd = buildCollectionWithItemsJsonLd({
+    name: "Día de la Madre — Joyería Artesanal",
+    description:
+      "Regala algo hecho a mano con amor. Joyería artesanal chilena para la persona más importante.",
+    url: "/coleccion/dia-de-la-madre",
+    products,
+  });
+
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }} />
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
       <div className="pt-20 pb-12">
         <FadeIn>
           <SectionHeading
@@ -82,5 +100,6 @@ export default async function DiaDeLaMadrePage() {
         </div>
       )}
     </section>
+    </>
   );
 }

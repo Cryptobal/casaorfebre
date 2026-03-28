@@ -6,6 +6,7 @@ import { FadeIn } from "@/components/shared/fade-in";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
+import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 
 export const metadata = {
   title: "Porque Tú lo Mereces — Autorregalo | Casa Orfebre",
@@ -27,6 +28,7 @@ export const metadata = {
   },
 };
 
+
 export default async function AutorregaloPage() {
   const session = await auth();
   const [products, favoriteIds] = await Promise.all([
@@ -46,8 +48,24 @@ export default async function AutorregaloPage() {
     getUserFavoriteIds(session?.user?.id),
   ]);
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Colección", url: "/coleccion" },
+    { name: "Autorregalo", url: "/coleccion/autorregalo" },
+  ]);
+  const jsonLd = buildCollectionWithItemsJsonLd({
+    name: "Porque Tú lo Mereces — Autorregalo",
+    description:
+      "No necesitas una ocasión especial. Date el gusto de una pieza artesanal que te represente.",
+    url: "/coleccion/autorregalo",
+    products,
+  });
+
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }} />
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
       <div className="pt-20 pb-12">
         <FadeIn>
           <SectionHeading
@@ -82,5 +100,6 @@ export default async function AutorregaloPage() {
         </div>
       )}
     </section>
+    </>
   );
 }

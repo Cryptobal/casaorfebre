@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
-import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 import { ProductCard } from "@/components/products/product-card";
 import type { Metadata } from "next";
 
@@ -31,14 +31,6 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: "Aros", url: "/coleccion/aros" },
 ]);
 
-const jsonLd = JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  name: "Aros Artesanales",
-  description: "Colección de aros artesanales de joyería de autor chilena",
-  url: "https://casaorfebre.cl/coleccion/aros",
-});
-
 export default async function ArosPage() {
   const session = await auth();
   const favoriteIds = session?.user?.id
@@ -52,6 +44,13 @@ export default async function ArosPage() {
       images: { orderBy: { position: "asc" }, take: 1 },
     },
     orderBy: { publishedAt: "desc" },
+  });
+
+  const jsonLd = buildCollectionWithItemsJsonLd({
+    name: "Aros Artesanales",
+    description: "Colección de aros artesanales de joyería de autor chilena",
+    url: "/coleccion/aros",
+    products,
   });
 
   return (

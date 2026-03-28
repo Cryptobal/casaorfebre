@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
-import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -53,8 +53,20 @@ export default async function Plata925Page() {
     getUserFavoriteIds(session?.user?.id),
   ]);
 
+  const jsonLd = buildCollectionWithItemsJsonLd({
+    name: "Joyería en Plata 925",
+    description: "Joyas artesanales en plata 925 y plata 950 hechas a mano por orfebres chilenos",
+    url: "/coleccion/plata-925",
+    products,
+  });
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        // Server-generated JSON.stringify output — no user input, safe to inject
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
       <script
         type="application/ld+json"
         // Static JSON-LD structured data — no user input, safe to inject

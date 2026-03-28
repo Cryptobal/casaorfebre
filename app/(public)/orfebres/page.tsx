@@ -7,6 +7,7 @@ import { CHILEAN_REGIONS } from "@/lib/chile-cities";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
+import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { OrfebresFilters } from "./orfebres-filters";
 
 export const metadata = {
@@ -45,7 +46,39 @@ export default async function OrfebresPage({
     getActiveMaterials(),
   ]);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Orfebres", url: "/orfebres" },
+  ]);
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Orfebres Chilenos Verificados",
+    description: "Directorio de orfebres chilenos verificados que crean piezas únicas de joyería artesanal.",
+    url: `${baseUrl}/orfebres`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: artisans.length,
+      itemListElement: artisans.slice(0, 30).map((a: any, i: number) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "LocalBusiness",
+          name: a.displayName,
+          url: `${baseUrl}/orfebres/${a.slug}`,
+          ...(a.profileImage ? { image: a.profileImage } : {}),
+          ...(a.location ? { address: { "@type": "PostalAddress", addressLocality: a.location, addressCountry: "CL" } } : {}),
+        },
+      })),
+    },
+  });
+
+  // JSON-LD structured data uses server-generated content only (no user input), safe to inject
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }} />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
       <SectionHeading
         title="Nuestros Orfebres"
@@ -77,5 +110,6 @@ export default async function OrfebresPage({
         </p>
       )}
     </div>
+    </>
   );
 }

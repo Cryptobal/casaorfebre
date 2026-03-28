@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
+import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 
 export const metadata = {
   title: "Joyas para Regalar | Casa Orfebre",
@@ -45,8 +46,24 @@ export default async function RegalosPage() {
     getUserFavoriteIds(session?.user?.id),
   ]);
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Inicio", url: "/" },
+    { name: "Colección", url: "/coleccion" },
+    { name: "Regalos", url: "/coleccion/regalos" },
+  ]);
+  const jsonLd = buildCollectionWithItemsJsonLd({
+    name: "Joyas para Regalar",
+    description: "Encuentra la joya artesanal perfecta para regalar. Piezas únicas hechas a mano por orfebres chilenos verificados.",
+    url: "/coleccion/regalos",
+    products,
+  });
+
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
+    <>
+      {/* JSON-LD structured data — server-generated, no user input */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }} />
+      <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
       <div className="max-w-2xl">
         <h1 className="font-serif text-3xl font-light sm:text-4xl">
           Joyas para Regalar
@@ -81,5 +98,6 @@ export default async function RegalosPage() {
         </div>
       )}
     </section>
+    </>
   );
 }
