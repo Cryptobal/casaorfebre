@@ -184,6 +184,10 @@ export async function approveProduct(
   }
 
   revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath(`/orfebres/${product.artisan.slug}`);
+  revalidatePath("/coleccion");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -225,6 +229,9 @@ export async function rejectProduct(
   }
 
   revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath(`/orfebres/${product.artisan.slug}`);
+  revalidatePath("/coleccion");
   return { success: true };
 }
 
@@ -238,12 +245,15 @@ export async function approvePhoto(
     return { error: "No autorizado" };
   }
 
-  await prisma.productImage.update({
+  const image = await prisma.productImage.update({
     where: { id: imageId },
     data: { status: "APPROVED" },
+    include: { product: { include: { artisan: { select: { slug: true } } } } },
   });
 
   revalidatePath("/portal/admin/fotos");
+  revalidatePath(`/orfebres/${image.product.artisan.slug}`);
+  revalidatePath("/coleccion");
   return { success: true };
 }
 
@@ -273,6 +283,8 @@ export async function approvePhotosBatch(
   });
 
   revalidatePath("/portal/admin/fotos");
+  revalidatePath("/coleccion");
+  revalidatePath("/");
   return { success: true };
 }
 

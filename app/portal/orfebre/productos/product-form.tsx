@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useCallback, useRef } from "react";
+import { useActionState, useState, useCallback, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,16 @@ import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/products/image-upload";
 import { VideoUploader } from "@/components/products/video-uploader";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
+import { ErrorModal } from "@/components/ui/error-modal";
 import { createProduct, updateProduct, saveAndSubmitForReview } from "@/lib/actions/products";
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  DRAFT: { label: "Borrador", className: "border-gray-300 bg-gray-50 text-gray-700" },
+  PENDING_REVIEW: { label: "Pendiente de revisión", className: "border-amber-300 bg-amber-50 text-amber-800" },
+  APPROVED: { label: "Aprobado", className: "border-green-300 bg-green-50 text-green-800" },
+  REJECTED: { label: "Rechazado", className: "border-red-300 bg-red-50 text-red-700" },
+  PAUSED: { label: "Pausado", className: "border-blue-300 bg-blue-50 text-blue-700" },
+};
 
 const CATEGORY_LABELS: Record<string, string> = {
   AROS: "Aros",
@@ -79,6 +88,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const [tallaInput, setTallaInput] = useState("");
   const [personalizable, setPersonalizable] = useState(product?.personalizable ?? false);
   const [submitting, setSubmitting] = useState(false);
+  const [errorModal, setErrorModal] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const updateBound = product
@@ -91,9 +101,11 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   );
 
   // Handle redirect after successful create
-  if (state?.success && "productId" in state && state.productId) {
-    router.push(`/portal/orfebre/productos/${state.productId}`);
-  }
+  useEffect(() => {
+    if (state?.success && "productId" in state && state.productId) {
+      router.push(`/portal/orfebre/productos/${state.productId}`);
+    }
+  }, [state, router]);
 
   const addMaterial = useCallback(() => {
     const value = materialInput.trim();
@@ -150,12 +162,31 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
     const result = await saveAndSubmitForReview(product.id, formData);
     setSubmitting(false);
     if (result.error) {
-      alert(result.error);
+      setErrorModal(result.error);
+    } else if (result.success) {
+      router.push("/portal/orfebre/productos");
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title="No se pudo enviar a revisión"
+          message={errorModal}
+          onClose={() => setErrorModal(null)}
+        />
+      )}
+
+      {/* Status badge */}
+      {product?.status && (
+        <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium ${STATUS_CONFIG[product.status]?.className ?? "border-border text-text-secondary"}`}>
+          <span className="h-2 w-2 rounded-full bg-current opacity-60" />
+          {STATUS_CONFIG[product.status]?.label ?? product.status}
+        </div>
+      )}
+
       {/* Rejected banner */}
       {product?.status === "REJECTED" && product.adminNotes && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">

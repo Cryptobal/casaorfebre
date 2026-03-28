@@ -2,8 +2,7 @@ import { getPendingProducts } from "@/lib/queries/admin";
 import { formatCLP } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { MaterialBadge } from "@/components/shared/material-badge";
-import Image from "next/image";
-import { ImagePlaceholder } from "@/components/shared/image-placeholder";
+import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { ProductModerationActions } from "./product-moderation-actions";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -177,30 +176,16 @@ export default async function ProductosModeracionPage() {
                 <p className="mb-2 text-sm font-medium text-text-tertiary">
                   Imagenes ({product.images.length})
                 </p>
-                {product.images.length > 0 ? (
-                  <div className="flex gap-2 overflow-x-auto">
-                    {product.images.map((img) =>
-                      img.url.startsWith("r2://") ? (
-                        <ImagePlaceholder
-                          key={img.id}
-                          name={product.name}
-                          className="h-24 w-24 flex-shrink-0 rounded"
-                        />
-                      ) : (
-                        <Image
-                          key={img.id}
-                          src={img.url}
-                          alt={img.altText ?? product.name}
-                          width={96}
-                          height={96}
-                          className="h-24 w-24 flex-shrink-0 rounded object-cover"
-                        />
-                      )
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-red-600">Sin imagenes</p>
-                )}
+                <ImageLightbox
+                  productName={product.name}
+                  images={product.images
+                    .filter((img) => !img.url.startsWith("r2://"))
+                    .map((img) => ({
+                      id: img.id,
+                      url: img.url,
+                      alt: img.altText ?? product.name,
+                    }))}
+                />
               </div>
 
               {/* Actions */}

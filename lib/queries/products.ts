@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import type { ProductCategory, Product, Artisan, ProductImage } from "@prisma/client";
 
+/** Only show approved images in public queries */
+const approvedImagesFirst = {
+  where: { status: "APPROVED" as const },
+  orderBy: { position: "asc" as const },
+  take: 1,
+} as const;
+
 interface ProductFilters {
   category?: ProductCategory;
   material?: string;
@@ -62,7 +69,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
             : {}),
         },
       },
-      images: { orderBy: { position: "asc" }, take: 1 },
+      images: approvedImagesFirst,
       specialty: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
     },
@@ -113,7 +120,7 @@ export async function getProductBySlug(slug: string) {
           profileImage: true,
         },
       },
-      images: { orderBy: { position: "asc" } },
+      images: { where: { status: "APPROVED" }, orderBy: { position: "asc" } },
       video: true,
       specialty: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
@@ -128,7 +135,7 @@ export async function getLatestProducts(limit = 8) {
     take: limit,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: { orderBy: { position: "asc" }, take: 1 },
+      images: approvedImagesFirst,
     },
   });
 }
@@ -198,7 +205,7 @@ export async function getNewProducts({
     take: perPage,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: { orderBy: { position: "asc" }, take: 1 },
+      images: approvedImagesFirst,
     },
   });
 
@@ -212,7 +219,7 @@ export async function getCuratorPicks(limit?: number) {
     ...(limit ? { take: limit } : {}),
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: { orderBy: { position: "asc" }, take: 1 },
+      images: approvedImagesFirst,
     },
   });
 }
@@ -243,7 +250,7 @@ export async function getSimilarProducts(product: {
 
   const include = {
     artisan: { select: { displayName: true, slug: true } as const },
-    images: { orderBy: { position: "asc" as const }, take: 1 },
+    images: approvedImagesFirst,
   };
 
   const mainMaterial = product.materials[0];
@@ -323,7 +330,7 @@ export async function getTesorosProducts(
     take: limit,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: { orderBy: { position: "asc" }, take: 1 },
+      images: approvedImagesFirst,
     },
   });
 }

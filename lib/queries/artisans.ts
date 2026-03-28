@@ -15,6 +15,20 @@ const activePlanInclude = {
   },
 } as const;
 
+const approvedProductCount = {
+  _count: {
+    select: {
+      products: { where: { status: "APPROVED" as const } },
+    },
+  },
+} as const;
+
+const approvedImageFilter = {
+  where: { status: "APPROVED" as const },
+  orderBy: { position: "asc" as const },
+  take: 1,
+} as const;
+
 export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
   const where: Record<string, unknown> = { status: "APPROVED" as const };
 
@@ -34,7 +48,7 @@ export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
       ...activePlanInclude,
-      _count: { select: { products: true } },
+      ...approvedProductCount,
     },
   });
 }
@@ -47,7 +61,7 @@ export async function getFeaturedArtisans(limit = 3) {
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
       ...activePlanInclude,
-      _count: { select: { products: true } },
+      ...approvedProductCount,
     },
   });
 }
@@ -67,13 +81,13 @@ export async function getMaestroArtisans() {
     orderBy: { rating: "desc" },
     include: {
       ...activePlanInclude,
-      _count: { select: { products: true } },
+      ...approvedProductCount,
       products: {
         where: { status: "APPROVED" },
         orderBy: [{ viewCount: "desc" }, { publishedAt: "desc" }],
         take: 1,
         include: {
-          images: { orderBy: { position: "asc" }, take: 1 },
+          images: approvedImageFilter,
         },
       },
     },
@@ -91,12 +105,17 @@ export async function getArtisanBySlug(slug: string) {
         orderBy: { publishedAt: "desc" },
         include: {
           artisan: { select: { displayName: true, slug: true } },
-          images: { orderBy: { position: "asc" }, take: 1 },
+          images: approvedImageFilter,
           specialty: { select: { id: true, name: true, slug: true } },
           occasions: { select: { id: true, name: true, slug: true } },
         },
       },
-      _count: { select: { products: true, reviews: true } },
+      _count: {
+        select: {
+          products: { where: { status: "APPROVED" as const } },
+          reviews: true,
+        },
+      },
     },
   });
 }
