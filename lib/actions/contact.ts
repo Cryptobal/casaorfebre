@@ -1,10 +1,8 @@
 "use server";
 
+import { prisma } from "@/lib/prisma";
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { emailLayout } from "@/lib/emails/base-layout";
-
-const ADMIN_EMAIL =
-  process.env.ADMIN_EMAIL || "hola@casaorfebre.cl";
 
 const SUBJECTS = [
   "Consulta general",
@@ -37,12 +35,13 @@ export async function sendContactForm(formData: FormData) {
   }
 
   try {
-    const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: ADMIN_EMAIL,
-      replyTo: email,
-      subject: `[Contacto] ${subject} — ${name}`,
-      html: emailLayout(`
+    // Send to ALL admin users
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { email: true },
+    });
+
+    const htmlContent = emailLayout(`
         <p style="margin:0 0 16px;"><strong>Nuevo mensaje de contacto</strong></p>
         <table style="width:100%;border-collapse:collapse;margin:0 0 16px;">
           <tr>
@@ -60,12 +59,20 @@ export async function sendContactForm(formData: FormData) {
         </table>
         <p style="margin:0 0 8px;font-weight:600;">Mensaje:</p>
         <p style="margin:0;white-space:pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
-      `),
-    });
+      `);
 
-    if (error) {
-      console.error("Contact form email failed:", error);
-      return { error: "No se pudo enviar el mensaje. Intenta nuevamente." };
+    for (const admin of admins) {
+      const { error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: admin.email,
+        replyTo: email,
+        subject: `[Contacto] ${subject} — ${name}`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error(`Contact form email failed for ${admin.email}:`, error);
+      }
     }
 
     return { success: true };

@@ -218,10 +218,10 @@ export default function PreguntasFrecuentesPage() {
           <p className="mt-2 font-light text-text-secondary">
             Escríbenos a{" "}
             <a
-              href="mailto:hola@casaorfebre.cl"
+              href="mailto:contacto@casaorfebre.cl"
               className="text-accent underline underline-offset-4 transition-colors hover:text-accent/80"
             >
-              hola@casaorfebre.cl
+              contacto@casaorfebre.cl
             </a>{" "}
             y te responderemos a la brevedad.
           </p>

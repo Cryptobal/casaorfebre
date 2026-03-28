@@ -55,10 +55,10 @@ export default function ContactoPage() {
                 <div>
                   <p className="font-medium text-text">Email de soporte</p>
                   <a
-                    href="mailto:hola@casaorfebre.cl"
+                    href="mailto:contacto@casaorfebre.cl"
                     className="text-accent hover:underline"
                   >
-                    hola@casaorfebre.cl
+                    contacto@casaorfebre.cl
                   </a>
                 </div>
                 <div>
