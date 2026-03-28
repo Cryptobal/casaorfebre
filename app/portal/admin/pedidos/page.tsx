@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllOrders } from "@/lib/queries/admin";
 import { formatCLP } from "@/lib/utils";
+import { DeleteOrderButton } from "./delete-order-button";
 
 const ORDER_STATUSES = [
   { value: "", label: "Todos" },
@@ -93,7 +94,8 @@ export default async function PedidosPage({
                 <th className="pb-3 pr-4 font-medium">Comprador</th>
                 <th className="pb-3 pr-4 font-medium">Total</th>
                 <th className="pb-3 pr-4 font-medium">Estado</th>
-                <th className="pb-3 font-medium">Items</th>
+                <th className="pb-3 pr-4 font-medium">Items</th>
+                <th className="pb-3 font-medium"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -194,7 +196,13 @@ export default async function PedidosPage({
                           ?.label ?? order.status}
                       </span>
                     </td>
-                    <td className="py-3">{order.items.length}</td>
+                    <td className="py-3 pr-4">{order.items.length}</td>
+                    <td className="py-3">
+                      <DeleteOrderButton
+                        orderId={order.id}
+                        orderNumber={order.orderNumber}
+                      />
+                    </td>
                   </tr>
                 );
               })}

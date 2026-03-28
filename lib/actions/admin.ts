@@ -1227,3 +1227,54 @@ async function redeemPromoCode(
     });
   });
 }
+
+// ── Admin: delete order ──────────────────────────────────────────────
+export async function adminDeleteOrder(
+  orderId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: { select: { id: true } },
+    },
+  });
+
+  if (!order) return { error: "Pedido no encontrado" };
+
+  const orderItemIds = order.items.map((i) => i.id);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.returnRequest.deleteMany({
+        where: { orderItemId: { in: orderItemIds } },
+      });
+      await tx.dispute.deleteMany({ where: { orderId } });
+      await tx.giftCardUsage.deleteMany({ where: { orderId } });
+      await tx.referralReward.updateMany({
+        where: { orderId },
+        data: { orderId: null },
+      });
+      await tx.giftCard.updateMany({
+        where: { orderId },
+        data: { orderId: null },
+      });
+      await tx.orderItem.deleteMany({ where: { orderId } });
+      await tx.order.delete({ where: { id: orderId } });
+    });
+  } catch (e) {
+    console.error("[adminDeleteOrder]", orderId, e);
+    return {
+      error:
+        "No se pudo eliminar el pedido. Puede haber datos vinculados.",
+    };
+  }
+
+  revalidatePath("/portal/admin/pedidos");
+  return { success: true };
+}
