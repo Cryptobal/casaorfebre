@@ -8,6 +8,8 @@ import { getCart } from "@/lib/queries/cart";
 import { validateDiscountCode, markRewardAsUsed } from "@/lib/actions/referral";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { normalizeGiftCardCode } from "@/lib/gift-cards";
+import { isSandbox } from "@/lib/config";
+import { ensureValidToken } from "@/lib/mercadopago-refresh";
 import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
@@ -309,12 +311,20 @@ export async function createCheckoutPreference(formData: FormData) {
   const artisanIds = [...new Set(products.map((p: any) => p.artisan?.id).filter(Boolean))];
   const isSingleArtisan = artisanIds.length === 1;
   const soleArtisan = isSingleArtisan ? products[0]?.artisan : null;
-  const useSplit = isSingleArtisan && soleArtisan?.mpAccessToken && soleArtisan?.mpOnboarded;
+  // Validate artisan token if split candidate
+  let validArtisanToken: string | null = null;
+  if (isSingleArtisan && soleArtisan?.mpAccessToken && soleArtisan?.mpOnboarded) {
+    validArtisanToken = await ensureValidToken(soleArtisan.id);
+    if (!validArtisanToken) {
+      console.warn(`[checkout] Artisan token expired/refresh failed for ${soleArtisan.id}, using marketplace fallback`);
+    }
+  }
+  const useSplit = !!validArtisanToken;
 
   // Create MercadoPago preference
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const useSandbox = process.env.MP_SANDBOX !== "false";
+    const useSandbox = isSandbox();
 
     const items = cartItems.map((item: any) => ({
       id: item.product.id,
@@ -340,7 +350,7 @@ export async function createCheckoutPreference(formData: FormData) {
       console.log(`[checkout] Split payment — artisan=${artisanIds[0]}, fee=${marketplaceFee} CLP (${Math.round(commissionRate * 100)}%)`);
 
       const preference = await createArtisanPreference(
-        soleArtisan!.mpAccessToken!,
+        validArtisanToken!,
         {
           items,
           payer: { email: session.user.email },
@@ -349,6 +359,7 @@ export async function createCheckoutPreference(formData: FormData) {
           external_reference: order.id,
           notification_url: `${appUrl}/api/mercadopago/webhook`,
           marketplace_fee: marketplaceFee,
+          statement_descriptor: "CASA ORFEBRE",
         }
       );
 
@@ -371,6 +382,7 @@ export async function createCheckoutPreference(formData: FormData) {
           auto_return: "approved",
           external_reference: order.id,
           notification_url: `${appUrl}/api/mercadopago/webhook`,
+          statement_descriptor: "CASA ORFEBRE",
         },
       });
 
@@ -446,11 +458,19 @@ export async function resumeOrderPayment(orderId: string) {
   const artisanIds = [...new Set(order.items.map((i) => i.artisanId).filter(Boolean))];
   const isSingleArtisan = artisanIds.length === 1;
   const soleArtisan = isSingleArtisan ? products[0]?.artisan : null;
-  const useSplit = isSingleArtisan && soleArtisan?.mpAccessToken && soleArtisan?.mpOnboarded;
+
+  let validArtisanToken: string | null = null;
+  if (isSingleArtisan && soleArtisan?.mpAccessToken && soleArtisan?.mpOnboarded) {
+    validArtisanToken = await ensureValidToken(soleArtisan.id);
+    if (!validArtisanToken) {
+      console.warn(`[checkout:resume] Artisan token expired/refresh failed for ${soleArtisan.id}, using marketplace fallback`);
+    }
+  }
+  const useSplit = !!validArtisanToken;
 
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const useSandbox = process.env.MP_SANDBOX !== "false";
+    const useSandbox = isSandbox();
 
     const items = order.items.map((item) => ({
       id: item.productId,
@@ -473,7 +493,7 @@ export async function resumeOrderPayment(orderId: string) {
       const marketplaceFee = Math.round(order.total * commissionRate);
 
       const preference = await createArtisanPreference(
-        soleArtisan!.mpAccessToken!,
+        validArtisanToken!,
         {
           items,
           payer: { email: session.user.email },
@@ -482,6 +502,7 @@ export async function resumeOrderPayment(orderId: string) {
           external_reference: order.id,
           notification_url: `${appUrl}/api/mercadopago/webhook`,
           marketplace_fee: marketplaceFee,
+          statement_descriptor: "CASA ORFEBRE",
         }
       );
 
@@ -497,6 +518,7 @@ export async function resumeOrderPayment(orderId: string) {
           auto_return: "approved",
           external_reference: order.id,
           notification_url: `${appUrl}/api/mercadopago/webhook`,
+          statement_descriptor: "CASA ORFEBRE",
         },
       });
 

@@ -25,6 +25,7 @@ export async function submitApplication(
   /** Chile: celular sin código de país = 9 dígitos (ej. 912345678) → E.164 +56912345678 */
   const phone = phoneDigits.length === 9 ? `+56${phoneDigits}` : null;
   const selectedPlan = (formData.get("selectedPlan") as string) || null;
+  const promoCodeRaw = (formData.get("promoCode") as string)?.trim().toUpperCase() || null;
   const yearsExperienceRaw = formData.get("yearsExperience") as string;
   const yearsExperience = yearsExperienceRaw ? parseInt(yearsExperienceRaw, 10) : null;
   const awardsRaw = (formData.get("awards") as string) || "";
@@ -87,6 +88,21 @@ export async function submitApplication(
     return { error: "Ya tienes una postulación pendiente de revisión" };
   }
 
+  // Validate promo code if provided
+  if (promoCodeRaw) {
+    const promo = await prisma.promoCode.findUnique({
+      where: { code: promoCodeRaw },
+    });
+    if (
+      !promo ||
+      !promo.isActive ||
+      promo.expiresAt < new Date() ||
+      promo.currentUses >= promo.maxUses
+    ) {
+      return { error: "Código promocional inválido o expirado" };
+    }
+  }
+
   await prisma.artisanApplication.create({
     data: {
       name,
@@ -102,6 +118,7 @@ export async function submitApplication(
       categories,
       portfolioImages,
       selectedPlan,
+      promoCode: promoCodeRaw,
       yearsExperience: yearsExperience !== null && !isNaN(yearsExperience) ? yearsExperience : null,
       awards,
       status: "PENDING",

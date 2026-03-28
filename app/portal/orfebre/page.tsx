@@ -25,14 +25,18 @@ export default async function ArtisanDashboard({
       displayName: true,
       mpAccessToken: true,
       mpOnboarded: true,
+      mpTokenExpiresAt: true,
       commissionRate: true,
       commissionOverride: true,
       maxProductsOverride: true,
       subscriptions: {
-        where: { status: "ACTIVE" },
+        where: { status: { in: ["ACTIVE", "GRACE_PERIOD"] } },
         select: {
+          status: true,
           endDate: true,
           startDate: true,
+          graceEndsAt: true,
+          source: true,
           plan: {
             select: {
               name: true,
@@ -185,6 +189,7 @@ export default async function ArtisanDashboard({
       {/* MercadoPago connection status */}
       <MpConnectionBanner
         isConnected={artisan.mpOnboarded && !!artisan.mpAccessToken}
+        tokenExpiresAt={artisan.mpTokenExpiresAt?.toISOString() ?? null}
       />
 
       {/* Alert banners */}
@@ -207,6 +212,41 @@ export default async function ArtisanDashboard({
           {unansweredQuestions > 1 ? "s" : ""} sin responder.
         </Link>
       )}
+
+      {/* Grace period banner */}
+      {artisan.subscriptions?.[0]?.status === "GRACE_PERIOD" &&
+        artisan.subscriptions[0].graceEndsAt && (
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  Tu plan ha finalizado. Tienes hasta el{" "}
+                  <strong>
+                    {new Intl.DateTimeFormat("es-CL", {
+                      day: "numeric",
+                      month: "long",
+                    }).format(artisan.subscriptions[0].graceEndsAt)}
+                  </strong>{" "}
+                  para elegir qué productos mantener activos.
+                </p>
+              </div>
+              <div className="flex flex-shrink-0 gap-2">
+                <Link
+                  href="/portal/orfebre/gestionar-productos"
+                  className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+                >
+                  Gestionar Productos
+                </Link>
+                <Link
+                  href="/portal/orfebre/plan"
+                  className="rounded-md border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                >
+                  Actualizar Plan
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
       <h1 className="font-serif text-3xl font-semibold text-text">
         Mi Taller

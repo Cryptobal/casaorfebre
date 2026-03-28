@@ -70,7 +70,7 @@ export async function approveApplication(
     });
   }
 
-  await prisma.artisan.create({
+  const artisan = await prisma.artisan.create({
     data: {
       userId: user.id,
       slug,
@@ -98,8 +98,32 @@ export async function approveApplication(
     },
   });
 
+  // Redeem promo code if the application had one
+  let promoRedeemed = false;
+  let promoEndDate: Date | null = null;
+  if (application.promoCode) {
+    try {
+      await redeemPromoCode(application.promoCode, artisan.id, application.email);
+      promoRedeemed = true;
+      // Calculate end date for the welcome email
+      const promo = await prisma.promoCode.findUnique({
+        where: { code: application.promoCode },
+      });
+      if (promo) {
+        promoEndDate = new Date();
+        promoEndDate.setDate(promoEndDate.getDate() + promo.durationDays);
+      }
+    } catch (e) {
+      console.error("Promo code redemption failed:", e);
+    }
+  }
+
   try {
-    await sendArtisanWelcomeEmail(application.email, { name: application.name });
+    await sendArtisanWelcomeEmail(application.email, {
+      name: application.name,
+      promoRedeemed,
+      promoEndDate,
+    });
   } catch (e) {
     console.error("Email failed:", e);
   }
@@ -961,4 +985,79 @@ export async function deleteBuyerUser(
 
   revalidatePath("/portal/admin/compradores");
   return { success: true };
+}
+
+/**
+ * Redeems a promo code for an artisan: creates subscription, updates commission,
+ * records redemption, increments usage. All wrapped in a transaction.
+ */
+async function redeemPromoCode(
+  code: string,
+  artisanId: string,
+  email: string
+) {
+  await prisma.$transaction(async (tx) => {
+    const promo = await tx.promoCode.findUnique({ where: { code } });
+    if (
+      !promo ||
+      !promo.isActive ||
+      promo.expiresAt < new Date() ||
+      promo.currentUses >= promo.maxUses
+    ) {
+      throw new Error("Código promocional inválido o expirado");
+    }
+
+    // Check if already redeemed by this email
+    const existingRedemption = await tx.promoCodeRedemption.findUnique({
+      where: { promoCodeId_email: { promoCodeId: promo.id, email } },
+    });
+    if (existingRedemption) {
+      throw new Error("Este código ya fue redimido por este email");
+    }
+
+    const plan = await tx.membershipPlan.findFirst({
+      where: { name: { equals: promo.planName, mode: "insensitive" } },
+    });
+    if (!plan) {
+      throw new Error(`Plan "${promo.planName}" no encontrado`);
+    }
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + promo.durationDays);
+
+    // Create subscription with source PROMO_CODE
+    await tx.membershipSubscription.create({
+      data: {
+        artisanId,
+        planId: plan.id,
+        status: "ACTIVE",
+        startDate,
+        endDate,
+        source: "PROMO_CODE",
+        promoCodeId: promo.id,
+      },
+    });
+
+    // Update artisan commission to plan rate
+    await tx.artisan.update({
+      where: { id: artisanId },
+      data: { commissionRate: plan.commissionRate },
+    });
+
+    // Record redemption
+    await tx.promoCodeRedemption.create({
+      data: {
+        promoCodeId: promo.id,
+        artisanId,
+        email,
+      },
+    });
+
+    // Increment uses
+    await tx.promoCode.update({
+      where: { id: promo.id },
+      data: { currentUses: { increment: 1 } },
+    });
+  });
 }

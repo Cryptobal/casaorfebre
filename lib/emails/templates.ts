@@ -93,14 +93,23 @@ export async function sendBuyerWelcomeEmail(
 // ---------------------------------------------------------------------------
 export async function sendArtisanWelcomeEmail(
   to: string,
-  { name }: { name: string },
+  { name, promoRedeemed, promoEndDate }: { name: string; promoRedeemed?: boolean; promoEndDate?: Date | null },
 ) {
   const base = appUrl();
+  const promoSection = promoRedeemed && promoEndDate
+    ? `<div style="margin:0 0 16px;padding:16px;background-color:#f0ebe3;border-radius:8px;border-left:4px solid #8B7355;">
+         <p style="margin:0 0 8px;font-weight:bold;color:#8B7355;">Programa Pioneros</p>
+         <p style="margin:0 0 4px;font-size:14px;">Tu <strong>Plan Maestro gratis</strong> está activo hasta el <strong>${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric" }).format(promoEndDate)}</strong>.</p>
+         <p style="margin:0;font-size:13px;color:#6b6050;">Productos ilimitados · Fotos ilimitadas · Comisión 9% · Badge Maestro · Destaque en home</p>
+       </div>`
+    : "";
+
   await sendEmail(
     to,
-    "¡Tu postulación fue aprobada!",
+    promoRedeemed ? "¡Bienvenido al Programa Pioneros!" : "¡Tu postulación fue aprobada!",
     `<p style="margin:0 0 16px;">Hola ${name},</p>
      <p style="margin:0 0 16px;">¡Felicidades! Tu postulación a <strong>Casa Orfebre</strong> ha sido aprobada. Ya formas parte de nuestra comunidad de artesanos.</p>
+     ${promoSection}
      <p style="margin:0 0 8px;font-weight:bold;">¿Cómo ingresar al portal?</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;font-size:14px;line-height:1.5;">
        Tu cuenta quedó asociada a <strong>este mismo correo</strong>. No recibiste una contraseña automática.<br><br>
@@ -1180,5 +1189,170 @@ export async function sendGiftCardPurchaserEmail(
        <p style="margin:0 0 8px;font-size:18px;font-weight:bold;letter-spacing:2px;font-family:monospace;">${displayCode}</p>
        <p style="margin:0;font-size:12px;color:#9e9a90;">Válida hasta ${expiresLabel}</p>
      </div>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pre-Expiration (7 days before)
+// ---------------------------------------------------------------------------
+export async function sendPreExpirationEmail(
+  to: string,
+  {
+    artisanName,
+    planName,
+    expiresAt,
+    upgradePlanUrl,
+  }: {
+    artisanName: string;
+    planName: string;
+    expiresAt: Date;
+    upgradePlanUrl: string;
+  },
+) {
+  const dateLabel = new Intl.DateTimeFormat("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(expiresAt);
+
+  await sendEmail(
+    to,
+    `Tu Plan ${planName} vence en 7 días`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">Tu <strong>Plan ${planName}</strong> en Casa Orfebre vence el <strong>${dateLabel}</strong>.</p>
+     <p style="margin:0 0 16px;">Renueva o actualiza tu plan para mantener todos tus beneficios y productos activos.</p>
+     <p style="margin:0 0 0;">
+       <a href="${upgradePlanUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Renovar plan</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Grace Period Start
+// ---------------------------------------------------------------------------
+export async function sendGracePeriodEmail(
+  to: string,
+  {
+    artisanName,
+    currentProducts,
+    newLimit,
+    graceEndsAt,
+    manageUrl,
+    upgradePlanUrl,
+    wasPromoCode,
+  }: {
+    artisanName: string;
+    currentProducts: number;
+    newLimit: number;
+    graceEndsAt: Date;
+    manageUrl: string;
+    upgradePlanUrl: string;
+    wasPromoCode: boolean;
+  },
+) {
+  const dateLabel = new Intl.DateTimeFormat("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(graceEndsAt);
+
+  const introText = wasPromoCode
+    ? "Tu período gratuito del <strong>Programa Pioneros</strong> ha terminado."
+    : "Tu plan actual ha finalizado.";
+
+  const needsSelection = currentProducts > newLimit;
+
+  await sendEmail(
+    to,
+    "Tu plan ha finalizado — Elige tus productos activos",
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">${introText}</p>
+     ${
+       needsSelection
+         ? `<p style="margin:0 0 16px;">Actualmente tienes <strong>${currentProducts}</strong> productos activos. Con el Plan Esencial puedes mantener hasta <strong>${newLimit}</strong>.</p>
+            <p style="margin:0 0 16px;">Tienes hasta el <strong>${dateLabel}</strong> para elegir qué productos mantener activos. Los demás quedarán pausados (no se eliminan).</p>
+            <p style="margin:0 0 16px;">Si no eliges, mantendremos activos tus ${newLimit} productos con mejor rendimiento.</p>`
+         : `<p style="margin:0 0 16px;">Tienes <strong>${currentProducts}</strong> productos activos, dentro del límite del Plan Esencial (${newLimit}).</p>`
+     }
+     <p style="margin:0 0 8px;">
+       <a href="${manageUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Elegir mis productos</a>
+     </p>
+     <p style="margin:0 0 0;">
+       <a href="${upgradePlanUrl}" style="display:inline-block;padding:10px 20px;background-color:transparent;color:#8B7355;text-decoration:none;border:1px solid #8B7355;border-radius:6px;font-size:14px;">Mantener todos — Actualizar plan</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Downgrade Completed
+// ---------------------------------------------------------------------------
+export async function sendDowngradeCompletedEmail(
+  to: string,
+  {
+    artisanName,
+    pausedCount,
+    activeCount,
+    upgradePlanUrl,
+  }: {
+    artisanName: string;
+    pausedCount: number;
+    activeCount: number;
+    upgradePlanUrl: string;
+  },
+) {
+  await sendEmail(
+    to,
+    "Tu plan ha sido actualizado a Esencial",
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">Tu plan en Casa Orfebre ha sido actualizado a <strong>Plan Esencial</strong>.</p>
+     <div style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:6px;">
+       <p style="margin:0 0 4px;font-size:14px;"><strong>${activeCount}</strong> productos activos</p>
+       ${pausedCount > 0 ? `<p style="margin:0;font-size:14px;"><strong>${pausedCount}</strong> productos pausados</p>` : ""}
+     </div>
+     ${pausedCount > 0 ? '<p style="margin:0 0 16px;">Los productos pausados no se eliminan. Puedes reactivarlos en cualquier momento actualizando tu plan.</p>' : ""}
+     <p style="margin:0 0 0;">
+       <a href="${upgradePlanUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Reactivar todos — Actualizar plan</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pioneer Invitation (for mail merge / manual send)
+// ---------------------------------------------------------------------------
+export async function sendPioneerInvitationEmail(
+  to: string,
+  {
+    name,
+    code,
+    planName,
+    durationDays,
+  }: {
+    name: string;
+    code: string;
+    planName: string;
+    durationDays: number;
+  },
+) {
+  const base = appUrl();
+  const registerUrl = `${base}/postular?code=${encodeURIComponent(code)}`;
+  const freeMonths = Math.round(durationDays / 30);
+  const planLabel = planName.charAt(0).toUpperCase() + planName.slice(1);
+
+  await sendEmail(
+    to,
+    "Has sido seleccionado — Programa Pioneros Casa Orfebre",
+    `<p style="margin:0 0 16px;">Hola ${name},</p>
+     <p style="margin:0 0 16px;"><strong>Casa Orfebre</strong> es el primer marketplace exclusivo para orfebres en Chile — un espacio curado donde artesanos verificados muestran y venden sus creaciones.</p>
+     <p style="margin:0 0 16px;">Has sido seleccionado como parte de nuestro grupo de <strong>orfebres fundadores</strong>.</p>
+     <div style="margin:0 0 20px;padding:20px;background-color:#f0ebe3;border-radius:8px;border-left:4px solid #8B7355;text-align:center;">
+       <p style="margin:0 0 8px;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;color:#8B7355;">Programa Pioneros</p>
+       <p style="margin:0 0 4px;font-size:20px;font-weight:bold;color:#1a1a18;">${freeMonths} meses de Plan ${planLabel} gratis</p>
+       <p style="margin:0;font-size:14px;color:#6b6050;">Productos ilimitados · Fotos ilimitadas · Comisión 9% · Badge Maestro · Destaque en home</p>
+     </div>
+     <p style="margin:0 0 16px;">Tu código personal es <strong style="font-family:monospace;font-size:16px;background:#f5f3ef;padding:4px 8px;border-radius:4px;">${code}</strong></p>
+     <p style="margin:0 0 20px;text-align:center;">
+       <a href="${registerUrl}" style="display:inline-block;padding:14px 32px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:16px;font-weight:bold;">Postular como Pionero</a>
+     </p>
+     <p style="margin:0 0 0;font-size:13px;color:#9e9a90;">Cupos limitados para los primeros orfebres. Tu código expira en 3 meses.</p>`,
   );
 }

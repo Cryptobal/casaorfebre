@@ -46,6 +46,8 @@ interface ApplicationFormProps {
   materials?: string[];
   /** Plan seleccionado en el paso de pricing */
   selectedPlan?: string;
+  /** Código promocional validado (viene del URL) */
+  promoCode?: string;
 }
 
 function stripNonDigits(value: string, maxLen: number) {
@@ -62,6 +64,7 @@ export function ApplicationForm({
   categories: categoriesProp,
   materials: materialsProp,
   selectedPlan,
+  promoCode,
 }: ApplicationFormProps) {
   const opcionesEspecialidad = sortAlphabeticalEs(
     specialtiesProp && specialtiesProp.length > 0 ? specialtiesProp : DEFAULT_ESPECIALIDADES
@@ -143,6 +146,7 @@ export function ApplicationForm({
       <input type="hidden" name="location" value={ciudad} />
       <input type="hidden" name="categories" value={categorias.join(",")} />
       {selectedPlan && <input type="hidden" name="selectedPlan" value={selectedPlan} />}
+      {promoCode && <input type="hidden" name="promoCode" value={promoCode} />}
 
       {/* ─── Section 1: Datos personales ─── */}
       <div>

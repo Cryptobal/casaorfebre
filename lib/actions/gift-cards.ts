@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { preferenceClient } from "@/lib/mercadopago";
 import { normalizeGiftCardCode } from "@/lib/gift-cards";
+import { isSandbox } from "@/lib/config";
 
 const MIN_AMOUNT = 10000;
 const MAX_AMOUNT = 500000;
@@ -37,7 +38,7 @@ export async function purchaseGiftCard(formData: FormData) {
 
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const useSandbox = process.env.MP_SANDBOX !== "false";
+    const useSandbox = isSandbox();
 
     // Store gift card data in metadata for the webhook to use
     const preference = await preferenceClient.create({

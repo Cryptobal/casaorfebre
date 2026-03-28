@@ -115,12 +115,24 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+interface PromoData {
+  valid: boolean;
+  planName?: string;
+  benefits?: {
+    planDisplayName: string;
+    price: string;
+    freeMonths: number;
+    totalValue: string;
+  };
+}
+
 interface PricingPlansProps {
   plans: MembershipPlan[];
   onSelectPlan: (planName: string) => void;
+  promoData?: PromoData;
 }
 
-export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
+export function PricingPlans({ plans, onSelectPlan, promoData }: PricingPlansProps) {
   const [annual, setAnnual] = useState(false);
 
   const sortedPlans = [...plans].sort(
@@ -164,6 +176,7 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
         {sortedPlans.map((plan) => {
           const isPopular = plan.name === "artesano";
           const isMaestro = plan.name === "maestro";
+          const isPromo = promoData?.valid && promoData.planName === plan.name;
           const price = plan.price === 0
             ? 0
             : annual && plan.annualPrice
@@ -174,16 +187,22 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
             <div
               key={plan.id}
               className={`relative flex flex-col rounded-xl border p-6 transition-shadow hover:shadow-md ${
-                isPopular
-                  ? "border-accent shadow-sm"
-                  : "border-border"
+                isPromo
+                  ? "border-[#8B7355] shadow-md ring-1 ring-[#8B7355]/20"
+                  : isPopular
+                    ? "border-accent shadow-sm"
+                    : "border-border"
               }`}
             >
-              {isPopular && (
+              {isPromo ? (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#8B7355] px-3 py-0.5 text-xs font-medium text-white">
+                  GRATIS {promoData.benefits!.freeMonths} MESES
+                </div>
+              ) : isPopular ? (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-medium text-white">
                   Más popular
                 </div>
-              )}
+              ) : null}
 
               <div className="text-center">
                 <h3 className="font-serif text-xl font-medium text-text">
@@ -194,7 +213,14 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
                 </p>
 
                 <div className="mt-4">
-                  {price === 0 ? (
+                  {isPromo ? (
+                    <>
+                      <p className="font-serif text-3xl font-light text-green-700">Gratis</p>
+                      <p className="mt-1 text-sm text-text-tertiary line-through">
+                        {formatPrice(price)}/mes
+                      </p>
+                    </>
+                  ) : price === 0 ? (
                     <p className="font-serif text-3xl font-light text-text">Gratis</p>
                   ) : (
                     <>
@@ -238,14 +264,20 @@ export function PricingPlans({ plans, onSelectPlan }: PricingPlansProps) {
                   type="button"
                   onClick={() => onSelectPlan(plan.name)}
                   className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                    isPopular
-                      ? "bg-accent text-white hover:bg-accent-dark"
-                      : isMaestro
-                        ? "bg-text text-background hover:bg-text/90"
-                        : "border border-border bg-surface text-text hover:bg-background"
+                    isPromo
+                      ? "bg-[#8B7355] text-white hover:bg-[#7a6549]"
+                      : isPopular
+                        ? "bg-accent text-white hover:bg-accent-dark"
+                        : isMaestro
+                          ? "bg-text text-background hover:bg-text/90"
+                          : "border border-border bg-surface text-text hover:bg-background"
                   }`}
                 >
-                  {plan.price === 0 ? "Empezar gratis" : `Elegir ${PLAN_LABELS[plan.name]}`}
+                  {isPromo
+                    ? "Postular como Pionero"
+                    : plan.price === 0
+                      ? "Empezar gratis"
+                      : `Elegir ${PLAN_LABELS[plan.name]}`}
                 </button>
               </div>
             </div>

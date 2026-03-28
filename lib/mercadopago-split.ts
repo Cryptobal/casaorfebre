@@ -23,6 +23,7 @@ export async function createArtisanPreference(
     external_reference: string;
     notification_url: string;
     marketplace_fee: number;
+    statement_descriptor?: string;
   }
 ): Promise<{ init_point: string; sandbox_init_point?: string }> {
   const response = await fetch("https://api.mercadopago.com/checkout/preferences", {

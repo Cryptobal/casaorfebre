@@ -30,9 +30,66 @@ export const metadata: Metadata = {
 export default async function PostularPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ plan?: string; code?: string }>;
 }) {
-  const { plan: preselectedPlan } = await searchParams;
+  const { plan: preselectedPlan, code: promoCodeParam } = await searchParams;
+
+  // Validate promo code server-side if present
+  let promoData: {
+    valid: boolean;
+    planName?: string;
+    durationDays?: number;
+    campaign?: string;
+    reason?: string;
+    benefits?: {
+      planDisplayName: string;
+      price: string;
+      freeMonths: number;
+      totalValue: string;
+    };
+  } | null = null;
+
+  if (promoCodeParam) {
+    const { prisma } = await import("@/lib/prisma");
+    const code = promoCodeParam.trim().toUpperCase();
+    const promo = await prisma.promoCode.findUnique({ where: { code } });
+
+    if (!promo || !promo.isActive) {
+      promoData = { valid: false, reason: "not_found" };
+    } else if (promo.expiresAt < new Date()) {
+      promoData = { valid: false, reason: "expired" };
+    } else if (promo.currentUses >= promo.maxUses) {
+      promoData = { valid: false, reason: "used" };
+    } else {
+      const plan = await prisma.membershipPlan.findFirst({
+        where: { name: { equals: promo.planName, mode: "insensitive" } },
+      });
+      const freeMonths = Math.round(promo.durationDays / 30);
+      const totalValue = plan ? plan.price * freeMonths : 0;
+      const fmt = (v: number) =>
+        new Intl.NumberFormat("es-CL", {
+          style: "currency",
+          currency: "CLP",
+          maximumFractionDigits: 0,
+        }).format(v);
+
+      promoData = {
+        valid: true,
+        planName: promo.planName,
+        durationDays: promo.durationDays,
+        campaign: promo.campaign,
+        benefits: {
+          planDisplayName: plan
+            ? plan.name.charAt(0).toUpperCase() + plan.name.slice(1)
+            : promo.planName,
+          price: plan ? `${fmt(plan.price)}/mes` : "",
+          freeMonths,
+          totalValue: fmt(totalValue),
+        },
+      };
+    }
+  }
+
   const [categories, materials, specialties, plans] = await Promise.all([
     getActiveCategories(),
     getActiveMaterials(),
@@ -44,21 +101,28 @@ export default async function PostularPage({
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
         <h1 className="font-serif text-3xl font-light sm:text-4xl">
-          Postula como Orfebre
+          {promoData?.valid
+            ? "Bienvenido al Programa Pioneros"
+            : "Postula como Orfebre"}
         </h1>
         <p className="mt-3 text-text-secondary">
-          Únete a nuestra comunidad de artesanos verificados y muestra tu
-          trabajo al mundo.
+          {promoData?.valid
+            ? "Has sido seleccionado como uno de los primeros orfebres de Casa Orfebre."
+            : "Únete a nuestra comunidad de artesanos verificados y muestra tu trabajo al mundo."}
         </p>
       </div>
 
       <div className="mt-12">
         <PostularFlow
           plans={plans}
-          preselectedPlan={preselectedPlan || null}
+          preselectedPlan={
+            promoData?.valid ? promoData.planName! : preselectedPlan || null
+          }
           specialties={specialties.map((s) => s.name)}
           categories={categories.map((c) => c.name)}
           materials={materials.map((m) => m.name)}
+          promoCode={promoData?.valid ? promoCodeParam!.trim().toUpperCase() : null}
+          promoData={promoData}
         />
       </div>
     </div>

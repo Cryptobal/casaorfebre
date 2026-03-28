@@ -1,4 +1,5 @@
 import { preferenceClient } from "@/lib/mercadopago";
+import { isSandbox } from "@/lib/config";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
@@ -21,7 +22,7 @@ export async function createSubscriptionPreference({
   amount: number;
   billingPeriod: "monthly" | "annual";
 }) {
-  const isSandbox = process.env.MP_SANDBOX === "true";
+  const sandbox = isSandbox();
 
   const preference = await preferenceClient.create({
     body: {
@@ -52,7 +53,7 @@ export async function createSubscriptionPreference({
     },
   });
 
-  const redirectUrl = isSandbox
+  const redirectUrl = sandbox
     ? preference.sandbox_init_point
     : preference.init_point;
 

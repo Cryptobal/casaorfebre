@@ -112,10 +112,11 @@ model Artisan {
   socialLinks      Json?
   rut            String?
   phone          String?
-  mpAccessToken   String?
-  mpRefreshToken  String?
-  mpUserId        String?           @unique
-  mpOnboarded     Boolean           @default(false)
+  mpAccessToken    String?
+  mpRefreshToken   String?
+  mpUserId         String?           @unique
+  mpOnboarded      Boolean           @default(false)
+  mpTokenExpiresAt DateTime?
   commissionRate      Float                    @default(0.18)
   commissionOverride  Float?
   maxProductsOverride Int?
@@ -204,6 +205,8 @@ model Product {
   isReturnable   Boolean           @default(true)
   viewCount      Int               @default(0)
   status         ProductStatus     @default(DRAFT)
+  pauseReason    ProductPauseReason?
+  pausedAt       DateTime?
   isCuratorPick  Boolean           @default(false)
   curatorPickAt  DateTime?
   curatorNote    String?
@@ -462,6 +465,7 @@ model ArtisanApplication {
   awards            String[]
   phone             String?
   selectedPlan    String?
+  promoCode       String?
   status          ArtisanApplicationStatus @default(PENDING)
   reviewedAt      DateTime?
   reviewNotes     String?
@@ -499,19 +503,57 @@ model MembershipPlan {
 }
 
 model MembershipSubscription {
-  id          String           @id @default(cuid())
-  artisanId   String
-  planId      String
-  status      MembershipStatus @default(ACTIVE)
-  startDate   DateTime         @default(now())
-  endDate     DateTime?
-  cancelledAt DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  artisan     Artisan          @relation(fields: [artisanId], references: [id])
-  plan        MembershipPlan   @relation(fields: [planId], references: [id])
+  id                    String             @id @default(cuid())
+  artisanId             String
+  planId                String
+  status                MembershipStatus   @default(ACTIVE)
+  startDate             DateTime           @default(now())
+  endDate               DateTime?
+  cancelledAt           DateTime?
+  source                SubscriptionSource @default(PAYMENT)
+  promoCodeId           String?
+  graceEndsAt           DateTime?
+  gracePeriodNotified   Boolean            @default(false)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  artisan               Artisan            @relation(fields: [artisanId], references: [id])
+  plan                  MembershipPlan     @relation(fields: [planId], references: [id])
 
   @@map("membership_subscriptions")
+}
+
+model PromoCode {
+  id           String              @id @default(cuid())
+  code         String              @unique
+  type         PromoCodeType       @default(FREE_TRIAL)
+  planName     String
+  durationDays Int                 @default(90)
+  maxUses      Int                 @default(1)
+  currentUses  Int                 @default(0)
+  expiresAt    DateTime
+  isActive     Boolean             @default(true)
+  campaign     String
+  metadata     Json?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  redemptions  PromoCodeRedemption[]
+
+  @@index([campaign])
+  @@index([code])
+  @@map("promo_codes")
+}
+
+model PromoCodeRedemption {
+  id          String    @id @default(cuid())
+  promoCodeId String
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  artisanId   String?
+  email       String
+  redeemedAt  DateTime  @default(now())
+
+  @@unique([promoCodeId, email])
+  @@index([artisanId])
+  @@map("promo_code_redemptions")
 }
 
 model Wishlist {
@@ -740,6 +782,27 @@ enum MembershipStatus {
   ACTIVE
   CANCELLED
   EXPIRED
+  GRACE_PERIOD
+}
+
+enum PromoCodeType {
+  PLAN_UPGRADE
+  FREE_TRIAL
+  DISCOUNT
+}
+
+enum SubscriptionSource {
+  PAYMENT
+  PROMO_CODE
+  DEFAULT
+  ADMIN
+}
+
+enum ProductPauseReason {
+  DOWNGRADE
+  MANUAL
+  ADMIN
+  MODERATION
 }
 
 // ---------------------------------------------------------------------------

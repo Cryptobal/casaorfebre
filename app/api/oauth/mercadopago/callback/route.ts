@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     }
 
     const tokenData = await tokenResponse.json();
-    const { access_token, refresh_token, user_id } = tokenData;
+    const { access_token, refresh_token, user_id, expires_in } = tokenData;
 
     if (!access_token) {
       console.error("[oauth/mp/callback] No access_token in response");
@@ -80,6 +80,9 @@ export async function GET(request: Request) {
         mpRefreshToken: refresh_token || null,
         mpUserId: user_id ? String(user_id) : null,
         mpOnboarded: true,
+        mpTokenExpiresAt: expires_in
+          ? new Date(Date.now() + expires_in * 1000)
+          : null,
       },
     });
 

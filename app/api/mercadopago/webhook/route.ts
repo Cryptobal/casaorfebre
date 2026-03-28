@@ -152,7 +152,14 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
       data: {
         status: "PAID",
         mpPaymentId: String(paymentId),
+        mpMerchantOrderId: payment.order?.id ? String(payment.order.id) : undefined,
       },
+    });
+
+    // Save mpTransactionId on each OrderItem
+    await prisma.orderItem.updateMany({
+      where: { orderId },
+      data: { mpTransactionId: String(paymentId) },
     });
 
     // Destock products (batch to avoid N+1)
@@ -271,6 +278,58 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
       where: { id: orderId },
       data: { status: "CANCELLED" },
     });
+  } else if (payment.status === "pending" || payment.status === "in_process") {
+    // Payment is being processed — don't change order status, just log
+    console.log('[MP Webhook] Payment pending/in_process', {
+      paymentId,
+      status: payment.status,
+      orderId,
+    });
+  } else if (payment.status === "cancelled") {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+    if (order && order.status === "PENDING_PAYMENT") {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { status: "CANCELLED" },
+      });
+      console.log('[MP Webhook] Order cancelled due to payment cancellation', { paymentId, orderId });
+    }
+  } else if (payment.status === "refunded" || payment.status === "charged_back") {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+    if (order && order.status === "PAID") {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { status: "REFUNDED" },
+      });
+
+      // Restore stock
+      await Promise.all(
+        order.items.map(async (item: any) => {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        })
+      );
+
+      // Update payout status for order items
+      await prisma.orderItem.updateMany({
+        where: { orderId },
+        data: { payoutStatus: "REFUNDED" },
+      });
+
+      console.log('[MP Webhook] Order refunded/charged_back', {
+        paymentId,
+        orderId,
+        status: payment.status,
+      });
+    }
   }
 }
 
@@ -404,7 +463,78 @@ export async function POST(request: Request) {
     }
 
     // Fetch payment details from MercadoPago
-    const payment = await paymentClient.get({ id: paymentId });
+    console.log('[MP Webhook] Fetching payment', {
+      paymentId,
+      usingToken: 'marketplace',
+      timestamp: new Date().toISOString(),
+    });
+
+    let payment: any;
+    try {
+      payment = await paymentClient.get({ id: paymentId });
+    } catch (err: any) {
+      // If marketplace token can't access this payment (split), try artisan's token
+      console.warn('[MP Webhook] Marketplace token fetch failed, attempting artisan fallback', {
+        paymentId,
+        error: err?.message,
+      });
+
+      // Look up order by scanning recent pending orders for this payment
+      const recentOrders = await prisma.order.findMany({
+        where: { status: 'PENDING_PAYMENT' },
+        include: {
+          items: {
+            select: { artisanId: true },
+            take: 1,
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+
+      for (const order of recentOrders) {
+        const artisanId = order.items[0]?.artisanId;
+        if (!artisanId) continue;
+
+        const artisan = await prisma.artisan.findUnique({
+          where: { id: artisanId },
+          select: { mpAccessToken: true },
+        });
+
+        if (artisan?.mpAccessToken) {
+          try {
+            const res = await fetch(
+              `https://api.mercadopago.com/v1/payments/${paymentId}`,
+              {
+                headers: { Authorization: `Bearer ${artisan.mpAccessToken}` },
+              }
+            );
+            if (res.ok) {
+              payment = await res.json();
+              console.log('[MP Webhook] Payment fetched via artisan token fallback', {
+                paymentId,
+                artisanId,
+              });
+              break;
+            }
+          } catch {}
+        }
+      }
+
+      if (!payment) {
+        console.error('[MP Webhook] Could not fetch payment with any token', { paymentId });
+        return NextResponse.json({ received: true });
+      }
+    }
+
+    console.log('[MP Webhook] Payment data', {
+      id: payment.id,
+      status: payment.status,
+      transaction_amount: payment.transaction_amount,
+      fee_details: payment.fee_details,
+      external_reference: payment.external_reference,
+      collector_id: payment.collector_id,
+    });
 
     if (!payment || !payment.external_reference) {
       return NextResponse.json({ received: true });

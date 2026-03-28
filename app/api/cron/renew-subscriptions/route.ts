@@ -5,7 +5,11 @@ import {
   sendSubscriptionRenewalEmail,
   sendSubscriptionReminderEmail,
   sendSubscriptionExpiredEmail,
+  sendPreExpirationEmail,
+  sendGracePeriodEmail,
+  sendDowngradeCompletedEmail,
 } from "@/lib/emails/templates";
+import { executeDowngrade } from "@/lib/membership/downgrade";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -15,6 +19,8 @@ export async function GET(request: Request) {
 
   const now = new Date();
   const results = {
+    preExpirationNotified: 0,
+    movedToGrace: 0,
     renewalsSent: 0,
     remindersSent: 0,
     degraded: 0,
@@ -22,82 +28,185 @@ export async function GET(request: Request) {
   };
 
   try {
-    // Find all ACTIVE subscriptions that have expired (endDate <= now)
-    const expiredSubs = await prisma.membershipSubscription.findMany({
+    // ── PASO 0: Aviso 7 días antes de expiración ──
+    const sevenDaysFromNow = new Date(now);
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const sixDaysFromNow = new Date(now);
+    sixDaysFromNow.setDate(sixDaysFromNow.getDate() + 6);
+
+    const expiringIn7Days = await prisma.membershipSubscription.findMany({
       where: {
         status: "ACTIVE",
-        endDate: { lte: now },
+        endDate: {
+          gte: sixDaysFromNow,
+          lte: sevenDaysFromNow,
+        },
+        plan: { price: { gt: 0 } },
+        gracePeriodNotified: false,
       },
       include: {
         plan: true,
-        artisan: {
-          include: {
-            user: { select: { email: true } },
-          },
-        },
+        artisan: { include: { user: { select: { email: true } } } },
       },
     });
 
-    for (const sub of expiredSubs) {
-      const artisan = sub.artisan;
-      const plan = sub.plan;
-      const email = artisan.user?.email;
-
-      if (!email) continue;
-
-      // Skip free plans (esencial) — they don't need renewal
-      if (plan.price === 0) continue;
-
-      const endDate = sub.endDate!;
-      const daysSinceExpiry = Math.floor(
-        (now.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      const planLabel =
-        plan.name.charAt(0).toUpperCase() + plan.name.slice(1);
-
+    for (const sub of expiringIn7Days) {
       try {
-        if (daysSinceExpiry >= 10) {
-          // ── 10+ days: DEGRADE to Esencial ──
-          await degradeToEsencial(artisan.id, sub.id, planLabel, email, artisan.displayName);
-          results.degraded++;
-        } else if (daysSinceExpiry >= 7) {
-          // ── 7 days: Last warning ──
-          const paymentUrl = await getOrCreatePaymentUrl(sub, artisan.id, planLabel);
-          await sendSubscriptionReminderEmail(email, {
-            artisanName: artisan.displayName,
-            planName: planLabel,
-            amount: plan.price,
-            paymentUrl,
-            daysOverdue: daysSinceExpiry,
+        const planLabel = sub.plan.name.charAt(0).toUpperCase() + sub.plan.name.slice(1);
+        await sendPreExpirationEmail(sub.artisan.user.email, {
+          artisanName: sub.artisan.displayName,
+          planName: planLabel,
+          expiresAt: sub.endDate!,
+          upgradePlanUrl: `${appUrl()}/portal/orfebre/plan`,
+        });
+        await prisma.membershipSubscription.update({
+          where: { id: sub.id },
+          data: { gracePeriodNotified: true },
+        });
+        results.preExpirationNotified++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.errors.push(`pre-expiration ${sub.id}: ${msg}`);
+      }
+    }
+
+    // ── PASO 1: Suscripciones ACTIVE que expiran hoy → GRACE_PERIOD ──
+    const expiringToday = await prisma.membershipSubscription.findMany({
+      where: {
+        status: "ACTIVE",
+        endDate: { lte: now },
+        plan: { price: { gt: 0 } },
+      },
+      include: {
+        plan: true,
+        artisan: { include: { user: { select: { email: true } } } },
+      },
+    });
+
+    for (const sub of expiringToday) {
+      try {
+        // Check if this is a paid subscription that should go through normal renewal flow
+        // vs a promo subscription that goes directly to grace period
+        if (sub.source === "PROMO_CODE" || sub.source === "ADMIN") {
+          // Promo/admin subs go to grace period immediately
+          const graceEndsAt = new Date(now);
+          graceEndsAt.setDate(graceEndsAt.getDate() + 7);
+
+          await prisma.membershipSubscription.update({
+            where: { id: sub.id },
+            data: { status: "GRACE_PERIOD", graceEndsAt },
           });
-          results.remindersSent++;
-        } else if (daysSinceExpiry >= 3) {
-          // ── 3 days: Reminder ──
-          const paymentUrl = await getOrCreatePaymentUrl(sub, artisan.id, planLabel);
-          await sendSubscriptionReminderEmail(email, {
-            artisanName: artisan.displayName,
-            planName: planLabel,
-            amount: plan.price,
-            paymentUrl,
-            daysOverdue: daysSinceExpiry,
+
+          const activeProducts = await prisma.product.count({
+            where: { artisanId: sub.artisanId, status: "APPROVED" },
           });
-          results.remindersSent++;
+
+          const essentialPlan = await prisma.membershipPlan.findFirst({
+            where: { name: "esencial" },
+          });
+
+          await sendGracePeriodEmail(sub.artisan.user.email, {
+            artisanName: sub.artisan.displayName,
+            currentProducts: activeProducts,
+            newLimit: essentialPlan?.maxProducts ?? 10,
+            graceEndsAt,
+            manageUrl: `${appUrl()}/portal/orfebre/gestionar-productos`,
+            upgradePlanUrl: `${appUrl()}/portal/orfebre/plan`,
+            wasPromoCode: sub.source === "PROMO_CODE",
+          });
+
+          results.movedToGrace++;
         } else {
-          // ── 0 days: Initial renewal notice ──
-          const paymentUrl = await getOrCreatePaymentUrl(sub, artisan.id, planLabel);
-          await sendSubscriptionRenewalEmail(email, {
-            artisanName: artisan.displayName,
-            planName: planLabel,
-            amount: plan.price,
-            paymentUrl,
-          });
-          results.renewalsSent++;
+          // Payment-based subs go through the existing renewal reminder flow
+          const endDate = sub.endDate!;
+          const daysSinceExpiry = Math.floor(
+            (now.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          const planLabel = sub.plan.name.charAt(0).toUpperCase() + sub.plan.name.slice(1);
+
+          if (daysSinceExpiry >= 10) {
+            // Move to grace period instead of immediate downgrade
+            const graceEndsAt = new Date(now);
+            graceEndsAt.setDate(graceEndsAt.getDate() + 7);
+
+            await prisma.membershipSubscription.update({
+              where: { id: sub.id },
+              data: { status: "GRACE_PERIOD", graceEndsAt },
+            });
+
+            const activeProducts = await prisma.product.count({
+              where: { artisanId: sub.artisanId, status: "APPROVED" },
+            });
+
+            const essentialPlan = await prisma.membershipPlan.findFirst({
+              where: { name: "esencial" },
+            });
+
+            await sendGracePeriodEmail(sub.artisan.user.email, {
+              artisanName: sub.artisan.displayName,
+              currentProducts: activeProducts,
+              newLimit: essentialPlan?.maxProducts ?? 10,
+              graceEndsAt,
+              manageUrl: `${appUrl()}/portal/orfebre/gestionar-productos`,
+              upgradePlanUrl: `${appUrl()}/portal/orfebre/plan`,
+              wasPromoCode: false,
+            });
+
+            results.movedToGrace++;
+          } else if (daysSinceExpiry >= 3) {
+            const paymentUrl = await getOrCreatePaymentUrl(sub, sub.artisanId, planLabel);
+            await sendSubscriptionReminderEmail(sub.artisan.user.email, {
+              artisanName: sub.artisan.displayName,
+              planName: planLabel,
+              amount: sub.plan.price,
+              paymentUrl,
+              daysOverdue: daysSinceExpiry,
+            });
+            results.remindersSent++;
+          } else {
+            const paymentUrl = await getOrCreatePaymentUrl(sub, sub.artisanId, planLabel);
+            await sendSubscriptionRenewalEmail(sub.artisan.user.email, {
+              artisanName: sub.artisan.displayName,
+              planName: planLabel,
+              amount: sub.plan.price,
+              paymentUrl,
+            });
+            results.renewalsSent++;
+          }
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error(`[renew-sub] Error processing sub ${sub.id}:`, msg);
         results.errors.push(`sub ${sub.id}: ${msg}`);
+      }
+    }
+
+    // ── PASO 2: Grace periods que terminaron → ejecutar downgrade ──
+    const expiredGrace = await prisma.membershipSubscription.findMany({
+      where: {
+        status: "GRACE_PERIOD",
+        graceEndsAt: { lte: now },
+      },
+      include: {
+        plan: true,
+        artisan: { include: { user: { select: { email: true } } } },
+      },
+    });
+
+    for (const sub of expiredGrace) {
+      try {
+        const result = await executeDowngrade(sub.artisanId, sub.id);
+        await sendDowngradeCompletedEmail(sub.artisan.user.email, {
+          artisanName: sub.artisan.displayName,
+          pausedCount: result.pausedCount,
+          activeCount: result.activeCount,
+          upgradePlanUrl: `${appUrl()}/portal/orfebre/plan`,
+        });
+        results.degraded++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error(`[renew-sub] Downgrade error ${sub.id}:`, msg);
+        results.errors.push(`downgrade ${sub.id}: ${msg}`);
       }
     }
 
@@ -108,16 +217,15 @@ export async function GET(request: Request) {
   }
 }
 
-/**
- * Creates a payment preference URL for a subscription renewal.
- * Determines billing period from the subscription's start/end dates.
- */
+function appUrl(): string {
+  return (process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl").replace(/\/$/, "");
+}
+
 async function getOrCreatePaymentUrl(
   sub: { id: string; startDate: Date; endDate: Date | null; plan: { price: number; annualPrice: number | null; name: string } },
   artisanId: string,
   planLabel: string
 ): Promise<string> {
-  // Determine if this was a monthly or annual subscription
   const startDate = sub.startDate;
   const endDate = sub.endDate!;
   const durationDays = Math.floor(
@@ -137,72 +245,4 @@ async function getOrCreatePaymentUrl(
   });
 
   return redirectUrl;
-}
-
-/**
- * Degrades an artisan's subscription to the Esencial plan.
- * - Marks old subscription as EXPIRED
- * - Sets commission to 18%
- * - Pauses excess products (over 10 limit)
- * - Sends notification email
- */
-async function degradeToEsencial(
-  artisanId: string,
-  subscriptionId: string,
-  oldPlanName: string,
-  email: string,
-  artisanName: string
-) {
-  // Mark subscription as expired
-  await prisma.membershipSubscription.update({
-    where: { id: subscriptionId },
-    data: { status: "EXPIRED" },
-  });
-
-  // Reset commission to 18% (esencial default) unless admin override
-  const artisan = await prisma.artisan.findUnique({
-    where: { id: artisanId },
-    select: { commissionOverride: true },
-  });
-  if (artisan && artisan.commissionOverride === null) {
-    await prisma.artisan.update({
-      where: { id: artisanId },
-      data: { commissionRate: 0.18 },
-    });
-  }
-
-  // Pause excess products (esencial limit = 10)
-  const ESENCIAL_LIMIT = 10;
-  const activeProductCount = await prisma.product.count({
-    where: { artisanId, status: "APPROVED" },
-  });
-
-  let pausedProducts = 0;
-  if (activeProductCount > ESENCIAL_LIMIT) {
-    const excessCount = activeProductCount - ESENCIAL_LIMIT;
-    const productsToPause = await prisma.product.findMany({
-      where: { artisanId, status: "APPROVED" },
-      orderBy: { publishedAt: "desc" },
-      take: excessCount,
-      select: { id: true },
-    });
-
-    await prisma.product.updateMany({
-      where: { id: { in: productsToPause.map((p) => p.id) } },
-      data: { status: "PAUSED" },
-    });
-
-    pausedProducts = productsToPause.length;
-  }
-
-  // Send expiration email
-  try {
-    await sendSubscriptionExpiredEmail(email, {
-      artisanName,
-      planName: oldPlanName,
-      pausedProducts,
-    });
-  } catch (e) {
-    console.error("[renew-sub] Expiration email failed:", e);
-  }
 }

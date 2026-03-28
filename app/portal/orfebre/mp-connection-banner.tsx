@@ -1,6 +1,36 @@
 "use client";
 
-export function MpConnectionBanner({ isConnected }: { isConnected: boolean }) {
+interface MpConnectionBannerProps {
+  isConnected: boolean;
+  tokenExpiresAt?: string | null;
+}
+
+export function MpConnectionBanner({ isConnected, tokenExpiresAt }: MpConnectionBannerProps) {
+  // Check if token is expiring within 14 days
+  const isExpiringSoon =
+    isConnected &&
+    tokenExpiresAt &&
+    new Date(tokenExpiresAt).getTime() < Date.now() + 14 * 24 * 60 * 60 * 1000;
+
+  if (isExpiringSoon) {
+    return (
+      <div className="mb-4 rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+        <div className="flex items-center justify-between gap-4">
+          <p>
+            Tu conexion con Mercado Pago expira pronto. Reconectate para seguir recibiendo pagos directamente.
+          </p>
+          <button
+            type="button"
+            onClick={() => { window.location.href = "/api/oauth/mercadopago"; }}
+            className="inline-flex shrink-0 items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700"
+          >
+            Reconectar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isConnected) {
     return (
       <div className="mb-4 flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -28,7 +58,7 @@ export function MpConnectionBanner({ isConnected }: { isConnected: boolean }) {
       <div className="flex items-center justify-between gap-4">
         <p>
           Conecta tu cuenta de Mercado Pago para recibir tus pagos directamente.
-          Mientras no la conectes, los pagos se procesan a través del marketplace.
+          Mientras no la conectes, los pagos se procesan a traves del marketplace.
         </p>
         <button
           type="button"
