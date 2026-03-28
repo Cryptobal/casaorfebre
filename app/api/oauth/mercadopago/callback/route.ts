@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const state = searchParams.get("state"); // artisan ID
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
 
   // Validate session — the artisan must be logged in
   const session = await auth();
@@ -70,7 +70,15 @@ export async function GET(request: Request) {
 
     if (!tokenResponse.ok) {
       const errorBody = await tokenResponse.text();
-      console.error("[oauth/mp/callback] Token exchange failed:", tokenResponse.status, errorBody);
+      console.error("[oauth/mp/callback] Token exchange FAILED", {
+        status: tokenResponse.status,
+        body: errorBody,
+        client_id: tokenPayload.client_id,
+        redirect_uri: tokenPayload.redirect_uri,
+        has_secret: !!tokenPayload.client_secret,
+        secret_prefix: tokenPayload.client_secret?.slice(0, 15) + "...",
+        code_prefix: code?.slice(0, 10) + "...",
+      });
       return NextResponse.redirect(
         new URL("/portal/orfebre?mp_error=token_exchange", appUrl)
       );
