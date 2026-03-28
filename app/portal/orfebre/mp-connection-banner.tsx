@@ -30,8 +30,9 @@ export function MpConnectionBanner({ isConnected }: { isConnected: boolean }) {
           Conecta tu cuenta de Mercado Pago para recibir tus pagos directamente.
           Mientras no la conectes, los pagos se procesan a través del marketplace.
         </p>
-        <a
-          href="/api/oauth/mercadopago"
+        <button
+          type="button"
+          onClick={() => { window.location.href = "/api/oauth/mercadopago"; }}
           className="inline-flex shrink-0 items-center gap-2 rounded-md bg-[#009ee3] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#007eb5]"
         >
           <svg
@@ -49,7 +50,7 @@ export function MpConnectionBanner({ isConnected }: { isConnected: boolean }) {
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
           Conectar Mercado Pago
-        </a>
+        </button>
       </div>
     </div>
   );

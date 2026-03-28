@@ -170,7 +170,11 @@ export default async function ArtisanDashboard({
       )}
       {params.mp_error && (
         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          Hubo un error al conectar Mercado Pago. Por favor intenta nuevamente.
+          {params.mp_error === "config"
+            ? "Error de configuración: MP_APP_ID no está configurado en el servidor."
+            : params.mp_error === "not_approved"
+              ? "Tu cuenta de orfebre debe estar aprobada antes de conectar Mercado Pago."
+              : "Hubo un error al conectar Mercado Pago. Por favor intenta nuevamente."}
         </div>
       )}
 

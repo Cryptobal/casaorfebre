@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_APP_URL));
+    return NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"));
   }
 
   const artisan = await prisma.artisan.findUnique({
@@ -19,7 +19,9 @@ export async function GET() {
   });
 
   if (!artisan || artisan.status !== "APPROVED") {
-    return NextResponse.redirect(new URL("/portal/orfebre", process.env.NEXT_PUBLIC_APP_URL));
+    return NextResponse.redirect(
+      new URL("/portal/orfebre?mp_error=not_approved", process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl")
+    );
   }
 
   const appId = process.env.MP_APP_ID;
@@ -33,7 +35,7 @@ export async function GET() {
   if (!appId) {
     console.error("[oauth/mp] MP_APP_ID not configured");
     return NextResponse.redirect(
-      new URL("/portal/orfebre?error=config", appUrl)
+      new URL("/portal/orfebre?mp_error=config", appUrl)
     );
   }
 
