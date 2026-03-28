@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { togglePauseProduct } from "@/lib/actions/products";
+import { DeleteProductButton } from "./delete-product-button";
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: "Borrador",
@@ -42,7 +43,7 @@ export default async function ProductosPage() {
         orderBy: { position: "asc" },
         take: 1,
       },
-      _count: { select: { images: true } },
+      _count: { select: { images: true, orderItems: true } },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -154,6 +155,11 @@ export default async function ProductosPage() {
                               Ver razon
                             </Link>
                           )}
+                          <DeleteProductButton
+                            productId={product.id}
+                            productName={product.name}
+                            hasSales={product._count.orderItems > 0}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -229,6 +235,12 @@ export default async function ProductosPage() {
                           Ver razon
                         </Link>
                       )}
+                      <DeleteProductButton
+                        productId={product.id}
+                        productName={product.name}
+                        hasSales={product._count.orderItems > 0}
+                        className="min-h-[44px] inline-flex items-center"
+                      />
                     </div>
                   </div>
                 </div>

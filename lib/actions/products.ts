@@ -450,6 +450,67 @@ export async function togglePauseProduct(
   }
 }
 
+export async function deleteProduct(
+  productId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const artisan = await getArtisan();
+  if (!artisan) return { error: "No tienes permisos" };
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      images: true,
+      _count: { select: { orderItems: true } },
+    },
+  });
+
+  if (!product || product.artisanId !== artisan.id) {
+    return { error: "Producto no encontrado" };
+  }
+
+  if (product._count.orderItems > 0) {
+    return {
+      error:
+        "No se puede eliminar un producto con ventas. Pausa el producto en su lugar.",
+    };
+  }
+
+  try {
+    const publicUrl = process.env.R2_PUBLIC_URL;
+    for (const img of product.images) {
+      if (publicUrl && img.url.startsWith(publicUrl)) {
+        const key = img.url.replace(`${publicUrl}/`, "");
+        try {
+          await deleteFromR2(key);
+        } catch {
+          // best-effort
+        }
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.review.deleteMany({ where: { productId } });
+      await tx.certificate.deleteMany({ where: { productId } });
+      await tx.conversation.updateMany({
+        where: { productId },
+        data: { productId: null },
+      });
+      await tx.productImage.deleteMany({ where: { productId } });
+      await tx.product.delete({ where: { id: productId } });
+    });
+  } catch (e) {
+    console.error("[deleteProduct]", productId, e);
+    return {
+      error:
+        "No se pudo eliminar el producto. Recarga la página e intenta de nuevo.",
+    };
+  }
+
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath("/coleccion");
+  return { success: true };
+}
+
 export async function deleteProductImage(
   imageId: string
 ): Promise<{ error?: string; success?: boolean }> {
