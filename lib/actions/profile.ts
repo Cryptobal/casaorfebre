@@ -71,6 +71,9 @@ export async function updateProfileImage(formData: FormData) {
     console.log("[updateProfileImage] saved in DB:", check?.profileImage);
 
     revalidatePath("/portal/orfebre/perfil");
+    revalidatePath("/");
+    revalidatePath("/orfebres");
+    revalidatePath(`/orfebres/${artisan.slug}`);
     return { success: true };
   } catch (e) {
     console.error("[updateProfileImage] Error:", e);

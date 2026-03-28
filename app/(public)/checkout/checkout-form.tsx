@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,10 @@ import {
   citiesForRegion,
   type ChileanRegion,
 } from "@/lib/chile-cities";
+import {
+  AddressAutocomplete,
+  type AddressResult,
+} from "@/components/address-autocomplete";
 
 const OTHER_CITY = "Otra comuna";
 
@@ -95,6 +99,9 @@ export function CheckoutForm({
   const [gcError, setGcError] = useState("");
   const [gcValidating, setGcValidating] = useState(false);
 
+  const [addressFromGoogle, setAddressFromGoogle] = useState(false);
+  const [postalFromGoogle, setPostalFromGoogle] = useState("");
+
   const cityOptions = useMemo(
     () => (region ? citiesForRegion(region) : []),
     [region]
@@ -104,7 +111,25 @@ export function CheckoutForm({
     setRegion(value);
     setCityChoice("");
     setCityOther("");
+    setAddressFromGoogle(false);
   }
+
+  const handleAddressSelect = useCallback((result: AddressResult) => {
+    if (result.region) {
+      setRegion(result.region);
+      if (result.city) {
+        setCityChoice(result.city);
+        setCityOther("");
+      } else {
+        setCityChoice("");
+        setCityOther("");
+      }
+      setAddressFromGoogle(true);
+    }
+    if (result.postalCode) {
+      setPostalFromGoogle(result.postalCode);
+    }
+  }, []);
 
   async function handleApplyDiscount() {
     const code = discountCode.trim().toUpperCase();
@@ -300,20 +325,23 @@ export function CheckoutForm({
 
           <div>
             <Label htmlFor="shippingAddress">Dirección</Label>
-            <Input
-              id="shippingAddress"
-              name="shippingAddress"
-              required
-              placeholder="Av. Principal 123, Depto 4B"
-              className="mt-1"
-              autoComplete="street-address"
+            <AddressAutocomplete
               defaultValue={savedAddress?.shippingAddress ?? undefined}
+              onAddressSelect={handleAddressSelect}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="shippingRegion">Región</Label>
+              <Label htmlFor="shippingRegion">
+                Región
+                {addressFromGoogle && region && (
+                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    Auto
+                  </span>
+                )}
+              </Label>
               <select
                 id="shippingRegion"
                 value={region}
@@ -334,6 +362,12 @@ export function CheckoutForm({
             <div>
               <Label htmlFor="shippingCitySelect">
                 Comuna / Ciudad
+                {addressFromGoogle && cityChoice && cityChoice !== OTHER_CITY && (
+                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    Auto
+                  </span>
+                )}
               </Label>
               <select
                 id="shippingCitySelect"
@@ -341,6 +375,7 @@ export function CheckoutForm({
                 onChange={(e) => {
                   setCityChoice(e.target.value);
                   if (e.target.value !== OTHER_CITY) setCityOther("");
+                  setAddressFromGoogle(false);
                 }}
                 disabled={!region}
                 required={!!region}
@@ -382,12 +417,13 @@ export function CheckoutForm({
               <span className="font-normal text-text-tertiary">(opcional)</span>
             </Label>
             <Input
+              key={postalFromGoogle || "postal"}
               id="shippingPostalCode"
               name="shippingPostalCode"
               placeholder="7500000"
               className="mt-1"
               autoComplete="postal-code"
-              defaultValue={savedAddress?.shippingPostalCode ?? undefined}
+              defaultValue={postalFromGoogle || savedAddress?.shippingPostalCode || undefined}
             />
           </div>
         </div>

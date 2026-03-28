@@ -2,6 +2,7 @@ export const revalidate = 300;
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getProductBySlug, getSimilarProducts } from "@/lib/queries/products";
 import { ProductCard } from "@/components/products/product-card";
 import { buildBreadcrumbJsonLd, getCategoryLabel, getCategorySlug, canonicalUrl } from "@/lib/seo";
@@ -380,8 +381,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* Artisan mini-card */}
           <div className="rounded-lg border border-border p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-serif text-lg font-medium text-accent">
-                {initials}
+              <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full border border-border bg-accent/10">
+                {artisan.profileImage ? (
+                  <Image
+                    src={artisan.profileImage}
+                    alt={artisan.displayName}
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center font-serif text-lg font-medium text-accent">
+                    {initials}
+                  </span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-serif text-lg">{artisan.displayName}</p>

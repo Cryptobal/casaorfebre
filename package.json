@@ -17,6 +17,7 @@
     "@aws-sdk/client-s3": "^3.1017.0",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@react-google-maps/api": "^2.20.8",
     "@types/pg": "^8.20.0",
     "@types/qrcode": "^1.5.6",
     "@upstash/ratelimit": "^2.0.8",

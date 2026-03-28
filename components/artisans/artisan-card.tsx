@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { ArtisanBadge } from "@/components/artisans/artisan-badge";
 import type { Artisan } from "@prisma/client";
@@ -29,10 +30,20 @@ export function ArtisanCard({ artisan }: ArtisanCardProps) {
       className="group block rounded-lg border border-border bg-surface p-6 transition-colors hover:border-accent/30"
     >
       {/* Avatar */}
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-background">
-        <span className="font-serif text-2xl font-light text-text-secondary">
-          {initials}
-        </span>
+      <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-full border border-border bg-background">
+        {artisan.profileImage ? (
+          <Image
+            src={artisan.profileImage}
+            alt={artisan.displayName}
+            fill
+            className="object-cover"
+            sizes="80px"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-serif text-2xl font-light text-text-secondary">
+            {initials}
+          </span>
+        )}
       </div>
 
       {/* Info */}

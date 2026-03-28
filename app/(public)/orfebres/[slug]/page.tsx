@@ -119,10 +119,21 @@ export default async function ArtisanProfilePage({
       <FadeIn>
         <div className="flex flex-col items-center text-center">
           {/* Avatar */}
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-surface border border-border">
-            <span className="font-serif text-4xl font-light text-text-secondary">
-              {initials}
-            </span>
+          <div className="relative h-32 w-32 overflow-hidden rounded-full border border-border bg-surface">
+            {artisan.profileImage ? (
+              <Image
+                src={artisan.profileImage}
+                alt={artisan.displayName}
+                fill
+                className="object-cover"
+                priority
+                sizes="128px"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center font-serif text-4xl font-light text-text-secondary">
+                {initials}
+              </span>
+            )}
           </div>
 
           {/* Name + Badge */}

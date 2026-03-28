@@ -424,3 +424,66 @@ export function citiesForRegion(region: string): string[] {
   if (!region || !(region in CITIES_BY_REGION)) return [];
   return CITIES_BY_REGION[region as ChileanRegion];
 }
+
+/**
+ * Maps Google Maps `administrative_area_level_1` values to our CHILEAN_REGIONS.
+ * Google returns the official name (e.g. "Región Metropolitana de Santiago")
+ * but sometimes abbreviated forms too.
+ */
+const GOOGLE_REGION_MAP: Record<string, ChileanRegion> = {
+  "Arica y Parinacota": "Arica y Parinacota",
+  "Región de Arica y Parinacota": "Arica y Parinacota",
+  "Tarapacá": "Tarapacá",
+  "Región de Tarapacá": "Tarapacá",
+  "Antofagasta": "Antofagasta",
+  "Región de Antofagasta": "Antofagasta",
+  "Atacama": "Atacama",
+  "Región de Atacama": "Atacama",
+  "Coquimbo": "Coquimbo",
+  "Región de Coquimbo": "Coquimbo",
+  "Valparaíso": "Valparaíso",
+  "Región de Valparaíso": "Valparaíso",
+  "Metropolitana": "Metropolitana de Santiago",
+  "Metropolitana de Santiago": "Metropolitana de Santiago",
+  "Región Metropolitana": "Metropolitana de Santiago",
+  "Región Metropolitana de Santiago": "Metropolitana de Santiago",
+  "Santiago Metropolitan": "Metropolitana de Santiago",
+  "O'Higgins": "O'Higgins",
+  "Región del Libertador General Bernardo O'Higgins": "O'Higgins",
+  "Libertador General Bernardo O'Higgins": "O'Higgins",
+  "Maule": "Maule",
+  "Región del Maule": "Maule",
+  "Ñuble": "Ñuble",
+  "Región de Ñuble": "Ñuble",
+  "Biobío": "Biobío",
+  "Bío-Bío": "Biobío",
+  "Región del Biobío": "Biobío",
+  "Región del Bío-Bío": "Biobío",
+  "Araucanía": "Araucanía",
+  "La Araucanía": "Araucanía",
+  "Región de la Araucanía": "Araucanía",
+  "Los Ríos": "Los Ríos",
+  "Región de los Ríos": "Los Ríos",
+  "Los Lagos": "Los Lagos",
+  "Región de los Lagos": "Los Lagos",
+  "Aysén": "Aysén",
+  "Aisén": "Aysén",
+  "Región Aysén del General Carlos Ibáñez del Campo": "Aysén",
+  "Región de Aysén": "Aysén",
+  "Magallanes": "Magallanes",
+  "Región de Magallanes y de la Antártica Chilena": "Magallanes",
+  "Magallanes y la Antártica Chilena": "Magallanes",
+};
+
+/** Resolve a Google Maps region name to our canonical Chilean region. */
+export function googleRegionToChilean(googleRegion: string): ChileanRegion | null {
+  return GOOGLE_REGION_MAP[googleRegion] ?? null;
+}
+
+/** Try to match a city/locality name to a city in a given region's list. */
+export function matchCityInRegion(region: string, city: string): string | null {
+  const list = citiesForRegion(region);
+  if (!list.length) return null;
+  const lower = city.toLowerCase().trim();
+  return list.find((c) => c.toLowerCase() === lower && c !== "Otra comuna") ?? null;
+}
