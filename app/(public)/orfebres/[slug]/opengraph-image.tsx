@@ -54,7 +54,7 @@ export default async function Image({
     );
   }
 
-  const productCount = artisan._count.products;
+  const productCount = artisan.products.length;
   const reviewCount = artisan._count.reviews;
 
   // Build star string for rating

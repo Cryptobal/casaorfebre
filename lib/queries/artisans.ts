@@ -110,12 +110,7 @@ export async function getArtisanBySlug(slug: string) {
           occasions: { select: { id: true, name: true, slug: true } },
         },
       },
-      _count: {
-        select: {
-          products: { where: { status: "APPROVED" as const } },
-          reviews: true,
-        },
-      },
+      _count: { select: { reviews: true } },
     },
   });
 }

@@ -24,7 +24,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Lo Nuevo | Casa Orfebre",
+    title: "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre",
     description:
       "Descubre las últimas piezas de joyería artesanal chilena. Nuevos diseños de orfebres verificados.",
     images: ["/casaorfebre-og-image.png"],

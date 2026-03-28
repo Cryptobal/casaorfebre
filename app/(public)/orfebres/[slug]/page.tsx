@@ -177,7 +177,7 @@ export default async function ArtisanProfilePage({
             {artisan._count.reviews > 0 && (
               <span>{artisan._count.reviews} opiniones</span>
             )}
-            <span>{artisan._count.products} piezas</span>
+            <span>{artisan.products.length} {artisan.products.length === 1 ? "pieza" : "piezas"}</span>
           </div>
         </div>
       </FadeIn>
