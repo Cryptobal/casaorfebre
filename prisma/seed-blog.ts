@@ -30,8 +30,11 @@ function tsxToMarkdown(tsx: string): string {
   md = md.replace(/\s*return \(\s*<div>/, "");
   md = md.replace(/<\/div>\s*\);\s*\}\s*$/, "");
 
-  // Remove the CTA section at the end (div with mt-16)
-  md = md.replace(/<div className="mt-16[\s\S]*?<\/div>\s*<\/div>/g, "");
+  // Remove JSX comments: {/* ... */}
+  md = md.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+
+  // Remove entire CTA section at the end (div with mt-16, may have nested divs)
+  md = md.replace(/<div className="mt-16[\s\S]*$/g, "");
 
   // Convert headings
   md = md.replace(/<h2[^>]*>\s*/g, "\n## ");
@@ -74,12 +77,13 @@ function tsxToMarkdown(tsx: string): string {
   md = md.replace(/&middot;/g, "·");
   md = md.replace(/&rarr;/g, "→");
 
-  // Remove remaining JSX: className, {" "}, self-closing spans, etc.
+  // Remove remaining JSX artifacts
   md = md.replace(/\{" "\}/g, " ");
   md = md.replace(/<span[^>]*>/g, "");
   md = md.replace(/<\/span>/g, "");
   md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g, "[$2]($1)");
   md = md.replace(/<br\s*\/?>/g, "\n");
+  md = md.replace(/<\/?div[^>]*>/g, "");
 
   // Clean up excessive whitespace
   md = md.replace(/\n{3,}/g, "\n\n");
@@ -224,7 +228,10 @@ async function main() {
 
     await prisma.blogPost.upsert({
       where: { slug: meta.slug },
-      update: {},
+      update: {
+        content,
+        readingTime: calculateReadingTime(content),
+      },
       create: {
         slug: meta.slug,
         title: meta.title,

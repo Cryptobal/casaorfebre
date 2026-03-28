@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
+import { BlogImage } from "@/components/shared/blog-image";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -116,15 +117,11 @@ export default async function BlogPage({
             className="group mb-12 block overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg"
           >
             <div className="grid md:grid-cols-2">
-              {featuredPost.coverImage ? (
-                <img
-                  src={featuredPost.coverImage}
-                  alt={featuredPost.title}
-                  className="aspect-[16/9] w-full object-cover md:aspect-auto md:h-full"
-                />
-              ) : (
-                <div className="aspect-[16/9] w-full bg-gradient-to-br from-border via-surface to-border md:aspect-auto md:h-full" />
-              )}
+              <BlogImage
+                src={featuredPost.coverImage}
+                alt={featuredPost.title}
+                className="aspect-[16/9] w-full object-cover md:aspect-auto md:h-full"
+              />
               <div className="p-8 sm:p-10 flex flex-col justify-center">
                 <span className="inline-block w-fit rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
                   {categoryLabels[featuredPost.category] || featuredPost.category}
@@ -155,23 +152,19 @@ export default async function BlogPage({
       {/* Post Grid - 3 columns */}
       <section className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {regularPosts.map((post) => (
-          <FadeIn key={post.slug}>
+          <FadeIn key={post.slug} className="h-full">
             <Link
               href={`/blog/${post.slug}`}
-              className="group block overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg"
+              className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg"
             >
-              {post.coverImage ? (
-                <img
-                  src={post.coverImage}
-                  alt={post.title}
-                  className="aspect-[16/9] w-full object-cover"
-                />
-              ) : (
-                <div className="aspect-[16/9] w-full bg-gradient-to-br from-border via-surface to-border" />
-              )}
+              <BlogImage
+                src={post.coverImage}
+                alt={post.title}
+                className="aspect-[16/9] w-full object-cover"
+              />
 
-              <div className="p-6 sm:p-8">
-                <span className="inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+              <div className="flex flex-1 flex-col p-6 sm:p-8">
+                <span className="inline-block w-fit rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
                   {categoryLabels[post.category] || post.category}
                 </span>
 
@@ -185,7 +178,7 @@ export default async function BlogPage({
                     : post.excerpt}
                 </p>
 
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-auto flex items-center justify-between pt-6">
                   <div className="flex items-center gap-2 text-xs text-text-tertiary">
                     {post.readingTime && <span>{post.readingTime} min</span>}
                     {post.publishedAt && (

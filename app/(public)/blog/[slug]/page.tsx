@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { renderMarkdown } from "@/lib/markdown";
 import { incrementViewCount } from "@/lib/actions/blog";
 import { FadeIn } from "@/components/shared/fade-in";
+import { BlogImage } from "@/components/shared/blog-image";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -132,15 +133,11 @@ export default async function BlogPostPage({
       />
 
       {/* Hero Image */}
-      {post.coverImage ? (
-        <img
-          src={post.coverImage}
-          alt={post.title}
-          className="w-full aspect-[21/9] object-cover"
-        />
-      ) : (
-        <div className="w-full bg-gradient-to-br from-border via-surface to-border aspect-[21/9]" />
-      )}
+      <BlogImage
+        src={post.coverImage}
+        alt={post.title}
+        className="w-full aspect-[21/9] object-cover"
+      />
 
       <article className="mx-auto max-w-4xl px-4 pb-24 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
@@ -224,11 +221,11 @@ export default async function BlogPostPage({
                   href={`/blog/${related.slug}`}
                   className="group block overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-lg"
                 >
-                  {related.coverImage ? (
-                    <img src={related.coverImage} alt={related.title} className="aspect-[16/9] w-full object-cover" />
-                  ) : (
-                    <div className="aspect-[16/9] w-full bg-gradient-to-br from-border via-surface to-border" />
-                  )}
+                  <BlogImage
+                    src={related.coverImage}
+                    alt={related.title}
+                    className="aspect-[16/9] w-full object-cover"
+                  />
                   <div className="p-6">
                     <span className="inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
                       {categoryLabels[related.category] || related.category}
