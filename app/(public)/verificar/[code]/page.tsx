@@ -15,12 +15,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   return {
     title: `Certificado ${cert.code}`,
-    description: `Certificado de autenticidad Casa Orfebre - Pieza artesanal verificada. Orfebre: ${cert.artisanName}.`,
+    description: `Registro de pieza y orfebre en Casa Orfebre (trazabilidad). Orfebre: ${cert.artisanName}.`,
     alternates: { canonical: `/verificar/${code}` },
     twitter: {
       card: "summary" as const,
       title: `Certificado ${cert.code} | Casa Orfebre`,
-      description: `Certificado de autenticidad Casa Orfebre - Pieza artesanal verificada. Orfebre: ${cert.artisanName}.`,
+      description: `Registro de pieza y orfebre en Casa Orfebre (trazabilidad). Orfebre: ${cert.artisanName}.`,
     },
   };
 }
@@ -98,8 +98,11 @@ export default async function VerificarPage({ params }: Props) {
           </div>
 
           <h1 className="font-serif text-2xl font-semibold text-text">
-            Certificado de Autenticidad Verificado
+            Registro verificado
           </h1>
+          <p className="mt-3 text-sm font-light text-text-secondary">
+            Certificado digital de trazabilidad Casa Orfebre
+          </p>
 
           <p className="mt-2 font-mono text-sm tracking-wider text-accent">
             {cert.code}
@@ -164,9 +167,11 @@ export default async function VerificarPage({ params }: Props) {
             />
           </div>
 
-          <p className="mt-6 text-xs text-text-tertiary">
-            Este certificado confirma la autenticidad de esta pieza artesanal de
-            Casa Orfebre.
+          <p className="mt-6 text-left text-xs leading-relaxed text-text-tertiary">
+            Este registro confirma que la pieza está asociada a su publicación y al
+            orfebre en Casa Orfebre (código verificable). La declaración de materiales
+            en la ficha es responsabilidad del orfebre; Casa Orfebre no sustituye un
+            ensayo metalúrgico de laboratorio.
           </p>
         </div>
       </div>
