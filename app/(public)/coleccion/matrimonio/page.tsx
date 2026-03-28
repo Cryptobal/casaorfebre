@@ -3,6 +3,7 @@ export const revalidate = 300;
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
 
@@ -46,17 +47,15 @@ export default async function MatrimonioPage() {
   ]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
-      <div className="max-w-2xl">
-        <h1 className="font-serif text-3xl font-light sm:text-4xl">
-          Joyería para Matrimonio
-        </h1>
-        <p className="mt-4 text-text-secondary leading-relaxed">
-          Celebra el día más importante con joyas que llevan la esencia de Chile.
-          Argollas, aros y accesorios creados a mano por orfebres verificados,
-          para que cada detalle de tu matrimonio sea tan especial como tu
-          historia juntos.
-        </p>
+    <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      <div className="pt-20 pb-12">
+        <FadeIn>
+          <SectionHeading
+            title="Joyería para Matrimonio"
+            subtitle="Celebra el día más importante con joyas que llevan la esencia de Chile. Argollas, aros y accesorios creados a mano por orfebres verificados."
+            as="h1"
+          />
+        </FadeIn>
       </div>
 
       {products.length > 0 ? (

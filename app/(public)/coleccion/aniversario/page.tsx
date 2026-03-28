@@ -3,6 +3,7 @@ export const revalidate = 300;
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
 
@@ -46,14 +47,15 @@ export default async function AniversarioPage() {
   ]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
-      <div className="max-w-2xl">
-        <h1 className="font-serif text-3xl font-light sm:text-4xl">
-          Joyería para Aniversario
-        </h1>
-        <p className="mt-4 text-text-secondary leading-relaxed">
-          Marca cada año con una pieza que perdure tanto como tu historia juntos.
-        </p>
+    <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      <div className="pt-20 pb-12">
+        <FadeIn>
+          <SectionHeading
+            title="Joyería para Aniversario"
+            subtitle="Marca cada año con una pieza que perdure tanto como tu historia juntos."
+            as="h1"
+          />
+        </FadeIn>
       </div>
 
       {products.length > 0 ? (

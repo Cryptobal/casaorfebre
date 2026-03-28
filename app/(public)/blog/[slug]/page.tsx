@@ -78,7 +78,6 @@ export default async function BlogPostPage({
   const { slug } = await params;
   const post = await prisma.blogPost.findFirst({
     where: { slug, status: "PUBLISHED" },
-    include: { author: { select: { name: true } } },
   });
   if (!post) notFound();
 
@@ -110,7 +109,7 @@ export default async function BlogPostPage({
     dateModified: post.updatedAt.toISOString(),
     author: {
       "@type": "Organization",
-      name: post.author?.name || "Casa Orfebre",
+      name: "Casa Orfebre",
       url: appUrl,
     },
     publisher: {
@@ -168,21 +167,17 @@ export default async function BlogPostPage({
               {post.title}
             </h1>
 
-            <div className="mt-6 flex items-center justify-center gap-3 text-sm text-text-tertiary">
-              <span className="font-medium text-text-secondary">
-                {post.author?.name || "Casa Orfebre"}
-              </span>
-              <span aria-hidden="true">&middot;</span>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-text-tertiary">
               {post.publishedAt && (
                 <time dateTime={post.publishedAt.toISOString()}>
                   {formatDate(post.publishedAt)}
                 </time>
               )}
-              {post.readingTime && (
-                <>
-                  <span aria-hidden="true">&middot;</span>
-                  <span>{post.readingTime} min lectura</span>
-                </>
+              {post.publishedAt && post.readingTime != null && post.readingTime > 0 && (
+                <span aria-hidden="true">&middot;</span>
+              )}
+              {post.readingTime != null && post.readingTime > 0 && (
+                <span>{post.readingTime} min lectura</span>
               )}
             </div>
 

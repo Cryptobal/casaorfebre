@@ -39,7 +39,7 @@ const footerColumns = [
       { href: "/preguntas-frecuentes", label: "Preguntas Frecuentes" },
       { href: "/terminos", label: "Términos y Condiciones" },
       { href: "/privacidad", label: "Privacidad" },
-      { href: "mailto:contacto@casaorfebre.cl", label: "Contacto" },
+      { href: "/contacto", label: "Contacto" },
     ],
   },
 ];
@@ -96,14 +96,14 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-text-tertiary sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} Casa Orfebre</p>
+        <div className="mt-12 flex flex-col items-center gap-2 border-t border-border pt-6 text-center text-xs text-text-tertiary">
           <p>
             Desarrollado por{" "}
             <a href="https://lx3.ai" target="_blank" rel="noopener noreferrer" className="text-text-secondary transition-colors hover:text-text">
-              LX3.ai
+              lx3.ai
             </a>
           </p>
+          <p>&copy; 2026 Casa Orfebre</p>
         </div>
       </div>
     </footer>

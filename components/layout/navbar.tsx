@@ -41,7 +41,7 @@ export function Navbar({
           <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={210} height={48} priority />
         </Link>
 
-        <ul className="hidden items-center gap-8 md:flex">
+        <ul className="hidden items-center gap-6 lg:flex">
           {navLinksLeft.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
@@ -64,12 +64,12 @@ export function Navbar({
         <div className="flex items-center gap-4">
           <SearchModal />
           {user?.role === "ADMIN" && (
-            <Link href="/portal/admin" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark md:block">
+            <Link href="/portal/admin" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark lg:block">
               Panel Admin
             </Link>
           )}
           {user?.role === "ARTISAN" && (
-            <Link href="/portal/orfebre" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark md:block">
+            <Link href="/portal/orfebre" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark lg:block">
               Mi Portal
             </Link>
           )}
@@ -81,7 +81,7 @@ export function Navbar({
           {user ? (
             <UserMenu user={user} />
           ) : (
-            <Link href="/login" className="hidden text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text md:block">
+            <Link href="/login" className="hidden text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text lg:block">
               Ingresar
             </Link>
           )}
