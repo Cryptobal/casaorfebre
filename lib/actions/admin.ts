@@ -385,6 +385,120 @@ export async function replacePhoto(
   return { success: true };
 }
 
+// 8b. Admin: suspend approved product
+export async function adminSuspendProduct(
+  productId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { artisan: { select: { slug: true } } },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+  if (product.status !== "APPROVED") return { error: "Solo se pueden suspender productos aprobados" };
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: { status: "PAUSED", pauseReason: "ADMIN" },
+  });
+
+  revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath(`/orfebres/${product.artisan.slug}`);
+  revalidatePath("/coleccion");
+  return { success: true };
+}
+
+// 8c. Admin: reactivate paused product
+export async function adminReactivateProduct(
+  productId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { artisan: { select: { slug: true } } },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+  if (product.status !== "PAUSED") return { error: "Solo se pueden reactivar productos en pausa" };
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: { status: "APPROVED", pauseReason: null, pausedAt: null },
+  });
+
+  revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath(`/orfebres/${product.artisan.slug}`);
+  revalidatePath("/coleccion");
+  return { success: true };
+}
+
+// 8d. Admin: delete product (only if no sales)
+export async function adminDeleteProduct(
+  productId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      artisan: { select: { slug: true } },
+      _count: { select: { orderItems: true } },
+    },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+
+  if (product._count.orderItems > 0) {
+    return { error: "No se puede eliminar un producto con ventas. Suspéndelo en su lugar." };
+  }
+
+  await prisma.product.delete({ where: { id: productId } });
+
+  revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath(`/orfebres/${product.artisan.slug}`);
+  revalidatePath("/coleccion");
+  return { success: true };
+}
+
+// 8e. Admin: delete photo
+export async function adminDeletePhoto(
+  imageId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const image = await prisma.productImage.findUnique({
+    where: { id: imageId },
+    include: { product: { include: { artisan: { select: { slug: true } } } } },
+  });
+  if (!image) return { error: "Imagen no encontrada" };
+
+  await prisma.productImage.delete({ where: { id: imageId } });
+
+  revalidatePath("/portal/admin/fotos");
+  revalidatePath(`/orfebres/${image.product.artisan.slug}`);
+  revalidatePath("/coleccion");
+  return { success: true };
+}
+
 // 9. Update artisan commission rate
 export async function updateArtisanCommission(
   artisanId: string,

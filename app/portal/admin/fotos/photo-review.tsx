@@ -9,6 +9,7 @@ import {
   approvePhotosBatch,
   rejectPhoto,
   replacePhoto,
+  adminDeletePhoto,
 } from "@/lib/actions/admin";
 
 interface PhotoItem {
@@ -103,6 +104,17 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
         setFeedback((prev) => ({ ...prev, [imageId]: { type: "error", message: result.error! } }));
       } else {
         setFeedback((prev) => ({ ...prev, [imageId]: { type: "success", message: "Reemplazada" } }));
+      }
+    });
+  }
+
+  function handleDelete(imageId: string) {
+    startTransition(async () => {
+      const result = await adminDeletePhoto(imageId);
+      if (result.error) {
+        setFeedback((prev) => ({ ...prev, [imageId]: { type: "error", message: result.error! } }));
+      } else {
+        setFeedback((prev) => ({ ...prev, [imageId]: { type: "success", message: "Eliminada" } }));
       }
     });
   }
@@ -254,17 +266,19 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                 )}
 
                 {/* Actions */}
-                {!feedback[photo.id] && activeTab === "PENDING_REVIEW" && (
+                {!feedback[photo.id] && (activeTab === "PENDING_REVIEW" || activeTab === "APPROVED") && (
                   <div className="space-y-2 pt-1">
                     <div className="flex flex-wrap gap-1.5">
-                      <Button
-                        size="sm"
-                        className="bg-green-700 text-white hover:bg-green-800"
-                        onClick={() => handleApprove(photo.id)}
-                        disabled={isPending}
-                      >
-                        Aprobar
-                      </Button>
+                      {activeTab === "PENDING_REVIEW" && (
+                        <Button
+                          size="sm"
+                          className="bg-green-700 text-white hover:bg-green-800"
+                          onClick={() => handleApprove(photo.id)}
+                          disabled={isPending}
+                        >
+                          Aprobar
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="secondary"
@@ -309,6 +323,15 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                           if (file) handleReplace(photo.id, file);
                         }}
                       />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="border-red-300 text-red-700 hover:bg-red-50"
+                        onClick={() => handleDelete(photo.id)}
+                        disabled={isPending}
+                      >
+                        Eliminar
+                      </Button>
                     </div>
 
                     {rejectingId === photo.id && (
@@ -316,7 +339,7 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                         <textarea
                           className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
                           rows={2}
-                          placeholder="Razon del rechazo (opcional)"
+                          placeholder="Razón del rechazo (opcional)"
                           value={rejectReason}
                           onChange={(e) => setRejectReason(e.target.value)}
                         />

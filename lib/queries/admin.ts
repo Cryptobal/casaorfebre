@@ -241,7 +241,7 @@ export async function getPendingApplications() {
   });
 }
 
-// Products for moderation
+// Products for moderation (pending only — legacy)
 export async function getPendingProducts() {
   return prisma.product.findMany({
     where: { status: "PENDING_REVIEW" },
@@ -250,6 +250,24 @@ export async function getPendingProducts() {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" } },
     },
+  });
+}
+
+// All products for admin management (filterable by status)
+export async function getAllProductsForAdmin(statusFilter?: string) {
+  const where = statusFilter && statusFilter !== "all"
+    ? { status: statusFilter as "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "PAUSED" | "SOLD_OUT" }
+    : {};
+
+  return prisma.product.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      images: { orderBy: { position: "asc" }, take: 1 },
+      _count: { select: { orderItems: true } },
+    },
+    take: 200,
   });
 }
 
