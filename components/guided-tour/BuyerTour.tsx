@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { buyerTourSteps } from "./tours/buyer-tour";
+import {
+  buyerTourStepsDesktop,
+  buyerTourStepsMobile,
+} from "./tours/buyer-tour";
 import { checkTourStatus, completeTour } from "@/app/actions/tour-actions";
 
 const TOUR_ID = "buyer-first-visit-v1";
+const MOBILE_BREAKPOINT = 1024;
 
 interface BuyerTourProps {
   isLoggedIn: boolean;
@@ -32,6 +36,11 @@ export function BuyerTour({ isLoggedIn }: BuyerTourProps) {
     if (!shouldAutoStart) return;
 
     const timer = setTimeout(() => {
+      const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+      const steps = isMobile
+        ? buyerTourStepsMobile
+        : buyerTourStepsDesktop;
+
       const driverInstance = driver({
         showProgress: true,
         animate: true,
@@ -44,7 +53,7 @@ export function BuyerTour({ isLoggedIn }: BuyerTourProps) {
         nextBtnText: "Siguiente →",
         prevBtnText: "← Anterior",
         doneBtnText: "¡A explorar!",
-        steps: buyerTourSteps,
+        steps,
         onDestroyStarted: () => {
           if (isLoggedIn) {
             completeTour(TOUR_ID, driverInstance.hasNextStep());

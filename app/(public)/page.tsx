@@ -11,6 +11,7 @@ import { getLatestProducts, getCuratorPicks, getUserFavoriteIds } from "@/lib/qu
 import { getFeaturedArtisans, getMaestroArtisans } from "@/lib/queries/artisans";
 import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
 import { HeroSection } from "@/components/home/hero-section";
+import { BuyerTour } from "@/components/guided-tour/BuyerTour";
 import { auth } from "@/lib/auth";
 
 const jsonLd = JSON.stringify([
@@ -50,6 +51,7 @@ export default async function HomePage() {
       />
       {/* ─── 1. Hero Section ─── */}
       <HeroSection />
+      <BuyerTour isLoggedIn={!!session?.user?.id} />
 
       {/* ─── 2. Trust Bar ─── */}
       <section className="border-y border-border bg-surface" data-tour="hero-garantias">

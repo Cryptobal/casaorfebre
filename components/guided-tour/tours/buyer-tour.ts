@@ -1,6 +1,6 @@
 import type { DriveStep } from "driver.js";
 
-export const buyerTourSteps: DriveStep[] = [
+export const buyerTourStepsDesktop: DriveStep[] = [
   {
     popover: {
       title: "¡Bienvenido a Casa Orfebre!",
@@ -39,7 +39,7 @@ export const buyerTourSteps: DriveStep[] = [
     popover: {
       title: "Regalos Especiales",
       description:
-        "Encuentra la pieza perfecta para cada ocasión: compromiso, aniversario, día de la madre y más. También puedes regalar una Gift Card.",
+        "Encuentra la pieza perfecta para cada ocasión: compromiso, aniversario, día de la madre y más.",
     },
   },
   {
@@ -55,7 +55,7 @@ export const buyerTourSteps: DriveStep[] = [
     popover: {
       title: "Compra con Confianza",
       description:
-        "Pago seguro con Mercado Pago, garantía de 14 días, certificado de autenticidad con QR verificable y seguimiento de envío real.",
+        "Pago seguro con Mercado Pago, garantía de 14 días, certificado de autenticidad y seguimiento de envío.",
     },
   },
   {
@@ -63,6 +63,52 @@ export const buyerTourSteps: DriveStep[] = [
       title: "¡Listo para explorar!",
       description:
         "Disfruta descubriendo joyería única hecha por manos chilenas. Si necesitas ayuda, el botón de WhatsApp está siempre disponible.",
+      side: "over",
+      align: "center",
+    },
+  },
+];
+
+export const buyerTourStepsMobile: DriveStep[] = [
+  {
+    popover: {
+      title: "¡Bienvenido a Casa Orfebre!",
+      description:
+        "Joyería artesanal chilena, directo del orfebre a tus manos. Te mostramos lo esencial.",
+      side: "over",
+      align: "center",
+    },
+  },
+  {
+    popover: {
+      title: "Explora y Descubre",
+      description:
+        "Usa el menú ☰ para navegar la colección, conocer orfebres, ver la selección del curador y encontrar regalos por ocasión.",
+      side: "over",
+      align: "center",
+    },
+  },
+  {
+    element: '[data-tour="nav-search"]',
+    popover: {
+      title: "Búsqueda Rápida",
+      description:
+        "Busca por nombre, material o estilo. Toca la lupa para abrir el buscador.",
+    },
+  },
+  {
+    element: '[data-tour="hero-garantias"]',
+    popover: {
+      title: "Compra con Confianza",
+      description:
+        "Pago seguro con Mercado Pago, garantía de 14 días, certificado de autenticidad y seguimiento de envío.",
+    },
+  },
+  {
+    popover: {
+      title: "¡A explorar!",
+      description:
+        "Descubre joyería única hecha por manos chilenas. Si necesitas ayuda, el botón de WhatsApp está siempre disponible.",
       side: "over",
       align: "center",
     },
