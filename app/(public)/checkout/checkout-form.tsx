@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo, useCallback } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,16 +8,9 @@ import { createCheckoutPreference } from "@/lib/actions/checkout";
 import { validateGiftCard } from "@/lib/actions/gift-cards";
 import { formatCLP } from "@/lib/utils";
 import {
-  CHILEAN_REGIONS,
-  citiesForRegion,
-  type ChileanRegion,
-} from "@/lib/chile-cities";
-import {
   AddressAutocomplete,
   type AddressResult,
 } from "@/components/address-autocomplete";
-
-const OTHER_CITY = "Otra comuna";
 
 interface CheckoutItem {
   id: string;
@@ -40,21 +33,6 @@ export type SavedShipping = {
   shippingPhone?: string | null;
 } | null;
 
-function getInitialShippingState(saved: SavedShipping | undefined) {
-  if (!saved?.shippingRegion) {
-    return { region: "", cityChoice: "", cityOther: "" };
-  }
-  const r = saved.shippingRegion;
-  if (!CHILEAN_REGIONS.includes(r as ChileanRegion)) {
-    return { region: "", cityChoice: "", cityOther: "" };
-  }
-  const list = citiesForRegion(r);
-  const sc = saved.shippingCity?.trim() ?? "";
-  if (!sc) return { region: r, cityChoice: "", cityOther: "" };
-  if (list.includes(sc)) return { region: r, cityChoice: sc, cityOther: "" };
-  return { region: r, cityChoice: OTHER_CITY, cityOther: sc };
-}
-
 interface CheckoutFormProps {
   items: CheckoutItem[];
   total: number;
@@ -62,21 +40,26 @@ interface CheckoutFormProps {
   savedAddress?: SavedShipping;
 }
 
-const selectClass =
-  "mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1";
-
 export function CheckoutForm({
   hasCustomMade,
   savedAddress,
 }: CheckoutFormProps) {
-  const initialShipping = getInitialShippingState(savedAddress);
-
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [region, setRegion] = useState(initialShipping.region);
-  const [cityChoice, setCityChoice] = useState(initialShipping.cityChoice);
-  const [cityOther, setCityOther] = useState(initialShipping.cityOther);
+  // Address fields from Google
+  const [addressRegion, setAddressRegion] = useState(savedAddress?.shippingRegion ?? "");
+  const [addressComuna, setAddressComuna] = useState(savedAddress?.shippingCity ?? "");
+  const [addressCiudad, setAddressCiudad] = useState("");
+  const [addressPostal, setAddressPostal] = useState(savedAddress?.shippingPostalCode ?? "");
+
+  // Phone
+  const [phone, setPhone] = useState(savedAddress?.shippingPhone ?? "");
+  const [phoneError, setPhoneError] = useState("");
+
+  // Field errors (custom validation, no native browser popups)
+  const [nameError, setNameError] = useState("");
+  const [addressError, setAddressError] = useState("");
 
   // Gift state
   const [isGift, setIsGift] = useState(false);
@@ -99,37 +82,19 @@ export function CheckoutForm({
   const [gcError, setGcError] = useState("");
   const [gcValidating, setGcValidating] = useState(false);
 
-  const [addressFromGoogle, setAddressFromGoogle] = useState(false);
-  const [postalFromGoogle, setPostalFromGoogle] = useState("");
-
-  const cityOptions = useMemo(
-    () => (region ? citiesForRegion(region) : []),
-    [region]
-  );
-
-  function handleRegionChange(value: string) {
-    setRegion(value);
-    setCityChoice("");
-    setCityOther("");
-    setAddressFromGoogle(false);
-  }
-
   const handleAddressSelect = useCallback((result: AddressResult) => {
-    if (result.region) {
-      setRegion(result.region);
-      if (result.city) {
-        setCityChoice(result.city);
-        setCityOther("");
-      } else {
-        setCityChoice("");
-        setCityOther("");
-      }
-      setAddressFromGoogle(true);
-    }
-    if (result.postalCode) {
-      setPostalFromGoogle(result.postalCode);
-    }
+    setAddressRegion(result.region ?? "");
+    setAddressComuna(result.comuna);
+    setAddressCiudad(result.ciudad);
+    setAddressPostal(result.postalCode);
   }, []);
+
+  function handlePhoneChange(value: string) {
+    // Only allow digits, max 9
+    const digits = value.replace(/\D/g, "").slice(0, 9);
+    setPhone(digits);
+    setPhoneError("");
+  }
 
   async function handleApplyDiscount() {
     const code = discountCode.trim().toUpperCase();
@@ -211,31 +176,36 @@ export function CheckoutForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-
-    if (!region) {
-      setError("Selecciona una región.");
-      return;
-    }
-
-    let shippingCity = "";
-    if (!cityChoice) {
-      setError("Selecciona una comuna o ciudad.");
-      return;
-    }
-    if (cityChoice === OTHER_CITY) {
-      const t = cityOther.trim();
-      if (!t) {
-        setError("Indica el nombre de tu comuna o ciudad.");
-        return;
-      }
-      shippingCity = t;
-    } else {
-      shippingCity = cityChoice;
-    }
+    setNameError("");
+    setPhoneError("");
+    setAddressError("");
 
     const formData = new FormData(e.currentTarget);
-    formData.set("shippingRegion", region);
-    formData.set("shippingCity", shippingCity);
+    const name = (formData.get("shippingName") as string)?.trim();
+
+    let hasFieldError = false;
+
+    if (!name) {
+      setNameError("Ingresa tu nombre completo.");
+      hasFieldError = true;
+    }
+
+    if (phone.length !== 9) {
+      setPhoneError("Ingresa 9 dígitos.");
+      hasFieldError = true;
+    }
+
+    if (!addressRegion || !addressComuna) {
+      setAddressError("Busca y selecciona tu dirección para completar los campos.");
+      hasFieldError = true;
+    }
+
+    if (hasFieldError) return;
+
+    formData.set("shippingRegion", addressRegion);
+    formData.set("shippingCity", addressComuna);
+    formData.set("shippingPhone", phone);
+    if (addressPostal) formData.set("shippingPostalCode", addressPostal);
     if (discountApplied && discountRewardId) {
       formData.set("discountCode", discountCode.trim().toUpperCase());
       formData.set("discountRewardId", discountRewardId);
@@ -268,7 +238,7 @@ export function CheckoutForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {/* Shipping */}
       <fieldset className="rounded-lg border border-border bg-surface p-6">
         <legend className="sr-only">Datos de envío</legend>
@@ -299,27 +269,37 @@ export function CheckoutForm({
               <Input
                 id="shippingName"
                 name="shippingName"
-                required
                 placeholder="María González"
-                className="mt-1"
+                className={`mt-1 ${nameError ? "border-red-400 focus:ring-red-400" : ""}`}
                 autoComplete="name"
                 defaultValue={savedAddress?.shippingName ?? undefined}
+                onChange={() => nameError && setNameError("")}
               />
+              {nameError && (
+                <p className="mt-1 text-xs text-red-600">{nameError}</p>
+              )}
             </div>
             <div>
-              <Label htmlFor="shippingPhone">
-                Teléfono{" "}
-                <span className="font-normal text-text-tertiary">(para el courier)</span>
-              </Label>
-              <Input
-                id="shippingPhone"
-                name="shippingPhone"
-                type="tel"
-                placeholder="+56 9 1234 5678"
-                className="mt-1"
-                autoComplete="tel"
-                defaultValue={savedAddress?.shippingPhone ?? undefined}
-              />
+              <Label htmlFor="shippingPhone">Teléfono</Label>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="flex h-9 items-center rounded-md border border-border bg-muted px-3 text-sm text-text-secondary">
+                  +56 9
+                </span>
+                <Input
+                  id="shippingPhone"
+                  type="tel"
+                  inputMode="numeric"
+                  value={phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  placeholder="1234 5678"
+                  className={`flex-1 ${phoneError ? "border-red-400 focus:ring-red-400" : ""}`}
+                  maxLength={9}
+                />
+              </div>
+              {phoneError && (
+                <p className="mt-1 text-xs text-red-600">{phoneError}</p>
+              )}
+              <p className="mt-1 text-xs text-text-tertiary">9 dígitos, para el courier</p>
             </div>
           </div>
 
@@ -327,105 +307,65 @@ export function CheckoutForm({
             <Label htmlFor="shippingAddress">Dirección</Label>
             <AddressAutocomplete
               defaultValue={savedAddress?.shippingAddress ?? undefined}
-              onAddressSelect={handleAddressSelect}
+              onAddressSelect={(result) => {
+                handleAddressSelect(result);
+                setAddressError("");
+              }}
             />
+            {addressError && (
+              <p className="mt-1 text-xs text-red-600">{addressError}</p>
+            )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="shippingRegion">
-                Región
-                {addressFromGoogle && region && (
-                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    Auto
-                  </span>
-                )}
-              </Label>
-              <select
-                id="shippingRegion"
-                value={region}
-                onChange={(e) => handleRegionChange(e.target.value)}
-                required
-                className={selectClass}
-              >
-                <option value="" disabled>
-                  Selecciona una región
-                </option>
-                {CHILEAN_REGIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="shippingCitySelect">
-                Comuna / Ciudad
-                {addressFromGoogle && cityChoice && cityChoice !== OTHER_CITY && (
-                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    Auto
-                  </span>
-                )}
-              </Label>
-              <select
-                id="shippingCitySelect"
-                value={cityChoice}
-                onChange={(e) => {
-                  setCityChoice(e.target.value);
-                  if (e.target.value !== OTHER_CITY) setCityOther("");
-                  setAddressFromGoogle(false);
-                }}
-                disabled={!region}
-                required={!!region}
-                className={`${selectClass} disabled:cursor-not-allowed disabled:opacity-60`}
-              >
-                <option value="">
-                  {region
-                    ? "Selecciona una comuna"
-                    : "Primero elige región"}
-                </option>
-                {cityOptions.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          {(addressRegion || addressComuna || addressCiudad) && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <Label htmlFor="displayRegion">Región</Label>
+                  <Input
+                    id="displayRegion"
+                    value={addressRegion}
+                    readOnly
+                    tabIndex={-1}
+                    className="mt-1 cursor-default bg-muted text-text-secondary"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="displayComuna">Comuna</Label>
+                  <Input
+                    id="displayComuna"
+                    value={addressComuna}
+                    readOnly
+                    tabIndex={-1}
+                    className="mt-1 cursor-default bg-muted text-text-secondary"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="displayCiudad">Ciudad</Label>
+                  <Input
+                    id="displayCiudad"
+                    value={addressCiudad}
+                    readOnly
+                    tabIndex={-1}
+                    className="mt-1 cursor-default bg-muted text-text-secondary"
+                  />
+                </div>
+              </div>
 
-          {cityChoice === OTHER_CITY && (
-            <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-              <Label htmlFor="shippingCityOther">
-                Nombre de la comuna o ciudad
-              </Label>
-              <Input
-                id="shippingCityOther"
-                value={cityOther}
-                onChange={(e) => setCityOther(e.target.value)}
-                placeholder="Ej.: Isla de Pascua"
-                className="mt-1"
-                autoComplete="address-level2"
-              />
+              {addressPostal && (
+                <div className="mt-4 sm:w-1/3">
+                  <Label htmlFor="displayPostal">Código postal</Label>
+                  <Input
+                    id="displayPostal"
+                    value={addressPostal}
+                    readOnly
+                    tabIndex={-1}
+                    className="mt-1 cursor-default bg-muted text-text-secondary"
+                  />
+                </div>
+              )}
             </div>
           )}
-
-          <div className="sm:w-1/3">
-            <Label htmlFor="shippingPostalCode">
-              Código postal{" "}
-              <span className="font-normal text-text-tertiary">(opcional)</span>
-            </Label>
-            <Input
-              key={postalFromGoogle || "postal"}
-              id="shippingPostalCode"
-              name="shippingPostalCode"
-              placeholder="7500000"
-              className="mt-1"
-              autoComplete="postal-code"
-              defaultValue={postalFromGoogle || savedAddress?.shippingPostalCode || undefined}
-            />
-          </div>
         </div>
       </fieldset>
 

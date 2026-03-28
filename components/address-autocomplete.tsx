@@ -3,10 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import { Input } from "@/components/ui/input";
-import {
-  googleRegionToChilean,
-  matchCityInRegion,
-} from "@/lib/chile-cities";
+import { googleRegionToChilean } from "@/lib/chile-cities";
 
 const LIBRARIES: ("places")[] = ["places"];
 
@@ -32,8 +29,9 @@ export interface AddressResult {
   formattedAddress: string;
   streetAddress: string;
   region: string | null;
-  city: string | null;
-  postalCode: string | null;
+  comuna: string;
+  ciudad: string;
+  postalCode: string;
   lat: number;
   lng: number;
 }
@@ -85,22 +83,29 @@ export function AddressAutocomplete({
     const components = place.address_components;
     const streetAddress = buildStreetAddress(components);
     const googleRegion = extractComponent(components, "administrative_area_level_1");
-    const locality =
-      extractComponent(components, "locality") ||
-      extractComponent(components, "administrative_area_level_3") ||
-      extractComponent(components, "administrative_area_level_2") ||
-      extractComponent(components, "sublocality_level_1");
     const postalCode = extractComponent(components, "postal_code");
 
+    // In Chile: administrative_area_level_3 or locality = comuna,
+    // administrative_area_level_2 or locality = ciudad/province
+    const locality = extractComponent(components, "locality");
+    const adminLevel3 = extractComponent(components, "administrative_area_level_3");
+    const adminLevel2 = extractComponent(components, "administrative_area_level_2");
+    const sublocality = extractComponent(components, "sublocality_level_1");
+
+    // Comuna: most specific local division
+    const comuna = adminLevel3 || locality || sublocality || adminLevel2;
+    // Ciudad: broader city/province name
+    const ciudad = locality || adminLevel2 || adminLevel3;
+
     const region = googleRegionToChilean(googleRegion);
-    const city = region ? matchCityInRegion(region, locality) : null;
 
     onAddressSelect({
       formattedAddress: place.formatted_address ?? "",
       streetAddress: streetAddress || place.formatted_address?.split(",")[0] || "",
       region,
-      city,
-      postalCode: postalCode || null,
+      comuna,
+      ciudad,
+      postalCode,
       lat,
       lng,
     });
@@ -143,7 +148,6 @@ export function AddressAutocomplete({
         ref={inputRef}
         id="shippingAddress"
         name="shippingAddress"
-        required
         placeholder="Busca tu dirección..."
         className="mt-1"
         autoComplete="off"

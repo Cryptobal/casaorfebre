@@ -759,10 +759,29 @@ export async function removeOrSuspendArtisanAccount(
       data: { status: "SUSPENDED" },
     });
     revalidatePath("/portal/admin/orfebres");
+    const parts: string[] = [];
+    if (artisan._count.products > 0) {
+      parts.push(
+        `${artisan._count.products} producto(s) en el sistema (incluye borradores, pendientes o rechazados; revisa Admin → Productos y cambia el filtro de estado)`
+      );
+    }
+    if (artisan._count.orderItems > 0) {
+      parts.push(`${artisan._count.orderItems} línea(s) de venta asociada(s)`);
+    }
+    if (artisan.totalSales > 0) {
+      parts.push("registro de ventas en el perfil del orfebre");
+    }
+    if (buyerOrders > 0) {
+      parts.push(`${buyerOrders} pedido(s) como comprador`);
+    }
+    if (giftPurchases > 0) {
+      parts.push(`${giftPurchases} compra(s) de gift card`);
+    }
+    const detail = parts.length > 0 ? ` Motivo: ${parts.join("; ")}.` : "";
     return {
       outcome: "suspended",
       message:
-        "Esta cuenta tiene productos, ventas u historial de compras. No se puede eliminar por trazabilidad; quedó suspendida.",
+        `No se puede borrar la cuenta por trazabilidad; quedó suspendida.${detail}`,
     };
   }
 

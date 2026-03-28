@@ -111,7 +111,7 @@ export function ArtisanAccountActions({ artisanId, status, className }: ArtisanA
         <ConfirmDestructiveModal
           open={open}
           title="Eliminar cuenta de orfebre"
-          description="Solo se elimina por completo si la cuenta no tiene productos publicados, ventas ni pedidos como comprador. Si hay actividad, la cuenta quedará suspendida (no borrada) para conservar trazabilidad."
+          description="Solo se elimina por completo si no hay ningún producto (ni borrador), ni ventas, ni pedidos como comprador. Cualquier pieza en borrador o pendiente cuenta igual: elimínala antes desde Admin → Productos (filtro por estado) o desde el taller del orfebre."
           confirmLabel="Continuar"
           onCancel={() => setOpen(false)}
           onConfirm={onConfirm}
