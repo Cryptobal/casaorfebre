@@ -28,5 +28,6 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  return NextResponse.redirect(new URL("/verificar?verified=true", request.url));
+  const role = user.role || "BUYER";
+  return NextResponse.redirect(new URL(`/verificar?verified=true&role=${role}`, request.url));
 }

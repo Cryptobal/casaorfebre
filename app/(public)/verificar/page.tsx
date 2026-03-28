@@ -8,11 +8,12 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ verified?: string }>;
+  searchParams: Promise<{ verified?: string; role?: string }>;
 }
 
 export default async function VerificarEmailPage({ searchParams }: Props) {
-  const { verified } = await searchParams;
+  const { verified, role } = await searchParams;
+  const isArtisan = role === "ARTISAN";
 
   if (verified === "true") {
     return (
@@ -37,13 +38,15 @@ export default async function VerificarEmailPage({ searchParams }: Props) {
             ¡Email verificado exitosamente!
           </h1>
           <p className="mt-3 text-sm text-text-secondary">
-            Ya puedes comprar en Casa Orfebre.
+            {isArtisan
+              ? "Tu cuenta de orfebre está lista. Ya puedes acceder a tu taller."
+              : "Ya puedes comprar en Casa Orfebre."}
           </p>
           <Link
-            href="/coleccion"
+            href={isArtisan ? "/portal/orfebre" : "/coleccion"}
             className="mt-6 inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
           >
-            Explorar colección
+            {isArtisan ? "Ir a mi taller" : "Explorar colección"}
           </Link>
         </div>
       </div>
