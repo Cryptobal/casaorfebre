@@ -16,6 +16,12 @@ import { loginAs, MP_SELLER, TEST_EMAILS } from './helpers';
 
 test.describe('MP OAuth - Vinculación de artesano', () => {
 
+  // OAuth requires a public redirect_uri — skip in localhost environments
+  test.skip(
+    !process.env.TEST_BASE_URL || process.env.TEST_BASE_URL.includes('localhost'),
+    'OAuth test requires a public URL (not localhost). Run against Vercel preview.'
+  );
+
   test('Artesano puede vincular su cuenta de Mercado Pago', async ({ page }) => {
     // 1. Login como artesano
     await loginAs(page, TEST_EMAILS.artisan);
