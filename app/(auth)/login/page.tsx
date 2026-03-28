@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useActionState, useMemo } from "react";
+import { Suspense, useActionState, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loginWithGoogle, loginWithCredentials } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
@@ -21,6 +22,9 @@ function LoginPageInner() {
   );
   const [state, formAction, pending] = useActionState(loginWithCredentials, null);
   const passwordResetOk = searchParams.get("reset") === "success";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <div>
@@ -61,7 +65,16 @@ function LoginPageInner() {
         )}
         <div>
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" required className="mt-1" placeholder="tu@email.com" />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            required
+            className="mt-1"
+            placeholder="tu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div>
           <div className="flex items-baseline justify-between gap-2">
@@ -73,7 +86,15 @@ function LoginPageInner() {
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <Input id="password" name="password" type="password" required className="mt-1" placeholder="••••••••" />
+          <PasswordInput
+            id="password"
+            name="password"
+            required
+            className="mt-1"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <Button type="submit" className="w-full" loading={pending}>Ingresar</Button>
       </form>

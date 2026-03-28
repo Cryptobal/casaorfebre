@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { loginWithGoogle, register } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
@@ -12,6 +13,11 @@ export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(register, null);
   const searchParams = useSearchParams();
   const [ref, setRef] = useState(searchParams.get("ref") || "");
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     if (!ref) {
@@ -53,19 +59,54 @@ export default function RegisterPage() {
         )}
         <div>
           <Label htmlFor="name">Nombre</Label>
-          <Input id="name" name="name" type="text" required className="mt-1" placeholder="Tu nombre" />
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            required
+            className="mt-1"
+            placeholder="Tu nombre"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
         <div>
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" required className="mt-1" placeholder="tu@email.com" />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            required
+            className="mt-1"
+            placeholder="tu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div>
           <Label htmlFor="password">Contraseña</Label>
-          <Input id="password" name="password" type="password" required minLength={8} className="mt-1" placeholder="Mínimo 8 caracteres" />
+          <PasswordInput
+            id="password"
+            name="password"
+            required
+            minLength={8}
+            className="mt-1"
+            placeholder="Mínimo 8 caracteres"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <div>
           <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-          <Input id="confirmPassword" name="confirmPassword" type="password" required className="mt-1" placeholder="Repite tu contraseña" />
+          <PasswordInput
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+            className="mt-1"
+            placeholder="Repite tu contraseña"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
         </div>
         <Button type="submit" className="w-full" loading={pending}>Crear Cuenta</Button>
       </form>
