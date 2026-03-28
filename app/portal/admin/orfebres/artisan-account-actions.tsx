@@ -67,51 +67,59 @@ export function ArtisanAccountActions({ artisanId, status }: ArtisanAccountActio
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       {info && (
-        <p className="w-full rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+        <p className="max-w-md rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           {info}
         </p>
       )}
       {error && (
-        <p className="w-full rounded-md bg-error/10 px-3 py-2 text-xs text-error">{error}</p>
+        <p className="max-w-md rounded-md bg-error/10 px-3 py-2 text-xs text-error">{error}</p>
       )}
-      {status === "APPROVED" && (
+      <div className="flex shrink-0 flex-nowrap items-center gap-1.5 sm:gap-2">
+        {status === "APPROVED" && (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
+            disabled={pending}
+            onClick={onSuspend}
+          >
+            Suspender
+          </Button>
+        )}
+        {status === "SUSPENDED" && (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="shrink-0 border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
+            disabled={pending}
+            onClick={onReactivate}
+          >
+            Reactivar
+          </Button>
+        )}
+        <ConfirmDestructiveModal
+          open={open}
+          title="Eliminar cuenta de orfebre"
+          description="Solo se elimina por completo si la cuenta no tiene productos publicados, ventas ni pedidos como comprador. Si hay actividad, la cuenta quedará suspendida (no borrada) para conservar trazabilidad."
+          confirmLabel="Continuar"
+          onCancel={() => setOpen(false)}
+          onConfirm={onConfirm}
+          pending={pending}
+        />
         <Button
           type="button"
           size="sm"
           variant="secondary"
-          className="border-red-300 text-red-700 hover:bg-red-50"
-          disabled={pending}
-          onClick={onSuspend}
+          className="shrink-0 border-border whitespace-nowrap"
+          onClick={() => setOpen(true)}
         >
-          Suspender
+          Eliminar cuenta…
         </Button>
-      )}
-      {status === "SUSPENDED" && (
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          className="border-emerald-300 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
-          disabled={pending}
-          onClick={onReactivate}
-        >
-          Reactivar
-        </Button>
-      )}
-      <ConfirmDestructiveModal
-        open={open}
-        title="Eliminar cuenta de orfebre"
-        description="Solo se elimina por completo si la cuenta no tiene productos publicados, ventas ni pedidos como comprador. Si hay actividad, la cuenta quedará suspendida (no borrada) para conservar trazabilidad."
-        confirmLabel="Continuar"
-        onCancel={() => setOpen(false)}
-        onConfirm={onConfirm}
-        pending={pending}
-      />
-      <Button type="button" size="sm" variant="secondary" className="border-border" onClick={() => setOpen(true)}>
-        Eliminar cuenta…
-      </Button>
+      </div>
     </div>
   );
 }

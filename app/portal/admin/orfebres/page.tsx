@@ -41,12 +41,12 @@ export default async function OrfebresPage() {
         <>
           {/* Desktop table */}
           <div className="mt-6 hidden overflow-x-auto md:block">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[1100px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-widest text-text-tertiary">
-                  <th className="pb-3 pr-4 font-medium">Orfebre</th>
-                  <th className="pb-3 pr-4 font-medium">Email</th>
-                  <th className="pb-3 pr-4 font-medium">Ubicación</th>
+                  <th className="max-w-[12rem] pb-3 pr-4 font-medium">Orfebre</th>
+                  <th className="min-w-[14rem] pb-3 pr-4 font-medium">Email</th>
+                  <th className="max-w-[10rem] pb-3 pr-4 font-medium">Ubicación</th>
                   <th className="pb-3 pr-4 font-medium">Plan</th>
                   <th className="pb-3 pr-4 font-medium">Rating</th>
                   <th className="pb-3 pr-4 font-medium">Ventas</th>
@@ -54,7 +54,7 @@ export default async function OrfebresPage() {
                   <th className="pb-3 pr-4 font-medium">Comisión</th>
                   <th className="pb-3 pr-4 font-medium">Estado</th>
                   <th className="pb-3 pr-4 font-medium">Destacar</th>
-                  <th className="pb-3 font-medium">Acciones</th>
+                  <th className="min-w-[22rem] whitespace-nowrap pb-3 pl-2 font-medium">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -67,8 +67,12 @@ export default async function OrfebresPage() {
 
                   return (
                     <tr key={artisan.id}>
-                      <td className="py-3 pr-4 font-medium">
-                        <Link href={`/portal/admin/orfebres/${artisan.id}`} className="text-accent hover:underline">
+                      <td className="max-w-[12rem] py-3 pr-4 font-medium align-middle">
+                        <Link
+                          href={`/portal/admin/orfebres/${artisan.id}`}
+                          className="line-clamp-2 text-accent hover:underline sm:line-clamp-none sm:whitespace-nowrap"
+                          title={artisan.displayName}
+                        >
                           {artisan.displayName}
                         </Link>
                         {hasOverrides && (
@@ -77,11 +81,18 @@ export default async function OrfebresPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 pr-4 text-text-secondary">
-                        <span className="break-all font-mono text-xs">{artisan.user.email}</span>
+                      <td className="min-w-[14rem] py-3 pr-4 align-middle text-text-secondary">
+                        <span
+                          className="block max-w-[18rem] truncate font-mono text-xs"
+                          title={artisan.user.email}
+                        >
+                          {artisan.user.email}
+                        </span>
                       </td>
-                      <td className="py-3 pr-4 text-text-secondary">
-                        {artisan.location}
+                      <td className="max-w-[10rem] py-3 pr-4 align-middle text-text-secondary">
+                        <span className="block truncate whitespace-nowrap" title={artisan.location ?? ""}>
+                          {artisan.location}
+                        </span>
                       </td>
                       <td className="py-3 pr-4 text-text-secondary">
                         {planName ? PLAN_LABELS[planName] || planName : "Esencial"}
@@ -117,8 +128,8 @@ export default async function OrfebresPage() {
                           <span className="text-xs text-text-tertiary">—</span>
                         )}
                       </td>
-                      <td className="py-3">
-                        <div className="flex items-center gap-2">
+                      <td className="min-w-[22rem] whitespace-nowrap py-3 pl-2 align-middle">
+                        <div className="flex min-w-0 flex-nowrap items-center gap-1.5 sm:gap-2">
                           <OverrideEditor
                             artisanId={artisan.id}
                             artisanName={artisan.displayName}

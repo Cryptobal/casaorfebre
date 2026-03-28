@@ -47,6 +47,7 @@ export function OverrideEditor({
         type="button"
         size="sm"
         variant="secondary"
+        className="shrink-0 whitespace-nowrap"
         onClick={() => setOpen(true)}
       >
         Overrides
