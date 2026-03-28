@@ -28,7 +28,7 @@ export default async function OrfebresPage() {
   const artisans = await getAllArtisans();
 
   return (
-    <div>
+    <div className="max-w-full min-w-0">
       <h1 className="font-serif text-3xl font-light">
         Gestión de Orfebres
       </h1>
@@ -39,22 +39,35 @@ export default async function OrfebresPage() {
         </p>
       ) : (
         <>
-          {/* Desktop table */}
-          <div className="mt-6 hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[1100px] text-left text-sm">
+          {/* Tabla: desde xl (sidebar + ancho suficiente); debajo, tarjetas sin scroll horizontal */}
+          <div className="mt-6 hidden w-full min-w-0 xl:block">
+            <table className="w-full table-fixed text-left text-sm">
+              <colgroup>
+                <col className="w-[13%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+                <col className="w-[8%]" />
+                <col className="w-[7%]" />
+                <col className="w-[6%]" />
+                <col className="w-[7%]" />
+                <col className="w-[8%]" />
+                <col className="w-[9%]" />
+                <col className="w-[7%]" />
+                <col className="w-[11%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-widest text-text-tertiary">
-                  <th className="max-w-[12rem] pb-3 pr-4 font-medium">Orfebre</th>
-                  <th className="min-w-[14rem] pb-3 pr-4 font-medium">Email</th>
-                  <th className="max-w-[10rem] pb-3 pr-4 font-medium">Ubicación</th>
-                  <th className="pb-3 pr-4 font-medium">Plan</th>
-                  <th className="pb-3 pr-4 font-medium">Rating</th>
-                  <th className="pb-3 pr-4 font-medium">Ventas</th>
-                  <th className="pb-3 pr-4 font-medium">Productos</th>
-                  <th className="pb-3 pr-4 font-medium">Comisión</th>
-                  <th className="pb-3 pr-4 font-medium">Estado</th>
-                  <th className="pb-3 pr-4 font-medium">Destacar</th>
-                  <th className="min-w-[22rem] whitespace-nowrap pb-3 pl-2 font-medium">Acciones</th>
+                  <th className="pb-3 pr-2 font-medium">Orfebre</th>
+                  <th className="pb-3 pr-2 font-medium">Email</th>
+                  <th className="pb-3 pr-2 font-medium">Ubicación</th>
+                  <th className="pb-3 pr-2 font-medium">Plan</th>
+                  <th className="pb-3 pr-2 font-medium">Rating</th>
+                  <th className="pb-3 pr-2 font-medium">Ventas</th>
+                  <th className="pb-3 pr-2 font-medium">Prod.</th>
+                  <th className="pb-3 pr-2 font-medium">Com.</th>
+                  <th className="pb-3 pr-2 font-medium">Estado</th>
+                  <th className="pb-3 pr-2 font-medium">Dest.</th>
+                  <th className="pb-3 pl-1 font-medium">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -67,58 +80,61 @@ export default async function OrfebresPage() {
 
                   return (
                     <tr key={artisan.id}>
-                      <td className="max-w-[12rem] py-3 pr-4 font-medium align-middle">
-                        <Link
-                          href={`/portal/admin/orfebres/${artisan.id}`}
-                          className="line-clamp-2 text-accent hover:underline sm:line-clamp-none sm:whitespace-nowrap"
-                          title={artisan.displayName}
-                        >
-                          {artisan.displayName}
-                        </Link>
-                        {hasOverrides && (
-                          <span className="ml-1.5 inline-block rounded bg-amber-50 px-1 py-0.5 text-[10px] text-amber-600">
-                            override
-                          </span>
-                        )}
+                      <td className="min-w-0 py-3 pr-2 align-middle font-medium">
+                        <div className="min-w-0">
+                          <Link
+                            href={`/portal/admin/orfebres/${artisan.id}`}
+                            className="block truncate text-accent hover:underline"
+                            title={artisan.displayName}
+                          >
+                            {artisan.displayName}
+                          </Link>
+                          {hasOverrides && (
+                            <span className="mt-0.5 inline-block rounded bg-amber-50 px-1 py-0.5 text-[10px] text-amber-600">
+                              override
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="min-w-[14rem] py-3 pr-4 align-middle text-text-secondary">
+                      <td className="min-w-0 py-3 pr-2 align-middle text-text-secondary">
                         <span
-                          className="block max-w-[18rem] truncate font-mono text-xs"
+                          className="block truncate font-mono text-[11px] leading-snug"
                           title={artisan.user.email}
                         >
                           {artisan.user.email}
                         </span>
                       </td>
-                      <td className="max-w-[10rem] py-3 pr-4 align-middle text-text-secondary">
-                        <span className="block truncate whitespace-nowrap" title={artisan.location ?? ""}>
+                      <td className="min-w-0 py-3 pr-2 align-middle text-text-secondary">
+                        <span className="block truncate text-xs" title={artisan.location ?? ""}>
                           {artisan.location}
                         </span>
                       </td>
-                      <td className="py-3 pr-4 text-text-secondary">
+                      <td className="min-w-0 py-3 pr-2 text-text-secondary">
                         {planName ? PLAN_LABELS[planName] || planName : "Esencial"}
                       </td>
-                      <td className="py-3 pr-4">
+                      <td className="min-w-0 py-3 pr-2">
                         {artisan.rating > 0
                           ? `★ ${artisan.rating.toFixed(1)}`
                           : "—"}
                       </td>
-                      <td className="py-3 pr-4">{artisan._count.orderItems}</td>
-                      <td className="py-3 pr-4">{artisan._count.products}</td>
-                      <td className="py-3 pr-4">
+                      <td className="min-w-0 py-3 pr-2">{artisan._count.orderItems}</td>
+                      <td className="min-w-0 py-3 pr-2">{artisan._count.products}</td>
+                      <td className="min-w-0 py-3 pr-2">
                         {artisan.commissionOverride !== null
                           ? `${Math.round(artisan.commissionOverride * 100)}% *`
                           : `${Math.round(artisan.commissionRate * 100)}%`}
                       </td>
-                      <td className="py-3 pr-4">
+                      <td className="min-w-0 py-3 pr-2">
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          className={`inline-block max-w-full truncate rounded-full px-2 py-0.5 text-[11px] font-medium ${
                             statusStyles[artisan.status] ?? "bg-gray-100 text-gray-800"
                           }`}
+                          title={statusLabels[artisan.status] ?? artisan.status}
                         >
                           {statusLabels[artisan.status] ?? artisan.status}
                         </span>
                       </td>
-                      <td className="py-3 pr-4">
+                      <td className="min-w-0 py-3 pr-2">
                         {artisan.subscriptions?.[0]?.plan?.homeHighlight ? (
                           <HighlightToggle
                             artisanId={artisan.id}
@@ -128,8 +144,8 @@ export default async function OrfebresPage() {
                           <span className="text-xs text-text-tertiary">—</span>
                         )}
                       </td>
-                      <td className="min-w-[22rem] whitespace-nowrap py-3 pl-2 align-middle">
-                        <div className="flex min-w-0 flex-nowrap items-center gap-1.5 sm:gap-2">
+                      <td className="min-w-0 py-3 pl-1 align-top">
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                           <OverrideEditor
                             artisanId={artisan.id}
                             artisanName={artisan.displayName}
@@ -147,8 +163,8 @@ export default async function OrfebresPage() {
             </table>
           </div>
 
-          {/* Mobile cards */}
-          <div className="mt-6 space-y-3 md:hidden">
+          {/* Tarjetas: mobile-first hasta pantallas muy anchas (evita scroll horizontal) */}
+          <div className="mt-6 space-y-3 xl:hidden">
             {artisans.map((artisan) => {
               const planName = artisan.subscriptions?.[0]?.plan?.name;
               const hasOverrides =
@@ -157,7 +173,10 @@ export default async function OrfebresPage() {
                 artisan.maxPhotosOverride !== null;
 
               return (
-                <div key={artisan.id} className="rounded-lg border border-border bg-surface p-4">
+                <div
+                  key={artisan.id}
+                  className="w-full max-w-full min-w-0 overflow-hidden rounded-lg border border-border bg-surface p-4"
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-text">
@@ -197,7 +216,7 @@ export default async function OrfebresPage() {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                  <div className="mt-3 flex flex-wrap items-stretch gap-2 border-t border-border pt-3">
                     {artisan.subscriptions?.[0]?.plan?.homeHighlight && (
                       <HighlightToggle
                         artisanId={artisan.id}
@@ -211,7 +230,11 @@ export default async function OrfebresPage() {
                       maxProductsOverride={artisan.maxProductsOverride}
                       maxPhotosOverride={artisan.maxPhotosOverride}
                     />
-                    <ArtisanAccountActions artisanId={artisan.id} status={artisan.status} />
+                    <ArtisanAccountActions
+                      artisanId={artisan.id}
+                      status={artisan.status}
+                      className="min-w-0 flex-1 basis-full sm:flex-none sm:basis-auto"
+                    />
                   </div>
                 </div>
               );

@@ -9,13 +9,15 @@ import {
   suspendArtisan,
 } from "@/lib/actions/admin";
 import { ConfirmDestructiveModal } from "@/components/shared/confirm-destructive-modal";
+import { cn } from "@/lib/utils";
 
 interface ArtisanAccountActionsProps {
   artisanId: string;
   status: string;
+  className?: string;
 }
 
-export function ArtisanAccountActions({ artisanId, status }: ArtisanAccountActionsProps) {
+export function ArtisanAccountActions({ artisanId, status, className }: ArtisanAccountActionsProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function ArtisanAccountActions({ artisanId, status }: ArtisanAccountActio
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className={cn("flex min-w-0 flex-col gap-2", className)}>
       {info && (
         <p className="max-w-md rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           {info}
@@ -76,7 +78,7 @@ export function ArtisanAccountActions({ artisanId, status }: ArtisanAccountActio
       {error && (
         <p className="max-w-md rounded-md bg-error/10 px-3 py-2 text-xs text-error">{error}</p>
       )}
-      <div className="flex shrink-0 flex-nowrap items-center gap-1.5 sm:gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
         {status === "APPROVED" && (
           <Button
             type="button"

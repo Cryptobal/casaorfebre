@@ -212,7 +212,7 @@ export default async function PortalLayout({ children }: { children: React.React
         </nav>
       </aside>
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         {/* Mobile header */}
         <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
           <PortalMobileNav title={mobileTitle} links={mobileLinks} />
@@ -221,7 +221,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </Link>
         </div>
 
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="max-w-full min-w-0 p-4 sm:p-6 lg:p-8">{children}</div>
       </div>
     </div>
   );
