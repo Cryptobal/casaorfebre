@@ -26,6 +26,7 @@ const jsonLd = JSON.stringify([
     name: "Casa Orfebre",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl",
     logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/casaorfebre-logo-compact.svg`,
+    image: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/casaorfebre-og-image.png`,
     description: "Marketplace curado de joyería artesanal chilena.",
     sameAs: [],
   },

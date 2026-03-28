@@ -65,11 +65,14 @@ export default async function ArtisanProfilePage({
     { name: artisan.displayName, url: `/orfebres/${slug}` },
   ]);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: artisan.displayName,
     description: artisan.bio,
+    image: artisan.profileImage || `${baseUrl}/casaorfebre-og-image.png`,
+    url: `${baseUrl}/orfebres/${slug}`,
     address: {
       "@type": "PostalAddress",
       addressLocality: artisan.location,

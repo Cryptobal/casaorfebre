@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface BlogImageProps {
@@ -28,11 +29,13 @@ export function BlogImage({ src, alt, className }: BlogImageProps) {
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={src}
       alt={alt}
-      className={className}
+      width={800}
+      height={450}
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
+      className={cn(className)}
       onError={() => setFailed(true)}
     />
   );

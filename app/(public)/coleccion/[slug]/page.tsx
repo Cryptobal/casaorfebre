@@ -66,11 +66,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .slice(0, 2)
     .toUpperCase();
 
-  const [reviews, questions] = await Promise.all([
+  const [reviewAgg, reviewList, questions] = await Promise.all([
     prisma.review.aggregate({
       where: { productId: product.id },
       _avg: { rating: true },
       _count: true,
+    }),
+    prisma.review.findMany({
+      where: { productId: product.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { user: { select: { name: true } } },
     }),
     prisma.productQuestion.findMany({
       where: { productId: product.id, isPublic: true, isBlocked: false },
@@ -92,12 +98,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
     { name: product.name, url: `/coleccion/${slug}` },
   ]);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const productImages = product.images.map((img: any) => img.url);
+
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: product.images.map((img: any) => img.url),
+    image: productImages.length > 0 ? productImages : [`${baseUrl}/casaorfebre-og-image.png`],
     category: categoryLabel,
     ...(product.materials.length > 0
       ? { material: product.materials.join(", ") }
@@ -109,7 +118,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     manufacturer: {
       "@type": "Person",
       name: artisan.displayName,
-      url: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/orfebres/${artisan.slug}`,
+      url: `${baseUrl}/orfebres/${artisan.slug}`,
     },
     offers: {
       "@type": "Offer",
@@ -123,16 +132,74 @@ export default async function ProductDetailPage({ params }: PageProps) {
         "@type": "Organization",
         name: "Casa Orfebre",
       },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: 0,
+          currency: "CLP",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "CL",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 3,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 2,
+            maxValue: 5,
+            unitCode: "DAY",
+          },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "CL",
+        returnPolicyCategory: product.isCustomMade
+          ? "https://schema.org/MerchantReturnNotPermitted"
+          : "https://schema.org/MerchantReturnFiniteReturnWindow",
+        ...(!product.isCustomMade && {
+          merchantReturnDays: 14,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/FreeReturn",
+        }),
+      },
     },
-    ...(reviews._count > 0 && reviews._avg.rating
+    ...(reviewAgg._count > 0 && reviewAgg._avg.rating
       ? {
           aggregateRating: {
             "@type": "AggregateRating",
-            ratingValue: reviews._avg.rating,
-            reviewCount: reviews._count,
+            ratingValue: reviewAgg._avg.rating,
+            reviewCount: reviewAgg._count,
             bestRating: 5,
             worstRating: 1,
           },
+        }
+      : {}),
+    ...(reviewList.length > 0
+      ? {
+          review: reviewList.map((r) => ({
+            "@type": "Review",
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+            author: {
+              "@type": "Person",
+              name: r.user.name || "Cliente verificado",
+            },
+            datePublished: r.createdAt.toISOString().split("T")[0],
+            reviewBody: r.comment,
+          })),
         }
       : {}),
   });
