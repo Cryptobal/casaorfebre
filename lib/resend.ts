@@ -4,7 +4,13 @@ let _resend: Resend | null = null;
 
 export function getResend(): Resend {
   if (!_resend) {
-    _resend = new Resend(process.env.RESEND_API_KEY);
+    const key = process.env.RESEND_API_KEY;
+    if (!key) {
+      throw new Error(
+        "RESEND_API_KEY is not set — emails cannot be sent without it.",
+      );
+    }
+    _resend = new Resend(key);
   }
   return _resend;
 }
@@ -12,7 +18,8 @@ export function getResend(): Resend {
 /** @deprecated use getResend() — kept for backward compat */
 export const resend = new Proxy({} as Resend, {
   get(_target, prop) {
-    return (getResend() as unknown as Record<string | symbol, unknown>)[prop];
+    if (typeof prop === "symbol") return undefined;
+    return (getResend() as unknown as Record<string, unknown>)[prop];
   },
 });
 
