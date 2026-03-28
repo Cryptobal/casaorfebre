@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint",
-    "process-blog-images": "node scripts/process-blog-images.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -46,7 +45,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
-    "sharp": "^0.34.5",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }
