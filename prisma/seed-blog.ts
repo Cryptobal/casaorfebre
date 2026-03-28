@@ -11,6 +11,9 @@ import * as fs from "fs";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+/** URLs absolutas R2 en prod/preview; sin R2_PUBLIC_URL se usan rutas `/blog/...` para desarrollo local. */
+const R2_BLOG_BASE = process.env.R2_PUBLIC_URL ? `${process.env.R2_PUBLIC_URL}/blog` : "/blog";
+
 const ADMIN_EMAIL = "carlos.irigoyen@gmail.com";
 
 function calculateReadingTime(text: string): number {
@@ -101,7 +104,7 @@ const articlesMetadata = [
     category: "CULTURA" as const,
     tags: ["joyería de autor", "orfebrería chilena", "artesanía", "plata"],
     publishedAt: "2026-03-26",
-    coverImage: "/blog/joyeria-autor-chile.jpg",
+    coverImage: `${R2_BLOG_BASE}/joyeria-autor-chile.jpg`,
     seoTitle: "Joyería de Autor en Chile: El Renacimiento de la Orfebrería Artesanal | Casa Orfebre",
     seoDescription: "Explora el movimiento de joyería de autor en Chile. Historia, técnicas, materiales nobles y el rol de los orfebres independientes en la escena artesanal contemporánea.",
     featured: true,
@@ -113,7 +116,7 @@ const articlesMetadata = [
     category: "GUIAS" as const,
     tags: ["plata", "cuidado de joyas", "plata 950", "guía"],
     publishedAt: "2026-03-26",
-    coverImage: "/blog/guia-plata-artesanal.jpg",
+    coverImage: `${R2_BLOG_BASE}/guia-plata-artesanal.jpg`,
     seoTitle: "Cómo Elegir y Cuidar Joyas de Plata Artesanal | Guía Completa | Casa Orfebre",
     seoDescription: "Guía definitiva para elegir y cuidar joyas artesanales de plata. Diferencias entre plata 950 y 925, limpieza, almacenamiento y autenticidad.",
     featured: false,
@@ -125,7 +128,7 @@ const articlesMetadata = [
     category: "GUIAS" as const,
     tags: ["anillos de compromiso", "hecho a mano", "matrimonio", "oro 18k"],
     publishedAt: "2026-04-02",
-    coverImage: "/blog/anillo-compromiso-artesanal.jpg",
+    coverImage: `${R2_BLOG_BASE}/anillo-compromiso-artesanal.jpg`,
     seoTitle: "Anillo de Compromiso Hecho a Mano en Chile | Guía para Elegir | Casa Orfebre",
     seoDescription: "Guía para elegir un anillo de compromiso artesanal hecho a mano en Chile. Materiales, estilos, presupuestos y cómo trabajar con un orfebre para crear tu pieza única.",
     featured: false,
@@ -137,7 +140,7 @@ const articlesMetadata = [
     category: "CULTURA" as const,
     tags: ["joyería sustentable", "slow fashion", "consumo consciente"],
     publishedAt: "2026-04-09",
-    coverImage: "/blog/joyeria-sustentable-chile.jpg",
+    coverImage: `${R2_BLOG_BASE}/joyeria-sustentable-chile.jpg`,
     seoTitle: "Joyería Sustentable Chile: Slow Fashion y Joyas con Historia | Casa Orfebre",
     seoDescription: "Descubre la joyería sustentable en Chile. Cómo el slow fashion y el consumo consciente están impulsando la joyería artesanal hecha a mano por orfebres locales.",
     featured: false,
@@ -149,7 +152,7 @@ const articlesMetadata = [
     category: "MATERIALES" as const,
     tags: ["lapislázuli", "piedras naturales", "piedras chilenas", "gemas"],
     publishedAt: "2026-04-16",
-    coverImage: "/blog/lapislazuli-chile.jpg",
+    coverImage: `${R2_BLOG_BASE}/lapislazuli-chile.jpg`,
     seoTitle: "Lapislázuli Chileno: Historia, Propiedades y Joyería Artesanal | Casa Orfebre",
     seoDescription: "Todo sobre el lapislázuli chileno: origen, extracción en la Cordillera de los Andes, propiedades y cómo los orfebres lo transforman en joyas únicas.",
     featured: false,
@@ -161,7 +164,7 @@ const articlesMetadata = [
     category: "GUIAS" as const,
     tags: ["regalo joyería", "joyería para regalar", "ideas regalo mujer"],
     publishedAt: "2026-04-23",
-    coverImage: "/blog/regalar-joyeria-artesanal.jpg",
+    coverImage: `${R2_BLOG_BASE}/regalar-joyeria-artesanal.jpg`,
     seoTitle: "Regalo Joyería Artesanal Mujer Chile: Guía por Ocasión | Casa Orfebre",
     seoDescription: "Ideas para regalar joyería artesanal en Chile. Guía por ocasión: aniversario, cumpleaños, día de la madre. Cómo elegir la pieza perfecta hecha a mano.",
     featured: false,
@@ -173,7 +176,7 @@ const articlesMetadata = [
     category: "CULTURA" as const,
     tags: ["joyas con significado", "joyas con historia", "joyas con piedras", "joyería artesanal", "simbolismo"],
     publishedAt: "2026-04-30",
-    coverImage: "/blog/joyas-significado.jpg",
+    coverImage: `${R2_BLOG_BASE}/joyas-significado.jpg`,
     seoTitle: "Joyas con Significado y Historia | Simbolismo en Joyería Artesanal | Casa Orfebre",
     seoDescription: "Descubre el significado detrás de las joyas artesanales. Símbolos en piedras naturales, formas orgánicas y la historia que cada orfebre chileno plasma en sus creaciones.",
     featured: false,
@@ -185,7 +188,7 @@ const articlesMetadata = [
     category: "ORFEBRES" as const,
     tags: ["vender joyas online", "plataforma para orfebres", "emprendimiento"],
     publishedAt: "2026-05-07",
-    coverImage: "/blog/vender-joyeria-online.jpg",
+    coverImage: `${R2_BLOG_BASE}/vender-joyeria-online.jpg`,
     seoTitle: "Vender Joyería Artesanal Online Chile: Guía Completa para Orfebres | Casa Orfebre",
     seoDescription: "Guía paso a paso para vender joyería artesanal online en Chile. Fotografía de producto, precios, plataformas, envíos y cómo construir tu marca como orfebre.",
     featured: false,
@@ -197,7 +200,7 @@ const articlesMetadata = [
     category: "MATERIALES" as const,
     tags: ["piedras naturales", "cuarzo", "turquesa", "piedras chilenas"],
     publishedAt: "2026-05-14",
-    coverImage: "/blog/piedras-naturales-chile.jpg",
+    coverImage: `${R2_BLOG_BASE}/piedras-naturales-chile.jpg`,
     seoTitle: "Piedras Naturales Chilenas para Joyería: Cuarzo, Turquesa, Ágata | Casa Orfebre",
     seoDescription: "Guía de piedras naturales chilenas usadas en joyería artesanal. Cuarzo, turquesa, ágata, amatista: propiedades, significado y cómo se engastan a mano.",
     featured: false,
@@ -231,6 +234,7 @@ async function main() {
       update: {
         content,
         readingTime: calculateReadingTime(content),
+        coverImage: meta.coverImage,
       },
       create: {
         slug: meta.slug,

@@ -22,6 +22,9 @@
 
 # misc
 .DS_Store
+
+# Blog cover images (servidas desde R2; no volver a commitear assets locales)
+public/blog/
 *.pem
 
 # debug
