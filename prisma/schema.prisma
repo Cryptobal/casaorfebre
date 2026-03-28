@@ -60,7 +60,22 @@ model User {
   // Blog
   blogPosts BlogPost[]
 
+  // Guided tours
+  tourCompletions TourCompletion[]
+
   @@map("users")
+}
+
+model TourCompletion {
+  id          String    @id @default(cuid())
+  userId      String
+  tourId      String
+  completedAt DateTime  @default(now())
+  skippedAt   DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tourId])
+  @@map("tour_completions")
 }
 
 model Account {

@@ -52,7 +52,7 @@ export default async function HomePage() {
       <HeroSection />
 
       {/* ─── 2. Trust Bar ─── */}
-      <section className="border-y border-border bg-surface">
+      <section className="border-y border-border bg-surface" data-tour="hero-garantias">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
           {TRUST_ITEMS.map((item, i) => (
             <FadeIn key={item.title} delay={i * 80}>

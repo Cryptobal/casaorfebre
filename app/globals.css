@@ -135,3 +135,76 @@ body {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* ============================================
+   Guided Tour Theme (driver.js overrides)
+   ============================================ */
+
+.casa-orfebre-tour {
+  background-color: #1a1a18 !important;
+  color: #FAFAF8 !important;
+  border: 1px solid rgba(139, 115, 85, 0.4) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+  max-width: 380px !important;
+}
+
+.casa-orfebre-tour .driver-popover-title {
+  font-family: var(--font-serif), "Cormorant Garamond", serif !important;
+  font-size: 1.25rem !important;
+  color: #8B7355 !important;
+  font-weight: 600 !important;
+}
+
+.casa-orfebre-tour .driver-popover-description {
+  font-family: var(--font-sans), "Outfit", sans-serif !important;
+  font-size: 0.875rem !important;
+  color: #FAFAF8 !important;
+  line-height: 1.6 !important;
+  opacity: 0.9;
+}
+
+.casa-orfebre-tour .driver-popover-progress-text {
+  font-family: var(--font-sans), "Outfit", sans-serif !important;
+  font-size: 0.75rem !important;
+  color: rgba(139, 115, 85, 0.7) !important;
+}
+
+.casa-orfebre-tour button.driver-popover-next-btn,
+.casa-orfebre-tour button.driver-popover-done-btn {
+  background-color: #8B7355 !important;
+  color: #FAFAF8 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-family: var(--font-sans), "Outfit", sans-serif !important;
+  font-size: 0.813rem !important;
+  padding: 6px 16px !important;
+  transition: background-color 0.2s !important;
+}
+
+.casa-orfebre-tour button.driver-popover-next-btn:hover,
+.casa-orfebre-tour button.driver-popover-done-btn:hover {
+  background-color: #a08963 !important;
+}
+
+.casa-orfebre-tour button.driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: #8B7355 !important;
+  border: 1px solid rgba(139, 115, 85, 0.4) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-sans), "Outfit", sans-serif !important;
+  font-size: 0.813rem !important;
+  padding: 6px 16px !important;
+}
+
+.casa-orfebre-tour button.driver-popover-close-btn {
+  color: rgba(139, 115, 85, 0.6) !important;
+}
+
+.casa-orfebre-tour button.driver-popover-close-btn:hover {
+  color: #8B7355 !important;
+}
+
+.driver-overlay {
+  background: rgba(26, 26, 24, 0.82) !important;
+}

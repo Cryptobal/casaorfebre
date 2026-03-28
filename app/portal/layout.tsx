@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
 import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
+import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
 
 const ROLE_SWITCHER_EMAILS = [
   "carlos.irigoyen@gmail.com",
@@ -175,15 +176,15 @@ export default async function PortalLayout({ children }: { children: React.React
           )}
           {role === "ARTISAN" && (
             <>
-              <Link href="/portal/orfebre" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Taller</Link>
-              <Link href="/portal/orfebre/productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Piezas</Link>
-              <SidebarLink href="/portal/orfebre/pedidos" label="Pedidos" count={artisanPendingOrders} />
-              <SidebarLink href="/portal/orfebre/preguntas" label="Preguntas" count={artisanUnansweredQuestions} />
-              <SidebarLink href="/portal/orfebre/mensajes" label="Mensajes" count={artisanUnreadMessages} />
-              <Link href="/portal/orfebre/finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
-              <Link href="/portal/orfebre/estadisticas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Estadísticas</Link>
-              <Link href="/portal/orfebre/herramientas/calculadora" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Calculadora</Link>
-              <Link href="/portal/orfebre/perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Perfil</Link>
+              <Link href="/portal/orfebre" data-tour="orfebre-dashboard" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Taller</Link>
+              <Link href="/portal/orfebre/productos" data-tour="orfebre-productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Piezas</Link>
+              <SidebarLink href="/portal/orfebre/pedidos" label="Pedidos" count={artisanPendingOrders} dataTour="orfebre-pedidos" />
+              <SidebarLink href="/portal/orfebre/preguntas" label="Preguntas" count={artisanUnansweredQuestions} dataTour="orfebre-preguntas" />
+              <SidebarLink href="/portal/orfebre/mensajes" label="Mensajes" count={artisanUnreadMessages} dataTour="orfebre-mensajes" />
+              <Link href="/portal/orfebre/finanzas" data-tour="orfebre-finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
+              <Link href="/portal/orfebre/estadisticas" data-tour="orfebre-estadisticas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Estadísticas</Link>
+              <Link href="/portal/orfebre/herramientas/calculadora" data-tour="orfebre-calculadora" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Calculadora</Link>
+              <Link href="/portal/orfebre/perfil" data-tour="orfebre-perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Perfil</Link>
             </>
           )}
           {showBuyerSection && (
@@ -201,7 +202,8 @@ export default async function PortalLayout({ children }: { children: React.React
             </>
           )}
 
-          <div className="mt-6 border-t border-border pt-4">
+          <div className="mt-6 border-t border-border pt-4 space-y-2">
+            {role === "ARTISAN" && <OrfebreTour />}
             <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-text-tertiary transition-colors hover:text-accent">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -219,6 +221,7 @@ export default async function PortalLayout({ children }: { children: React.React
           <Link href="/" className="flex items-center">
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={90} height={20} />
           </Link>
+          {role === "ARTISAN" && <OrfebreTour />}
         </div>
 
         <div className="max-w-full min-w-0 p-4 sm:p-6 lg:p-8">{children}</div>
@@ -227,10 +230,11 @@ export default async function PortalLayout({ children }: { children: React.React
   );
 }
 
-function SidebarLink({ href, label, count }: { href: string; label: string; count: number }) {
+function SidebarLink({ href, label, count, dataTour }: { href: string; label: string; count: number; dataTour?: string }) {
   return (
     <Link
       href={href}
+      data-tour={dataTour}
       className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
     >
       <span>{label}</span>

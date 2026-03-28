@@ -24,6 +24,7 @@
     "@upstash/redis": "^1.37.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "driver.js": "^1.4.0",
     "marked": "^17.0.5",
     "mercadopago": "^2.12.0",
     "next": "16.2.1",

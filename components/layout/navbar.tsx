@@ -8,15 +8,15 @@ import { SearchModal } from "@/components/shared/search-modal";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinksLeft = [
-  { href: "/coleccion", label: "Colección" },
-  { href: "/lo-nuevo", label: "Lo Nuevo" },
-  { href: "/seleccion-del-curador", label: "Selección del Curador" },
-  { href: "/tesoros-de-chile", label: "Tesoros de Chile" },
+  { href: "/coleccion", label: "Colección", tourId: "nav-coleccion" },
+  { href: "/lo-nuevo", label: "Lo Nuevo", tourId: undefined },
+  { href: "/seleccion-del-curador", label: "Selección del Curador", tourId: "nav-curador" },
+  { href: "/tesoros-de-chile", label: "Tesoros de Chile", tourId: undefined },
 ];
 
 const navLinksRight = [
-  { href: "/orfebres", label: "Orfebres" },
-  { href: "/postular", label: "Postular" },
+  { href: "/orfebres", label: "Orfebres", tourId: "nav-orfebres" },
+  { href: "/postular", label: "Postular", tourId: undefined },
 ];
 
 const navLinks = [...navLinksLeft, ...navLinksRight];
@@ -44,17 +44,17 @@ export function Navbar({
         <ul className="hidden items-center gap-6 lg:flex">
           {navLinksLeft.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
+              <Link href={link.href} data-tour={link.tourId} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
                 {link.label}
               </Link>
             </li>
           ))}
-          <li>
+          <li data-tour="nav-regalar">
             <RegalarDropdown />
           </li>
           {navLinksRight.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
+              <Link href={link.href} data-tour={link.tourId} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">
                 {link.label}
               </Link>
             </li>
@@ -62,7 +62,9 @@ export function Navbar({
         </ul>
 
         <div className="flex items-center gap-4">
-          <SearchModal />
+          <div data-tour="nav-search">
+            <SearchModal />
+          </div>
           {user?.role === "ADMIN" && (
             <Link href="/portal/admin" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark lg:block">
               Panel Admin

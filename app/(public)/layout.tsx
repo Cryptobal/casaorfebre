@@ -2,6 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner";
+import { BuyerTour } from "@/components/guided-tour/BuyerTour";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCart, getCartTotal } from "@/lib/queries/cart";
@@ -72,6 +73,7 @@ export default async function PublicLayout({
       <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       <Footer />
       <WhatsAppButton />
+      <BuyerTour isLoggedIn={!!session?.user?.id} />
     </>
   );
 }
