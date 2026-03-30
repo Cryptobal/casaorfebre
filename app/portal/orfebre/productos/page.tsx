@@ -39,6 +39,7 @@ export default async function ProductosPage() {
   const products = await prisma.product.findMany({
     where: { artisanId: artisan.id },
     include: {
+      categories: { select: { name: true } },
       images: {
         orderBy: { position: "asc" },
         take: 1,
@@ -113,7 +114,7 @@ export default async function ProductosPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {STATUS_LABELS[product.category] ?? product.category}
+                        {product.categories.map((c) => c.name).join(", ") || "—"}
                       </td>
                       <td className="px-4 py-3 text-text">{formatCLP(product.price)}</td>
                       <td className="px-4 py-3">

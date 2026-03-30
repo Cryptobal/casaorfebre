@@ -38,7 +38,7 @@ export default async function AnillosPage() {
     : new Set<string>();
 
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED", category: "ANILLO" },
+    where: { status: "APPROVED", categories: { some: { slug: "anillo" } } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },

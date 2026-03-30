@@ -38,7 +38,7 @@ export default async function CollaresPage() {
     : new Set<string>();
 
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED", category: "COLLAR" },
+    where: { status: "APPROVED", categories: { some: { slug: "collar" } } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },

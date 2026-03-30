@@ -1,7 +1,6 @@
 export const revalidate = 60;
 
 import Link from "next/link";
-import type { ProductCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveCategories, getActiveOccasions } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -27,23 +26,17 @@ export const metadata = {
   },
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  AROS: "Aros",
-  COLLAR: "Collares",
-  ANILLO: "Anillos",
-  PULSERA: "Pulseras",
-  BROCHE: "Broches",
-  COLGANTE: "Colgantes",
-  OTRO: "Otros",
-};
-
 async function getCategoryCounts() {
-  const counts = await prisma.product.groupBy({
-    by: ["category"],
-    where: { status: "APPROVED" },
-    _count: { id: true },
+  const categories = await prisma.category.findMany({
+    where: { isActive: true },
+    include: {
+      products: {
+        where: { status: "APPROVED" },
+        select: { id: true },
+      },
+    },
   });
-  return new Map(counts.map((c) => [c.category, c._count.id]));
+  return new Map(categories.map((c) => [c.slug, c.products.length]));
 }
 
 async function getOccasionCounts() {
@@ -92,16 +85,15 @@ export default async function ColeccionesPage() {
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {categories.map((cat, i) => {
-            const categoryKey = cat.name.toUpperCase() as ProductCategory;
-            const count = categoryCounts.get(categoryKey) ?? 0;
+            const count = categoryCounts.get(cat.slug) ?? 0;
             return (
               <FadeIn key={cat.id} delay={i * 60}>
                 <Link
-                  href={`/coleccion?category=${categoryKey}`}
+                  href={`/coleccion?category=${cat.slug}`}
                   className="group flex flex-col items-center rounded-lg border border-border bg-surface p-6 text-center transition-all hover:border-accent hover:shadow-sm"
                 >
                   <span className="font-serif text-lg font-light text-text group-hover:text-accent">
-                    {CATEGORY_LABELS[categoryKey] ?? cat.name}
+                    {cat.name}
                   </span>
                   <span className="mt-1 text-xs text-text-tertiary">
                     {count} {count === 1 ? "pieza" : "piezas"}

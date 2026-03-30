@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/products/image-upload";
 import { VideoUploader } from "@/components/products/video-uploader";
-import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { ErrorModal } from "@/components/ui/error-modal";
 import { createProduct, updateProduct, saveAndSubmitForReview } from "@/lib/actions/products";
 
@@ -17,16 +16,6 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   APPROVED: { label: "Aprobado", className: "border-green-300 bg-green-50 text-green-800" },
   REJECTED: { label: "Rechazado", className: "border-red-300 bg-red-50 text-red-700" },
   PAUSED: { label: "Pausado", className: "border-blue-300 bg-blue-50 text-blue-700" },
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  AROS: "Aros",
-  COLLAR: "Collar",
-  ANILLO: "Anillo",
-  PULSERA: "Pulsera",
-  BROCHE: "Broche",
-  COLGANTE: "Colgante",
-  OTRO: "Otro",
 };
 
 const RING_SIZES = [
@@ -41,7 +30,7 @@ interface ProductFormProps {
     name: string;
     description: string;
     story: string | null;
-    category: string;
+    categoryIds: string[];
     materials: string[];
     technique: string | null;
     price: number;
@@ -73,18 +62,19 @@ interface ProductFormProps {
     garantia: string | null;
   };
   artisanId: string;
+  categories?: { id: string; name: string; slug: string }[];
   specialties?: { id: string; name: string }[];
   occasions?: { id: string; name: string }[];
   videoEnabled?: boolean;
 }
 
-export function ProductForm({ product, artisanId, specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
+export function ProductForm({ product, artisanId, categories = [], specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const precioFromCalculadora = searchParams.get("precio");
   const isEditing = !!product;
 
-  const [category, setCategory] = useState(product?.category ?? "ANILLO");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(product?.categoryIds ?? []);
   const [materials, setMaterials] = useState<string[]>(product?.materials ?? []);
   const [materialInput, setMaterialInput] = useState("");
   const [productionType, setProductionType] = useState(product?.productionType ?? "UNIQUE");
@@ -164,9 +154,12 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
     [addTalla]
   );
 
-  const needsTallas = category === "ANILLO";
-  const needsLargoCadena = category === "COLLAR" || category === "COLGANTE";
-  const needsDiametro = category === "AROS" || category === "PULSERA";
+  const selectedCategorySlugs = categories
+    .filter((c) => selectedCategoryIds.includes(c.id))
+    .map((c) => c.slug);
+  const needsTallas = selectedCategorySlugs.includes("anillo");
+  const needsLargoCadena = selectedCategorySlugs.includes("collar") || selectedCategorySlugs.includes("colgante");
+  const needsDiametro = selectedCategorySlugs.includes("aros") || selectedCategorySlugs.includes("pulsera");
 
   const [showReviewModal, setShowReviewModal] = useState(false);
 
@@ -299,20 +292,45 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           />
         </div>
 
-        {/* Category */}
+        {/* Categories */}
         <div className="space-y-1.5">
-          <Label htmlFor="category">Categoria</Label>
-          <input type="hidden" name="category" value={category} />
-          <SelectDropdown
-            value={category}
-            onChange={setCategory}
-            placeholder="Seleccionar categoría"
-            options={Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
-              value,
-              label,
-            }))}
-            className="w-full"
-          />
+          <Label>Categorías</Label>
+          <input type="hidden" name="categoryIds" value={selectedCategoryIds.join(",")} />
+          <p className="text-xs text-text-secondary">
+            Selecciona una o más categorías para tu pieza
+          </p>
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {categories.map((c) => {
+                const isSelected = selectedCategoryIds.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedCategoryIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== c.id)
+                          : [...prev, c.id]
+                      )
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Specialties */}
@@ -611,7 +629,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           {/* LIMITED: stock by size or global */}
           {productionType === "LIMITED" && (
             <div className="space-y-3 pl-1">
-              {category === "ANILLO" ? (
+              {needsTallas ? (
                 <div className="space-y-3">
                   <Label>Stock por talla</Label>
                   <p className="text-xs text-text-secondary">Haz clic en las tallas disponibles e indica la cantidad de cada una.</p>
@@ -788,7 +806,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
         {needsDiametro && (
           <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
             <Label htmlFor="diametroMm">Diámetro / largo (mm) <span className="text-red-500">*</span></Label>
-            <p className="text-xs text-text-secondary">Obligatorio para {category === "AROS" ? "aros" : "pulseras"}.</p>
+            <p className="text-xs text-text-secondary">Obligatorio para {selectedCategorySlugs.includes("aros") ? "aros" : "pulseras"}.</p>
             <Input id="diametroMm" name="diametroMm" type="number" step="0.1" defaultValue={product?.diametroMm ?? ""} placeholder="Ej: 25" />
           </div>
         )}

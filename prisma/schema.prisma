@@ -193,7 +193,7 @@ model Product {
   story          String?
   price          Int
   compareAtPrice Int?
-  category       ProductCategory
+  categories     Category[]
   materials      String[]
   specialties    Specialty[]
   occasions      Occasion[]
@@ -242,7 +242,6 @@ model Product {
   conversations  Conversation[]
 
   @@index([artisanId])
-  @@index([category])
   @@index([status])
   @@map("products")
 }
@@ -635,16 +634,6 @@ enum ArtisanStatus {
   SUSPENDED
 }
 
-enum ProductCategory {
-  AROS
-  COLLAR
-  ANILLO
-  PULSERA
-  BROCHE
-  COLGANTE
-  OTRO
-}
-
 enum ProductStatus {
   DRAFT
   PENDING_REVIEW
@@ -969,13 +958,14 @@ enum MessageSenderRole {
 }
 
 model Category {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  position  Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  position  Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 
   @@map("categories")
 }

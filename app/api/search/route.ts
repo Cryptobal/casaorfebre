@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         slug: true,
         name: true,
         price: true,
-        category: true,
+        categories: { select: { name: true } },
         images: { take: 1, select: { url: true, altText: true } },
         artisan: { select: { displayName: true } },
       },

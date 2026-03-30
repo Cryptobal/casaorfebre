@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
-type ProductCategory = "ANILLO" | "AROS" | "COLLAR" | "PULSERA" | "COLGANTE" | "BROCHE" | "OTRO";
+type SizeCategory = "anillo" | "aros" | "collar" | "pulsera" | "colgante";
 
 interface SizeGuideProps {
-  category: ProductCategory;
+  categorySlugs: string[];
   tallas: string[];
   guiaTallas?: string | null;
   largoCadenaCm?: number | null;
@@ -52,22 +52,30 @@ const EARRING_SIZES = [
   { range: "50+ mm",   name: "Statement", ref: "", d: 50 },
 ];
 
-const CATEGORY_TITLES: Partial<Record<ProductCategory, string>> = {
-  ANILLO: "Anillos",
-  AROS: "Aros",
-  COLLAR: "Collares",
-  PULSERA: "Pulseras",
-  COLGANTE: "Collares y Colgantes",
+const CATEGORY_TITLES: Partial<Record<SizeCategory, string>> = {
+  anillo: "Anillos",
+  aros: "Aros",
+  collar: "Collares",
+  pulsera: "Pulseras",
+  colgante: "Collares y Colgantes",
 };
 
 /* ─── Main Component ─── */
 
-export function SizeGuide({ category, tallas, guiaTallas, largoCadenaCm, diametroMm }: SizeGuideProps) {
+/** Pick the best size-guide category from the product's category slugs */
+function resolveSizeCategory(slugs: string[]): SizeCategory | null {
+  const priority: SizeCategory[] = ["anillo", "collar", "colgante", "pulsera", "aros"];
+  for (const p of priority) {
+    if (slugs.includes(p)) return p;
+  }
+  return null;
+}
+
+export function SizeGuide({ categorySlugs, tallas, guiaTallas, largoCadenaCm, diametroMm }: SizeGuideProps) {
   const [open, setOpen] = useState(false);
 
-  const showButton =
-    tallas.length > 0 ||
-    ["ANILLO", "COLLAR", "PULSERA", "AROS", "COLGANTE"].includes(category);
+  const sizeCategory = resolveSizeCategory(categorySlugs);
+  const showButton = tallas.length > 0 || sizeCategory !== null;
 
   if (!showButton) return null;
 
@@ -88,9 +96,9 @@ export function SizeGuide({ category, tallas, guiaTallas, largoCadenaCm, diametr
         Guia de tallas
       </button>
 
-      {open && (
+      {open && sizeCategory && (
         <SizeGuideModal
-          category={category}
+          sizeCategory={sizeCategory}
           tallas={tallas}
           guiaTallas={guiaTallas}
           largoCadenaCm={largoCadenaCm}
@@ -104,14 +112,23 @@ export function SizeGuide({ category, tallas, guiaTallas, largoCadenaCm, diametr
 
 /* ─── Modal ─── */
 
+interface SizeGuideModalProps {
+  sizeCategory: SizeCategory;
+  tallas: string[];
+  guiaTallas?: string | null;
+  largoCadenaCm?: number | null;
+  diametroMm?: number | null;
+  onClose: () => void;
+}
+
 function SizeGuideModal({
-  category,
+  sizeCategory,
   tallas,
   guiaTallas,
   largoCadenaCm,
   diametroMm,
   onClose,
-}: SizeGuideProps & { onClose: () => void }) {
+}: SizeGuideModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -137,8 +154,8 @@ function SizeGuideModal({
     return () => window.removeEventListener("keydown", handleKey);
   }, [animateClose]);
 
-  const tabs = getTabs(category);
-  const title = CATEGORY_TITLES[category] || "Productos";
+  const tabs = getTabs(sizeCategory);
+  const title = CATEGORY_TITLES[sizeCategory] || "Productos";
 
   const content = (
     <div
@@ -198,7 +215,7 @@ function SizeGuideModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          {renderCategoryContent(category, tallas, largoCadenaCm, diametroMm, activeTab)}
+          {renderCategoryContent(sizeCategory, tallas, largoCadenaCm, diametroMm, activeTab)}
 
           {/* Artisan note */}
           {guiaTallas && (
@@ -230,19 +247,19 @@ function SizeGuideModal({
 
 /* ─── Tab structure per category ─── */
 
-function getTabs(category: ProductCategory): { label: string }[] {
+function getTabs(category: SizeCategory): { label: string }[] {
   switch (category) {
-    case "ANILLO":
+    case "anillo":
       return [
         { label: "Tabla de tallas" },
         { label: "Como medir" },
       ];
-    case "COLLAR":
-    case "COLGANTE":
+    case "collar":
+    case "colgante":
       return [{ label: "Largos de cadena" }];
-    case "PULSERA":
+    case "pulsera":
       return [{ label: "Tallas" }, { label: "Como medir" }];
-    case "AROS":
+    case "aros":
       return [{ label: "Referencia de tamanos" }];
     default:
       return [{ label: "Referencia" }];
@@ -252,25 +269,25 @@ function getTabs(category: ProductCategory): { label: string }[] {
 /* ─── Category-specific content ─── */
 
 function renderCategoryContent(
-  category: ProductCategory,
+  category: SizeCategory,
   tallas: string[],
   largoCadenaCm?: number | null,
   diametroMm?: number | null,
   activeTab = 0,
 ) {
   switch (category) {
-    case "ANILLO":
+    case "anillo":
       return activeTab === 0
         ? <RingSizeTable tallas={tallas} />
         : <RingMeasureMethods />;
-    case "COLLAR":
-    case "COLGANTE":
+    case "collar":
+    case "colgante":
       return <NecklaceDiagram largoCadenaCm={largoCadenaCm} />;
-    case "PULSERA":
+    case "pulsera":
       return activeTab === 0
         ? <BraceletSizeTable tallas={tallas} />
         : <BraceletMeasureMethod />;
-    case "AROS":
+    case "aros":
       return <EarringSizeReference diametroMm={diametroMm} />;
     default:
       return (

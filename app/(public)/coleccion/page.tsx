@@ -10,7 +10,6 @@ import { FadeIn } from "@/components/shared/fade-in";
 import { CatalogFilters } from "./catalog-filters";
 import { ListTracker } from "./list-tracker";
 import { auth } from "@/lib/auth";
-import type { ProductCategory } from "@prisma/client";
 
 export const metadata = {
   title: "Colección",
@@ -32,15 +31,7 @@ export const metadata = {
   },
 };
 
-const VALID_CATEGORIES = new Set([
-  "AROS",
-  "COLLAR",
-  "ANILLO",
-  "PULSERA",
-  "BROCHE",
-  "COLGANTE",
-  "OTRO",
-]);
+// Category slugs are validated against the DB below
 
 function parsePriceRange(price: string | undefined) {
   if (!price) return {};
@@ -65,10 +56,7 @@ export default async function ColeccionPage({
 }) {
   const params = await searchParams;
 
-  const categoryParam = typeof params.category === "string" ? params.category : undefined;
-  const category = categoryParam && VALID_CATEGORIES.has(categoryParam)
-    ? (categoryParam as ProductCategory)
-    : undefined;
+  const categorySlug = typeof params.category === "string" ? params.category.toLowerCase() : undefined;
   const material = typeof params.material === "string" ? params.material : undefined;
   const artisanSlug = typeof params.artisan === "string" ? params.artisan : undefined;
   const occasionSlug = typeof params.occasion === "string" ? params.occasion : undefined;
@@ -82,7 +70,7 @@ export default async function ColeccionPage({
 
   const session = await auth();
   const [products, materials, artisans, favoriteIds, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
-    getApprovedProducts({ category, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, sort }),
+    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
     getUserFavoriteIds(session?.user?.id),
@@ -117,11 +105,11 @@ export default async function ColeccionPage({
       {products.length > 0 ? (
         <>
         <ListTracker
-          listName={category ?? "Colección"}
+          listName={categorySlug ?? "Colección"}
           items={products.slice(0, 20).map((p) => ({
             item_id: p.id,
             item_name: p.name,
-            item_category: p.category,
+            item_category: p.categories?.[0]?.name ?? "",
             item_brand: p.artisan.displayName,
             price: p.price,
             quantity: 1,
@@ -130,7 +118,7 @@ export default async function ColeccionPage({
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
           {products.map((product, i) => (
             <FadeIn key={product.id} delay={i * 60}>
-              <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} listName={category ?? "Colección"} />
+              <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} listName={categorySlug ?? "Colección"} />
             </FadeIn>
           ))}
         </div>

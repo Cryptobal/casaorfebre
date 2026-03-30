@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductBySlug, getSimilarProducts } from "@/lib/queries/products";
 import { ProductCard } from "@/components/products/product-card";
-import { buildBreadcrumbJsonLd, getCategoryLabel, getCategorySlug, canonicalUrl } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, canonicalUrl } from "@/lib/seo";
 import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
@@ -53,7 +53,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const similarProducts = await getSimilarProducts({
     id: product.id,
-    category: product.category,
+    categorySlugs: product.categories.map((c: { slug: string }) => c.slug),
     materials: product.materials,
     price: product.price,
     artisanId: product.artisanId,
@@ -89,8 +89,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
     }),
   ]);
 
-  const categoryLabel = getCategoryLabel(product.category);
-  const categorySlug = getCategorySlug(product.category);
+  const primaryCategory = product.categories[0];
+  const categoryLabel = primaryCategory?.name ?? "Otro";
+  const categorySlug = primaryCategory?.slug ?? "coleccion";
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Inicio", url: "/" },
@@ -108,7 +109,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     name: product.name,
     description: product.description,
     image: productImages.length > 0 ? productImages : [`${baseUrl}/casaorfebre-og-image.png`],
-    category: categoryLabel,
+    category: product.categories.map((c: { name: string }) => c.name).join(", ") || "Otro",
     ...(product.materials.length > 0
       ? { material: product.materials.join(", ") }
       : {}),
@@ -338,7 +339,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Size guide */}
             <SizeGuide
-              category={product.category}
+              categorySlugs={product.categories.map((c: { slug: string }) => c.slug)}
               tallas={product.tallas}
               guiaTallas={product.guiaTallas}
               largoCadenaCm={product.largoCadenaCm}
@@ -532,17 +533,7 @@ function TruckIcon() {
 
 /* ─── Product Details & Measurements ─── */
 
-const CATEGORY_LABELS: Record<string, string> = {
-  AROS: "Aros",
-  COLLAR: "Collar",
-  ANILLO: "Anillo",
-  PULSERA: "Pulsera",
-  BROCHE: "Broche",
-  COLGANTE: "Colgante",
-  OTRO: "Otro",
-};
-
-function ProductDetails({ product }: { product: Record<string, unknown> & { materials: string[]; tallas: string[]; category: string } }) {
+function ProductDetails({ product }: { product: Record<string, unknown> & { materials: string[]; tallas: string[]; categories: { name: string }[] } }) {
   const rows: { label: string; value: string }[] = [];
 
   if (product.materials.length > 0)
@@ -573,7 +564,9 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Personalizable", value: (product.detallePersonalizacion as string) || "Sí" });
   if (product.cantidadEdicion)
     rows.push({ label: "Edición", value: `${product.stock} de ${product.cantidadEdicion}` });
-  rows.push({ label: "Categoría", value: CATEGORY_LABELS[product.category] || product.category });
+  if (product.categories.length > 0) {
+    rows.push({ label: "Categoría", value: product.categories.map((c) => c.name).join(", ") });
+  }
 
   if (rows.length === 0) return null;
 

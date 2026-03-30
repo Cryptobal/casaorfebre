@@ -62,7 +62,7 @@ export function CatalogFilters({ categories, materials, artisans, occasions, spe
   // Build active filters list (excluding sort)
   const activeFilters: { key: string; label: string }[] = [];
   if (category) {
-    const cat = categories.find((c) => c.slug.toUpperCase() === category || c.name.toUpperCase() === category);
+    const cat = categories.find((c) => c.slug === category || c.name.toUpperCase() === category);
     activeFilters.push({ key: "category", label: cat?.name ?? category });
   }
   if (material) activeFilters.push({ key: "material", label: material });
@@ -182,7 +182,7 @@ export function CatalogFilters({ categories, materials, artisans, occasions, spe
               options={[
                 { value: "", label: "Todas las categorías" },
                 ...categories.map((c) => ({
-                  value: c.name.toUpperCase(),
+                  value: c.slug,
                   label: c.name,
                 })),
               ]}

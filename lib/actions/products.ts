@@ -7,6 +7,7 @@ import { slugify } from "@/lib/utils";
 import { getArtisanPlanLimits } from "@/lib/plan-limits";
 import { revalidatePath } from "next/cache";
 import type { ProductionType } from "@prisma/client";
+import { getActiveCategories } from "@/lib/queries/catalog";
 
 async function getArtisan() {
   const session = await auth();
@@ -24,7 +25,10 @@ function parseFormData(formData: FormData) {
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const story = (formData.get("story") as string) || null;
-  const category = formData.get("category") as string;
+  const categoryIdsRaw = formData.get("categoryIds") as string;
+  const categoryIds = categoryIdsRaw
+    ? categoryIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
+    : [];
   const materialsRaw = formData.get("materials") as string;
   const materials = materialsRaw
     ? materialsRaw.split(",").map((m) => m.trim()).filter(Boolean)
@@ -101,7 +105,7 @@ function parseFormData(formData: FormData) {
     name,
     description,
     story,
-    category,
+    categoryIds,
     materials,
     technique,
     price,
@@ -148,6 +152,10 @@ export async function createProduct(
     return { error: "El precio minimo es $1.000 CLP" };
   }
 
+  if (data.categoryIds.length === 0) {
+    return { error: "Selecciona al menos una categoría" };
+  }
+
   // ── Enforce product limit by plan ──
   const limits = await getArtisanPlanLimits(artisan.id);
   if (limits.maxProducts > 0) {
@@ -183,7 +191,7 @@ export async function createProduct(
         name: data.name,
         description: data.description,
         story: data.story,
-        category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
+        categories: { connect: data.categoryIds.map((id) => ({ id })) },
         materials: data.materials,
         specialties: data.specialtyIds.length > 0
           ? { connect: data.specialtyIds.map((id) => ({ id })) }
@@ -258,15 +266,18 @@ export async function updateProduct(
     return { error: "El precio minimo es $1.000 CLP" };
   }
 
+  if (data.categoryIds.length === 0) {
+    return { error: "Selecciona al menos una categoría" };
+  }
+
   // If product was APPROVED and key fields changed, set to PENDING_REVIEW
   let newStatus = product.status;
   if (product.status === "APPROVED") {
-    const categoryChanged = data.category !== product.category;
     const materialsChanged =
       JSON.stringify(data.materials.sort()) !== JSON.stringify([...product.materials].sort());
     const priceChanged = data.price !== product.price;
 
-    if (categoryChanged || materialsChanged || priceChanged) {
+    if (materialsChanged || priceChanged) {
       newStatus = "PENDING_REVIEW";
     }
   }
@@ -278,7 +289,7 @@ export async function updateProduct(
         name: data.name,
         description: data.description,
         story: data.story,
-        category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
+        categories: { set: [], connect: data.categoryIds.map((id) => ({ id })) },
         materials: data.materials,
         specialties: { set: data.specialtyIds.map((id) => ({ id })) },
         occasions: { set: data.occasionIds.map((id) => ({ id })) },
@@ -335,7 +346,7 @@ export async function submitForReview(
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    include: { images: true },
+    include: { images: true, categories: { select: { slug: true } } },
   });
 
   if (!product || product.artisanId !== artisan.id) {
@@ -351,24 +362,24 @@ export async function submitForReview(
   }
 
   // Validate mandatory measurements by category
-  const cat = product.category;
-  if (cat === "ANILLO" && product.productionType === "LIMITED") {
+  const categorySlugs = product.categories.map((c) => c.slug);
+  if (categorySlugs.includes("anillo") && product.productionType === "LIMITED") {
     const variantCount = await prisma.productVariant.count({ where: { productId } });
     if (product.tallas.length === 0 && variantCount === 0) {
       return { error: "Los anillos con producción limitada requieren tallas o stock por talla para publicarse" };
     }
   }
-  if (cat === "COLLAR" || cat === "COLGANTE") {
+  if (categorySlugs.includes("collar") || categorySlugs.includes("colgante")) {
     if (!product.largoCadenaCm) {
       return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
     }
   }
-  if (cat === "AROS") {
+  if (categorySlugs.includes("aros")) {
     if (!product.diametroMm) {
       return { error: "Los aros requieren el diámetro (mm) para publicarse" };
     }
   }
-  if (cat === "PULSERA") {
+  if (categorySlugs.includes("pulsera")) {
     if (!product.diametroMm) {
       return { error: "Las pulseras requieren el diámetro o largo (mm) para publicarse" };
     }
@@ -417,17 +428,26 @@ export async function saveAndSubmitForReview(
     return { error: "El producto debe tener al menos 1 imagen" };
   }
 
-  const cat = data.category;
-  if (cat === "ANILLO" && data.productionType === "LIMITED" && data.tallas.length === 0 && data.variants.length === 0) {
+  if (data.categoryIds.length === 0) {
+    return { error: "Selecciona al menos una categoría" };
+  }
+
+  // Resolve category slugs for validation
+  const allCategories = await getActiveCategories();
+  const selectedSlugs = allCategories
+    .filter((c) => data.categoryIds.includes(c.id))
+    .map((c) => c.slug);
+
+  if (selectedSlugs.includes("anillo") && data.productionType === "LIMITED" && data.tallas.length === 0 && data.variants.length === 0) {
     return { error: "Los anillos con producción limitada requieren tallas o stock por talla para publicarse" };
   }
-  if ((cat === "COLLAR" || cat === "COLGANTE") && !data.largoCadenaCm) {
+  if ((selectedSlugs.includes("collar") || selectedSlugs.includes("colgante")) && !data.largoCadenaCm) {
     return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
   }
-  if (cat === "AROS" && !data.diametroMm) {
+  if (selectedSlugs.includes("aros") && !data.diametroMm) {
     return { error: "Los aros requieren el diámetro (mm) para publicarse" };
   }
-  if (cat === "PULSERA" && !data.diametroMm) {
+  if (selectedSlugs.includes("pulsera") && !data.diametroMm) {
     return { error: "Las pulseras requieren el diámetro o largo (mm) para publicarse" };
   }
 
@@ -438,7 +458,7 @@ export async function saveAndSubmitForReview(
         name: data.name,
         description: data.description,
         story: data.story,
-        category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
+        categories: { set: [], connect: data.categoryIds.map((id) => ({ id })) },
         materials: data.materials,
         specialties: { set: data.specialtyIds.map((id) => ({ id })) },
         occasions: { set: data.occasionIds.map((id) => ({ id })) },

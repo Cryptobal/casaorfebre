@@ -36,7 +36,7 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
   const ga4Item = {
     item_id: product.id,
     item_name: product.name,
-    item_category: product.category,
+    item_category: (product as unknown as { categories?: { name: string }[] }).categories?.[0]?.name ?? "",
     item_brand: product.artisan.displayName,
     price: product.price,
     quantity: 1,

@@ -9,7 +9,6 @@ import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { LoNuevoFilters } from "./lo-nuevo-filters";
 import { auth } from "@/lib/auth";
-import type { ProductCategory } from "@prisma/client";
 
 export const metadata = {
   title: "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre",
@@ -31,9 +30,7 @@ export const metadata = {
   },
 };
 
-const VALID_CATEGORIES = new Set([
-  "AROS", "COLLAR", "ANILLO", "PULSERA", "BROCHE", "COLGANTE", "OTRO",
-]);
+// Category slugs validated against DB below
 
 function parsePriceRange(price: string | undefined) {
   if (!price) return {};
@@ -57,17 +54,14 @@ export default async function LoNuevoPage({
   const pageParam = typeof params.page === "string" ? parseInt(params.page, 10) : 1;
   const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-  const categoryParam = typeof params.category === "string" ? params.category : undefined;
-  const category = categoryParam && VALID_CATEGORIES.has(categoryParam)
-    ? (categoryParam as ProductCategory)
-    : undefined;
+  const categorySlug = typeof params.category === "string" ? params.category.toLowerCase() : undefined;
   const material = typeof params.material === "string" ? params.material : undefined;
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
 
   const session = await auth();
   const [{ products, total, totalPages }, favoriteIds, dbCategories, dbMaterials] = await Promise.all([
-    getNewProducts({ page, category, material, minPrice, maxPrice }),
+    getNewProducts({ page, categorySlug, material, minPrice, maxPrice }),
     getUserFavoriteIds(session?.user?.id),
     getActiveCategories(),
     getActiveMaterials(),

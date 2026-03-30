@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { ProductCategory, Product, Artisan, ProductImage } from "@prisma/client";
+import type { Product, Artisan, ProductImage } from "@prisma/client";
 
 /** Only show approved images in public queries */
 const approvedImagesFirst = {
@@ -9,7 +9,7 @@ const approvedImagesFirst = {
 } as const;
 
 interface ProductFilters {
-  category?: ProductCategory;
+  categorySlug?: string;
   material?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -22,7 +22,7 @@ interface ProductFilters {
 export async function getApprovedProducts(filters: ProductFilters = {}) {
   const where: Record<string, unknown> = { status: "APPROVED" as const };
 
-  if (filters.category) where.category = filters.category;
+  if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
   if (filters.material) where.materials = { has: filters.material };
   if (filters.minPrice || filters.maxPrice) {
     where.price = {
@@ -69,6 +69,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
             : {}),
         },
       },
+      categories: { select: { id: true, name: true, slug: true } },
       images: approvedImagesFirst,
       specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
@@ -120,6 +121,7 @@ export async function getProductBySlug(slug: string) {
           profileImage: true,
         },
       },
+      categories: { select: { id: true, name: true, slug: true } },
       images: { where: { status: "APPROVED" }, orderBy: { position: "asc" } },
       video: true,
       specialties: { select: { id: true, name: true, slug: true } },
@@ -161,14 +163,14 @@ export async function getAllMaterials() {
 export async function getNewProducts({
   page = 1,
   perPage = 12,
-  category,
+  categorySlug,
   material,
   minPrice,
   maxPrice,
 }: {
   page?: number;
   perPage?: number;
-  category?: ProductCategory;
+  categorySlug?: string;
   material?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -180,7 +182,7 @@ export async function getNewProducts({
     status: "APPROVED" as const,
     createdAt: { gte: cutoff },
   };
-  if (category) where.category = category;
+  if (categorySlug) where.categories = { some: { slug: categorySlug } };
   if (material) where.materials = { has: material };
   if (minPrice || maxPrice) {
     where.price = {
@@ -192,7 +194,7 @@ export async function getNewProducts({
   let total = await prisma.product.count({ where });
 
   // Expand to 60 days if nothing in 30
-  if (total === 0 && !category && !material && !minPrice && !maxPrice) {
+  if (total === 0 && !categorySlug && !material && !minPrice && !maxPrice) {
     cutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
     where.createdAt = { gte: cutoff };
     total = await prisma.product.count({ where });
@@ -238,7 +240,7 @@ type SimilarProduct = Product & {
  */
 export async function getSimilarProducts(product: {
   id: string;
-  category: string;
+  categorySlugs: string[];
   materials: string[];
   price: number;
   artisanId: string;
@@ -246,7 +248,9 @@ export async function getSimilarProducts(product: {
   const collected = new Set<string>();
   collected.add(product.id);
   const results: SimilarProduct[] = [];
-  const cat = product.category as ProductCategory;
+  const catFilter = product.categorySlugs.length > 0
+    ? { categories: { some: { slug: { in: product.categorySlugs } } } }
+    : {};
 
   const include = {
     artisan: { select: { displayName: true, slug: true } as const },
@@ -258,7 +262,7 @@ export async function getSimilarProducts(product: {
   // Priority 1: same category + same main material (max 4)
   if (mainMaterial) {
     const p1 = await prisma.product.findMany({
-      where: { status: "APPROVED", category: cat, materials: { has: mainMaterial }, id: { notIn: [...collected] } },
+      where: { status: "APPROVED", ...catFilter, materials: { has: mainMaterial }, id: { notIn: [...collected] } },
       take: 4,
       orderBy: { publishedAt: "desc" },
       include,
@@ -270,7 +274,7 @@ export async function getSimilarProducts(product: {
   const minPrice = Math.round(product.price * 0.7);
   const maxPrice = Math.round(product.price * 1.3);
   const p2 = await prisma.product.findMany({
-    where: { status: "APPROVED", category: cat, price: { gte: minPrice, lte: maxPrice }, id: { notIn: [...collected] } },
+    where: { status: "APPROVED", ...catFilter, price: { gte: minPrice, lte: maxPrice }, id: { notIn: [...collected] } },
     take: 3,
     orderBy: { publishedAt: "desc" },
     include,
@@ -289,7 +293,7 @@ export async function getSimilarProducts(product: {
   // Priority 4: best-selling same category (fill up to 12)
   if (results.length < 12) {
     const p4 = await prisma.product.findMany({
-      where: { status: "APPROVED", category: cat, id: { notIn: [...collected] } },
+      where: { status: "APPROVED", ...catFilter, id: { notIn: [...collected] } },
       take: 12 - results.length,
       orderBy: [{ orderItems: { _count: "desc" } }, { publishedAt: "desc" }],
       include,

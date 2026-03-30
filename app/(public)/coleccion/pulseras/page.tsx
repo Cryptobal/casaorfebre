@@ -38,7 +38,7 @@ export default async function PulserasPage() {
     : new Set<string>();
 
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED", category: "PULSERA" },
+    where: { status: "APPROVED", categories: { some: { slug: "pulsera" } } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },

@@ -8,15 +8,6 @@ import { AdminProductActions } from "./admin-product-actions";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  AROS: "Aros",
-  COLLAR: "Collar",
-  ANILLO: "Anillo",
-  PULSERA: "Pulsera",
-  BROCHE: "Broche",
-  COLGANTE: "Colgante",
-  OTRO: "Otro",
-};
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-800",
@@ -131,7 +122,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
-                    <DetailRow label="Categoría" value={CATEGORY_LABELS[product.category] ?? product.category} />
+                    <DetailRow label="Categoría" value={(product as unknown as { categories?: { name: string }[] }).categories?.map((c) => c.name).join(", ") ?? "—"} />
                     <DetailRow
                       label="Tipo"
                       value={product.productionType === "UNIQUE" ? "Pieza única" : product.productionType === "MADE_TO_ORDER" ? "Hecha por encargo" : "Producción limitada"}

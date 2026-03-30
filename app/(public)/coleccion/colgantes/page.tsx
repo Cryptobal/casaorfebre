@@ -38,7 +38,7 @@ export default async function ColgantesPage() {
     : new Set<string>();
 
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED", category: "COLGANTE" },
+    where: { status: "APPROVED", categories: { some: { slug: "colgante" } } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },

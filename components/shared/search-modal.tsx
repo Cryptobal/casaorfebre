@@ -15,7 +15,7 @@ interface ProductResult {
   slug: string;
   name: string;
   price: number;
-  category: string;
+  categories: { name: string }[];
   images: { url: string; altText: string | null }[];
   artisan: { displayName: string };
 }

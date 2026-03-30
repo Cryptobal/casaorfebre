@@ -38,7 +38,7 @@ export default async function ArosPage() {
     : new Set<string>();
 
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED", category: "AROS" },
+    where: { status: "APPROVED", categories: { some: { slug: "aros" } } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },

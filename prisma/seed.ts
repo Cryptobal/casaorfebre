@@ -277,7 +277,7 @@ async function main() {
       story:
         "Estos aros nacieron una mañana de invierno mirando las olas romper en el muelle Barón.",
       price: 67000,
-      category: "AROS" as const,
+      categorySlug: "aros",
       materials: ["Plata 950"],
       technique: "Texturizado a martillo",
       dimensions: "4.5 x 1.8 cm",
@@ -294,7 +294,7 @@ async function main() {
       description:
         "Collar con dije de plata y piedra de mar verde encontrada en la costa de Quintay. Cadena de plata 950 de 45 cm.",
       price: 89000,
-      category: "COLLAR" as const,
+      categorySlug: "collar",
       materials: ["Plata 950", "Piedra de mar"],
       technique: "Engaste en bisel",
       dimensions: "Dije: 2.5 x 1.5 cm",
@@ -311,7 +311,7 @@ async function main() {
       description:
         "Colgante de media luna en plata 950 con textura de arena. Incluye cadena de 50 cm.",
       price: 52000,
-      category: "COLGANTE" as const,
+      categorySlug: "colgante",
       materials: ["Plata 950"],
       technique: "Fundición y texturizado",
       dimensions: "3.0 x 2.0 cm",
@@ -330,7 +330,7 @@ async function main() {
       story:
         "Diseñé este anillo después de una tormenta costera en Quintay. La fuerza del mar quedó atrapada en la plata.",
       price: 45000,
-      category: "ANILLO" as const,
+      categorySlug: "anillo",
       materials: ["Plata 950"],
       technique: "Forjado a mano",
       dimensions: "Talla ajustable 12-16",
@@ -351,7 +351,7 @@ async function main() {
       story:
         "El trapelacucha es símbolo de fertilidad y protección. Lo reinterpreté en un anillo que puedes llevar todos los días.",
       price: 54000,
-      category: "ANILLO" as const,
+      categorySlug: "anillo",
       materials: ["Plata 950"],
       technique: "Grabado y calado",
       dimensions: "Talla ajustable 14-18",
@@ -368,7 +368,7 @@ async function main() {
       description:
         "Pulsera rígida en cobre con diseño del kultrun. Acabado oxidado y pulido selectivo.",
       price: 42000,
-      category: "PULSERA" as const,
+      categorySlug: "pulsera",
       materials: ["Cobre", "Bronce"],
       technique: "Repujado",
       dimensions: "Diámetro interno: 6.5 cm",
@@ -385,7 +385,7 @@ async function main() {
       description:
         'Aros circulares en plata y cobre. "Pewma" significa sueño en mapudungun. Diseño geométrico con acabado satinado.',
       price: 38000,
-      category: "AROS" as const,
+      categorySlug: "aros",
       materials: ["Plata 950", "Cobre"],
       technique: "Soldadura y pulido",
       dimensions: "2.2 cm diámetro",
@@ -404,7 +404,7 @@ async function main() {
       story:
         "El rewe es el altar sagrado mapuche. Este collar lleva un fragmento de lapislázuli del norte, uniendo dos mundos del territorio chileno.",
       price: 125000,
-      category: "COLLAR" as const,
+      categorySlug: "collar",
       materials: ["Plata 950", "Lapislázuli"],
       technique: "Cera perdida y engaste",
       dimensions: "Dije: 3.5 x 2.0 cm",
@@ -425,7 +425,7 @@ async function main() {
       story:
         "El copihue es la flor nacional de Chile. Lo tallé en oro para que dure tanto como su belleza en la naturaleza.",
       price: 320000,
-      category: "COLLAR" as const,
+      categorySlug: "collar",
       materials: ["Oro 18k", "Rubí"],
       technique: "Tallado en cera perdida",
       dimensions: "Dije: 3.0 x 1.8 cm",
@@ -442,7 +442,7 @@ async function main() {
       description:
         "Anillo en plata 950 con textura de corteza de araucaria y engaste de amatista oval. Pieza única.",
       price: 145000,
-      category: "ANILLO" as const,
+      categorySlug: "anillo",
       materials: ["Plata 950", "Amatista"],
       technique: "Texturizado orgánico y engaste",
       dimensions: "Talla 12",
@@ -459,7 +459,7 @@ async function main() {
       description:
         "Broche en forma de helecho en plata con baño de oro. Detalle de turmalina verde en la base.",
       price: 78000,
-      category: "BROCHE" as const,
+      categorySlug: "broche",
       materials: ["Plata 950", "Baño de oro", "Turmalina"],
       technique: "Calado y baño galvánico",
       dimensions: "5.5 x 2.0 cm",
@@ -476,7 +476,7 @@ async function main() {
       description:
         "Aros largos inspirados en las hojas del canelo. Plata 950 con acabado espejo y esmeralda diminuta.",
       price: 185000,
-      category: "AROS" as const,
+      categorySlug: "aros",
       materials: ["Plata 950", "Esmeralda"],
       technique: "Laminado y engaste",
       dimensions: "5.0 x 1.2 cm",
@@ -497,7 +497,7 @@ async function main() {
       story:
         "Las raíces del boldo que crece junto a mi taller me inspiraron esta pieza. El cobre, como las raíces, cambia y se adapta al entorno.",
       price: 35000,
-      category: "PULSERA" as const,
+      categorySlug: "pulsera",
       materials: ["Cobre", "Bronce"],
       technique: "Forjado y oxidación natural",
       dimensions: "Diámetro interno: 6.0 cm",
@@ -514,7 +514,7 @@ async function main() {
       description:
         "Aros colgantes en cobre con incrustación de semilla de palma chilena encapsulada en resina transparente. Gancho de plata 950.",
       price: 28000,
-      category: "AROS" as const,
+      categorySlug: "aros",
       materials: ["Cobre", "Semillas nativas", "Plata 950"],
       technique: "Engaste en resina y soldadura",
       dimensions: "3.5 x 1.5 cm",
@@ -533,7 +533,7 @@ async function main() {
       story:
         "Este collar une fuego y tierra: el cobre fundido representa el volcán, y la lenga fosilizada la paciencia del bosque. Cada medallón es irrepetible.",
       price: 58000,
-      category: "COLLAR" as const,
+      categorySlug: "collar",
       materials: ["Cobre", "Bronce", "Madera de lenga"],
       technique: "Fundición mixta y engaste orgánico",
       dimensions: "Medallón: 4.0 x 3.0 cm",
@@ -547,10 +547,14 @@ async function main() {
 
   const createdProducts: Record<string, string> = {};
   for (const product of products) {
+    const { categorySlug, ...productData } = product;
     const created = await prisma.product.upsert({
       where: { slug: product.slug },
       update: {},
-      create: product,
+      create: {
+        ...productData,
+        categories: { connect: [{ slug: categorySlug }] },
+      },
     });
     createdProducts[product.slug] = created.id;
   }
@@ -768,12 +772,12 @@ async function main() {
   const aniversario = await prisma.occasion.findUnique({ where: { slug: "aniversario" } });
 
   if (regalo && usoDiario && compromiso && aniversario) {
-    const allProducts = await prisma.product.findMany({ take: 15 });
+    const allProducts = await prisma.product.findMany({ take: 15, include: { categories: { select: { slug: true } } } });
     for (let i = 0; i < allProducts.length; i++) {
       const occasionIds: string[] = [];
       if (i % 2 === 0) occasionIds.push(regalo.id);
       if (i % 3 === 0) occasionIds.push(usoDiario.id);
-      if (allProducts[i].category === "ANILLO" && i % 2 === 0) occasionIds.push(compromiso.id);
+      if (allProducts[i].categories.some((c) => c.slug === "anillo") && i % 2 === 0) occasionIds.push(compromiso.id);
       if (i % 4 === 0) occasionIds.push(aniversario.id);
       if (occasionIds.length === 0) occasionIds.push(regalo.id);
 
