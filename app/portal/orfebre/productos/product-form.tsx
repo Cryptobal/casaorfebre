@@ -155,6 +155,8 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const needsLargoCadena = category === "COLLAR" || category === "COLGANTE";
   const needsDiametro = category === "AROS" || category === "PULSERA";
 
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
   const handleSubmitForReview = async () => {
     if (!product || !formRef.current) return;
     setSubmitting(true);
@@ -164,7 +166,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
     if (result.error) {
       setErrorModal(result.error);
     } else if (result.success) {
-      router.push("/portal/orfebre/productos");
+      setShowReviewModal(true);
     }
   };
 
@@ -177,6 +179,39 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           message={errorModal}
           onClose={() => setErrorModal(null)}
         />
+      )}
+
+      {/* Review submitted modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-accent/10">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-serif font-medium text-text">Pieza enviada a revisión</h3>
+                <p className="mt-1.5 text-sm text-text-secondary">
+                  Nuestro equipo revisará tu pieza para asegurar que cumple con los estándares de Casa Orfebre. Te notificaremos por correo electrónico cuando sea aprobada.
+                </p>
+                <p className="mt-1 text-xs text-text-tertiary">
+                  Este proceso suele tomar entre 24 y 48 horas.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={() => router.push("/portal/orfebre/productos")}
+                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Status badge */}
