@@ -195,8 +195,7 @@ model Product {
   compareAtPrice Int?
   category       ProductCategory
   materials      String[]
-  specialtyId    String?
-  specialty      Specialty?    @relation(fields: [specialtyId], references: [id])
+  specialties    Specialty[]
   occasions      Occasion[]
   technique      String?
   dimensions     String?

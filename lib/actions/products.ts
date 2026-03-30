@@ -67,7 +67,10 @@ function parseFormData(formData: FormData) {
   const dimensions = (formData.get("dimensions") as string) || null;
   const weightRaw = formData.get("weight") as string;
   const weight = weightRaw ? parseFloat(weightRaw) : null;
-  const specialtyId = (formData.get("specialtyId") as string) || null;
+  const specialtyIdsRaw = formData.get("specialtyIds") as string;
+  const specialtyIds = specialtyIdsRaw
+    ? specialtyIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
+    : [];
   const occasionIdsRaw = formData.get("occasionIds") as string;
   const occasionIds = occasionIdsRaw
     ? occasionIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
@@ -111,7 +114,7 @@ function parseFormData(formData: FormData) {
     isReturnable,
     dimensions,
     weight,
-    specialtyId,
+    specialtyIds,
     occasionIds,
     coleccion,
     tallas,
@@ -182,7 +185,9 @@ export async function createProduct(
         story: data.story,
         category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
         materials: data.materials,
-        specialtyId: data.specialtyId,
+        specialties: data.specialtyIds.length > 0
+          ? { connect: data.specialtyIds.map((id) => ({ id })) }
+          : undefined,
         occasions: data.occasionIds.length > 0
           ? { connect: data.occasionIds.map((id) => ({ id })) }
           : undefined,
@@ -275,7 +280,7 @@ export async function updateProduct(
         story: data.story,
         category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
         materials: data.materials,
-        specialtyId: data.specialtyId,
+        specialties: { set: data.specialtyIds.map((id) => ({ id })) },
         occasions: { set: data.occasionIds.map((id) => ({ id })) },
         technique: data.technique,
         price: data.price,
@@ -435,7 +440,7 @@ export async function saveAndSubmitForReview(
         story: data.story,
         category: data.category as "AROS" | "COLLAR" | "ANILLO" | "PULSERA" | "BROCHE" | "COLGANTE" | "OTRO",
         materials: data.materials,
-        specialtyId: data.specialtyId,
+        specialties: { set: data.specialtyIds.map((id) => ({ id })) },
         occasions: { set: data.occasionIds.map((id) => ({ id })) },
         technique: data.technique,
         price: data.price,

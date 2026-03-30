@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
           { materials: { hasSome: [q.toUpperCase()] } },
           { artisan: { displayName: { contains: q, mode: "insensitive" } } },
           { occasions: { some: { name: { contains: q, mode: "insensitive" } } } },
-          { specialty: { name: { contains: q, mode: "insensitive" } } },
+          { specialties: { some: { name: { contains: q, mode: "insensitive" } } } },
         ],
       },
       select: {

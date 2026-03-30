@@ -56,7 +56,7 @@ interface ProductFormProps {
     adminNotes: string | null;
     images: { id: string; url: string; altText: string | null; position: number }[];
     video?: { cloudflareStreamUid: string; status: string } | null;
-    specialtyId: string | null;
+    specialtyIds: string[];
     occasionIds: string[];
     variants: { size: string; stock: number }[];
     coleccion: string | null;
@@ -95,7 +95,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const [variants, setVariants] = useState<{ size: string; stock: number }[]>(
     product?.variants ?? []
   );
-  const [specialtyId, setSpecialtyId] = useState(product?.specialtyId ?? "");
+  const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState<string[]>(product?.specialtyIds ?? []);
   const [selectedOccasionIds, setSelectedOccasionIds] = useState<string[]>(product?.occasionIds ?? []);
   const [tallas, setTallas] = useState<string[]>(product?.tallas ?? []);
   const [tallaInput, setTallaInput] = useState("");
@@ -315,20 +315,45 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           />
         </div>
 
-        {/* Specialty */}
+        {/* Specialties */}
         <div className="space-y-1.5">
-          <Label htmlFor="specialtyId">Especialidad</Label>
-          <input type="hidden" name="specialtyId" value={specialtyId} />
-          <SelectDropdown
-            value={specialtyId}
-            onChange={setSpecialtyId}
-            placeholder="Seleccionar especialidad"
-            options={[
-              { value: "", label: "Sin especialidad" },
-              ...specialties.map((s) => ({ value: s.id, label: s.name })),
-            ]}
-            className="w-full"
-          />
+          <Label>Especialidades / Técnicas</Label>
+          <input type="hidden" name="specialtyIds" value={selectedSpecialtyIds.join(",")} />
+          <p className="text-xs text-text-secondary">
+            Selecciona las técnicas utilizadas en esta pieza
+          </p>
+          {specialties.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {specialties.map((s) => {
+                const isSelected = selectedSpecialtyIds.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedSpecialtyIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== s.id)
+                          : [...prev, s.id]
+                      )
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {s.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Occasions */}

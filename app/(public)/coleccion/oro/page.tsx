@@ -53,7 +53,7 @@ export default async function OroPage() {
       include: {
         artisan: { select: { displayName: true, slug: true } },
         images: { orderBy: { position: "asc" }, take: 1 },
-        specialty: { select: { id: true, name: true, slug: true } },
+        specialties: { select: { id: true, name: true, slug: true } },
         occasions: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { publishedAt: "desc" },

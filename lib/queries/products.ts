@@ -37,7 +37,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
     where.occasions = { some: { slug: filters.occasionSlug } };
   }
   if (filters.specialtySlug) {
-    where.specialty = { slug: filters.specialtySlug };
+    where.specialties = { some: { slug: filters.specialtySlug } };
   }
 
   const isRelevanceSort = !filters.sort || filters.sort === "newest";
@@ -70,7 +70,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
         },
       },
       images: approvedImagesFirst,
-      specialty: { select: { id: true, name: true, slug: true } },
+      specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
     },
   });
@@ -122,7 +122,7 @@ export async function getProductBySlug(slug: string) {
       },
       images: { where: { status: "APPROVED" }, orderBy: { position: "asc" } },
       video: true,
-      specialty: { select: { id: true, name: true, slug: true } },
+      specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
     },
   });

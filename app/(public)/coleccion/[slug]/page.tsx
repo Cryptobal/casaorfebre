@@ -277,11 +277,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </Link>
             </p>
 
-            {/* Specialty badge */}
-            {product.specialty && (
-              <span className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
-                {product.specialty.name}
-              </span>
+            {/* Specialty badges */}
+            {product.specialties.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {product.specialties.map((s: { id: string; name: string }) => (
+                  <span key={s.id} className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
+                    {s.name}
+                  </span>
+                ))}
+              </div>
             )}
 
             {/* Occasion badges */}

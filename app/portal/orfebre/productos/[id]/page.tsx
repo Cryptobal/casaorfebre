@@ -34,6 +34,7 @@ export default async function EditProductPage({
         images: { orderBy: { position: "asc" } },
         video: true,
         occasions: { select: { id: true } },
+        specialties: { select: { id: true } },
         variants: { orderBy: { size: "asc" } },
       },
     }),
@@ -93,7 +94,7 @@ export default async function EditProductPage({
                 status: product.video.status,
               }
             : null,
-          specialtyId: product.specialtyId,
+          specialtyIds: product.specialties.map((s) => s.id),
           occasionIds: product.occasions.map((o) => o.id),
           variants: product.variants.map((v) => ({ size: v.size, stock: v.stock })),
           coleccion: product.coleccion,
