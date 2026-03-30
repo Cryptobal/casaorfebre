@@ -134,7 +134,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                     <DetailRow label="Categoría" value={CATEGORY_LABELS[product.category] ?? product.category} />
                     <DetailRow
                       label="Tipo"
-                      value={product.isUnique ? "Pieza única" : product.isCustomMade ? "Pieza personalizada" : "Producción"}
+                      value={product.productionType === "UNIQUE" ? "Pieza única" : product.productionType === "MADE_TO_ORDER" ? "Hecha por encargo" : "Producción limitada"}
                     />
                     <DetailRow label="Técnica" value={product.technique} />
                     <DetailRow label="Dimensiones" value={product.dimensions} />
@@ -147,10 +147,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                     <DetailRow label="Personalizable" value={product.personalizable ? "Sí" : null} />
                     <DetailRow label="Detalle personalización" value={product.detallePersonalizacion} />
                     <DetailRow label="Tiempo elaboración" value={product.tiempoElaboracionDias ? `${product.tiempoElaboracionDias} días` : null} />
-                    <DetailRow label="Stock" value={product.isUnique ? "Pieza única" : `${product.stock} unidades`} />
-                    {!product.isUnique && product.editionSize && (
-                      <DetailRow label="Edición limitada" value={`${product.editionSize} piezas`} />
-                    )}
+                    <DetailRow label="Stock" value={product.productionType === "UNIQUE" ? "Pieza única" : product.productionType === "MADE_TO_ORDER" ? "Por encargo" : `${product.stock} unidades`} />
                   </div>
 
                   {product.materials.length > 0 && (

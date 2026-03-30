@@ -15,13 +15,14 @@ import Image from "next/image";
 export interface SerializedCartItem {
   id: string;
   quantity: number;
+  size?: string | null;
   product: {
     id: string;
     name: string;
     slug: string;
     price: number;
     stock: number;
-    isUnique: boolean;
+    productionType: string;
     artisan: { displayName: string; slug: string };
     images: { id: string; url: string; altText: string | null }[];
   };
@@ -96,6 +97,9 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
             <p className="text-xs text-text-tertiary">
               {product.artisan.displayName}
             </p>
+            {item.size && (
+              <p className="text-xs text-text-tertiary">Talla: {item.size}</p>
+            )}
           </div>
           <button
             onClick={handleRemove}
@@ -119,8 +123,10 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
         </div>
 
         <div className="flex items-center justify-between">
-          {product.isUnique ? (
-            <span className="text-xs text-text-tertiary">Pieza única</span>
+          {product.productionType === "UNIQUE" || product.productionType === "MADE_TO_ORDER" ? (
+            <span className="text-xs text-text-tertiary">
+              {product.productionType === "UNIQUE" ? "Pieza única" : "Hecha por encargo"}
+            </span>
           ) : (
             <div className="flex items-center gap-2">
               <button

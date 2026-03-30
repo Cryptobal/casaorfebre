@@ -507,7 +507,7 @@ export default async function BuyerOrderDetailPage({
                             )}
 
                             {daysSinceDelivery <= 14 &&
-                              !item.product.isCustomMade &&
+                              item.product.productionType !== "MADE_TO_ORDER" &&
                               !hasReturn && (
                                 <Link
                                   href={`/portal/comprador/pedidos/${order.id}/devolucion?item=${item.id}`}
@@ -516,9 +516,9 @@ export default async function BuyerOrderDetailPage({
                                   Solicitar Devolución
                                 </Link>
                               )}
-                            {item.product.isCustomMade && (
+                            {item.product.productionType === "MADE_TO_ORDER" && (
                               <span className="text-[11px] text-text-tertiary">
-                                Pieza personalizada · Sin devolución
+                                Hecha por encargo · Sin devolución
                               </span>
                             )}
 

@@ -163,10 +163,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
       hasMerchantReturnPolicy: {
         "@type": "MerchantReturnPolicy",
         applicableCountry: "CL",
-        returnPolicyCategory: product.isCustomMade
+        returnPolicyCategory: product.productionType === "MADE_TO_ORDER"
           ? "https://schema.org/MerchantReturnNotPermitted"
           : "https://schema.org/MerchantReturnFiniteReturnWindow",
-        ...(!product.isCustomMade && {
+        ...(product.productionType !== "MADE_TO_ORDER" && {
           merchantReturnDays: 14,
           returnMethod: "https://schema.org/ReturnByMail",
           returnFees: "https://schema.org/FreeReturn",
@@ -237,22 +237,29 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* Right column — info */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Type badge */}
-            {product.isCustomMade && (
-              <span className="inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium text-accent">
-                Pieza Personalizada &middot; Sin devoluci&oacute;n
-              </span>
-            )}
-            {!product.isCustomMade && product.isUnique && (
-              <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
-                Pieza &Uacute;nica
-              </span>
-            )}
-            {!product.isCustomMade && !product.isUnique && product.editionSize && (
-              <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
-                Edici&oacute;n Limitada
-              </span>
-            )}
+            {/* Type badges */}
+            <div className="flex flex-wrap gap-2">
+              {product.productionType === "UNIQUE" && (
+                <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
+                  Pieza &Uacute;nica
+                </span>
+              )}
+              {product.productionType === "MADE_TO_ORDER" && (
+                <span className="inline-block rounded-full border border-accent px-3 py-1 text-xs font-medium text-accent">
+                  Hecha por Encargo{product.elaborationDays ? ` · ${product.elaborationDays} días` : ""}
+                </span>
+              )}
+              {product.productionType === "LIMITED" && product.stock > 0 && product.stock < 10 && (
+                <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
+                  Quedan {product.stock} unidades
+                </span>
+              )}
+              {product.isCustomizable && (
+                <span className="inline-block rounded-full border border-accent/40 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                  Personalizable
+                </span>
+              )}
+            </div>
 
             {/* Product name */}
             <h1 className="font-serif text-2xl font-light sm:text-3xl">
@@ -340,9 +347,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </p>
 
             {/* Stock */}
-            {!product.isUnique && product.stock > 0 && (
+            {product.productionType === "LIMITED" && product.stock > 0 && (
               <p className="text-sm text-text-secondary">
                 Stock: {product.stock} disponibles
+              </p>
+            )}
+            {product.productionType === "MADE_TO_ORDER" && (
+              <p className="text-sm text-amber-700">
+                Sin devolución · Se fabrica tras la compra
               </p>
             )}
 
@@ -350,7 +362,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <AddToCart
               productId={product.id}
               price={product.price}
-              isUnique={product.isUnique}
+              productionType={product.productionType}
               stock={product.stock}
               ga4Item={{
                 item_id: product.id,
@@ -363,7 +375,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Trust icons */}
             <div className="flex flex-wrap items-center justify-between gap-4">
-              {product.isCustomMade ? (
+              {product.productionType === "MADE_TO_ORDER" ? (
                 <TrustItem icon={<NoReturnIcon />} text="Sin devoluci&oacute;n" />
               ) : (
                 <Link href="/garantia" className="hover:opacity-80 transition-opacity">
@@ -556,7 +568,7 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
   if (product.personalizable)
     rows.push({ label: "Personalizable", value: (product.detallePersonalizacion as string) || "Sí" });
   if (product.cantidadEdicion)
-    rows.push({ label: "Edición", value: `${product.editionSize ?? "?"} de ${product.cantidadEdicion}` });
+    rows.push({ label: "Edición", value: `${product.stock} de ${product.cantidadEdicion}` });
   rows.push({ label: "Categoría", value: CATEGORY_LABELS[product.category] || product.category });
 
   if (rows.length === 0) return null;

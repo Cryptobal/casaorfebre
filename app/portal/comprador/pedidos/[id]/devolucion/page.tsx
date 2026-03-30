@@ -24,7 +24,7 @@ export default async function DevolucionPage({
       order: { id: orderId, userId: session.user.id },
     },
     include: {
-      product: { select: { name: true, isCustomMade: true } },
+      product: { select: { name: true, productionType: true } },
       order: { select: { orderNumber: true } },
     },
   });
@@ -32,7 +32,7 @@ export default async function DevolucionPage({
   if (!orderItem) notFound();
 
   // Custom-made products cannot be returned
-  if (orderItem.product.isCustomMade) {
+  if (orderItem.product.productionType === "MADE_TO_ORDER") {
     redirect(`/portal/comprador/pedidos/${orderId}`);
   }
 

@@ -20,7 +20,7 @@ export default async function CheckoutPage() {
   if (cartItems.length === 0) redirect("/coleccion");
 
   const hasCustomMade = cartItems.some(
-    (item: any) => item.product.isCustomMade
+    (item: any) => item.product.productionType === "MADE_TO_ORDER"
   );
 
   const serializedItems = cartItems.map((item: any) => ({

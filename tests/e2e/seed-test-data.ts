@@ -111,7 +111,7 @@ async function seed() {
       status: 'APPROVED',
       category: 'ANILLO',
       materials: ['Plata 950'],
-      isUnique: false,
+      productionType: "LIMITED" as const,
       artisanId: artisan.id,
       publishedAt: new Date(),
     },

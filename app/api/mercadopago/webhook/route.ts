@@ -178,6 +178,14 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
     // Destock products (batch to avoid N+1)
     await Promise.all(
       order.items.map(async (item: any) => {
+        // Decrement variant stock if size is specified
+        if (item.size) {
+          await prisma.productVariant.updateMany({
+            where: { productId: item.productId, size: item.size },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
+        // Always decrement global product stock
         const product = await prisma.product.update({
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },

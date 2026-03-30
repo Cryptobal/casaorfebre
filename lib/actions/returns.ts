@@ -20,10 +20,10 @@ export async function createReturnRequest(formData: FormData) {
   // Verify ownership and eligibility
   const item = await prisma.orderItem.findFirst({
     where: { id: orderItemId, order: { userId: session.user.id } },
-    include: { product: { select: { isCustomMade: true } }, order: true },
+    include: { product: { select: { productionType: true } }, order: true },
   });
   if (!item) return { error: "Pedido no encontrado" };
-  if (item.product.isCustomMade) return { error: "Las piezas personalizadas no admiten devolución" };
+  if (item.product.productionType === "MADE_TO_ORDER") return { error: "Las piezas hechas por encargo no admiten devolución" };
   if (item.fulfillmentStatus !== "DELIVERED") return { error: "El producto debe estar entregado" };
   if (item.deliveredAt) {
     const daysSince = (Date.now() - item.deliveredAt.getTime()) / (1000 * 60 * 60 * 24);

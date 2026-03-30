@@ -29,6 +29,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTRO: "Otro",
 };
 
+const RING_SIZES = [
+  "4", "4.5", "5", "5.5", "6", "6.5", "7", "7.5",
+  "8", "8.5", "9", "9.5", "10", "10.5", "11", "11.5",
+  "12", "12.5", "13",
+];
+
 interface ProductFormProps {
   product?: {
     id: string;
@@ -40,10 +46,10 @@ interface ProductFormProps {
     technique: string | null;
     price: number;
     compareAtPrice: number | null;
-    isUnique: boolean;
-    editionSize: number | null;
+    productionType: string;
+    isCustomizable: boolean;
+    elaborationDays: number | null;
     stock: number;
-    isCustomMade: boolean;
     dimensions: string | null;
     weight: number | null;
     status: string;
@@ -52,6 +58,7 @@ interface ProductFormProps {
     video?: { cloudflareStreamUid: string; status: string } | null;
     specialtyId: string | null;
     occasionIds: string[];
+    variants: { size: string; stock: number }[];
     coleccion: string | null;
     tallas: string[];
     guiaTallas: string | null;
@@ -80,8 +87,14 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
   const [category, setCategory] = useState(product?.category ?? "ANILLO");
   const [materials, setMaterials] = useState<string[]>(product?.materials ?? []);
   const [materialInput, setMaterialInput] = useState("");
-  const [isUnique, setIsUnique] = useState(product?.isUnique ?? true);
-  const [isCustomMade, setIsCustomMade] = useState(product?.isCustomMade ?? false);
+  const [productionType, setProductionType] = useState(product?.productionType ?? "UNIQUE");
+  const [isCustomizable, setIsCustomizable] = useState(product?.isCustomizable ?? false);
+  const [elaborationDays, setElaborationDays] = useState<string>(
+    product?.elaborationDays?.toString() ?? ""
+  );
+  const [variants, setVariants] = useState<{ size: string; stock: number }[]>(
+    product?.variants ?? []
+  );
   const [specialtyId, setSpecialtyId] = useState(product?.specialtyId ?? "");
   const [selectedOccasionIds, setSelectedOccasionIds] = useState<string[]>(product?.occasionIds ?? []);
   const [tallas, setTallas] = useState<string[]>(product?.tallas ?? []);
@@ -475,64 +488,202 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           </div>
         </div>
 
-        {/* Unique toggle */}
+        {/* Production type */}
         <div className="space-y-3">
-          <label className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              name="isUnique"
-              checked={isUnique}
-              onChange={(e) => setIsUnique(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-medium text-text">Pieza unica</span>
-          </label>
+          <Label>Tipo de producción</Label>
+          <input type="hidden" name="productionType" value={productionType} />
+          <input type="hidden" name="variants" value={JSON.stringify(variants)} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {([
+              {
+                value: "UNIQUE",
+                title: "Pieza única",
+                desc: "Solo existe una unidad. Al venderse, desaparece.",
+                icon: (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 3h12l4 6-10 13L2 9z" />
+                    <path d="M11 3l1 6h6" />
+                    <path d="M7 9l5-6" />
+                    <path d="M2 9h20" />
+                  </svg>
+                ),
+              },
+              {
+                value: "MADE_TO_ORDER",
+                title: "Hecha por encargo",
+                desc: "Se fabrica después de la compra. No admite devolución.",
+                icon: (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                  </svg>
+                ),
+              },
+              {
+                value: "LIMITED",
+                title: "Producción limitada",
+                desc: "Tienes varias unidades disponibles.",
+                icon: (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                ),
+              },
+            ] as const).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setProductionType(opt.value)}
+                className={`flex flex-col items-start gap-2 rounded-lg border-2 p-4 text-left transition-colors ${
+                  productionType === opt.value
+                    ? "border-accent bg-accent/5"
+                    : "border-border hover:border-accent/40"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                    productionType === opt.value ? "border-accent" : "border-border"
+                  }`}>
+                    {productionType === opt.value && (
+                      <div className="h-2 w-2 rounded-full bg-accent" />
+                    )}
+                  </div>
+                  <span className={productionType === opt.value ? "text-accent" : "text-text-tertiary"}>
+                    {opt.icon}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-text">{opt.title}</p>
+                  <p className="mt-0.5 text-xs text-text-secondary">{opt.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
 
-          {!isUnique && (
-            <div className="grid grid-cols-1 gap-4 pl-7 sm:grid-cols-2">
+          {/* MADE_TO_ORDER: elaboration days */}
+          {productionType === "MADE_TO_ORDER" && (
+            <div className="space-y-3 pl-1">
               <div className="space-y-1.5">
-                <Label htmlFor="editionSize">Tamano de edicion</Label>
+                <Label htmlFor="elaborationDays">Tiempo estimado de elaboración (días) <span className="text-red-500">*</span></Label>
                 <Input
-                  id="editionSize"
-                  name="editionSize"
+                  id="elaborationDays"
+                  name="elaborationDays"
                   type="number"
                   min={1}
-                  defaultValue={product?.editionSize ?? ""}
-                  placeholder="Ej: 10"
+                  required
+                  value={elaborationDays}
+                  onChange={(e) => setElaborationDays(e.target.value)}
+                  placeholder="Ej: 7"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="stock">Stock disponible</Label>
-                <Input
-                  id="stock"
-                  name="stock"
-                  type="number"
-                  min={0}
-                  defaultValue={product?.stock ?? 1}
-                />
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Las piezas hechas por encargo no admiten devolución. Esto se indicará al comprador antes de la compra.
               </div>
+            </div>
+          )}
+
+          {/* LIMITED: stock by size or global */}
+          {productionType === "LIMITED" && (
+            <div className="space-y-3 pl-1">
+              {category === "ANILLO" ? (
+                <div className="space-y-3">
+                  <Label>Stock por talla</Label>
+                  <p className="text-xs text-text-secondary">Haz clic en las tallas disponibles e indica la cantidad de cada una.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {RING_SIZES.map((size) => {
+                      const isSelected = variants.some((v) => v.size === size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setVariants((prev) => prev.filter((v) => v.size !== size));
+                            } else {
+                              setVariants((prev) => [...prev, { size, stock: 1 }]);
+                            }
+                          }}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                            isSelected
+                              ? "bg-accent text-white"
+                              : "border border-border text-text-secondary hover:border-accent/50"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {variants.length > 0 && (
+                    <div className="space-y-2 rounded-md border border-border p-3">
+                      {variants
+                        .sort((a, b) => parseFloat(a.size) - parseFloat(b.size))
+                        .map((v) => (
+                        <div key={v.size} className="flex items-center gap-3">
+                          <span className="w-12 text-sm font-medium text-text">Talla {v.size}</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={v.stock}
+                            onChange={(e) => {
+                              const newStock = parseInt(e.target.value, 10) || 0;
+                              setVariants((prev) =>
+                                prev.map((x) => x.size === v.size ? { ...x, stock: newStock } : x)
+                              );
+                            }}
+                            className="w-20"
+                          />
+                          <span className="text-xs text-text-tertiary">unidades</span>
+                          <button
+                            type="button"
+                            onClick={() => setVariants((prev) => prev.filter((x) => x.size !== v.size))}
+                            className="ml-auto text-text-tertiary hover:text-text"
+                            aria-label={`Eliminar talla ${v.size}`}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                          </button>
+                        </div>
+                      ))}
+                      <p className="pt-1 text-xs font-medium text-accent">
+                        Stock total: {variants.reduce((sum, v) => sum + v.stock, 0)} unidades
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="stock">Stock disponible</Label>
+                  <Input
+                    id="stock"
+                    name="stock"
+                    type="number"
+                    min={1}
+                    defaultValue={product?.stock ?? 1}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Custom made toggle */}
+        {/* Customizable toggle */}
         <div className="space-y-3">
-          <label className="flex items-center gap-3">
+          <label className="flex items-start gap-3">
             <input
               type="checkbox"
-              name="isCustomMade"
-              checked={isCustomMade}
-              onChange={(e) => setIsCustomMade(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+              name="isCustomizable"
+              checked={isCustomizable}
+              onChange={(e) => setIsCustomizable(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
             />
-            <span className="text-sm font-medium text-text">Pieza personalizada</span>
-          </label>
-
-          {isCustomMade && (
-            <div className="ml-7 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Las piezas personalizadas no admiten devolucion. Esto se indicara al comprador antes de la compra.
+            <div>
+              <span className="text-sm font-medium text-text">Personalizable</span>
+              <p className="text-xs text-text-secondary">
+                El comprador puede solicitar modificaciones como grabado personalizado, cambio de tamaño u otros ajustes.
+              </p>
             </div>
-          )}
+          </label>
         </div>
 
         {/* Dimensions and Weight */}
@@ -654,10 +805,10 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
           <Input id="tiempoElaboracionDias" name="tiempoElaboracionDias" type="number" min={1} defaultValue={product?.tiempoElaboracionDias ?? ""} placeholder="Ej: 7" />
         </div>
 
-        {!isUnique && (
+        {productionType === "LIMITED" && (
           <div className="space-y-1.5">
             <Label htmlFor="cantidadEdicion">Cantidad de edición</Label>
-            <p className="text-xs text-text-secondary">Ej: "5 de 20" — el total de la edición</p>
+            <p className="text-xs text-text-secondary">Ej: &quot;5 de 20&quot; — el total de la edición</p>
             <Input id="cantidadEdicion" name="cantidadEdicion" type="number" min={1} defaultValue={product?.cantidadEdicion ?? ""} placeholder="Ej: 20" />
           </div>
         )}

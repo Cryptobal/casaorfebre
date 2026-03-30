@@ -13,12 +13,12 @@ import { trackAddToCart, type GA4Item } from "@/lib/analytics-events";
 interface AddToCartProps {
   productId: string;
   price: number;
-  isUnique: boolean;
+  productionType: string;
   stock: number;
   ga4Item?: Omit<GA4Item, "quantity">;
 }
 
-export function AddToCart({ productId, price, isUnique, stock, ga4Item }: AddToCartProps) {
+export function AddToCart({ productId, price, productionType, stock, ga4Item }: AddToCartProps) {
   const router = useRouter();
   const { status } = useSession();
   const [isPending, startTransition] = useTransition();
@@ -54,7 +54,7 @@ export function AddToCart({ productId, price, isUnique, stock, ga4Item }: AddToC
         return;
       }
 
-      if (isUnique && readGuestCartLines().some((l) => l.productId === productId)) {
+      if (productionType === "UNIQUE" && readGuestCartLines().some((l) => l.productId === productId)) {
         setErrorMsg("Esta pieza única ya está en tu carrito");
         return;
       }
@@ -72,8 +72,8 @@ export function AddToCart({ productId, price, isUnique, stock, ga4Item }: AddToC
 
   return (
     <div className="space-y-3">
-      {/* Quantity selector — only for non-unique products with stock > 1 */}
-      {!isUnique && stock > 1 && (
+      {/* Quantity selector — only for LIMITED products with stock > 1 */}
+      {productionType === "LIMITED" && stock > 1 && (
         <div className="flex items-center gap-3">
           <span className="text-sm text-text-secondary">Cantidad:</span>
           <div className="flex items-center gap-1">

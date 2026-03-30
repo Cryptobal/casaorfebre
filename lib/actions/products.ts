@@ -6,6 +6,7 @@ import { deleteFromR2 } from "@/lib/r2";
 import { slugify } from "@/lib/utils";
 import { getArtisanPlanLimits } from "@/lib/plan-limits";
 import { revalidatePath } from "next/cache";
+import type { ProductionType } from "@prisma/client";
 
 async function getArtisan() {
   const session = await auth();
@@ -32,23 +33,47 @@ function parseFormData(formData: FormData) {
   const price = parseInt(formData.get("price") as string, 10);
   const compareAtPriceRaw = formData.get("compareAtPrice") as string;
   const compareAtPrice = compareAtPriceRaw ? parseInt(compareAtPriceRaw, 10) : null;
-  const isUnique = formData.get("isUnique") === "on";
-  const editionSizeRaw = formData.get("editionSize") as string;
-  const editionSize = editionSizeRaw ? parseInt(editionSizeRaw, 10) : null;
-  const stockRaw = formData.get("stock") as string;
-  const stock = stockRaw ? parseInt(stockRaw, 10) : 1;
-  const isCustomMade = formData.get("isCustomMade") === "on";
+
+  // Production type system
+  const productionType = (formData.get("productionType") as string) || "UNIQUE";
+  const isCustomizable = formData.get("isCustomizable") === "on";
+  const elaborationDaysRaw = formData.get("elaborationDays") as string;
+  const elaborationDays = elaborationDaysRaw ? parseInt(elaborationDaysRaw, 10) : null;
+
+  // Variants (JSON from hidden input)
+  const variantsRaw = formData.get("variants") as string;
+  let variants: { size: string; stock: number }[] = [];
+  if (variantsRaw) {
+    try { variants = JSON.parse(variantsRaw); } catch { variants = []; }
+  }
+
+  // Calculate stock and isReturnable based on productionType
+  let stock = 1;
+  let isReturnable = true;
+  if (productionType === "UNIQUE") {
+    stock = 1;
+  } else if (productionType === "MADE_TO_ORDER") {
+    stock = 0;
+    isReturnable = false;
+  } else if (productionType === "LIMITED") {
+    if (variants.length > 0) {
+      stock = variants.reduce((sum, v) => sum + v.stock, 0);
+    } else {
+      const stockRaw = formData.get("stock") as string;
+      stock = stockRaw ? parseInt(stockRaw, 10) : 1;
+    }
+  }
+
   const dimensions = (formData.get("dimensions") as string) || null;
   const weightRaw = formData.get("weight") as string;
   const weight = weightRaw ? parseFloat(weightRaw) : null;
-  const isReturnable = !isCustomMade;
   const specialtyId = (formData.get("specialtyId") as string) || null;
   const occasionIdsRaw = formData.get("occasionIds") as string;
   const occasionIds = occasionIdsRaw
     ? occasionIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
     : [];
 
-  // New detail fields
+  // Detail fields
   const coleccion = (formData.get("coleccion") as string) || null;
   const tallasRaw = formData.get("tallas") as string;
   const tallas = tallasRaw
@@ -78,10 +103,11 @@ function parseFormData(formData: FormData) {
     technique,
     price,
     compareAtPrice,
-    isUnique,
-    editionSize,
+    productionType,
+    isCustomizable,
+    elaborationDays,
+    variants,
     stock,
-    isCustomMade,
     isReturnable,
     dimensions,
     weight,
@@ -163,10 +189,10 @@ export async function createProduct(
         technique: data.technique,
         price: data.price,
         compareAtPrice: data.compareAtPrice,
-        isUnique: data.isUnique,
-        editionSize: data.editionSize,
-        stock: data.isUnique ? 1 : data.stock,
-        isCustomMade: data.isCustomMade,
+        productionType: data.productionType as ProductionType,
+        isCustomizable: data.isCustomizable,
+        elaborationDays: data.productionType === "MADE_TO_ORDER" ? data.elaborationDays : null,
+        stock: data.stock,
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
@@ -185,6 +211,17 @@ export async function createProduct(
         status: "DRAFT",
       },
     });
+
+    // Create variants if provided
+    if (data.variants.length > 0) {
+      await prisma.productVariant.createMany({
+        data: data.variants.map((v) => ({
+          productId: product.id,
+          size: v.size,
+          stock: v.stock,
+        })),
+      });
+    }
 
     revalidatePath("/portal/orfebre/productos");
     return { success: true, productId: product.id };
@@ -243,10 +280,10 @@ export async function updateProduct(
         technique: data.technique,
         price: data.price,
         compareAtPrice: data.compareAtPrice,
-        isUnique: data.isUnique,
-        editionSize: data.editionSize,
-        stock: data.isUnique ? 1 : data.stock,
-        isCustomMade: data.isCustomMade,
+        productionType: data.productionType as ProductionType,
+        isCustomizable: data.isCustomizable,
+        elaborationDays: data.productionType === "MADE_TO_ORDER" ? data.elaborationDays : null,
+        stock: data.stock,
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
@@ -265,6 +302,18 @@ export async function updateProduct(
         status: newStatus,
       },
     });
+
+    // Recreate variants
+    await prisma.productVariant.deleteMany({ where: { productId } });
+    if (data.variants.length > 0) {
+      await prisma.productVariant.createMany({
+        data: data.variants.map((v) => ({
+          productId,
+          size: v.size,
+          stock: v.stock,
+        })),
+      });
+    }
 
     revalidatePath("/portal/orfebre/productos");
     return { success: true };
@@ -298,9 +347,10 @@ export async function submitForReview(
 
   // Validate mandatory measurements by category
   const cat = product.category;
-  if (cat === "ANILLO") {
-    if (product.tallas.length === 0) {
-      return { error: "Los anillos requieren al menos una talla disponible para publicarse" };
+  if (cat === "ANILLO" && product.productionType === "LIMITED") {
+    const variantCount = await prisma.productVariant.count({ where: { productId } });
+    if (product.tallas.length === 0 && variantCount === 0) {
+      return { error: "Los anillos con producción limitada requieren tallas o stock por talla para publicarse" };
     }
   }
   if (cat === "COLLAR" || cat === "COLGANTE") {
@@ -363,8 +413,8 @@ export async function saveAndSubmitForReview(
   }
 
   const cat = data.category;
-  if (cat === "ANILLO" && data.tallas.length === 0) {
-    return { error: "Los anillos requieren al menos una talla disponible para publicarse" };
+  if (cat === "ANILLO" && data.productionType === "LIMITED" && data.tallas.length === 0 && data.variants.length === 0) {
+    return { error: "Los anillos con producción limitada requieren tallas o stock por talla para publicarse" };
   }
   if ((cat === "COLLAR" || cat === "COLGANTE") && !data.largoCadenaCm) {
     return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
@@ -390,11 +440,11 @@ export async function saveAndSubmitForReview(
         technique: data.technique,
         price: data.price,
         compareAtPrice: data.compareAtPrice,
-        isUnique: data.isUnique,
-        editionSize: data.editionSize,
-        stock: data.isUnique ? 1 : data.stock,
-        isCustomMade: data.isCustomMade,
-        isReturnable: !data.isCustomMade,
+        productionType: data.productionType as ProductionType,
+        isCustomizable: data.isCustomizable,
+        elaborationDays: data.productionType === "MADE_TO_ORDER" ? data.elaborationDays : null,
+        stock: data.stock,
+        isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
         coleccion: data.coleccion,
@@ -412,6 +462,18 @@ export async function saveAndSubmitForReview(
         status: "PENDING_REVIEW",
       },
     });
+
+    // Recreate variants
+    await prisma.productVariant.deleteMany({ where: { productId } });
+    if (data.variants.length > 0) {
+      await prisma.productVariant.createMany({
+        data: data.variants.map((v) => ({
+          productId,
+          size: v.size,
+          stock: v.stock,
+        })),
+      });
+    }
 
     revalidatePath("/portal/orfebre/productos");
     return { success: true };

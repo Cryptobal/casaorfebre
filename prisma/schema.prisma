@@ -201,8 +201,9 @@ model Product {
   technique      String?
   dimensions     String?
   weight         Float?
-  isUnique       Boolean           @default(true)
-  editionSize    Int?
+  productionType  ProductionType    @default(UNIQUE)
+  isCustomizable  Boolean           @default(false)
+  elaborationDays Int?
   stock          Int               @default(1)
   coleccion      String?
   tallas         String[]
@@ -213,10 +214,10 @@ model Product {
   detallePersonalizacion String?
   tiempoElaboracionDias  Int?
   cantidadEdicion        Int?
+  variants       ProductVariant[]
   cuidados       String?
   empaque        String?
   garantia       String?
-  isCustomMade   Boolean           @default(false)
   isReturnable   Boolean           @default(true)
   viewCount      Int               @default(0)
   status         ProductStatus     @default(DRAFT)
@@ -245,6 +246,19 @@ model Product {
   @@index([category])
   @@index([status])
   @@map("products")
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  size      String
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, size])
+  @@index([productId])
+  @@map("product_variants")
 }
 
 model ProductImage {
@@ -280,11 +294,12 @@ model CartItem {
   userId    String
   productId String
   quantity  Int      @default(1)
+  size      String?
   createdAt DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, productId])
+  @@unique([userId, productId, size])
   @@map("cart_items")
 }
 
@@ -333,6 +348,7 @@ model OrderItem {
   productName       String
   productPrice      Int
   quantity          Int               @default(1)
+  size              String?
   commissionRate    Float
   commissionAmount  Int
   artisanPayout     Int
@@ -827,6 +843,12 @@ enum ProductPauseReason {
   MANUAL
   ADMIN
   MODERATION
+}
+
+enum ProductionType {
+  UNIQUE        // Pieza única — stock siempre 1, desaparece al venderse
+  MADE_TO_ORDER // Hecha por encargo — se fabrica al comprar, sin stock, sin devolución
+  LIMITED       // Producción limitada/múltiple — tiene stock (global o por talla)
 }
 
 enum InvitationStatus {

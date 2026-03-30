@@ -25,12 +25,12 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const badge = product.isCustomMade
-    ? "Personalizada"
-    : product.isUnique
+  const badge = product.productionType === "MADE_TO_ORDER"
+    ? "Hecha por Encargo"
+    : product.productionType === "UNIQUE"
       ? "Pieza Única"
-      : product.editionSize
-        ? `Ed. Limitada ${product.stock}/${product.editionSize}`
+      : product.productionType === "LIMITED" && product.stock < 10
+        ? `Quedan ${product.stock}`
         : null;
 
   const ga4Item = {

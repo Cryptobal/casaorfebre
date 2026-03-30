@@ -24,7 +24,7 @@ export async function validateGuestAddToCart(productId: string, quantity = 1) {
       slug: product.slug,
       price: product.price,
       stock: product.stock,
-      isUnique: product.isUnique,
+      productionType: product.productionType,
       artisan: {
         displayName: product.artisan.displayName,
         slug: product.artisan.slug,
@@ -61,7 +61,7 @@ export async function resolveGuestCartLines(lines: GuestCartLine[]) {
       slug: string;
       price: number;
       stock: number;
-      isUnique: boolean;
+      productionType: string;
       artisan: { displayName: string; slug: string };
       images: { id: string; url: string; altText: string | null }[];
     };
@@ -81,7 +81,7 @@ export async function resolveGuestCartLines(lines: GuestCartLine[]) {
       continue;
     }
     let quantity = Math.min(rawQty, product.stock);
-    if (product.isUnique) quantity = Math.min(quantity, 1);
+    if (product.productionType === "UNIQUE" || product.productionType === "MADE_TO_ORDER") quantity = Math.min(quantity, 1);
     if (quantity < 1) {
       dropped += 1;
       continue;
@@ -96,7 +96,7 @@ export async function resolveGuestCartLines(lines: GuestCartLine[]) {
         slug: product.slug,
         price: product.price,
         stock: product.stock,
-        isUnique: product.isUnique,
+        productionType: product.productionType,
         artisan: {
           displayName: product.artisan.displayName,
           slug: product.artisan.slug,
@@ -119,7 +119,7 @@ export async function validateGuestLineQuantity(productId: string, quantity: num
     where: { id: productId, status: "APPROVED" },
   });
   if (!product) return { error: "Producto no disponible" as const };
-  if (product.isUnique && quantity > 1) return { error: "Cantidad no válida" as const };
+  if ((product.productionType === "UNIQUE" || product.productionType === "MADE_TO_ORDER") && quantity > 1) return { error: "Cantidad no válida" as const };
   if (quantity > product.stock) return { error: "Stock insuficiente" as const };
   return { success: true as const };
 }

@@ -7,7 +7,7 @@ export async function getBuyerOrders(userId: string) {
     include: {
       items: {
         include: {
-          product: { select: { name: true, slug: true, isCustomMade: true } },
+          product: { select: { name: true, slug: true, productionType: true } },
           artisan: { select: { displayName: true } },
         },
       },
@@ -22,7 +22,7 @@ export async function getBuyerOrderDetail(orderId: string, userId: string) {
       items: {
         include: {
           product: {
-            select: { id: true, name: true, slug: true, isCustomMade: true, images: { take: 1, orderBy: { position: "asc" } } },
+            select: { id: true, name: true, slug: true, productionType: true, images: { take: 1, orderBy: { position: "asc" } } },
           },
           artisan: { select: { displayName: true, slug: true } },
         },

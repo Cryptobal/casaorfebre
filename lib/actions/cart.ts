@@ -20,16 +20,18 @@ async function mergeGuestLinesIntoUserCart(userId: string, lines: GuestCartLine[
     if (!product) continue;
 
     let qtyToAdd = Math.min(rawQty, product.stock);
-    if (product.isUnique) qtyToAdd = Math.min(qtyToAdd, 1);
-    if (qtyToAdd < 1) continue;
+    if (product.productionType === "UNIQUE") qtyToAdd = Math.min(qtyToAdd, 1);
+    if (product.productionType === "MADE_TO_ORDER") qtyToAdd = 1;
+    if (qtyToAdd < 1 && product.productionType !== "MADE_TO_ORDER") continue;
+    if (product.productionType === "MADE_TO_ORDER") qtyToAdd = 1;
 
     const existing = await prisma.cartItem.findUnique({
-      where: { userId_productId: { userId, productId } },
+      where: { userId_productId_size: { userId, productId, size: "" } },
     });
 
     if (existing) {
-      if (product.isUnique) continue;
-      const newQty = Math.min(existing.quantity + qtyToAdd, product.stock);
+      if (product.productionType === "UNIQUE") continue;
+      const newQty = product.productionType === "MADE_TO_ORDER" ? 1 : Math.min(existing.quantity + qtyToAdd, product.stock);
       await prisma.cartItem.update({
         where: { id: existing.id },
         data: { quantity: newQty },
@@ -52,34 +54,56 @@ export async function mergeGuestCartAfterLogin(lines: GuestCartLine[]) {
   return { success: true as const };
 }
 
-export async function addToCart(productId: string, quantity = 1) {
+export async function addToCart(productId: string, quantity = 1, size?: string) {
   const session = await auth();
   if (!session?.user) return { error: "Inicia sesión para agregar al carrito" };
 
   const product = await prisma.product.findUnique({
     where: { id: productId, status: "APPROVED" },
+    include: { variants: true },
   });
   if (!product) return { error: "Producto no disponible" };
-  if (product.stock < quantity) return { error: "Stock insuficiente" };
+
+  // Validate stock based on production type
+  if (product.productionType === "UNIQUE") {
+    quantity = 1;
+  } else if (product.productionType === "MADE_TO_ORDER") {
+    quantity = 1;
+  } else {
+    // LIMITED
+    if (size) {
+      const variant = product.variants.find((v) => v.size === size);
+      if (!variant || variant.stock < quantity) return { error: "Stock insuficiente para esta talla" };
+    } else if (product.stock < quantity) {
+      return { error: "Stock insuficiente" };
+    }
+  }
+
+  const sizeKey = size ?? null;
 
   const existing = await prisma.cartItem.findUnique({
     where: {
-      userId_productId: { userId: session.user.id, productId },
+      userId_productId_size: { userId: session.user.id, productId, size: sizeKey ?? "" },
     },
   });
 
   if (existing) {
-    if (product.isUnique)
+    if (product.productionType === "UNIQUE")
       return { error: "Esta pieza única ya está en tu carrito" };
+    if (product.productionType === "MADE_TO_ORDER")
+      return { error: "Esta pieza ya está en tu carrito" };
+    const maxStock = size
+      ? (product.variants.find((v) => v.size === size)?.stock ?? product.stock)
+      : product.stock;
     const newQty = existing.quantity + quantity;
-    if (newQty > product.stock) return { error: "Stock insuficiente" };
+    if (newQty > maxStock) return { error: "Stock insuficiente" };
     await prisma.cartItem.update({
       where: { id: existing.id },
       data: { quantity: newQty },
     });
   } else {
     await prisma.cartItem.create({
-      data: { userId: session.user.id, productId, quantity },
+      data: { userId: session.user.id, productId, quantity, size: sizeKey },
     });
   }
 

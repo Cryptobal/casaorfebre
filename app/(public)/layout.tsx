@@ -46,7 +46,7 @@ export default async function PublicLayout({
         slug: item.product.slug,
         price: item.product.price,
         stock: item.product.stock,
-        isUnique: item.product.isUnique,
+        productionType: item.product.productionType,
         artisan: {
           displayName: item.product.artisan.displayName,
           slug: item.product.artisan.slug,
