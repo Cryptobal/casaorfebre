@@ -228,8 +228,8 @@ export function ImageUpload({
                 {index + 1}
               </span>
 
-              {/* Controls overlay */}
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-1.5 py-1 opacity-0 transition-opacity group-hover:opacity-100">
+              {/* Controls overlay - always visible on mobile, hover on desktop */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-1.5 py-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                 <div className="flex gap-0.5">
                   <button
                     type="button"

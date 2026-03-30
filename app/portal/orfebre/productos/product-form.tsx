@@ -394,21 +394,48 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
             <Input
               id="price"
               name="price"
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]+"
               required
-              min={1000}
               defaultValue={precioFromCalculadora || product?.price || ""}
               placeholder="50000"
+              onKeyDown={(e) => {
+                if (e.key === "." || e.key === ",") e.preventDefault();
+              }}
+              onPaste={(e) => {
+                const text = e.clipboardData.getData("text");
+                if (/[.,]/.test(text)) {
+                  e.preventDefault();
+                  const clean = text.replace(/[.,]/g, "");
+                  const input = e.currentTarget;
+                  document.execCommand("insertText", false, clean);
+                }
+              }}
             />
+            <p className="text-[11px] text-text-secondary/70">Solo números, sin punto ni coma</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="compareAtPrice">Precio anterior</Label>
             <Input
               id="compareAtPrice"
               name="compareAtPrice"
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]+"
               defaultValue={product?.compareAtPrice ?? ""}
               placeholder="Opcional, para mostrar descuento"
+              onKeyDown={(e) => {
+                if (e.key === "." || e.key === ",") e.preventDefault();
+              }}
+              onPaste={(e) => {
+                const text = e.clipboardData.getData("text");
+                if (/[.,]/.test(text)) {
+                  e.preventDefault();
+                  const clean = text.replace(/[.,]/g, "");
+                  document.execCommand("insertText", false, clean);
+                }
+              }}
             />
           </div>
         </div>
@@ -495,6 +522,7 @@ export function ProductForm({ product, artisanId, specialties = [], occasions = 
               defaultValue={product?.weight ?? ""}
               placeholder="Ej: 12.5"
             />
+            <p className="text-[11px] text-text-secondary/70">Usa punto como separador decimal (ej: 12.5)</p>
           </div>
         </div>
 
