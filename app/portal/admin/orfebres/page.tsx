@@ -3,6 +3,7 @@ import { getAllArtisans } from "@/lib/queries/admin";
 import { OverrideEditor } from "./override-editor";
 import { HighlightToggle } from "./highlight-toggle";
 import { ArtisanAccountActions } from "./artisan-account-actions";
+import { PlanChanger } from "./plan-changer";
 
 const statusStyles: Record<string, string> = {
   APPROVED: "bg-green-100 text-green-800",
@@ -110,7 +111,10 @@ export default async function OrfebresPage() {
                         </span>
                       </td>
                       <td className="min-w-0 py-3 pr-2 text-text-secondary">
-                        {planName ? PLAN_LABELS[planName] || planName : "Esencial"}
+                        <PlanChanger
+                          artisanId={artisan.id}
+                          currentPlan={planName || "esencial"}
+                        />
                       </td>
                       <td className="min-w-0 py-3 pr-2">
                         {artisan.rating > 0
@@ -201,7 +205,12 @@ export default async function OrfebresPage() {
 
                   <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     <div className="text-text-tertiary">Plan</div>
-                    <div className="text-text">{planName ? PLAN_LABELS[planName] || planName : "Esencial"}</div>
+                    <div className="text-text">
+                      <PlanChanger
+                        artisanId={artisan.id}
+                        currentPlan={planName || "esencial"}
+                      />
+                    </div>
                     <div className="text-text-tertiary">Rating</div>
                     <div className="text-text">{artisan.rating > 0 ? `★ ${artisan.rating.toFixed(1)}` : "—"}</div>
                     <div className="text-text-tertiary">Ventas</div>

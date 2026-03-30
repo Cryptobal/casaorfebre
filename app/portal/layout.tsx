@@ -63,14 +63,18 @@ export default async function PortalLayout({ children }: { children: React.React
   }
 
   let pendingPostulaciones = 0;
+  let pendingProductModeration = 0;
+  let pendingOrfebreApplications = 0;
   let artisanPendingOrders = 0;
   let artisanUnansweredQuestions = 0;
   let artisanUnreadMessages = 0;
 
   if (session.user.role === "ADMIN") {
-    pendingPostulaciones = await prisma.artisanApplication.count({
-      where: { status: "PENDING" },
-    });
+    [pendingPostulaciones, pendingProductModeration, pendingOrfebreApplications] = await Promise.all([
+      prisma.artisanApplication.count({ where: { status: "PENDING" } }),
+      prisma.product.count({ where: { status: "PENDING_REVIEW" } }),
+      prisma.artisan.count({ where: { status: "PENDING" } }),
+    ]);
   }
 
   // Determine effective role (consider activeRole for admin testers)
@@ -119,11 +123,12 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const mobileLinks = [
     ...(role === "ADMIN"
-      ? ADMIN_LINKS.map((l) =>
-          l.href === "/portal/admin/postulaciones"
-            ? { ...l, badge: pendingPostulaciones }
-            : l
-        )
+      ? ADMIN_LINKS.map((l) => {
+          if (l.href === "/portal/admin/postulaciones") return { ...l, badge: pendingPostulaciones };
+          if (l.href === "/portal/admin/productos") return { ...l, badge: pendingProductModeration };
+          if (l.href === "/portal/admin/orfebres") return { ...l, badge: pendingOrfebreApplications };
+          return l;
+        })
       : []),
     ...(role === "ARTISAN"
       ? ARTISAN_LINKS.map((l) => {
@@ -159,9 +164,9 @@ export default async function PortalLayout({ children }: { children: React.React
                   </span>
                 )}
               </Link>
-              <Link href="/portal/admin/productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Productos</Link>
+              <SidebarLink href="/portal/admin/productos" label="Productos" count={pendingProductModeration} />
               <Link href="/portal/admin/fotos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Fotos</Link>
-              <Link href="/portal/admin/orfebres" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Orfebres</Link>
+              <SidebarLink href="/portal/admin/orfebres" label="Orfebres" count={pendingOrfebreApplications} />
               <Link href="/portal/admin/planes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Planes</Link>
               <Link href="/portal/admin/pedidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Pedidos</Link>
               <Link href="/portal/admin/disputas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Disputas</Link>

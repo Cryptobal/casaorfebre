@@ -1297,3 +1297,61 @@ export async function adminDeleteOrder(
   revalidatePath("/portal/admin/pedidos");
   return { success: true };
 }
+
+// Change artisan plan
+export async function changeArtisanPlan(
+  artisanId: string,
+  newPlanName: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const plan = await prisma.membershipPlan.findUnique({
+    where: { name: newPlanName },
+  });
+  if (!plan) return { error: "Plan no encontrado" };
+
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: artisanId },
+    include: {
+      subscriptions: {
+        where: { status: "ACTIVE" },
+        orderBy: { startDate: "desc" },
+        take: 1,
+      },
+    },
+  });
+  if (!artisan) return { error: "Orfebre no encontrado" };
+
+  const activeSub = artisan.subscriptions[0];
+
+  if (activeSub) {
+    // Update existing subscription to new plan
+    await prisma.membershipSubscription.update({
+      where: { id: activeSub.id },
+      data: { planId: plan.id },
+    });
+  } else {
+    // Create new subscription
+    await prisma.membershipSubscription.create({
+      data: {
+        artisanId,
+        planId: plan.id,
+        status: "ACTIVE",
+        source: "ADMIN",
+      },
+    });
+  }
+
+  // Update artisan commission rate from plan
+  await prisma.artisan.update({
+    where: { id: artisanId },
+    data: { commissionRate: plan.commissionRate },
+  });
+
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
