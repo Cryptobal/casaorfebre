@@ -67,7 +67,12 @@ export default async function OrfebresPage() {
                   <th className="pb-3 pr-2 font-medium">Prod.</th>
                   <th className="pb-3 pr-2 font-medium">Com.</th>
                   <th className="pb-3 pr-2 font-medium">Estado</th>
-                  <th className="pb-3 pr-2 font-medium">Dest.</th>
+                  <th
+                    className="pb-3 pr-2 font-medium leading-tight"
+                    title="Si el plan lo permite: mostrar este orfebre destacado en la página de inicio del sitio."
+                  >
+                    Destaque home
+                  </th>
                   <th className="pb-3 pl-1 font-medium">Acciones</th>
                 </tr>
               </thead>
@@ -225,12 +230,15 @@ export default async function OrfebresPage() {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-stretch gap-2 border-t border-border pt-3">
+                  <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3">
                     {artisan.subscriptions?.[0]?.plan?.homeHighlight && (
-                      <HighlightToggle
-                        artisanId={artisan.id}
-                        initialValue={artisan.homeHighlight}
-                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-text-tertiary">Destaque en inicio</span>
+                        <HighlightToggle
+                          artisanId={artisan.id}
+                          initialValue={artisan.homeHighlight}
+                        />
+                      </div>
                     )}
                     <OverrideEditor
                       artisanId={artisan.id}

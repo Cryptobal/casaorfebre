@@ -31,8 +31,16 @@ export function HighlightToggle({
       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
         enabled ? "bg-amber-500" : "bg-border"
       } ${loading ? "opacity-50" : ""}`}
-      title={enabled ? "Quitar de home" : "Destacar en home"}
-      aria-label={enabled ? "Quitar de home" : "Destacar en home"}
+      title={
+        enabled
+          ? "Quitar el destaque en la página de inicio"
+          : "Destacar en la página de inicio del sitio"
+      }
+      aria-label={
+        enabled
+          ? "Quitar destaque en página de inicio"
+          : "Destacar en página de inicio"
+      }
     >
       <span
         className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
