@@ -436,6 +436,11 @@ export async function saveAndSubmitForReview(
     return { error: "El precio minimo es $1.000 CLP" };
   }
 
+  const originalityDeclared = formData.get("originalityDeclared") === "true";
+  if (!originalityDeclared) {
+    return { error: "Debes marcar la declaración de originalidad para enviar a revisión" };
+  }
+
   if (product.images.length === 0) {
     return { error: "El producto debe tener al menos 1 imagen" };
   }

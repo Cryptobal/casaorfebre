@@ -220,9 +220,14 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   }, [newCollectionName, creatingCollection]);
 
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [originalityDeclared, setOriginalityDeclared] = useState(false);
 
   const handleSubmitForReview = async () => {
     if (!product || !formRef.current) return;
+    if (!originalityDeclared) {
+      setErrorModal("Debes marcar la declaración de originalidad para enviar a revisión.");
+      return;
+    }
     setSubmitting(true);
     const formData = new FormData(formRef.current);
     const result = await saveAndSubmitForReview(product.id, formData);
@@ -1121,6 +1126,26 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             </div>
           )}
         </div>
+
+        {/* Declaración de originalidad */}
+        <input type="hidden" name="originalityDeclared" value={originalityDeclared ? "true" : "false"} />
+        {product && product.status !== "PENDING_REVIEW" && product.status !== "PAUSED" && product.status !== "SOLD_OUT" && (
+          <div className="rounded-md border border-border bg-background px-4 py-4">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={originalityDeclared}
+                onChange={(e) => setOriginalityDeclared(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+              />
+              <span className="text-xs font-light text-text-tertiary leading-relaxed">
+                Declaro que esta pieza es de mi propia autoría o taller, que los
+                materiales declarados son veraces, y que las fotografías
+                corresponden al producto real que recibirá el comprador.
+              </span>
+            </label>
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="border-t border-border pt-6">
