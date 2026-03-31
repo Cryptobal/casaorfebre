@@ -373,10 +373,12 @@ export async function getPendingReturns() {
           productName: true,
           productPrice: true,
           quantity: true,
+          artisanId: true,
           artisan: { select: { displayName: true, slug: true } },
           order: {
             select: {
               orderNumber: true,
+              userId: true,
               user: { select: { name: true, email: true } },
             },
           },
@@ -420,4 +422,49 @@ export async function getFinanceStats() {
     commissionsNet,
     pendingPayouts,
   };
+}
+
+// Pending payouts grouped by artisan
+export async function getPendingPayouts() {
+  const items = await prisma.orderItem.findMany({
+    where: { payoutStatus: "PENDING" },
+    include: {
+      artisan: {
+        select: {
+          id: true, displayName: true, slug: true,
+          bankName: true, bankAccountNumber: true, bankRut: true,
+          bankHolderName: true, bankAccountType: true,
+        },
+      },
+      order: { select: { orderNumber: true } },
+      product: { select: { name: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const grouped = items.reduce((acc: Record<string, any>, item) => {
+    const key = item.artisanId;
+    if (!acc[key]) {
+      acc[key] = { artisan: item.artisan, items: [], totalAmount: 0 };
+    }
+    acc[key].items.push(item);
+    acc[key].totalAmount += item.artisanPayout;
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+}
+
+// Paid payouts history
+export async function getPaidPayoutsHistory() {
+  return prisma.orderItem.findMany({
+    where: { payoutStatus: "PAID" },
+    include: {
+      artisan: { select: { displayName: true } },
+      order: { select: { orderNumber: true } },
+      product: { select: { name: true } },
+    },
+    orderBy: { payoutAt: "desc" },
+    take: 50,
+  });
 }

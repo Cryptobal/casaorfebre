@@ -1,6 +1,8 @@
 import { getPendingReturns } from "@/lib/queries/admin";
+import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { formatCLP } from "@/lib/utils";
+import Link from "next/link";
 import { ReturnActions } from "./return-actions";
 
 const reasonLabels: Record<string, string> = {
@@ -40,6 +42,24 @@ const shippingPayerStyles: Record<string, string> = {
 export default async function DevolucionesPage() {
   const returns = await getPendingReturns();
 
+  // Batch-lookup conversations for all returns
+  const convPairs = returns.map((r) => ({
+    buyerId: r.orderItem.order.userId,
+    artisanId: r.orderItem.artisanId,
+  }));
+  const conversations = await prisma.conversation.findMany({
+    where: {
+      OR: convPairs.map((p) => ({
+        buyerId: p.buyerId,
+        artisanId: p.artisanId,
+      })),
+    },
+    select: { id: true, buyerId: true, artisanId: true },
+  });
+  const convMap = new Map(
+    conversations.map((c) => [`${c.buyerId}:${c.artisanId}`, c.id]),
+  );
+
   return (
     <div>
       <h1 className="font-serif text-3xl font-light">Devoluciones</h1>
@@ -53,6 +73,7 @@ export default async function DevolucionesPage() {
           {returns.map((ret) => {
             const item = ret.orderItem;
             const buyer = item.order.user;
+            const convId = convMap.get(`${item.order.userId}:${item.artisanId}`);
             return (
             <Card key={ret.id} className="space-y-4">
               <div className="flex items-start justify-between gap-4">
@@ -103,6 +124,47 @@ export default async function DevolucionesPage() {
                 <div className="rounded-md bg-background-secondary p-3 text-sm text-text-secondary">
                   <span className="font-medium text-text-tertiary">Descripción del comprador: </span>
                   {ret.description}
+                </div>
+              )}
+
+              {/* Evidence photos */}
+              {ret.images.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-medium text-text-tertiary">
+                    Fotos de evidencia ({ret.images.length})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {ret.images.map((url: string, idx: number) => (
+                      <a
+                        key={idx}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block h-16 w-16 overflow-hidden rounded-lg border border-border transition-opacity hover:opacity-80"
+                      >
+                        <img
+                          src={url}
+                          alt={`Evidencia ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Conversation link */}
+              {convId && (
+                <div>
+                  <Link
+                    href={`/portal/admin/mensajes/${convId}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-text-secondary transition-colors hover:text-text"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    Ver conversación comprador-orfebre
+                  </Link>
                 </div>
               )}
 

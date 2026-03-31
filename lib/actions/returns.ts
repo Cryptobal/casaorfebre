@@ -93,6 +93,43 @@ export async function createReturnRequest(formData: FormData) {
     }
   }
 
+  // Auto-open conversation with artisan and send system message
+  try {
+    const conversation = await prisma.conversation.upsert({
+      where: {
+        buyerId_artisanId: {
+          buyerId: session.user.id,
+          artisanId: item.artisanId,
+        },
+      },
+      update: { lastMessageAt: new Date() },
+      create: {
+        buyerId: session.user.id,
+        artisanId: item.artisanId,
+        productId: item.productId,
+      },
+    });
+
+    const descText = description?.trim()
+      ? `\n\nDescripción: ${description.trim()}`
+      : "";
+    const photosText = imageUrls.length > 0
+      ? `\n\n${imageUrls.length} foto(s) adjuntada(s) como evidencia.`
+      : "";
+
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        senderId: session.user.id,
+        senderRole: "BUYER",
+        content: `He solicitado una devolución para "${item.productName}".\n\nMotivo: ${reasonLabel}${descText}${photosText}\n\nPuedes responder aquí si necesitas más información.`,
+      },
+    });
+  } catch (e) {
+    console.error("[createReturnRequest] Conversation auto-open failed:", e);
+  }
+
   revalidatePath(`/portal/comprador/pedidos/${item.order.id}`);
+  revalidatePath("/portal/orfebre/mensajes");
   return { success: true };
 }

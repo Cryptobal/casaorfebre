@@ -10,6 +10,35 @@ import { confirmPreparation } from "@/lib/actions/orders";
 import { TrackingLink } from "@/components/tracking-link";
 import { ShippingForm } from "./shipping-form";
 
+const RETURN_REASON_LABELS: Record<string, string> = {
+  NOT_AS_DESCRIBED: "No coincide con la descripción",
+  DAMAGED_ON_ARRIVAL: "Llegó dañado",
+  WRONG_ITEM: "Producto equivocado",
+  BUYER_REGRET: "Arrepentimiento de compra",
+  DEFECTIVE: "Defecto de fabricación",
+  OTHER: "Otro",
+};
+
+const RETURN_STATUS_LABELS: Record<string, string> = {
+  REQUESTED: "Solicitada",
+  APPROVED: "Aprobada",
+  REJECTED: "Rechazada",
+  SHIPPED_BACK: "Enviada de vuelta",
+  RECEIVED_BY_ARTISAN: "Recibida",
+  REFUNDED: "Reembolsada",
+  CLOSED: "Cerrada",
+};
+
+const RETURN_STATUS_STYLES: Record<string, string> = {
+  REQUESTED: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-blue-100 text-blue-700",
+  REJECTED: "bg-red-100 text-red-700",
+  SHIPPED_BACK: "bg-indigo-100 text-indigo-700",
+  RECEIVED_BY_ARTISAN: "bg-green-100 text-green-700",
+  REFUNDED: "bg-green-100 text-green-700",
+  CLOSED: "bg-gray-100 text-gray-700",
+};
+
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendiente",
   PREPARING: "Preparando",
@@ -44,6 +73,21 @@ export default async function OrderDetailPage({
 
   const item = await getArtisanOrderDetail(id, artisan.id);
   if (!item) notFound();
+
+  // Find conversation with buyer for this order (if exists)
+  let conversationId: string | null = null;
+  if (item.returnRequests.length > 0) {
+    const conversation = await prisma.conversation.findUnique({
+      where: {
+        buyerId_artisanId: {
+          buyerId: item.order.userId,
+          artisanId: artisan.id,
+        },
+      },
+      select: { id: true },
+    });
+    conversationId = conversation?.id ?? null;
+  }
 
   // Calculate days since order
   const daysSinceOrder = Math.floor(
@@ -269,6 +313,89 @@ export default async function OrderDetailPage({
           </div>
         )}
       </Card>
+
+      {/* Return request info */}
+      {item.returnRequests.length > 0 && (() => {
+        const ret = item.returnRequests[0];
+        return (
+          <Card className="mt-6 border-amber-200 bg-amber-50/60">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-amber-900">
+                Solicitud de devolución
+              </h2>
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                  RETURN_STATUS_STYLES[ret.status] ?? "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {RETURN_STATUS_LABELS[ret.status] ?? ret.status}
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-2 text-sm">
+              <p>
+                <span className="text-text-secondary">Motivo:</span>{" "}
+                <span className="font-medium">{RETURN_REASON_LABELS[ret.reason] ?? ret.reason}</span>
+              </p>
+              {ret.description && (
+                <p>
+                  <span className="text-text-secondary">Descripción:</span>{" "}
+                  {ret.description}
+                </p>
+              )}
+              <p className="text-text-tertiary">
+                Solicitada el{" "}
+                {new Date(ret.createdAt).toLocaleDateString("es-CL", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+
+            {/* Evidence photos */}
+            {ret.images.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-2 text-xs font-medium text-text-secondary">
+                  Fotos de evidencia del comprador
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {ret.images.map((url, idx) => (
+                    <a
+                      key={idx}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block h-20 w-20 overflow-hidden rounded-lg border border-border transition-opacity hover:opacity-80"
+                    >
+                      <img
+                        src={url}
+                        alt={`Evidencia ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Link to conversation */}
+            {conversationId && (
+              <div className="mt-4 border-t border-amber-200 pt-3">
+                <Link
+                  href={`/portal/orfebre/mensajes/${conversationId}`}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Conversar con el comprador
+                </Link>
+              </div>
+            )}
+          </Card>
+        );
+      })()}
     </div>
   );
 }

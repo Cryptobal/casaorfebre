@@ -33,6 +33,7 @@ export async function getArtisanOrderDetail(orderItemId: string, artisanId: stri
       order: {
         select: {
           orderNumber: true,
+          userId: true,
           shippingName: true,
           shippingAddress: true,
           shippingCity: true,
@@ -47,6 +48,19 @@ export async function getArtisanOrderDetail(orderItemId: string, artisanId: stri
         },
       },
       product: { select: { name: true, slug: true } },
+      returnRequests: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          reason: true,
+          description: true,
+          images: true,
+          status: true,
+          shippingPaidBy: true,
+          createdAt: true,
+        },
+      },
     },
   });
 }
