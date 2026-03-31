@@ -24,6 +24,7 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
   const [polling, setPolling] = useState(existingVideo?.status === "PROCESSING");
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [togglingMute, setTogglingMute] = useState(false);
   const [muteAudio, setMuteAudio] = useState(existingVideo?.muted ?? false);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -180,6 +181,28 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
     }
   }, [productId]);
 
+  const handleToggleMute = useCallback(async () => {
+    setTogglingMute(true);
+    const newMuted = !muteAudio;
+    try {
+      const res = await fetch("/api/upload/video", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, muted: newMuted }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al actualizar el audio");
+      }
+      setMuteAudio(newMuted);
+      setVideo((prev) => prev ? { ...prev, muted: newMuted } : prev);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al actualizar el audio");
+    } finally {
+      setTogglingMute(false);
+    }
+  }, [productId, muteAudio]);
+
   // If plan doesn't allow video, show upgrade prompt
   if (!videoEnabled) {
     return (
@@ -307,16 +330,30 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
               style={{ border: "none", width: "100%", aspectRatio: "16/9" }}
             />
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={handleDelete}
-            loading={deleting}
-            disabled={deleting}
-          >
-            Eliminar Video
-          </Button>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={muteAudio}
+                onChange={handleToggleMute}
+                disabled={togglingMute}
+                className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+              />
+              <span className="text-sm text-text-secondary">
+                {togglingMute ? "Guardando..." : "Eliminar sonido del video"}
+              </span>
+            </label>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleDelete}
+              loading={deleting}
+              disabled={deleting}
+            >
+              Eliminar Video
+            </Button>
+          </div>
         </div>
       )}
 

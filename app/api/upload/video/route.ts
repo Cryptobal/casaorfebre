@@ -114,6 +114,36 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { productId, muted } = body as { productId?: string; muted?: boolean };
+
+  if (!productId || typeof muted !== "boolean") {
+    return NextResponse.json({ error: "productId y muted requeridos" }, { status: 400 });
+  }
+
+  const video = await prisma.productVideo.findUnique({
+    where: { productId },
+    include: { product: { include: { artisan: true } } },
+  });
+
+  if (!video || video.product.artisan.userId !== session.user.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  await prisma.productVideo.update({
+    where: { productId },
+    data: { muted },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
 export async function DELETE(request: Request) {
   const session = await auth();
   if (!session?.user) {
