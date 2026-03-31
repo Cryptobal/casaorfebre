@@ -8,6 +8,7 @@ import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 import { OrfebresFilters } from "./orfebres-filters";
 
 export const metadata = {
@@ -51,7 +52,7 @@ export default async function OrfebresPage({
     { name: "Inicio", url: "/" },
     { name: "Orfebres", url: "/orfebres" },
   ]);
-  const jsonLd = JSON.stringify({
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Orfebres Chilenos Verificados",
@@ -72,13 +73,12 @@ export default async function OrfebresPage({
         },
       })),
     },
-  });
+  };
 
-  // JSON-LD structured data uses server-generated content only (no user input), safe to inject
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }} />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
       <SectionHeading
         title="Nuestros Orfebres"

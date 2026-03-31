@@ -6,6 +6,7 @@ import { FadeIn } from "@/components/shared/fade-in";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
 import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = {
   title: "Joyas para Regalar | Casa Orfebre",
@@ -60,9 +61,8 @@ export default async function RegalosPage() {
 
   return (
     <>
-      {/* JSON-LD structured data — server-generated, no user input */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }} />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
       <div className="max-w-2xl">
         <h1 className="font-serif text-3xl font-light sm:text-4xl">

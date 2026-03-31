@@ -5,7 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductBySlug, getSimilarProducts } from "@/lib/queries/products";
 import { ProductCard } from "@/components/products/product-card";
-import { buildBreadcrumbJsonLd, canonicalUrl } from "@/lib/seo";
+import { canonicalUrl } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
@@ -25,20 +27,20 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
-  const desc = product.description.slice(0, 160);
+  const desc = product.description.slice(0, 155);
   const images = product.images?.[0]?.url ? [{ url: product.images[0].url }] : undefined;
   return {
-    title: product.name,
+    title: `${product.name} · Plata Artesanal`,
     description: desc,
     alternates: { canonical: `/coleccion/${slug}` },
     openGraph: {
-      title: `${product.name} | Casa Orfebre`,
+      title: `${product.name} · Plata Artesanal | Casa Orfebre`,
       description: desc,
       images,
     },
     twitter: {
       card: "summary_large_image" as const,
-      title: `${product.name} | Casa Orfebre`,
+      title: `${product.name} · Plata Artesanal | Casa Orfebre`,
       description: desc,
       images: product.images?.[0]?.url ? [product.images[0].url] : undefined,
     },
@@ -93,17 +95,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const categoryLabel = primaryCategory?.name ?? "Otro";
   const categorySlug = primaryCategory?.slug ?? "coleccion";
 
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: "Inicio", url: "/" },
-    { name: "Colección", url: "/coleccion" },
-    { name: categoryLabel, url: `/coleccion/${categorySlug}` },
-    { name: product.name, url: `/coleccion/${slug}` },
-  ]);
-
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const productImages = product.images.map((img: any) => img.url);
 
-  const jsonLd = JSON.stringify({
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
@@ -204,7 +199,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           })),
         }
       : {}),
-  });
+  };
 
   return (
     <>
@@ -219,16 +214,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
           quantity: 1,
         }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
-      />
+      <JsonLd data={jsonLd} />
 
       <div className="mx-auto max-w-6xl px-4 pt-8 pb-20 sm:px-6 lg:px-8">
+        <Breadcrumbs
+          items={[
+            { label: "Inicio", href: "/" },
+            { label: "Colección", href: "/coleccion" },
+            { label: categoryLabel, href: `/coleccion/${categorySlug}` },
+            { label: product.name },
+          ]}
+        />
         {/* Two-column layout */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12">
           {/* Left column — gallery */}

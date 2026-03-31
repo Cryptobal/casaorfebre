@@ -13,25 +13,16 @@ import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
 import { HeroSection } from "@/components/home/hero-section";
 import { BuyerTour } from "@/components/guided-tour/BuyerTour";
 import { auth } from "@/lib/auth";
+import { generateOrganizationJsonLd, generateLocalBusinessJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 
-const jsonLd = JSON.stringify([
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "Casa Orfebre",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl",
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Casa Orfebre",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl",
-    logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/casaorfebre-logo-compact.svg`,
-    image: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/casaorfebre-og-image.png`,
-    description: "Marketplace curado de joyería artesanal chilena.",
-    sameAs: [],
-  },
-]);
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Casa Orfebre",
+  url: BASE_URL,
+};
 
 export default async function HomePage() {
   const session = await auth();
@@ -45,10 +36,9 @@ export default async function HomePage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd }}
-      />
+      <JsonLd data={websiteJsonLd} />
+      <JsonLd data={generateOrganizationJsonLd()} />
+      <JsonLd data={generateLocalBusinessJsonLd()} />
       {/* ─── 1. Hero Section ─── */}
       <HeroSection />
       <BuyerTour isLoggedIn={!!session?.user?.id} />

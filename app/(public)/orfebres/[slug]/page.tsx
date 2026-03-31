@@ -5,6 +5,7 @@ import { getArtisanBySlug } from "@/lib/queries/artisans";
 import { getUserFavoriteIds } from "@/lib/queries/products";
 import { auth } from "@/lib/auth";
 import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { MaterialBadge } from "@/components/shared/material-badge";
@@ -66,7 +67,7 @@ export default async function ArtisanProfilePage({
   ]);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
-  const jsonLd = JSON.stringify({
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: artisan.displayName,
@@ -102,18 +103,12 @@ export default async function ArtisanProfilePage({
           })),
         }
       : {}),
-  });
+  };
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
       {/* Hero Section */}
       <FadeIn>

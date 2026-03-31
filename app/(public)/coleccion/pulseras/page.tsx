@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getUserFavoriteIds } from "@/lib/queries/products";
 import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 import { ProductCard } from "@/components/products/product-card";
 import type { Metadata } from "next";
 
@@ -55,15 +56,8 @@ export default async function PulserasPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        // Static JSON-LD structured data — no user input, safe to inject
-        dangerouslySetInnerHTML={{ __html: jsonLd }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-10 max-w-2xl">
           <h1 className="font-serif text-3xl font-light sm:text-4xl">
