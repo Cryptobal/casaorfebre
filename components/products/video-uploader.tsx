@@ -56,8 +56,14 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
   }, [polling, video, productId]);
 
   const validateFile = useCallback((file: File): string | null => {
-    if (file.type !== "video/mp4") {
-      return "Solo se permiten videos en formato MP4.";
+    const allowedTypes = [
+      "video/mp4",
+      "video/quicktime",  // MOV — iPhone default
+      "video/webm",
+      "video/x-m4v",      // M4V — older iOS
+    ];
+    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp4|mov|webm|m4v)$/i)) {
+      return "Formato no soportado. Usa MP4, MOV o WebM.";
     }
     if (file.size > MAX_SIZE_BYTES) {
       return `El video no debe superar ${MAX_SIZE_MB} MB.`;
@@ -230,12 +236,12 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
             Haz clic para subir un video de tu pieza
           </p>
           <p className="mt-1 text-xs text-text-secondary/70">
-            MP4 — máx. {MAX_DURATION_SECONDS} segundos — máx. {MAX_SIZE_MB} MB
+            MP4, MOV o WebM — máx. {MAX_DURATION_SECONDS} segundos — máx. {MAX_SIZE_MB} MB
           </p>
           <input
             ref={inputRef}
             type="file"
-            accept="video/mp4"
+            accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mov,.mp4,.webm,.m4v"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
