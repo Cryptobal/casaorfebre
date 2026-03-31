@@ -619,6 +619,83 @@ export async function sendShipmentAlertEmail(
 }
 
 // ---------------------------------------------------------------------------
+// 12b. Last Warning Before Auto-Cancel (to artisan)
+// ---------------------------------------------------------------------------
+export async function sendShipmentLastWarningEmail(
+  to: string,
+  { artisanName, orderNumber, orderId }: {
+    artisanName: string;
+    orderNumber: string;
+    orderId: string;
+  },
+) {
+  const base = appUrl();
+  await sendEmail(
+    to,
+    `URGENTE: pedido #${orderNumber} será cancelado mañana`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;color:#dc2626;font-weight:600;">Tu pedido <strong>#${orderNumber}</strong> lleva 4 días sin ser despachado y será cancelado automáticamente mañana si no lo despachas.</p>
+     <p style="margin:0 0 16px;">Al cancelarse, el comprador recibirá un reembolso completo.</p>
+     <p style="margin:0 0 16px;">Si necesitas más tiempo (por ejemplo, una pieza a medida), contacta al comprador a través del chat de la plataforma para coordinar.</p>
+     <p style="margin:0 0 0;">
+       <a href="${base}/portal/orfebre/pedidos/${orderId}" style="display:inline-block;padding:12px 24px;background-color:#dc2626;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Despachar ahora</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 12c. Order Auto-Cancelled (to buyer)
+// ---------------------------------------------------------------------------
+export async function sendOrderAutoCancelledToBuyerEmail(
+  to: string,
+  { buyerName, orderNumber, productNames }: {
+    buyerName: string;
+    orderNumber: string;
+    productNames: string[];
+  },
+) {
+  const base = appUrl();
+  const itemsList = productNames.map((n) => `<li>${n}</li>`).join("");
+  await sendEmail(
+    to,
+    `Pedido #${orderNumber} cancelado — reembolso en proceso`,
+    `<p style="margin:0 0 16px;">Hola ${buyerName},</p>
+     <p style="margin:0 0 16px;">Lamentablemente, el orfebre no despachó tu pedido <strong>#${orderNumber}</strong> dentro del plazo establecido.</p>
+     <p style="margin:0 0 8px;">Productos afectados:</p>
+     <ul style="margin:0 0 16px;padding-left:20px;">${itemsList}</ul>
+     <p style="margin:0 0 16px;">Tu pedido ha sido <strong>cancelado automáticamente</strong> y el reembolso completo será procesado a tu medio de pago original. Puede demorar entre 5 y 10 días hábiles en reflejarse.</p>
+     <p style="margin:0 0 16px;">Pedimos disculpas por la molestia. Puedes explorar otras piezas de nuestros orfebres verificados.</p>
+     <p style="margin:0 0 0;">
+       <a href="${base}/coleccion" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Explorar colección</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 12d. Order Auto-Cancelled (to artisan)
+// ---------------------------------------------------------------------------
+export async function sendOrderAutoCancelledToArtisanEmail(
+  to: string,
+  { artisanName, orderNumber, productNames }: {
+    artisanName: string;
+    orderNumber: string;
+    productNames: string[];
+  },
+) {
+  const itemsList = productNames.map((n) => `<li>${n}</li>`).join("");
+  await sendEmail(
+    to,
+    `Pedido #${orderNumber} cancelado por no despachar a tiempo`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">El pedido <strong>#${orderNumber}</strong> fue cancelado automáticamente porque no fue despachado dentro del plazo de 5 días.</p>
+     <p style="margin:0 0 8px;">Productos:</p>
+     <ul style="margin:0 0 16px;padding-left:20px;">${itemsList}</ul>
+     <p style="margin:0 0 16px;">El comprador recibirá un reembolso completo. Los incumplimientos reiterados de plazo pueden resultar en la suspensión de tu cuenta.</p>
+     <p style="margin:0 0 16px;">Si tuviste una razón justificada, por favor escríbenos a contacto@casaorfebre.cl.</p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 13. Dispute Opened (to artisan)
 // ---------------------------------------------------------------------------
 export async function sendDisputeOpenedEmail(
