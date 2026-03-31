@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadToR2 } from "@/lib/r2";
 import { revalidatePath } from "next/cache";
-import { slugify } from "@/lib/utils";
+import { slugify, formatCLP } from "@/lib/utils";
 import {
   sendArtisanWelcomeEmail,
   sendApplicationRejectedEmail,
@@ -15,6 +15,7 @@ import {
   sendReturnRejectedEmail,
   sendReturnReceivedEmail,
   sendRefundProcessedEmail,
+  sendEmail,
 } from "@/lib/emails/templates";
 import { CURRENT_LEGAL_VERSIONS } from "@/lib/legal/constants";
 
@@ -1387,5 +1388,48 @@ export async function changeArtisanPlan(
   });
 
   revalidatePath("/portal/admin/orfebres");
+  return { success: true };
+}
+
+// Mark all pending payouts for an artisan as paid
+export async function markArtisanPaid(artisanId: string): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const pendingItems = await prisma.orderItem.findMany({
+    where: { artisanId, payoutStatus: "PENDING" },
+    include: { artisan: { include: { user: { select: { email: true } } } } },
+  });
+
+  if (pendingItems.length === 0) {
+    return { error: "No hay pagos pendientes para este orfebre" };
+  }
+
+  const totalPaid = pendingItems.reduce((sum, item) => sum + item.artisanPayout, 0);
+
+  await prisma.orderItem.updateMany({
+    where: { artisanId, payoutStatus: "PENDING" },
+    data: { payoutStatus: "PAID", payoutAt: new Date() },
+  });
+
+  const artisan = pendingItems[0].artisan;
+  if (artisan?.user?.email) {
+    try {
+      await sendEmail(
+        artisan.user.email,
+        `Pago transferido: ${formatCLP(totalPaid)}`,
+        `<p>Hola ${artisan.displayName},</p>
+         <p>Se ha transferido <strong>${formatCLP(totalPaid)}</strong> a tu cuenta bancaria.</p>
+         <p>Gracias por ser parte de Casa Orfebre.</p>`
+      );
+    } catch (e) {
+      console.error("Payout confirmation email failed:", e);
+    }
+  }
+
+  revalidatePath("/portal/admin/pagos");
   return { success: true };
 }

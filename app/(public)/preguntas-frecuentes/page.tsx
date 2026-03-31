@@ -72,6 +72,12 @@ const faqSections: FaqSection[] = [
           "Tienes 14 días naturales desde la recepción de tu pedido para solicitar una devolución, siempre que la pieza esté en su estado original, sin uso y con su empaque completo. Una vez recibida y verificada la devolución, procesamos el reembolso en un plazo de 5 a 10 días hábiles al mismo medio de pago utilizado.",
       },
       {
+        question:
+          "¿Cuál es la diferencia entre una devolución y una disputa?",
+        answer:
+          "La devolución es para cuando quieres devolver físicamente una pieza y recibir un reembolso (por ejemplo, por arrepentimiento o porque no era lo que esperabas). La disputa es para reportar un problema que requiere mediación de Casa Orfebre (producto dañado, no coincide con la descripción, producto equivocado). En ambos casos, tienes 14 días desde la entrega para iniciar el proceso desde tu portal de comprador.",
+      },
+      {
         question: "¿Las piezas personalizadas tienen devolución?",
         answer:
           "Las piezas personalizadas o hechas a pedido no admiten devolución, ya que son creadas específicamente según tus indicaciones. Sin embargo, si la pieza presenta algún defecto de fabricación, será reparada o reemplazada sin costo adicional bajo nuestra garantía de calidad artesanal.",

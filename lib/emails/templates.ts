@@ -10,7 +10,7 @@ function appUrl(): string {
   );
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+export async function sendEmail(to: string, subject: string, html: string) {
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to,
@@ -747,10 +747,10 @@ export async function sendPayoutReleasedEmail(
   const base = appUrl();
   await sendEmail(
     to,
-    `Pago liberado: ${formatCLP(amount)}`,
+    `Pago en proceso: ${formatCLP(amount)}`,
     `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
-     <p style="margin:0 0 16px;">Se ha liberado un pago por <strong>${formatCLP(amount)}</strong> a tu cuenta de Mercado Pago.</p>
-     <p style="margin:0 0 16px;">El monto debería reflejarse en tu cuenta en las próximas horas.</p>
+     <p style="margin:0 0 16px;">Tu pago por <strong>${formatCLP(amount)}</strong> ha sido aprobado y está en proceso de transferencia.</p>
+     <p style="margin:0 0 16px;">Recibirás una confirmación cuando el monto se haya transferido a tu cuenta.</p>
      <p style="margin:0 0 0;">
        <a href="${base}/portal/orfebre/finanzas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver finanzas</a>
      </p>`,

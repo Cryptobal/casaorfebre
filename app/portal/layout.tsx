@@ -26,6 +26,7 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/pedidos", label: "Pedidos" },
   { href: "/portal/admin/disputas", label: "Disputas" },
   { href: "/portal/admin/devoluciones", label: "Devoluciones" },
+  { href: "/portal/admin/pagos", label: "Pagos" },
   { href: "/portal/admin/catalogo", label: "Catálogo" },
   { href: "/portal/admin/gift-cards", label: "Gift Cards" },
   { href: "/portal/admin/finanzas", label: "Finanzas" },

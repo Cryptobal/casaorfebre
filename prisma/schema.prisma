@@ -138,6 +138,12 @@ model Artisan {
   mpUserId         String?           @unique
   mpOnboarded      Boolean           @default(false)
   mpTokenExpiresAt DateTime?
+  bankName            String?
+  bankAccountType     String?
+  bankAccountNumber   String?
+  bankRut             String?
+  bankHolderName      String?
+  bankDataUpdatedAt   DateTime?
   commissionRate      Float                    @default(0.18)
   commissionOverride  Float?
   maxProductsOverride Int?
@@ -350,6 +356,8 @@ model Order {
   total              Int
   mpPaymentId        String?     @unique
   mpMerchantOrderId  String?
+  mpFeeAmount        Int?
+  mpNetReceived      Int?
   status             OrderStatus @default(PENDING_PAYMENT)
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
@@ -718,7 +726,9 @@ enum FulfillmentStatus {
 
 enum PayoutStatus {
   HELD
+  PENDING
   RELEASED
+  PAID
   REFUNDED
   DISPUTED
 }

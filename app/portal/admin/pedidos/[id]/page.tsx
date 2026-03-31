@@ -32,14 +32,18 @@ const statusColors: Record<OrderStatus, string> = {
 
 const payoutColors: Record<PayoutStatus, string> = {
   HELD: "bg-amber-100 text-amber-800",
+  PENDING: "bg-blue-100 text-blue-800",
   RELEASED: "bg-green-100 text-green-800",
+  PAID: "bg-green-100 text-green-800",
   REFUNDED: "bg-red-100 text-red-800",
   DISPUTED: "bg-red-100 text-red-800",
 };
 
 const payoutLabels: Record<PayoutStatus, string> = {
   HELD: "Retenido",
+  PENDING: "Disponible",
   RELEASED: "Liberado",
+  PAID: "Pagado",
   REFUNDED: "Reembolsado",
   DISPUTED: "Disputado",
 };

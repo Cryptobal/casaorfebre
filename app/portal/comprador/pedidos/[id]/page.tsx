@@ -528,7 +528,8 @@ export default async function BuyerOrderDetailPage({
 
                         {/* Actions for delivered */}
                         {item.fulfillmentStatus === "DELIVERED" && (
-                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <div className="mt-3 space-y-3">
+                            <div className="flex flex-wrap items-start gap-2">
                             {daysSinceDelivery >= 3 && !hasReview && (
                               <ReviewForm
                                 productId={item.productId}
@@ -544,7 +545,8 @@ export default async function BuyerOrderDetailPage({
                                   href={`/portal/comprador/pedidos/${order.id}/devolucion?item=${item.id}`}
                                   className="min-h-[44px] rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
                                 >
-                                  Solicitar Devolución
+                                  Devolver este producto
+                                  <span className="text-[11px] text-text-tertiary block mt-0.5">Reembolso tras devolución física</span>
                                 </Link>
                               )}
                             {item.product.productionType === "MADE_TO_ORDER" && (
@@ -558,8 +560,15 @@ export default async function BuyerOrderDetailPage({
                                 href={`/portal/comprador/pedidos/${order.id}/disputa`}
                                 className="min-h-[44px] rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background hover:text-text"
                               >
-                                Abrir Disputa
+                                Reportar un problema
+                                <span className="text-[11px] text-text-tertiary block mt-0.5">Mediación por parte de Casa Orfebre</span>
                               </Link>
+                            )}
+
+                            {daysSinceDelivery <= 14 && (
+                              <span className={`self-center text-[11px] ${14 - Math.floor(daysSinceDelivery) <= 3 ? 'text-amber-600' : 'text-text-tertiary'}`}>
+                                Te quedan {14 - Math.floor(daysSinceDelivery)} días
+                              </span>
                             )}
 
                             {certByProduct.has(item.productId) ? (
@@ -587,6 +596,29 @@ export default async function BuyerOrderDetailPage({
                               <span className="text-[11px] text-text-tertiary">
                                 Certificado en proceso
                               </span>
+                            )}
+                            </div>
+
+                            {daysSinceDelivery <= 14 && (
+                              <details className="mt-3 rounded-lg border border-border bg-background">
+                                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-text-secondary hover:text-text">
+                                  ¿Necesitas ayuda con este pedido?
+                                </summary>
+                                <div className="space-y-3 px-4 pb-4 pt-1">
+                                  <div>
+                                    <p className="text-sm font-medium text-text">Devolver este producto</p>
+                                    <p className="text-xs text-text-secondary">
+                                      Quiero devolver la pieza y recibir un reembolso. El producto debe estar sin uso y en su empaque original.
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-text">Reportar un problema</p>
+                                    <p className="text-xs text-text-secondary">
+                                      Tengo un problema con mi pedido que necesita mediación (no coincide con la descripción, llegó dañado, producto equivocado).
+                                    </p>
+                                  </div>
+                                </div>
+                              </details>
                             )}
                           </div>
                         )}

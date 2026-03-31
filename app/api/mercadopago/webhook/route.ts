@@ -161,12 +161,21 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
 
     if (!order || order.status !== "PENDING_PAYMENT") return;
 
+    const feeDetails = payment.fee_details;
+    const mpFeeAmount = Array.isArray(feeDetails)
+      ? feeDetails.reduce((sum: number, fee: any) => sum + (fee.amount || 0), 0)
+      : 0;
+    const transactionAmount = payment.transaction_amount ?? 0;
+    const mpNetReceived = transactionAmount - mpFeeAmount;
+
     await prisma.order.update({
       where: { id: orderId },
       data: {
         status: "PAID",
         mpPaymentId: String(paymentId),
         mpMerchantOrderId: payment.order?.id ? String(payment.order.id) : undefined,
+        mpFeeAmount: Math.round(mpFeeAmount),
+        mpNetReceived: Math.round(mpNetReceived),
       },
     });
 

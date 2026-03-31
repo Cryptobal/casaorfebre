@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/emails/templates";
 import {
   sendPayoutReleasedEmail,
   sendPayoutReleasedDetailedEmail,
 } from "@/lib/emails/templates";
+import { formatCLP } from "@/lib/utils";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -62,7 +64,7 @@ export async function GET(request: Request) {
     await prisma.orderItem.update({
       where: { id: item.id },
       data: {
-        payoutStatus: "RELEASED",
+        payoutStatus: "PENDING",
         payoutAt: now,
       },
     });
@@ -99,6 +101,42 @@ export async function GET(request: Request) {
     }
 
     released++;
+  }
+
+  // Notify admins about pending payouts
+  if (released > 0) {
+    const payoutSummary = allEligible.reduce((acc: Record<string, { name: string; total: number; items: number }>, item) => {
+      const key = item.artisanId;
+      if (!acc[key]) {
+        acc[key] = { name: item.artisan.displayName, total: 0, items: 0 };
+      }
+      acc[key].total += item.artisanPayout;
+      acc[key].items += 1;
+      return acc;
+    }, {});
+
+    const adminUsers = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { email: true },
+    });
+
+    const summaryHtml = Object.values(payoutSummary)
+      .map((p) => `<li><strong>${p.name}</strong>: ${formatCLP(p.total)} (${p.items} item${p.items > 1 ? "s" : ""})</li>`)
+      .join("");
+
+    for (const admin of adminUsers) {
+      try {
+        await sendEmail(
+          admin.email,
+          `Pagos pendientes de transferencia: ${released} items`,
+          `<p>Los siguientes pagos han cumplido el período de retención de 14 días y están listos para ser transferidos:</p>
+           <ul>${summaryHtml}</ul>
+           <p><a href="https://casaorfebre.cl/portal/admin/pagos" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;">Ver pagos pendientes</a></p>`
+        );
+      } catch (e) {
+        console.error("Admin payout notification failed:", e);
+      }
+    }
   }
 
   return NextResponse.json({
