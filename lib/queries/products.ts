@@ -128,6 +128,7 @@ export async function getProductBySlug(slug: string) {
       video: true,
       specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
+      collection: { select: { name: true } },
     },
   });
 }

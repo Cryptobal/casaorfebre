@@ -48,7 +48,7 @@ interface ProductFormProps {
     specialtyIds: string[];
     occasionIds: string[];
     variants: { size: string; stock: number }[];
-    coleccion: string | null;
+    collectionId: string | null;
     tallas: string[];
     guiaTallas: string | null;
     largoCadenaCm: number | null;
@@ -66,10 +66,11 @@ interface ProductFormProps {
   materials?: { id: string; name: string }[];
   specialties?: { id: string; name: string }[];
   occasions?: { id: string; name: string }[];
+  collections?: { id: string; name: string }[];
   videoEnabled?: boolean;
 }
 
-export function ProductForm({ product, artisanId, categories = [], materials = [], specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
+export function ProductForm({ product, artisanId, categories = [], materials = [], specialties = [], occasions = [], collections = [], videoEnabled = false }: ProductFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const precioFromCalculadora = searchParams.get("precio");
@@ -90,6 +91,11 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const [tallas, setTallas] = useState<string[]>(product?.tallas ?? []);
   const [tallaInput, setTallaInput] = useState("");
   const [personalizable, setPersonalizable] = useState(product?.personalizable ?? false);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>(product?.collectionId ?? "");
+  const [localCollections, setLocalCollections] = useState(collections);
+  const [showNewCollectionForm, setShowNewCollectionForm] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [creatingCollection, setCreatingCollection] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -138,6 +144,27 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const needsTallas = selectedCategorySlugs.includes("anillo");
   const needsLargoCadena = selectedCategorySlugs.includes("collar") || selectedCategorySlugs.includes("colgante");
   const needsDiametro = selectedCategorySlugs.includes("aros") || selectedCategorySlugs.includes("pulsera");
+
+  const handleCreateInlineCollection = useCallback(async () => {
+    if (!newCollectionName.trim() || creatingCollection) return;
+    setCreatingCollection(true);
+    try {
+      const res = await fetch("/api/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCollectionName.trim() }),
+      });
+      const data = await res.json();
+      if (data.id) {
+        setLocalCollections((prev) => [...prev, { id: data.id, name: data.name }]);
+        setSelectedCollectionId(data.id);
+        setNewCollectionName("");
+        setShowNewCollectionForm(false);
+      }
+    } finally {
+      setCreatingCollection(false);
+    }
+  }, [newCollectionName, creatingCollection]);
 
   const [showReviewModal, setShowReviewModal] = useState(false);
 
@@ -485,7 +512,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             <p className="text-[11px] text-text-secondary/70">Solo números, sin punto ni coma</p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="compareAtPrice">Precio anterior</Label>
+            <Label htmlFor="compareAtPrice">Precio anterior (opcional)</Label>
             <Input
               id="compareAtPrice"
               name="compareAtPrice"
@@ -506,6 +533,9 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
                 }
               }}
             />
+            <p className="text-xs text-text-secondary">
+              Si el precio anterior es mayor al precio actual, se mostrará tachado junto al precio indicando descuento.
+            </p>
           </div>
         </div>
 
@@ -789,10 +819,63 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           </div>
         )}
 
-        {/* ── Additional detail fields ── */}
+        {/* ── Collection selector ── */}
         <div className="space-y-1.5">
-          <Label htmlFor="coleccion">Colección</Label>
-          <Input id="coleccion" name="coleccion" type="text" defaultValue={product?.coleccion ?? ""} placeholder='Ej: "Raíces", "Luna Austral"' />
+          <Label>Coleccion (opcional)</Label>
+          <input type="hidden" name="collectionId" value={selectedCollectionId} />
+          <select
+            value={selectedCollectionId}
+            onChange={(e) => setSelectedCollectionId(e.target.value)}
+            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+          >
+            <option value="">Sin coleccion</option>
+            {localCollections.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          {!showNewCollectionForm ? (
+            <button
+              type="button"
+              onClick={() => setShowNewCollectionForm(true)}
+              className="text-xs font-medium text-accent hover:underline"
+            >
+              + Crear nueva coleccion
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 rounded-md border border-border bg-background p-2">
+              <Input
+                type="text"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                placeholder="Nombre de la coleccion"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleCreateInlineCollection();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                disabled={creatingCollection || !newCollectionName.trim()}
+                onClick={handleCreateInlineCollection}
+                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              >
+                {creatingCollection ? "..." : "Crear"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNewCollectionForm(false);
+                  setNewCollectionName("");
+                }}
+                className="text-text-tertiary hover:text-text"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">

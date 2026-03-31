@@ -154,6 +154,7 @@ model Artisan {
   subscriptions       MembershipSubscription[]
   conversations       Conversation[]
   artisanMaterials     ArtisanMaterial[]
+  collections          Collection[]
 
   @@map("artisans")
 }
@@ -184,6 +185,24 @@ model ArtisanMaterial {
   @@map("artisan_materials")
 }
 
+model Collection {
+  id          String    @id @default(cuid())
+  artisanId   String
+  name        String
+  slug        String
+  description String?
+  isActive    Boolean   @default(true)
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  artisan     Artisan   @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  products    Product[]
+
+  @@unique([artisanId, slug])
+  @@index([artisanId])
+  @@map("collections")
+}
+
 model Product {
   id             String            @id @default(cuid())
   artisanId      String
@@ -204,7 +223,8 @@ model Product {
   isCustomizable  Boolean           @default(false)
   elaborationDays Int?
   stock          Int               @default(1)
-  coleccion      String?
+  collectionId   String?
+  collection     Collection?   @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   tallas         String[]
   guiaTallas     String?
   largoCadenaCm  Float?
@@ -242,6 +262,7 @@ model Product {
   conversations  Conversation[]
 
   @@index([artisanId])
+  @@index([collectionId])
   @@index([status])
   @@map("products")
 }

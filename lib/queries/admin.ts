@@ -268,6 +268,7 @@ export async function getAllProductsForAdmin(statusFilter?: string) {
       artisan: { select: { displayName: true, slug: true } },
       categories: { select: { name: true } },
       materials: { select: { id: true, name: true } },
+      collection: { select: { name: true } },
       images: { orderBy: { position: "asc" }, take: 1 },
       _count: { select: { orderItems: true } },
     },

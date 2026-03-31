@@ -533,7 +533,7 @@ function TruckIcon() {
 
 /* ─── Product Details & Measurements ─── */
 
-function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string }[] } }) {
+function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string }[]; collection: { name: string } | null } }) {
   const rows: { label: string; value: string }[] = [];
 
   if (product.materials.length > 0)
@@ -552,8 +552,8 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Largo de cadena", value: `${product.largoCadenaCm} cm` });
   if (product.diametroMm)
     rows.push({ label: "Diámetro", value: `${product.diametroMm} mm` });
-  if (product.coleccion)
-    rows.push({ label: "Colección", value: product.coleccion as string });
+  if (product.collection)
+    rows.push({ label: "Colección", value: product.collection.name });
   if (product.tiempoElaboracionDias)
     rows.push({ label: "Tiempo de elaboración", value: `${product.tiempoElaboracionDias} días` });
   if (product.empaque)

@@ -130,7 +130,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                     <DetailRow label="Técnica" value={product.technique} />
                     <DetailRow label="Dimensiones" value={product.dimensions} />
                     <DetailRow label="Peso" value={product.weight ? `${product.weight}g` : null} />
-                    <DetailRow label="Colección" value={product.coleccion} />
+                    <DetailRow label="Colección" value={(product as unknown as { collection?: { name: string } | null }).collection?.name} />
                     <DetailRow label="Tallas" value={product.tallas.length > 0 ? product.tallas.join(", ") : null} />
                     <DetailRow label="Guía de tallas" value={product.guiaTallas} />
                     <DetailRow label="Largo cadena" value={product.largoCadenaCm ? `${product.largoCadenaCm} cm` : null} />

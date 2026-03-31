@@ -36,6 +36,7 @@ const ADMIN_LINKS = [
 const ARTISAN_LINKS = [
   { href: "/portal/orfebre", label: "Mi Taller" },
   { href: "/portal/orfebre/productos", label: "Mis Piezas" },
+  { href: "/portal/orfebre/colecciones", label: "Colecciones" },
   { href: "/portal/orfebre/pedidos", label: "Pedidos" },
   { href: "/portal/orfebre/preguntas", label: "Preguntas" },
   { href: "/portal/orfebre/mensajes", label: "Mensajes" },
@@ -184,6 +185,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <>
               <Link href="/portal/orfebre" data-tour="orfebre-dashboard" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Taller</Link>
               <Link href="/portal/orfebre/productos" data-tour="orfebre-productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Piezas</Link>
+              <Link href="/portal/orfebre/colecciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Colecciones</Link>
               <SidebarLink href="/portal/orfebre/pedidos" label="Pedidos" count={artisanPendingOrders} dataTour="orfebre-pedidos" />
               <SidebarLink href="/portal/orfebre/preguntas" label="Preguntas" count={artisanUnansweredQuestions} dataTour="orfebre-preguntas" />
               <SidebarLink href="/portal/orfebre/mensajes" label="Mensajes" count={artisanUnreadMessages} dataTour="orfebre-mensajes" />

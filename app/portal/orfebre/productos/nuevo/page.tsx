@@ -14,11 +14,16 @@ export default async function NuevoProductoPage() {
 
   if (!artisan) redirect("/");
 
-  const [categories, materials, specialties, occasions] = await Promise.all([
+  const [categories, materials, specialties, occasions, collections] = await Promise.all([
     getActiveCategories(),
     getActiveMaterials(),
     getActiveSpecialties(),
     getActiveOccasions(),
+    prisma.collection.findMany({
+      where: { artisanId: artisan.id, isActive: true },
+      orderBy: { position: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   return (
@@ -32,6 +37,7 @@ export default async function NuevoProductoPage() {
         materials={materials}
         specialties={specialties}
         occasions={occasions}
+        collections={collections}
       />
     </div>
   );

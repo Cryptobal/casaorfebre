@@ -27,7 +27,7 @@ export default async function EditProductPage({
     orderBy: { startDate: "desc" },
   });
 
-  const [product, categories, allMaterials, specialties, occasions] = await Promise.all([
+  const [product, categories, allMaterials, specialties, occasions, collections] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: {
@@ -44,6 +44,11 @@ export default async function EditProductPage({
     getActiveMaterials(),
     getActiveSpecialties(),
     getActiveOccasions(),
+    prisma.collection.findMany({
+      where: { artisanId: artisan.id, isActive: true },
+      orderBy: { position: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   if (!product || product.artisanId !== artisan.id) {
@@ -69,6 +74,7 @@ export default async function EditProductPage({
         materials={allMaterials}
         specialties={specialties}
         occasions={occasions}
+        collections={collections}
         videoEnabled={activeSub?.plan?.videoEnabled ?? false}
         product={{
           id: product.id,
@@ -103,7 +109,7 @@ export default async function EditProductPage({
           specialtyIds: product.specialties.map((s) => s.id),
           occasionIds: product.occasions.map((o) => o.id),
           variants: product.variants.map((v) => ({ size: v.size, stock: v.stock })),
-          coleccion: product.coleccion,
+          collectionId: product.collectionId,
           tallas: product.tallas,
           guiaTallas: product.guiaTallas,
           largoCadenaCm: product.largoCadenaCm,

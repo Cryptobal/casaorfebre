@@ -81,7 +81,7 @@ function parseFormData(formData: FormData) {
     : [];
 
   // Detail fields
-  const coleccion = (formData.get("coleccion") as string) || null;
+  const collectionId = (formData.get("collectionId") as string) || null;
   const tallasRaw = formData.get("tallas") as string;
   const tallas = tallasRaw
     ? tallasRaw.split(",").map((t) => t.trim()).filter(Boolean)
@@ -120,7 +120,7 @@ function parseFormData(formData: FormData) {
     weight,
     specialtyIds,
     occasionIds,
-    coleccion,
+    collectionId,
     tallas,
     guiaTallas,
     largoCadenaCm,
@@ -211,7 +211,7 @@ export async function createProduct(
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
-        coleccion: data.coleccion,
+        collectionId: data.collectionId,
         tallas: data.tallas,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
@@ -303,7 +303,7 @@ export async function updateProduct(
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
-        coleccion: data.coleccion,
+        collectionId: data.collectionId,
         tallas: data.tallas,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
@@ -472,7 +472,7 @@ export async function saveAndSubmitForReview(
         isReturnable: data.isReturnable,
         dimensions: data.dimensions,
         weight: data.weight,
-        coleccion: data.coleccion,
+        collectionId: data.collectionId,
         tallas: data.tallas,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
