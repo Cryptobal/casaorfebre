@@ -1094,7 +1094,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
         <input type="hidden" name="garantia" value={combinePresets(garantiaSelected, garantiaCustom)} />
 
         {/* Measurement validation warning */}
-        {needsTallas && tallas.length === 0 && (
+        {needsTallas && tallas.length === 0 && !tallaUnica && (
           <p className="text-sm text-amber-600">⚠ Debes agregar al menos una talla para poder enviar a revisión.</p>
         )}
 

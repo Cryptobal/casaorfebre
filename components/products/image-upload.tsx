@@ -4,6 +4,53 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PhotographyGuide } from "./photography-guide";
 
+const MAX_UPLOAD_SIZE = 4 * 1024 * 1024; // 4MB — Vercel serverless body limit is ~4.5MB
+
+async function compressImage(file: File): Promise<File> {
+  if (file.size <= MAX_UPLOAD_SIZE) return file;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      // Scale down proportionally — max 2400px on longest side
+      const maxDim = 2400;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size > MAX_UPLOAD_SIZE) {
+            // Try lower quality
+            canvas.toBlob(
+              (blob2) => {
+                if (!blob2) { resolve(file); return; }
+                resolve(new File([blob2], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+              },
+              "image/jpeg",
+              0.6
+            );
+          } else {
+            resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+          }
+        },
+        "image/jpeg",
+        0.82
+      );
+    };
+    img.onerror = () => reject(new Error("No se pudo procesar la imagen"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 interface ImageItem {
   id: string;
   url: string;
@@ -52,8 +99,10 @@ export function ImageUpload({
       setUploadingCount((c) => c + 1);
 
       try {
+        const compressed = await compressImage(file);
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", compressed);
         formData.append("productId", productId);
 
         const res = await fetch("/api/upload", {
@@ -62,8 +111,16 @@ export function ImageUpload({
         });
 
         if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Error al subir la imagen");
+          let message = "Error al subir la imagen";
+          try {
+            const data = await res.json();
+            message = data.error || message;
+          } catch {
+            if (res.status === 413) {
+              message = "La imagen es demasiado grande. Intenta con una foto más pequeña.";
+            }
+          }
+          throw new Error(message);
         }
 
         const data = await res.json();
