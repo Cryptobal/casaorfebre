@@ -104,6 +104,7 @@ export default async function EditProductPage({
             ? {
                 cloudflareStreamUid: product.video.cloudflareStreamUid,
                 status: product.video.status,
+                muted: product.video.muted,
               }
             : null,
           specialtyIds: product.specialties.map((s) => s.id),
