@@ -60,7 +60,7 @@ export default async function BuyerOrdersPage() {
               key={order.id}
               href={`/portal/comprador/pedidos/${order.id}`}
             >
-              <Card className="flex items-center justify-between transition-colors hover:bg-background">
+              <Card className="flex cursor-pointer items-center justify-between transition-colors hover:bg-background hover:border-accent/40">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-text">
                     Pedido #{order.orderNumber}

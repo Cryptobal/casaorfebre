@@ -15,11 +15,12 @@ export async function getArtisanOrders(artisanId: string, status?: FulfillmentSt
   return prisma.orderItem.findMany({
     where: {
       artisanId,
+      order: { status: { not: "PENDING_PAYMENT" } },
       ...(status ? { fulfillmentStatus: status } : {}),
     },
     orderBy: { createdAt: "desc" },
     include: {
-      order: { select: { orderNumber: true, createdAt: true } },
+      order: { select: { orderNumber: true, createdAt: true, status: true } },
       product: { select: { name: true, slug: true } },
     },
   });

@@ -41,10 +41,10 @@ export default async function SuscripcionesPage({ searchParams }: PageProps) {
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  // Stats — only count revenue from subs where artisan is APPROVED
+  // Stats — only count revenue from non-pioneer, approved artisans
   const [activeSubs, allSubs, plans] = await Promise.all([
     prisma.membershipSubscription.findMany({
-      where: { status: "ACTIVE", artisan: { status: "APPROVED" } },
+      where: { status: "ACTIVE", artisan: { status: "APPROVED", isPioneer: false } },
       include: { plan: { select: { price: true, name: true } } },
     }),
     prisma.membershipSubscription.findMany({
