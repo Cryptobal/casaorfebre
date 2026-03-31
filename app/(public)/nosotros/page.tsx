@@ -3,6 +3,8 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Nosotros",
   description:

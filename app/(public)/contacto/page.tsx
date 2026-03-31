@@ -4,6 +4,8 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { ContactForm } from "./contact-form";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Contacto",
   description:

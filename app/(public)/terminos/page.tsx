@@ -1,3 +1,5 @@
+export const revalidate = 3600;
+
 export const metadata = {
   title: "Términos y Condiciones",
   description:
