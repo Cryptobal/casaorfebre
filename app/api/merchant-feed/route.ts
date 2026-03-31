@@ -52,10 +52,16 @@ export async function GET() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
 
-  const items = products
-    .map((product: any) => {
-      const image = product.images[0]?.url;
-      if (!image) return "";
+  const validProducts = products.filter(
+    (p) => p.images.length > 0 && p.price > 0,
+  );
+
+  const items = validProducts
+    .map((product) => {
+      const imageUrl = product.images[0].url;
+      const image = imageUrl.startsWith("http")
+        ? imageUrl
+        : `${baseUrl}${imageUrl}`;
 
       const categorySlug = product.categories[0]?.slug || "";
       const googleCategory = GOOGLE_CATEGORIES[categorySlug] || "188 - Jewelry";
@@ -84,7 +90,6 @@ export async function GET() {
       </g:shipping>
     </item>`;
     })
-    .filter(Boolean)
     .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
