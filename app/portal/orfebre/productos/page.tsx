@@ -44,6 +44,7 @@ export default async function ProductosPage() {
         orderBy: { position: "asc" },
         take: 1,
       },
+      video: { select: { id: true } },
       _count: { select: { images: true, orderItems: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -80,7 +81,7 @@ export default async function ProductosPage() {
                   <th className="px-4 py-3 font-medium text-text-secondary">Categoria</th>
                   <th className="px-4 py-3 font-medium text-text-secondary">Precio</th>
                   <th className="px-4 py-3 font-medium text-text-secondary">Estado</th>
-                  <th className="px-4 py-3 font-medium text-text-secondary">Stock</th>
+                  <th className="px-4 py-3 font-medium text-text-secondary">Medios</th>
                   <th className="px-4 py-3 font-medium text-text-secondary">Acciones</th>
                 </tr>
               </thead>
@@ -124,17 +125,28 @@ export default async function ProductosPage() {
                           {STATUS_LABELS[product.status] ?? product.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">
-                        {product.stock}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 text-xs text-text-secondary">
+                          <span title="Fotos">{product._count.images} foto{product._count.images !== 1 ? "s" : ""}</span>
+                          {product.video ? (
+                            <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700">Video</span>
+                          ) : (
+                            <span className="text-text-tertiary">Sin video</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Link
-                            href={`/portal/orfebre/productos/${product.id}`}
-                            className="text-accent hover:underline"
-                          >
-                            Editar
-                          </Link>
+                          {product.status === "PENDING_REVIEW" ? (
+                            <span className="text-xs text-amber-600">En revisión</span>
+                          ) : (
+                            <Link
+                              href={`/portal/orfebre/productos/${product.id}`}
+                              className="text-accent hover:underline"
+                            >
+                              Editar
+                            </Link>
+                          )}
                           {(product.status === "APPROVED" || product.status === "PAUSED") && (
                             <form action={async () => {
                               "use server";
@@ -207,14 +219,25 @@ export default async function ProductosPage() {
                     </span>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="text-text-tertiary">Stock: {product.stock}</span>
+                    <div className="flex items-center gap-2 text-xs text-text-tertiary">
+                      <span>{product._count.images} foto{product._count.images !== 1 ? "s" : ""}</span>
+                      {product.video ? (
+                        <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700">Video</span>
+                      ) : (
+                        <span>Sin video</span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-3">
-                      <Link
-                        href={`/portal/orfebre/productos/${product.id}`}
-                        className="min-h-[44px] inline-flex items-center text-accent hover:underline"
-                      >
-                        Editar
-                      </Link>
+                      {product.status === "PENDING_REVIEW" ? (
+                        <span className="min-h-[44px] inline-flex items-center text-xs text-amber-600">En revisión</span>
+                      ) : (
+                        <Link
+                          href={`/portal/orfebre/productos/${product.id}`}
+                          className="min-h-[44px] inline-flex items-center text-accent hover:underline"
+                        >
+                          Editar
+                        </Link>
+                      )}
                       {(product.status === "APPROVED" || product.status === "PAUSED") && (
                         <form action={async () => {
                           "use server";

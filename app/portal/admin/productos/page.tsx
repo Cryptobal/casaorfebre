@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { ProductModerationActions } from "./product-moderation-actions";
-import { AdminProductActions } from "./admin-product-actions";
+import { ExpandableProductRow } from "./expandable-product-row";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 
@@ -26,13 +26,6 @@ const STATUS_LABELS: Record<string, string> = {
   PAUSED: "Pausado",
   SOLD_OUT: "Agotado",
 };
-
-/** Miniatura en admin: evita next/image con dominios no listados (500 en producción). */
-function canShowProductThumbUrl(url: string | undefined): boolean {
-  if (!url || url.startsWith("r2://")) return false;
-  if (url.includes("placeholder-ring")) return false;
-  return true;
-}
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (!value) return null;
@@ -59,8 +52,8 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
   ]);
 
   const TAB_ITEMS = [
-    { key: "moderation", label: "Moderación", count: pendingProducts.length },
-    { key: "manage", label: "Gestión de Productos" },
+    { key: "moderation", label: "Moderacion", count: pendingProducts.length },
+    { key: "manage", label: "Gestion de Productos" },
   ];
 
   const STATUS_TABS = [
@@ -68,6 +61,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
     { key: "PAUSED", label: "Pausados" },
     { key: "REJECTED", label: "Rechazados" },
     { key: "DRAFT", label: "Borradores" },
+    { key: "PENDING_REVIEW", label: "Pendientes" },
     { key: "all", label: "Todos" },
   ];
 
@@ -102,7 +96,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
         <>
           {pendingProducts.length === 0 ? (
             <p className="mt-8 text-center text-sm text-text-tertiary">
-              No hay productos pendientes de aprobación
+              No hay productos pendientes de aprobacion
             </p>
           ) : (
             <div className="mt-6 space-y-6">
@@ -122,23 +116,23 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
-                    <DetailRow label="Categoría" value={(product as unknown as { categories?: { name: string }[] }).categories?.map((c) => c.name).join(", ") ?? "—"} />
+                    <DetailRow label="Categoria" value={(product as unknown as { categories?: { name: string }[] }).categories?.map((c) => c.name).join(", ") ?? "—"} />
                     <DetailRow
                       label="Tipo"
-                      value={product.productionType === "UNIQUE" ? "Pieza única" : product.productionType === "MADE_TO_ORDER" ? "Hecha por encargo" : "Producción limitada"}
+                      value={product.productionType === "UNIQUE" ? "Pieza unica" : product.productionType === "MADE_TO_ORDER" ? "Hecha por encargo" : "Produccion limitada"}
                     />
-                    <DetailRow label="Técnica" value={product.technique} />
+                    <DetailRow label="Tecnica" value={product.technique} />
                     <DetailRow label="Dimensiones" value={product.dimensions} />
                     <DetailRow label="Peso" value={product.weight ? `${product.weight}g` : null} />
-                    <DetailRow label="Colección" value={(product as unknown as { collection?: { name: string } | null }).collection?.name} />
+                    <DetailRow label="Coleccion" value={(product as unknown as { collection?: { name: string } | null }).collection?.name} />
                     <DetailRow label="Tallas" value={product.tallas.length > 0 ? product.tallas.join(", ") : null} />
-                    <DetailRow label="Guía de tallas" value={product.guiaTallas} />
+                    <DetailRow label="Guia de tallas" value={product.guiaTallas} />
                     <DetailRow label="Largo cadena" value={product.largoCadenaCm ? `${product.largoCadenaCm} cm` : null} />
-                    <DetailRow label="Diámetro" value={product.diametroMm ? `${product.diametroMm} mm` : null} />
-                    <DetailRow label="Personalizable" value={product.personalizable ? "Sí" : null} />
-                    <DetailRow label="Detalle personalización" value={product.detallePersonalizacion} />
-                    <DetailRow label="Tiempo elaboración" value={product.tiempoElaboracionDias ? `${product.tiempoElaboracionDias} días` : null} />
-                    <DetailRow label="Stock" value={product.productionType === "UNIQUE" ? "Pieza única" : product.productionType === "MADE_TO_ORDER" ? "Por encargo" : `${product.stock} unidades`} />
+                    <DetailRow label="Diametro" value={product.diametroMm ? `${product.diametroMm} mm` : null} />
+                    <DetailRow label="Personalizable" value={product.personalizable ? "Si" : null} />
+                    <DetailRow label="Detalle personalizacion" value={product.detallePersonalizacion} />
+                    <DetailRow label="Tiempo elaboracion" value={product.tiempoElaboracionDias ? `${product.tiempoElaboracionDias} dias` : null} />
+                    <DetailRow label="Stock" value={product.productionType === "UNIQUE" ? "Pieza unica" : product.productionType === "MADE_TO_ORDER" ? "Por encargo" : `${product.stock} unidades`} />
                   </div>
 
                   {product.materials.length > 0 && (
@@ -153,7 +147,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                   )}
 
                   <div>
-                    <p className="mb-1 text-sm font-medium text-text-tertiary">Descripción</p>
+                    <p className="mb-1 text-sm font-medium text-text-tertiary">Descripcion</p>
                     <p className="whitespace-pre-line text-sm text-text-secondary">{product.description}</p>
                   </div>
 
@@ -180,7 +174,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                       )}
                       {product.garantia && (
                         <div>
-                          <p className="mb-1 text-sm font-medium text-text-tertiary">Garantía</p>
+                          <p className="mb-1 text-sm font-medium text-text-tertiary">Garantia</p>
                           <p className="text-sm text-text-secondary">{product.garantia}</p>
                         </div>
                       )}
@@ -189,7 +183,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
 
                   <div>
                     <div className="mb-2 flex items-center gap-2">
-                      <p className="text-sm font-medium text-text-tertiary">Imágenes ({product.images.length})</p>
+                      <p className="text-sm font-medium text-text-tertiary">Imagenes ({product.images.length})</p>
                       {product.images.some((img: { status: string }) => img.status === "PENDING_REVIEW") && (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
                           {product.images.filter((img: { status: string }) => img.status === "PENDING_REVIEW").length} por revisar
@@ -219,7 +213,7 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
         </>
       )}
 
-      {/* ─── Management view (new) ─── */}
+      {/* ─── Management view (expandable list) ─── */}
       {view === "manage" && (
         <>
           {/* Status sub-tabs */}
@@ -241,114 +235,18 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
 
           {allProducts.length === 0 ? (
             <p className="mt-8 text-center text-sm text-text-tertiary">
-              No hay productos en esta categoría
+              No hay productos en esta categoria
             </p>
           ) : (
             <>
               <p className="mt-4 text-xs text-text-tertiary">{allProducts.length} producto{allProducts.length !== 1 ? "s" : ""}</p>
-              <div className="mt-2 hidden overflow-x-auto md:block">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-xs uppercase tracking-widest text-text-tertiary">
-                      <th className="pb-3 pr-3 font-medium">Imagen</th>
-                      <th className="pb-3 pr-3 font-medium">Producto</th>
-                      <th className="pb-3 pr-3 font-medium">Orfebre</th>
-                      <th className="pb-3 pr-3 font-medium">Precio</th>
-                      <th className="pb-3 pr-3 font-medium">Ventas</th>
-                      <th className="pb-3 pr-3 font-medium">Estado</th>
-                      <th className="pb-3 font-medium">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {allProducts.map((product) => {
-                      const thumb = product.images[0];
-                      const showThumb = thumb && canShowProductThumbUrl(thumb.url);
-                      return (
-                        <tr key={product.id}>
-                          <td className="py-3 pr-3">
-                            <div className="h-12 w-12 overflow-hidden rounded-md border border-border">
-                              {showThumb ? (
-                                // eslint-disable-next-line @next/next/no-img-element -- admin: URLs de R2/CDN sin depender de remotePatterns
-                                <img
-                                  src={thumb!.url}
-                                  alt=""
-                                  className="h-full w-full object-cover"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <ImagePlaceholder name={product.name} className="h-full w-full text-[8px]" />
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 pr-3">
-                            <Link href={`/coleccion/${product.slug}`} target="_blank" className="font-medium text-accent hover:underline">
-                              {product.name}
-                            </Link>
-                          </td>
-                          <td className="py-3 pr-3 text-text-secondary">{product.artisan.displayName}</td>
-                          <td className="py-3 pr-3">{formatCLP(product.price)}</td>
-                          <td className="py-3 pr-3">{product._count.orderItems}</td>
-                          <td className="py-3 pr-3">
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[product.status] ?? "bg-gray-100 text-gray-800"}`}>
-                              {STATUS_LABELS[product.status] ?? product.status}
-                            </span>
-                          </td>
-                          <td className="py-3">
-                            <AdminProductActions
-                              productId={product.id}
-                              status={product.status}
-                              hasSales={product._count.orderItems > 0}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile cards */}
-              <div className="mt-4 space-y-3 md:hidden">
-                {allProducts.map((product) => {
-                  const thumb = product.images[0];
-                  const showThumb = thumb && canShowProductThumbUrl(thumb.url);
-                  return (
-                    <div key={product.id} className="rounded-lg border border-border bg-surface p-4">
-                      <div className="flex gap-3">
-                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border">
-                          {showThumb ? (
-                            // eslint-disable-next-line @next/next/no-img-element -- admin: URLs de R2/CDN sin depender de remotePatterns
-                            <img
-                              src={thumb!.url}
-                              alt=""
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <ImagePlaceholder name={product.name} className="h-full w-full text-[8px]" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium">{product.name}</p>
-                          <p className="text-xs text-text-secondary">{product.artisan.displayName}</p>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="text-sm font-medium">{formatCLP(product.price)}</span>
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_STYLES[product.status] ?? "bg-gray-100 text-gray-800"}`}>
-                              {STATUS_LABELS[product.status] ?? product.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-3 border-t border-border pt-3">
-                        <AdminProductActions
-                          productId={product.id}
-                          status={product.status}
-                          hasSales={product._count.orderItems > 0}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="mt-2 space-y-2">
+                {allProducts.map((product) => (
+                  <ExpandableProductRow
+                    key={product.id}
+                    product={product as unknown as Parameters<typeof ExpandableProductRow>[0]["product"]}
+                  />
+                ))}
               </div>
             </>
           )}

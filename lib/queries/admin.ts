@@ -266,11 +266,12 @@ export async function getAllProductsForAdmin(statusFilter?: string) {
     orderBy: { updatedAt: "desc" },
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      categories: { select: { name: true } },
+      categories: { select: { name: true, slug: true } },
       materials: { select: { id: true, name: true } },
       collection: { select: { name: true } },
-      images: { orderBy: { position: "asc" }, take: 1 },
-      _count: { select: { orderItems: true } },
+      images: { orderBy: { position: "asc" } },
+      video: true,
+      _count: { select: { orderItems: true, images: true } },
     },
     take: 200,
   });

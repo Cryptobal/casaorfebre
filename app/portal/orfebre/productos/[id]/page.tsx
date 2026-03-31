@@ -55,6 +55,28 @@ export default async function EditProductPage({
     notFound();
   }
 
+  if (product.status === "PENDING_REVIEW") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+          <h2 className="font-serif text-xl font-semibold text-amber-800">
+            Pieza en revisión
+          </h2>
+          <p className="mt-2 text-sm text-amber-700">
+            Tu pieza &ldquo;{product.name}&rdquo; está siendo revisada por el equipo de Casa Orfebre.
+            No es posible editarla hasta que sea aprobada o rechazada.
+          </p>
+          <a
+            href="/portal/orfebre/productos"
+            className="mt-4 inline-block text-sm font-medium text-accent hover:underline"
+          >
+            Volver a mis productos
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       {product.status === "REJECTED" && product.adminNotes && (

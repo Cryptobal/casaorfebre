@@ -276,6 +276,10 @@ export async function updateProduct(
     return { error: "Producto no encontrado" };
   }
 
+  if (product.status === "PENDING_REVIEW") {
+    return { error: "No puedes editar un producto que está pendiente de revisión. Espera a que sea aprobado o rechazado." };
+  }
+
   const data = parseFormData(formData);
 
   if (!data.name || !data.description || !data.price) {
@@ -290,7 +294,7 @@ export async function updateProduct(
     return { error: "Selecciona al menos una categoría" };
   }
 
-  // When saving as borrador, keep current status for DRAFT/REJECTED/PENDING_REVIEW.
+  // When saving as borrador, keep current status for DRAFT/REJECTED.
   // If product was APPROVED, saving as borrador sets it back to DRAFT
   // (the orfebre must use "Enviar a revisión" to re-publish).
   let newStatus = product.status;

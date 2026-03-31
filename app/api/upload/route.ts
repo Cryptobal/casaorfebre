@@ -49,6 +49,10 @@ export async function POST(request: Request) {
   if (product.artisan.userId !== session.user.id) {
     return NextResponse.json({ error: "No tienes permiso para subir imágenes a este producto" }, { status: 403 });
   }
+
+  if (product.status === "PENDING_REVIEW") {
+    return NextResponse.json({ error: "No puedes modificar imágenes de un producto en revisión" }, { status: 400 });
+  }
   try {
     const limits = await getArtisanPlanLimits(product.artisanId);
     if (limits.maxPhotosPerProduct > 0 && product._count.images >= limits.maxPhotosPerProduct) {
@@ -120,6 +124,10 @@ export async function DELETE(request: Request) {
 
   if (image.product.artisan.userId !== session.user.id) {
     return NextResponse.json({ error: "No tienes permiso para eliminar esta imagen" }, { status: 403 });
+  }
+
+  if (image.product.status === "PENDING_REVIEW") {
+    return NextResponse.json({ error: "No puedes modificar imágenes de un producto en revisión" }, { status: 400 });
   }
 
   // Delete from R2
