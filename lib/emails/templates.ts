@@ -1505,8 +1505,8 @@ export async function sendPioneerInvitationEmail(
        Te adjuntamos nuestra guía donde encontrarás todos los detalles sobre planes, beneficios y cómo funciona Casa Orfebre.
      </p>
      <p style="text-align:center;margin:0 0 28px;">
-       <a href="${brochureUrl}" style="display:inline-flex;align-items:center;gap:6px;color:#8B7355;font-size:14px;font-weight:500;text-decoration:none;border:1px solid #e8e4de;padding:10px 20px;border-radius:8px;">
-         📄 Ver Guía para Orfebres
+       <a href="${brochureUrl}" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
+         📄 Ver Guía para Orfebres (PDF)
        </a>
      </p>` : ""}
 
