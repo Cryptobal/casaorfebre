@@ -41,10 +41,10 @@ export default async function SuscripcionesPage({ searchParams }: PageProps) {
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  // Stats
+  // Stats — only count revenue from subs where artisan is APPROVED
   const [activeSubs, allSubs, plans] = await Promise.all([
     prisma.membershipSubscription.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", artisan: { status: "APPROVED" } },
       include: { plan: { select: { price: true, name: true } } },
     }),
     prisma.membershipSubscription.findMany({
@@ -54,7 +54,7 @@ export default async function SuscripcionesPage({ searchParams }: PageProps) {
       },
       orderBy: { startDate: "desc" },
       include: {
-        artisan: { select: { id: true, displayName: true, slug: true, profileImage: true } },
+        artisan: { select: { id: true, displayName: true, slug: true, profileImage: true, status: true } },
         plan: { select: { name: true, price: true, badgeText: true } },
       },
     }),
@@ -197,6 +197,11 @@ export default async function SuscripcionesPage({ searchParams }: PageProps) {
                       <Link href={`/portal/admin/orfebres`} className="text-accent hover:underline">
                         {sub.artisan.displayName}
                       </Link>
+                      {sub.artisan.status !== "APPROVED" && (
+                        <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700">
+                          {sub.artisan.status === "SUSPENDED" ? "Suspendido" : sub.artisan.status}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 pr-4">
                       <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
@@ -238,7 +243,14 @@ export default async function SuscripcionesPage({ searchParams }: PageProps) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium">{sub.artisan.displayName}</p>
+                    <p className="font-medium">
+                      {sub.artisan.displayName}
+                      {sub.artisan.status !== "APPROVED" && (
+                        <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700">
+                          {sub.artisan.status === "SUSPENDED" ? "Suspendido" : sub.artisan.status}
+                        </span>
+                      )}
+                    </p>
                     <p className="mt-0.5 text-sm text-text-secondary">
                       <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
                         {sub.plan.name}

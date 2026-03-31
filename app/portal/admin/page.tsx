@@ -97,26 +97,26 @@ export default async function AdminDashboardPage() {
 
       {/* Row 1: Main KPIs */}
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Link href="/portal/admin/finanzas">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/finanzas" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">GMV del Mes</p>
             <p className="mt-1 text-2xl font-medium">{formatCLP(stats.gmv)}</p>
           </Card>
         </Link>
-        <Link href="/portal/admin/finanzas">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/finanzas" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">Comisiones</p>
             <p className="mt-1 text-2xl font-medium">{formatCLP(stats.commissions)}</p>
           </Card>
         </Link>
-        <Link href="/portal/admin/suscripciones">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/suscripciones" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">Suscripciones</p>
             <p className="mt-1 text-2xl font-medium">{formatCLP(stats.subscriptionRevenue)}</p>
           </Card>
         </Link>
-        <Link href="/portal/admin/pedidos">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/pedidos" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">Pedidos del Mes</p>
             <p className="mt-1 text-2xl font-medium">{stats.monthlyOrderCount}</p>
           </Card>
@@ -125,20 +125,20 @@ export default async function AdminDashboardPage() {
 
       {/* Row 2: Secondary KPIs */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Link href="/portal/admin/orfebres">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/orfebres" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">Orfebres Activos</p>
             <p className="mt-1 text-2xl font-medium">{stats.activeArtisans}</p>
           </Card>
         </Link>
-        <Link href="/portal/admin/productos">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/productos" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">Productos</p>
             <p className="mt-1 text-2xl font-medium">{stats.publishedProducts}</p>
           </Card>
         </Link>
-        <Link href="/portal/admin/compradores">
-          <Card className="cursor-pointer transition-colors hover:border-accent/40">
+        <Link href="/portal/admin/compradores" className="cursor-pointer">
+          <Card className="h-full transition-colors hover:border-accent/40">
             <p className="text-xs uppercase tracking-widest text-text-tertiary">Compradores</p>
             <p className="mt-1 text-2xl font-medium">{stats.registeredBuyers}</p>
           </Card>

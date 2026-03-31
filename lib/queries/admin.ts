@@ -73,9 +73,9 @@ export async function getAdminDashboardStats() {
   const salesCount = monthlyOrders.length;
   const avgTicket = salesCount > 0 ? Math.round(gmv / salesCount) : 0;
 
-  // Subscription revenue estimate (sum of active subscriptions for this month)
+  // Subscription revenue estimate (only from approved artisans)
   const activeSubs = await prisma.membershipSubscription.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: "ACTIVE", artisan: { status: "APPROVED" } },
     include: { plan: { select: { price: true } } },
   });
   const subscriptionRevenue = activeSubs.reduce((s, sub) => s + sub.plan.price, 0);
