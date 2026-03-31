@@ -579,7 +579,7 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
           {rows.map((row) => (
             <tr key={row.label} className="border-b border-border/50 last:border-0">
               <td className="py-2.5 pr-4 font-medium text-text">{row.label}</td>
-              <td className="py-2.5 text-text-secondary">{row.value}</td>
+              <td className="py-2.5 text-text-secondary whitespace-pre-line">{row.value}</td>
             </tr>
           ))}
         </tbody>

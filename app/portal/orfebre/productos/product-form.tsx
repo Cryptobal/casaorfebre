@@ -9,6 +9,8 @@ import { ImageUpload } from "@/components/products/image-upload";
 import { VideoUploader } from "@/components/products/video-uploader";
 import { ErrorModal } from "@/components/ui/error-modal";
 import { createProduct, updateProduct, saveAndSubmitForReview } from "@/lib/actions/products";
+import { PresetSelector } from "@/components/forms/preset-selector";
+import { CARE_PRESETS, PACKAGING_PRESETS, WARRANTY_PRESETS } from "@/lib/constants";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   DRAFT: { label: "Borrador", className: "border-gray-300 bg-gray-50 text-gray-700" },
@@ -99,6 +101,50 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const [submitting, setSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Preset selector state for cuidados, empaque, garantia
+  const parsePresets = (value: string | null | undefined, presets: readonly string[]): { selected: string[]; custom: string } => {
+    if (!value) return { selected: [], custom: "" };
+    const lines = value.split("\n").map((l) => l.trim()).filter(Boolean);
+    const selected: string[] = [];
+    const customLines: string[] = [];
+    for (const line of lines) {
+      const clean = line.replace(/^[•\-]\s*/, "").trim();
+      if ((presets as readonly string[]).includes(clean)) {
+        selected.push(clean);
+      } else {
+        customLines.push(clean);
+      }
+    }
+    return { selected, custom: customLines.join("\n") };
+  };
+
+  const combinePresets = (selected: string[], custom: string): string => {
+    const parts = [
+      ...selected.map((s) => `• ${s}`),
+      ...(custom.trim() ? [custom.trim()] : []),
+    ];
+    return parts.join("\n");
+  };
+
+  const [cuidadosSelected, setCuidadosSelected] = useState<string[]>(
+    () => parsePresets(product?.cuidados, CARE_PRESETS).selected
+  );
+  const [cuidadosCustom, setCuidadosCustom] = useState(
+    () => parsePresets(product?.cuidados, CARE_PRESETS).custom
+  );
+  const [empaqueSelected, setEmpaqueSelected] = useState<string[]>(
+    () => parsePresets(product?.empaque, PACKAGING_PRESETS).selected
+  );
+  const [empaqueCustom, setEmpaqueCustom] = useState(
+    () => parsePresets(product?.empaque, PACKAGING_PRESETS).custom
+  );
+  const [garantiaSelected, setGarantiaSelected] = useState<string[]>(
+    () => parsePresets(product?.garantia, WARRANTY_PRESETS).selected
+  );
+  const [garantiaCustom, setGarantiaCustom] = useState(
+    () => parsePresets(product?.garantia, WARRANTY_PRESETS).custom
+  );
 
   const updateBound = product
     ? updateProduct.bind(null, product.id)
@@ -917,28 +963,38 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           </div>
         )}
 
-        <div className="space-y-1.5">
-          <Label htmlFor="cuidados">Cuidados</Label>
-          <textarea
-            id="cuidados"
-            name="cuidados"
-            defaultValue={product?.cuidados ?? ""}
-            rows={2}
-            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-            placeholder="Instrucciones de cuidado de la pieza..."
-          />
-        </div>
+        <PresetSelector
+          label="Cuidados de la pieza"
+          presets={CARE_PRESETS}
+          selected={cuidadosSelected}
+          onSelectedChange={setCuidadosSelected}
+          customText={cuidadosCustom}
+          onCustomTextChange={setCuidadosCustom}
+          textareaPlaceholder="Agrega indicaciones de cuidado específicas..."
+        />
+        <input type="hidden" name="cuidados" value={combinePresets(cuidadosSelected, cuidadosCustom)} />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="empaque">Empaque</Label>
-            <Input id="empaque" name="empaque" type="text" defaultValue={product?.empaque ?? ""} placeholder="Descripción del empaque" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="garantia">Garantía</Label>
-            <Input id="garantia" name="garantia" type="text" defaultValue={product?.garantia ?? ""} placeholder="Política de garantía" />
-          </div>
-        </div>
+        <PresetSelector
+          label="Empaque"
+          presets={PACKAGING_PRESETS}
+          selected={empaqueSelected}
+          onSelectedChange={setEmpaqueSelected}
+          customText={empaqueCustom}
+          onCustomTextChange={setEmpaqueCustom}
+          textareaPlaceholder="Describe detalles adicionales del empaque..."
+        />
+        <input type="hidden" name="empaque" value={combinePresets(empaqueSelected, empaqueCustom)} />
+
+        <PresetSelector
+          label="Garantía"
+          presets={WARRANTY_PRESETS}
+          selected={garantiaSelected}
+          onSelectedChange={setGarantiaSelected}
+          customText={garantiaCustom}
+          onCustomTextChange={setGarantiaCustom}
+          textareaPlaceholder="Detalles adicionales de garantía..."
+        />
+        <input type="hidden" name="garantia" value={combinePresets(garantiaSelected, garantiaCustom)} />
 
         {/* Measurement validation warning */}
         {needsTallas && tallas.length === 0 && (
