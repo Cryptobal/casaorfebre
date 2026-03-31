@@ -4,11 +4,11 @@ import { MobileMenu } from "./mobile-menu";
 import { CartButton } from "./cart-button";
 import { UserMenu } from "./user-menu";
 import { RegalarDropdown } from "./regalar-dropdown";
+import { ColeccionMegaMenu } from "./coleccion-mega-menu";
 import { SearchModal } from "@/components/shared/search-modal";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinksLeft = [
-  { href: "/coleccion", label: "Colección", tourId: "nav-coleccion" },
   { href: "/lo-nuevo", label: "Lo Nuevo", tourId: undefined },
   { href: "/seleccion-del-curador", label: "Selección del Curador", tourId: "nav-curador" },
   { href: "/tesoros-de-chile", label: "Tesoros de Chile", tourId: undefined },
@@ -42,6 +42,9 @@ export function Navbar({
         </Link>
 
         <ul className="hidden items-center gap-6 lg:flex">
+          <li data-tour="nav-coleccion">
+            <ColeccionMegaMenu />
+          </li>
           {navLinksLeft.map((link) => (
             <li key={link.href}>
               <Link href={link.href} data-tour={link.tourId} className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text">

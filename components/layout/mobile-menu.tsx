@@ -11,6 +11,43 @@ function useIsClient() {
   return useSyncExternalStore(emptySubscribe, () => true, () => false);
 }
 
+const coleccionTipoLinks = [
+  { href: "/coleccion/anillos", label: "Anillos" },
+  { href: "/coleccion/aros", label: "Aros" },
+  { href: "/coleccion/collares", label: "Collares" },
+  { href: "/coleccion/pulseras", label: "Pulseras" },
+  { href: "/coleccion/colgantes", label: "Colgantes" },
+  { href: "/coleccion/plata-925", label: "Cadenas" },
+];
+
+const coleccionOcasionLinks = [
+  { href: "/ocasion/anillos-de-compromiso-plata", label: "Compromiso" },
+  { href: "/ocasion/anillos-matrimonio-plata", label: "Matrimonio" },
+  { href: "/coleccion/dia-de-la-madre", label: "Día de la Madre" },
+  { href: "/ocasion/joyas-para-parejas", label: "Parejas" },
+  { href: "/coleccion/graduacion", label: "Graduación" },
+  { href: "/coleccion/aniversario", label: "Aniversario" },
+  { href: "/coleccion/autorregalo", label: "Autorregalo" },
+];
+
+const coleccionEstiloLinks = [
+  { href: "/coleccion/joyas-mujer", label: "Joyas para Mujer" },
+  { href: "/coleccion/joyas-hombre", label: "Joyas para Hombre" },
+];
+
+const coleccionGuiasLinks = [
+  { href: "/guia/plata-925-950", label: "Plata 925 vs 950" },
+  { href: "/coleccion/regalos", label: "Regalar Joyería" },
+  { href: "/coleccion/piedras-naturales", label: "Piedras Naturales" },
+];
+
+const coleccionExplorarLinks = [
+  { href: "/galeria-santo-domingo", label: "Galería Santo Domingo" },
+  { href: "/orfebres", label: "Orfebres" },
+  { href: "/blog", label: "Blog" },
+  { href: "/lo-nuevo", label: "Novedades" },
+];
+
 const regalarOcasionLinks = [
   { href: "/coleccion/compromiso", label: "Compromiso" },
   { href: "/coleccion/matrimonio", label: "Matrimonio" },
@@ -34,6 +71,7 @@ interface MobileMenuProps {
 
 export function MobileMenu({ links, user }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const [coleccionOpen, setColeccionOpen] = useState(false);
   const [regalarOpen, setRegalarOpen] = useState(false);
   const isClient = useIsClient();
 
@@ -71,6 +109,108 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
         />
         <div className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto">
           <nav className="flex flex-col items-center gap-8 px-6 pt-10 pb-12">
+            {/* Colección Menu */}
+            <div className="flex w-full flex-col items-center">
+              <button
+                type="button"
+                onClick={() => setColeccionOpen(!coleccionOpen)}
+                className="flex items-center gap-2 font-serif text-2xl font-light text-text transition-colors hover:text-accent"
+              >
+                Colección
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  className={`transition-transform ${coleccionOpen ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              {coleccionOpen && (
+                <div className="mt-4 w-full max-w-xs space-y-4">
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Por Tipo
+                    </p>
+                    {coleccionTipoLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Por Ocasión
+                    </p>
+                    {coleccionOcasionLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Por Estilo
+                    </p>
+                    {coleccionEstiloLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Guías
+                    </p>
+                    {coleccionGuiasLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                      Explorar
+                    </p>
+                    {coleccionExplorarLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="block py-1 text-sm font-light text-text-secondary transition-colors hover:text-text"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {links.map((link) => (
               <Link
                 key={link.href}
