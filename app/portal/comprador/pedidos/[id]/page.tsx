@@ -12,6 +12,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ReviewForm } from "./review-form";
 import { ResumePaymentButton } from "./resume-payment-button";
+import { ConfirmReceiptButton } from "./confirm-receipt-button";
+import { TrackingLink } from "@/components/tracking-link";
 import type { OrderStatus, FulfillmentStatus } from "@prisma/client";
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -462,41 +464,67 @@ export default async function BuyerOrderDetailPage({
                         {/* Tracking */}
                         {item.fulfillmentStatus === "SHIPPED" &&
                           item.trackingNumber && (
-                            <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1 text-xs text-indigo-700">
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
-                                <path d="M15 18H9" />
-                                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
-                                <circle cx="7" cy="18" r="2" />
-                                <circle cx="17" cy="18" r="2" />
-                              </svg>
-                              {item.trackingNumber}
-                              {item.trackingCarrier &&
-                                ` · ${item.trackingCarrier}`}
+                            <div className="mt-2">
+                              <TrackingLink
+                                carrier={item.trackingCarrier}
+                                trackingNumber={item.trackingNumber}
+                              />
                             </div>
                           )}
 
-                        {/* Delivery date */}
-                        {item.fulfillmentStatus === "DELIVERED" &&
-                          item.deliveredAt && (
-                            <p className="mt-2 text-xs text-text-secondary">
-                              Entregado el{" "}
-                              {item.deliveredAt.toLocaleDateString("es-CL", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              })}
-                            </p>
+                        {/* Confirm receipt button */}
+                        {item.fulfillmentStatus === "SHIPPED" &&
+                          !item.receivedAt && (
+                            <div className="mt-3">
+                              <ConfirmReceiptButton orderItemId={item.id} />
+                              <p className="mt-1 text-[11px] text-text-tertiary">
+                                Al confirmar, inicias el proceso de liberación del pago al orfebre
+                              </p>
+                            </div>
                           )}
+
+                        {/* Receipt confirmed info */}
+                        {item.receivedAt && item.fulfillmentStatus !== "DELIVERED" && (
+                          <p className="mt-2 text-xs text-green-700">
+                            Recibido el{" "}
+                            {item.receivedAt.toLocaleDateString("es-CL", {
+                              day: "numeric",
+                              month: "long",
+                            })}
+                          </p>
+                        )}
+
+                        {/* Delivery date + payout info */}
+                        {item.fulfillmentStatus === "DELIVERED" && (
+                          <div className="mt-2 space-y-1">
+                            {item.receivedAt && (
+                              <p className="text-xs text-green-700">
+                                Recibido el{" "}
+                                {item.receivedAt.toLocaleDateString("es-CL", {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                })}
+                              </p>
+                            )}
+                            {!item.receivedAt && item.deliveredAt && (
+                              <p className="text-xs text-text-secondary">
+                                Entregado el{" "}
+                                {item.deliveredAt.toLocaleDateString("es-CL", {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                })}
+                              </p>
+                            )}
+                            {item.trackingNumber && (
+                              <TrackingLink
+                                carrier={item.trackingCarrier}
+                                trackingNumber={item.trackingNumber}
+                              />
+                            )}
+                          </div>
+                        )}
 
                         {/* Actions for delivered */}
                         {item.fulfillmentStatus === "DELIVERED" && (

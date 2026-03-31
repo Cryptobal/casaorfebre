@@ -45,6 +45,12 @@ export async function createDispute(formData: FormData) {
     },
   });
 
+  // Mark all order items as DISPUTED so payouts are blocked
+  await prisma.orderItem.updateMany({
+    where: { orderId },
+    data: { payoutStatus: "DISPUTED" },
+  });
+
   // Send dispute notification to each artisan involved (pre-fetch to avoid N+1)
   const artisanIds = [...new Set(order.items.map((i: any) => i.artisanId))];
   const artisans = await prisma.artisan.findMany({

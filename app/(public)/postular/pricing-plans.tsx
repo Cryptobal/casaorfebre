@@ -77,11 +77,15 @@ function buildComparisonRows(plans: MembershipPlan[]): ComparisonRow[] {
       ),
     },
     {
-      label: "Frecuencia de pago",
+      label: "Liberación de pago",
       values: Object.fromEntries(
         plans.map((p) => [
           p.name,
-          p.payoutFrequency === "48h" ? "48 horas" : p.payoutFrequency.charAt(0).toUpperCase() + p.payoutFrequency.slice(1),
+          p.payoutFrequency === "48h"
+            ? "48h post-entrega"
+            : p.payoutFrequency === "semanal"
+              ? "7 días post-entrega"
+              : "14 días post-entrega",
         ])
       ),
     },

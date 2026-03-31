@@ -12,7 +12,9 @@ import {
 } from "@/lib/emails/templates";
 import { createCertificate } from "@/lib/certificates";
 
-const ADMIN_EMAILS = ["carlos.irigoyen@gmail.com", "camilatorrespuga@gmail.com"];
+import { getAdminEmails } from "@/lib/config";
+
+const ADMIN_EMAILS = getAdminEmails();
 
 export async function confirmPreparation(orderItemId: string) {
   const session = await auth();

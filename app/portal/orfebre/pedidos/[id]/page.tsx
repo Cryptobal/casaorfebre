@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getArtisanOrderDetail } from "@/lib/queries/orders";
 import { confirmPreparation, markAsShipped } from "@/lib/actions/orders";
+import { TrackingLink } from "@/components/tracking-link";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendiente",
@@ -233,9 +234,13 @@ export default async function OrderDetailPage({
         {item.fulfillmentStatus === "SHIPPED" && (
           <div className="mt-4 space-y-2 text-sm">
             <p className="text-text">Este pedido ya fue despachado.</p>
-            <div className="rounded-md bg-background p-3">
-              <p><span className="text-text-secondary">Courier:</span> <span className="text-text">{item.trackingCarrier}</span></p>
-              <p><span className="text-text-secondary">N. seguimiento:</span> <span className="font-medium text-text">{item.trackingNumber}</span></p>
+            <div className="rounded-md bg-background p-3 space-y-2">
+              {item.trackingNumber && (
+                <TrackingLink
+                  carrier={item.trackingCarrier}
+                  trackingNumber={item.trackingNumber}
+                />
+              )}
               {item.shippedAt && (
                 <p><span className="text-text-secondary">Fecha de despacho:</span> <span className="text-text">{new Date(item.shippedAt).toLocaleDateString("es-CL")}</span></p>
               )}

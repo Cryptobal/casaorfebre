@@ -115,7 +115,9 @@ export default async function PedidosPage({
                     <td className="py-3 pr-4">
                       <details>
                         <summary className="cursor-pointer font-medium">
-                          {order.orderNumber}
+                          <Link href={`/portal/admin/pedidos/${order.id}`} className="hover:text-accent hover:underline">
+                            {order.orderNumber}
+                          </Link>
                           {order.isGift && (
                             <span className="ml-1.5" title="Pedido regalo" role="img" aria-label="Regalo">🎁</span>
                           )}

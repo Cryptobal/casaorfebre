@@ -290,7 +290,8 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
       }
     }
     // Send admin notification
-    const ADMIN_EMAILS = ["carlos.irigoyen@gmail.com", "camilatorrespuga@gmail.com"];
+    const { getAdminEmails } = await import("@/lib/config");
+    const ADMIN_EMAILS = getAdminEmails();
     for (const adminEmail of ADMIN_EMAILS) {
       try {
         const artisanMap = new Map(artisans.map((a: any) => [a.id, a.displayName]));

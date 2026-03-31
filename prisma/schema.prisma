@@ -386,6 +386,9 @@ model OrderItem {
   trackingCarrier   String?
   shippedAt         DateTime?
   deliveredAt       DateTime?
+  receivedAt        DateTime?         // Buyer confirmed receipt
+  autoReceivedAt    DateTime?         // Auto-confirmed by cron (10 days post-ship)
+  payoutEligibleAt  DateTime?         // When payout can be released (receivedAt + plan days)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   artisan           Artisan           @relation(fields: [artisanId], references: [id])

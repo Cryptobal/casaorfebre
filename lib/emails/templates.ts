@@ -1528,3 +1528,153 @@ export async function sendPioneerInvitationEmail(
      </div>`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Receipt Confirmed — to artisan
+// ---------------------------------------------------------------------------
+export async function sendReceiptConfirmedToArtisanEmail(
+  to: string,
+  {
+    artisanName,
+    productName,
+    orderNumber,
+    artisanPayout,
+    payoutEligibleAt,
+    payoutDays,
+  }: {
+    artisanName: string;
+    productName: string;
+    orderNumber: string;
+    artisanPayout: number;
+    payoutEligibleAt: Date;
+    payoutDays: number;
+  },
+) {
+  const dateStr = payoutEligibleAt.toLocaleDateString("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  await sendEmail(
+    to,
+    `Recepción confirmada: ${productName} — Pedido #${orderNumber}`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">El comprador ha confirmado que recibió tu pieza <strong>${productName}</strong> del pedido <strong>#${orderNumber}</strong>.</p>
+     <div style="padding:12px 16px;background-color:#f0fdf4;border-radius:4px;margin:0 0 16px;">
+       <p style="margin:0 0 4px;font-weight:600;">Tu pago: ${formatCLP(artisanPayout)}</p>
+       <p style="margin:0;font-size:14px;color:#4a4a48;">Se liberará el ${dateStr} (en ${payoutDays} días)</p>
+     </div>
+     <p style="margin:0 0 0;">
+       <a href="${appUrl()}/portal/orfebre/finanzas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver finanzas</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Auto-confirm receipt — to buyer
+// ---------------------------------------------------------------------------
+export async function sendAutoConfirmToBuyerEmail(
+  to: string,
+  {
+    buyerName,
+    orderNumber,
+    orderId,
+  }: {
+    buyerName: string;
+    orderNumber: string;
+    orderId: string;
+  },
+) {
+  const base = appUrl();
+  await sendEmail(
+    to,
+    `Tu pedido #${orderNumber} fue marcado como entregado`,
+    `<p style="margin:0 0 16px;">Hola ${buyerName},</p>
+     <p style="margin:0 0 16px;">Han pasado 10 días desde el despacho de tu pedido <strong>#${orderNumber}</strong> y fue marcado como entregado automáticamente.</p>
+     <p style="margin:0 0 16px;">Si tienes algún problema con tu pieza, puedes abrir un reclamo desde tu portal.</p>
+     <p style="margin:0 0 8px;">
+       <a href="${base}/portal/comprador/pedidos/${orderId}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mi pedido</a>
+     </p>
+     <p style="margin:0 0 0;">
+       <a href="${base}/portal/comprador/pedidos/${orderId}/disputa" style="display:inline-block;padding:12px 24px;background-color:#ffffff;color:#8B7355;text-decoration:none;border-radius:6px;font-size:14px;border:1px solid #8B7355;">Abrir reclamo</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Auto-confirm receipt — to artisan
+// ---------------------------------------------------------------------------
+export async function sendAutoConfirmToArtisanEmail(
+  to: string,
+  {
+    artisanName,
+    productName,
+    artisanPayout,
+    payoutEligibleAt,
+  }: {
+    artisanName: string;
+    productName: string;
+    artisanPayout: number;
+    payoutEligibleAt: Date;
+  },
+) {
+  const dateStr = payoutEligibleAt.toLocaleDateString("es-CL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  await sendEmail(
+    to,
+    `Entrega confirmada automáticamente: ${productName}`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">La entrega de <strong>${productName}</strong> fue confirmada automáticamente después de 10 días.</p>
+     <div style="padding:12px 16px;background-color:#f0fdf4;border-radius:4px;margin:0 0 16px;">
+       <p style="margin:0 0 4px;font-weight:600;">Tu pago: ${formatCLP(artisanPayout)}</p>
+       <p style="margin:0;font-size:14px;color:#4a4a48;">Se liberará el ${dateStr}</p>
+     </div>
+     <p style="margin:0 0 0;">
+       <a href="${appUrl()}/portal/orfebre/finanzas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver finanzas</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Payout Released (enhanced with breakdown)
+// ---------------------------------------------------------------------------
+export async function sendPayoutReleasedDetailedEmail(
+  to: string,
+  {
+    artisanName,
+    productName,
+    productTotal,
+    commissionRate,
+    commissionAmount,
+    shippingShare,
+    artisanPayout,
+  }: {
+    artisanName: string;
+    productName: string;
+    productTotal: number;
+    commissionRate: number;
+    commissionAmount: number;
+    shippingShare: number;
+    artisanPayout: number;
+  },
+) {
+  await sendEmail(
+    to,
+    `Pago liberado: ${formatCLP(artisanPayout)} — ${productName}`,
+    `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
+     <p style="margin:0 0 16px;">Se ha liberado tu pago por <strong>${productName}</strong>.</p>
+     <div style="padding:16px;background-color:#f5f3ef;border-radius:6px;margin:0 0 16px;font-size:14px;">
+       <p style="margin:0 0 6px;">Monto producto: <strong>${formatCLP(productTotal)}</strong></p>
+       <p style="margin:0 0 6px;">Comisión Casa Orfebre (${Math.round(commissionRate * 100)}%): <span style="color:#dc2626;">-${formatCLP(commissionAmount)}</span></p>
+       ${shippingShare > 0 ? `<p style="margin:0 0 6px;">Monto despacho: +${formatCLP(shippingShare)}</p>` : ""}
+       <hr style="border:none;border-top:1px solid #e8e4de;margin:8px 0;" />
+       <p style="margin:0;font-weight:700;font-size:16px;">Tu pago: ${formatCLP(artisanPayout)}</p>
+     </div>
+     <p style="margin:0 0 0;">
+       <a href="${appUrl()}/portal/orfebre/finanzas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver finanzas</a>
+     </p>`,
+  );
+}

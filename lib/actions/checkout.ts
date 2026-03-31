@@ -334,11 +334,19 @@ export async function createCheckoutPreference(formData: FormData) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const useSandbox = isSandbox();
 
+    // Build MP items — if there's a discount/gift card, adjust prices proportionally
+    // so MP total matches the actual charge (MP CLP doesn't accept negative unit_price)
+    const totalDiscount = discountAmount + giftCardDiscount;
+    const rawItemsTotal = subtotal + shippingCost;
+    const adjustmentRatio = totalDiscount > 0 && rawItemsTotal > 0
+      ? (rawItemsTotal - totalDiscount) / rawItemsTotal
+      : 1;
+
     const items: { id: string; title: string; quantity: number; unit_price: number; currency_id: "CLP" }[] = cartItems.map((item: any) => ({
       id: item.product.id,
       title: item.product.name,
       quantity: item.quantity,
-      unit_price: item.product.price,
+      unit_price: Math.round(item.product.price * adjustmentRatio),
       currency_id: "CLP" as const,
     }));
 
@@ -347,9 +355,15 @@ export async function createCheckoutPreference(formData: FormData) {
         id: "shipping",
         title: `Despacho ${shippingResult.zoneName}`,
         quantity: 1,
-        unit_price: shippingCost,
+        unit_price: Math.round(shippingCost * adjustmentRatio),
         currency_id: "CLP",
       });
+    }
+
+    // Ensure MP items sum exactly matches total (fix rounding)
+    const mpSum = items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+    if (mpSum !== total && items.length > 0) {
+      items[0].unit_price += total - mpSum;
     }
 
     const backUrls = {
