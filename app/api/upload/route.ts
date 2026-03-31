@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { uploadToR2 } from "@/lib/r2";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 import { getArtisanPlanLimits } from "@/lib/plan-limits";
 import { uploadLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
@@ -94,4 +94,46 @@ export async function POST(request: Request) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Error al subir la imagen" }, { status: 500 });
   }
+}
+
+export async function DELETE(request: Request) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const imageId = searchParams.get("imageId");
+
+  if (!imageId) {
+    return NextResponse.json({ error: "imageId requerido" }, { status: 400 });
+  }
+
+  const image = await prisma.productImage.findUnique({
+    where: { id: imageId },
+    include: { product: { include: { artisan: true } } },
+  });
+
+  if (!image) {
+    return NextResponse.json({ error: "Imagen no encontrada" }, { status: 404 });
+  }
+
+  if (image.product.artisan.userId !== session.user.id) {
+    return NextResponse.json({ error: "No tienes permiso para eliminar esta imagen" }, { status: 403 });
+  }
+
+  // Delete from R2
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (publicUrl && image.url.startsWith(publicUrl)) {
+    const key = image.url.replace(`${publicUrl}/`, "");
+    try {
+      await deleteFromR2(key);
+    } catch {
+      // Continue even if R2 delete fails
+    }
+  }
+
+  await prisma.productImage.delete({ where: { id: imageId } });
+
+  return NextResponse.json({ success: true });
 }
