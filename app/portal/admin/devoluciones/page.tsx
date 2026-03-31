@@ -1,13 +1,14 @@
 import { getPendingReturns } from "@/lib/queries/admin";
 import { Card } from "@/components/ui/card";
+import { formatCLP } from "@/lib/utils";
 import { ReturnActions } from "./return-actions";
 
 const reasonLabels: Record<string, string> = {
-  NOT_AS_DESCRIBED: "No coincide",
-  DAMAGED_ON_ARRIVAL: "Llego danado",
-  WRONG_ITEM: "Equivocado",
-  BUYER_REGRET: "Arrepentimiento",
-  DEFECTIVE: "Defecto",
+  NOT_AS_DESCRIBED: "No coincide con la descripción",
+  DAMAGED_ON_ARRIVAL: "Llegó dañado",
+  WRONG_ITEM: "Producto equivocado",
+  BUYER_REGRET: "Arrepentimiento de compra",
+  DEFECTIVE: "Defecto de fabricación",
   OTHER: "Otro",
 };
 
@@ -49,13 +50,19 @@ export default async function DevolucionesPage() {
         </p>
       ) : (
         <div className="mt-6 space-y-4">
-          {returns.map((ret) => (
+          {returns.map((ret) => {
+            const item = ret.orderItem;
+            const buyer = item.order.user;
+            return (
             <Card key={ret.id} className="space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="font-serif text-lg font-medium">
-                    Item: {ret.orderItemId.slice(0, 8)}...
+                    {item.productName}
                   </h2>
+                  <p className="mt-1 text-sm text-text-tertiary">
+                    Pedido #{item.order.orderNumber} · {formatCLP(item.productPrice)}
+                  </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <span
@@ -64,7 +71,7 @@ export default async function DevolucionesPage() {
                       "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    Envio: {ret.shippingPaidBy === "PLATFORM" ? "Plataforma" : "Comprador"}
+                    Envío: {ret.shippingPaidBy === "PLATFORM" ? "Plataforma" : "Comprador"}
                   </span>
                   <span
                     className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -78,15 +85,25 @@ export default async function DevolucionesPage() {
 
               <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                 <div>
-                  <span className="text-text-tertiary">Razon: </span>
-                  <span>{reasonLabels[ret.reason] ?? ret.reason}</span>
+                  <span className="text-text-tertiary">Comprador: </span>
+                  <span>{buyer.name || buyer.email}</span>
+                </div>
+                <div>
+                  <span className="text-text-tertiary">Orfebre: </span>
+                  <span>{item.artisan.displayName}</span>
                 </div>
               </div>
 
+              <div className="text-sm">
+                <span className="text-text-tertiary">Motivo: </span>
+                <span>{reasonLabels[ret.reason] ?? ret.reason}</span>
+              </div>
+
               {ret.description && (
-                <p className="text-sm text-text-secondary">
+                <div className="rounded-md bg-background-secondary p-3 text-sm text-text-secondary">
+                  <span className="font-medium text-text-tertiary">Descripción del comprador: </span>
                   {ret.description}
-                </p>
+                </div>
               )}
 
               <div className="border-t border-border pt-4">
@@ -96,7 +113,8 @@ export default async function DevolucionesPage() {
                 />
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

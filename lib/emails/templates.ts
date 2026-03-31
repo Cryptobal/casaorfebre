@@ -779,6 +779,40 @@ export async function sendReturnRequestedEmail(
 }
 
 // ---------------------------------------------------------------------------
+// 16b. Return Requested (to admin)
+// ---------------------------------------------------------------------------
+export async function sendReturnRequestedAdminEmail(
+  to: string,
+  { productName, buyerName, artisanName, reason, description }: {
+    productName: string;
+    buyerName: string;
+    artisanName: string;
+    reason: string;
+    description: string | null;
+  },
+) {
+  const base = appUrl();
+  const descHtml = description
+    ? `<p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;"><strong>Descripción:</strong> ${description}</p>`
+    : "";
+  await sendEmail(
+    to,
+    `Nueva devolución solicitada: ${productName}`,
+    `<p style="margin:0 0 16px;">Se ha solicitado una nueva devolución que requiere revisión.</p>
+     <div style="margin:0 0 16px;padding:16px;background-color:#FAFAF8;border:1px solid #e8e4de;border-radius:8px;">
+       <p style="margin:0 0 8px;"><strong>Producto:</strong> ${productName}</p>
+       <p style="margin:0 0 8px;"><strong>Comprador:</strong> ${buyerName}</p>
+       <p style="margin:0 0 8px;"><strong>Orfebre:</strong> ${artisanName}</p>
+       <p style="margin:0;"><strong>Motivo:</strong> ${reason}</p>
+     </div>
+     ${descHtml}
+     <p style="margin:0 0 0;">
+       <a href="${base}/portal/admin/devoluciones" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver devoluciones</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 17. Return Approved (to buyer)
 // ---------------------------------------------------------------------------
 export async function sendReturnApprovedEmail(

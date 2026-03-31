@@ -66,6 +66,9 @@ model User {
   // Legal acceptances
   legalAcceptances LegalAcceptance[]
 
+  // Return requests
+  returnRequests ReturnRequest[] @relation("UserReturns")
+
   @@map("users")
 }
 
@@ -397,6 +400,7 @@ model OrderItem {
   artisan           Artisan           @relation(fields: [artisanId], references: [id])
   order             Order             @relation(fields: [orderId], references: [id])
   product           Product           @relation(fields: [productId], references: [id])
+  returnRequests    ReturnRequest[]
 
   @@index([orderId])
   @@index([artisanId])
@@ -506,6 +510,9 @@ model ReturnRequest {
   refundAmount          Int?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
+
+  orderItem             OrderItem           @relation(fields: [orderItemId], references: [id])
+  user                  User                @relation("UserReturns", fields: [userId], references: [id])
 
   @@map("return_requests")
 }

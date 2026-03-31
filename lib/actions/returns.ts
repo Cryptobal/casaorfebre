@@ -4,7 +4,20 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { ReturnReason } from "@prisma/client";
-import { sendReturnRequestedEmail } from "@/lib/emails/templates";
+import {
+  sendReturnRequestedEmail,
+  sendReturnRequestedAdminEmail,
+} from "@/lib/emails/templates";
+import { getAdminEmails } from "@/lib/config";
+
+const REASON_LABELS: Record<string, string> = {
+  NOT_AS_DESCRIBED: "No coincide con la descripción",
+  DAMAGED_ON_ARRIVAL: "Llegó dañado",
+  WRONG_ITEM: "Producto equivocado",
+  BUYER_REGRET: "Arrepentimiento",
+  DEFECTIVE: "Defecto de fabricación",
+  OTHER: "Otro",
+};
 
 export async function createReturnRequest(formData: FormData) {
   const session = await auth();
@@ -44,6 +57,8 @@ export async function createReturnRequest(formData: FormData) {
     },
   });
 
+  const reasonLabel = REASON_LABELS[reason] ?? reason;
+
   // Send notification to artisan
   const artisan = await prisma.artisan.findUnique({
     where: { id: item.artisanId },
@@ -54,10 +69,27 @@ export async function createReturnRequest(formData: FormData) {
       await sendReturnRequestedEmail(artisan.user.email, {
         name: artisan.displayName,
         productName: item.productName,
-        reason: description?.trim() || reason,
+        reason: description?.trim() || reasonLabel,
       });
     } catch (e) {
       console.error("Email failed:", e);
+    }
+  }
+
+  // Send notification to admins
+  const buyerName = session.user.name || "Comprador";
+  const adminEmails = getAdminEmails();
+  for (const adminEmail of adminEmails) {
+    try {
+      await sendReturnRequestedAdminEmail(adminEmail, {
+        productName: item.productName,
+        buyerName,
+        artisanName: artisan?.displayName || "Orfebre",
+        reason: reasonLabel,
+        description: description?.trim() || null,
+      });
+    } catch (e) {
+      console.error("[createReturnRequest] Admin email failed:", e);
     }
   }
 

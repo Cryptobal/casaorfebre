@@ -367,6 +367,22 @@ export async function getPendingReturns() {
       },
     },
     orderBy: { createdAt: "asc" },
+    include: {
+      orderItem: {
+        select: {
+          productName: true,
+          productPrice: true,
+          quantity: true,
+          artisan: { select: { displayName: true, slug: true } },
+          order: {
+            select: {
+              orderNumber: true,
+              user: { select: { name: true, email: true } },
+            },
+          },
+        },
+      },
+    },
   });
 }
 
