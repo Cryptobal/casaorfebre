@@ -117,6 +117,8 @@ export default async function EditProductPage({
           tallaAjusteAbajo: product.tallaAjusteAbajo,
           guiaTallas: product.guiaTallas,
           largoCadenaCm: product.largoCadenaCm,
+          tieneCadena: product.tieneCadena,
+          espesorCadenaMm: product.espesorCadenaMm,
           diametroMm: product.diametroMm,
           personalizable: product.personalizable,
           detallePersonalizacion: product.detallePersonalizacion,

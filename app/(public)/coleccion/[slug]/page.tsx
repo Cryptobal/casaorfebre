@@ -532,7 +532,7 @@ function TruckIcon() {
 
 /* ─── Product Details & Measurements ─── */
 
-function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string }[]; collection: { name: string } | null } }) {
+function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string; slug: string }[]; collection: { name: string } | null } }) {
   const rows: { label: string; value: string }[] = [];
 
   if (product.materials.length > 0)
@@ -554,8 +554,15 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
   }
   if (product.guiaTallas)
     rows.push({ label: "Guía de tallas", value: product.guiaTallas as string });
+  // Chain info for pendants
+  const categorySlugs = product.categories.map((c) => c.slug);
+  if (categorySlugs.includes("colgante")) {
+    rows.push({ label: "Cadena", value: product.tieneCadena ? "Incluye cadena" : "Sin cadena (solo colgante)" });
+  }
   if (product.largoCadenaCm)
     rows.push({ label: "Largo de cadena", value: `${product.largoCadenaCm} cm` });
+  if (product.espesorCadenaMm)
+    rows.push({ label: "Espesor de cadena", value: `${product.espesorCadenaMm} mm` });
   if (product.diametroMm)
     rows.push({ label: "Diámetro", value: `${product.diametroMm} mm` });
   if (product.collection)
