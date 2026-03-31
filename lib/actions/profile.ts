@@ -81,3 +81,36 @@ export async function updateProfileImage(formData: FormData) {
     return { error: "Error al subir la imagen. Intenta de nuevo." };
   }
 }
+
+export async function updateBankingData(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) return { error: "No autorizado" };
+
+  const artisan = await prisma.artisan.findUnique({ where: { userId: session.user.id } });
+  if (!artisan) return { error: "Orfebre no encontrado" };
+
+  const bankRut = formData.get("bankRut") as string;
+  const bankHolderName = formData.get("bankHolderName") as string;
+  const bankName = formData.get("bankName") as string;
+  const bankAccountType = formData.get("bankAccountType") as string;
+  const bankAccountNumber = formData.get("bankAccountNumber") as string;
+
+  if (!bankRut || !bankHolderName || !bankName || !bankAccountType || !bankAccountNumber) {
+    return { error: "Todos los campos bancarios son requeridos" };
+  }
+
+  await prisma.artisan.update({
+    where: { id: artisan.id },
+    data: {
+      bankRut: bankRut.trim(),
+      bankHolderName: bankHolderName.trim(),
+      bankName,
+      bankAccountType,
+      bankAccountNumber: bankAccountNumber.trim(),
+      bankDataUpdatedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/portal/orfebre/perfil");
+  return { success: true };
+}

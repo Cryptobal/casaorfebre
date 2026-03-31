@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "./profile-form";
+import { BankingForm } from "./banking-form";
 
 export default async function PerfilPage() {
   const session = await auth();
@@ -37,6 +38,25 @@ export default async function PerfilPage() {
             awards: artisan.awards,
           }}
         />
+      </div>
+
+      {/* Banking data */}
+      <div className="mt-10 border-t border-border pt-8">
+        <h2 className="font-serif text-xl font-light">Datos bancarios</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Necesarios para recibir tus pagos por transferencia bancaria
+        </p>
+        <div className="mt-4">
+          <BankingForm
+            initialData={{
+              bankRut: artisan.bankRut,
+              bankHolderName: artisan.bankHolderName,
+              bankName: artisan.bankName,
+              bankAccountType: artisan.bankAccountType,
+              bankAccountNumber: artisan.bankAccountNumber,
+            }}
+          />
+        </div>
       </div>
     </div>
   );

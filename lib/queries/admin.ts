@@ -455,6 +455,44 @@ export async function getPendingPayouts() {
   return Object.values(grouped);
 }
 
+// Admin financials with real MP fees
+export async function getAdminFinancials() {
+  const paidOrders = await prisma.order.findMany({
+    where: { status: "PAID" },
+    include: {
+      items: {
+        select: { commissionAmount: true, artisanPayout: true, payoutStatus: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  let gmvTotal = 0, mpFeeTotal = 0, mpNetTotal = 0, commissionTotal = 0;
+  let artisanPayoutTotal = 0, artisanPendingTotal = 0, artisanPaidTotal = 0;
+
+  for (const order of paidOrders) {
+    gmvTotal += order.total;
+    mpFeeTotal += order.mpFeeAmount ?? 0;
+    mpNetTotal += order.mpNetReceived ?? order.total;
+    for (const item of order.items) {
+      commissionTotal += item.commissionAmount;
+      artisanPayoutTotal += item.artisanPayout;
+      if (item.payoutStatus === "PAID") artisanPaidTotal += item.artisanPayout;
+      else artisanPendingTotal += item.artisanPayout;
+    }
+  }
+
+  return {
+    summary: {
+      gmvTotal, mpFeeTotal, mpNetTotal, commissionTotal,
+      artisanPayoutTotal, artisanPaidTotal, artisanPendingTotal,
+      netMargin: commissionTotal - mpFeeTotal,
+      netMarginPercent: gmvTotal > 0 ? ((commissionTotal - mpFeeTotal) / gmvTotal) * 100 : 0,
+    },
+    orders: paidOrders,
+  };
+}
+
 // Paid payouts history
 export async function getPaidPayoutsHistory() {
   return prisma.orderItem.findMany({
