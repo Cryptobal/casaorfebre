@@ -341,6 +341,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <SizeGuide
               categorySlugs={product.categories.map((c: { slug: string }) => c.slug)}
               tallas={product.tallas}
+              tallaUnica={product.tallaUnica}
+              tallaAjusteArriba={product.tallaAjusteArriba}
+              tallaAjusteAbajo={product.tallaAjusteAbajo}
               guiaTallas={product.guiaTallas}
               largoCadenaCm={product.largoCadenaCm}
               diametroMm={product.diametroMm}
@@ -544,8 +547,15 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Peso", value: `${product.weight} g` });
   if (product.dimensions)
     rows.push({ label: "Dimensiones", value: product.dimensions as string });
-  if (product.tallas.length > 0)
+  if (product.tallaUnica) {
+    let tallaValue = `Talla ${product.tallaUnica}`;
+    if (product.tallaAjusteAbajo || product.tallaAjusteArriba) {
+      tallaValue += ` (ajustable: ${product.tallaAjusteAbajo ?? 0} abajo, ${product.tallaAjusteArriba ?? 0} arriba)`;
+    }
+    rows.push({ label: "Talla", value: tallaValue });
+  } else if (product.tallas.length > 0) {
     rows.push({ label: "Tallas disponibles", value: product.tallas.join(", ") });
+  }
   if (product.guiaTallas)
     rows.push({ label: "Guía de tallas", value: product.guiaTallas as string });
   if (product.largoCadenaCm)
@@ -554,8 +564,8 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Diámetro", value: `${product.diametroMm} mm` });
   if (product.collection)
     rows.push({ label: "Colección", value: product.collection.name });
-  if (product.tiempoElaboracionDias)
-    rows.push({ label: "Tiempo de elaboración", value: `${product.tiempoElaboracionDias} días` });
+  if (product.elaborationDays)
+    rows.push({ label: "Tiempo de elaboración", value: `${product.elaborationDays} días` });
   if (product.empaque)
     rows.push({ label: "Empaque", value: product.empaque as string });
   if (product.garantia)

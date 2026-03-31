@@ -1123,50 +1123,65 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
+        <div className="border-t border-border pt-6">
           {product?.status === "SOLD_OUT" ? (
-            <Button
-              type="button"
-              variant="primary"
-              loading={reactivating}
-              disabled={reactivating}
-              onClick={async () => {
-                setReactivating(true);
-                const stock = productionType === "UNIQUE" ? 1 : parseInt(prompt("¿Cuántas unidades tienes disponibles?") || "0", 10);
-                if (stock < 1) { setReactivating(false); return; }
-                const result = await reactivateProduct(product.id, stock);
-                if (result.error) {
-                  setErrorModal(result.error);
-                } else {
-                  router.refresh();
-                }
-                setReactivating(false);
-              }}
-            >
-              Reactivar publicación
-            </Button>
-          ) : (
-            <>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p className="text-sm text-text-secondary">
+                Esta pieza está agotada. Puedes reactivarla para volver a publicarla.
+              </p>
               <Button
-                type="submit"
-                variant="secondary"
-                loading={pending}
-                disabled={pending}
+                type="button"
+                variant="primary"
+                loading={reactivating}
+                disabled={reactivating}
+                onClick={async () => {
+                  setReactivating(true);
+                  const stock = productionType === "UNIQUE" ? 1 : parseInt(prompt("¿Cuántas unidades tienes disponibles?") || "0", 10);
+                  if (stock < 1) { setReactivating(false); return; }
+                  const result = await reactivateProduct(product.id, stock);
+                  if (result.error) {
+                    setErrorModal(result.error);
+                  } else {
+                    router.refresh();
+                  }
+                  setReactivating(false);
+                }}
               >
-                Guardar Borrador
+                Reactivar publicación
               </Button>
-              {product && (product.status === "DRAFT" || product.status === "REJECTED") && (
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-end sm:items-start">
+              <div className="flex flex-col items-center gap-1 sm:items-end">
                 <Button
-                  type="button"
-                  variant="primary"
-                  loading={submitting}
-                  disabled={submitting || pending}
-                  onClick={handleSubmitForReview}
+                  type="submit"
+                  variant="secondary"
+                  loading={pending}
+                  disabled={pending}
                 >
-                  Enviar a Revision
+                  Guardar borrador
                 </Button>
+                <p className="text-[11px] text-text-tertiary">
+                  Guarda los cambios sin publicar. Puedes seguir editando después.
+                </p>
+              </div>
+              {product && (product.status === "DRAFT" || product.status === "REJECTED") && (
+                <div className="flex flex-col items-center gap-1 sm:items-end">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    loading={submitting}
+                    disabled={submitting || pending}
+                    onClick={handleSubmitForReview}
+                  >
+                    Enviar a revisión
+                  </Button>
+                  <p className="text-[11px] text-text-tertiary">
+                    Envía tu pieza al equipo de Casa Orfebre para aprobación y publicación.
+                  </p>
+                </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </form>

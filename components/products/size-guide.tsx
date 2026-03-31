@@ -9,6 +9,9 @@ type SizeCategory = "anillo" | "aros" | "collar" | "pulsera" | "colgante";
 interface SizeGuideProps {
   categorySlugs: string[];
   tallas: string[];
+  tallaUnica?: string | null;
+  tallaAjusteArriba?: number | null;
+  tallaAjusteAbajo?: number | null;
   guiaTallas?: string | null;
   largoCadenaCm?: number | null;
   diametroMm?: number | null;
@@ -71,11 +74,25 @@ function resolveSizeCategory(slugs: string[]): SizeCategory | null {
   return null;
 }
 
-export function SizeGuide({ categorySlugs, tallas, guiaTallas, largoCadenaCm, diametroMm }: SizeGuideProps) {
+export function SizeGuide({ categorySlugs, tallas, tallaUnica, tallaAjusteArriba, tallaAjusteAbajo, guiaTallas, largoCadenaCm, diametroMm }: SizeGuideProps) {
   const [open, setOpen] = useState(false);
 
+  // Build effective tallas: if tallaUnica with adjustment, expand to range
+  const effectiveTallas = (() => {
+    if (tallaUnica && (tallaAjusteAbajo || tallaAjusteArriba)) {
+      const base = parseFloat(tallaUnica);
+      const down = tallaAjusteAbajo ?? 0;
+      const up = tallaAjusteArriba ?? 0;
+      const allSizes = RING_SIZES.map((r) => parseFloat(r.us));
+      return allSizes
+        .filter((s) => s >= base - down && s <= base + up)
+        .map(String);
+    }
+    return tallas;
+  })();
+
   const sizeCategory = resolveSizeCategory(categorySlugs);
-  const showButton = tallas.length > 0 || sizeCategory !== null;
+  const showButton = effectiveTallas.length > 0 || sizeCategory !== null;
 
   if (!showButton) return null;
 
@@ -99,7 +116,10 @@ export function SizeGuide({ categorySlugs, tallas, guiaTallas, largoCadenaCm, di
       {open && sizeCategory && (
         <SizeGuideModal
           sizeCategory={sizeCategory}
-          tallas={tallas}
+          tallas={effectiveTallas}
+          tallaUnica={tallaUnica}
+          tallaAjusteArriba={tallaAjusteArriba}
+          tallaAjusteAbajo={tallaAjusteAbajo}
           guiaTallas={guiaTallas}
           largoCadenaCm={largoCadenaCm}
           diametroMm={diametroMm}
@@ -115,6 +135,9 @@ export function SizeGuide({ categorySlugs, tallas, guiaTallas, largoCadenaCm, di
 interface SizeGuideModalProps {
   sizeCategory: SizeCategory;
   tallas: string[];
+  tallaUnica?: string | null;
+  tallaAjusteArriba?: number | null;
+  tallaAjusteAbajo?: number | null;
   guiaTallas?: string | null;
   largoCadenaCm?: number | null;
   diametroMm?: number | null;
@@ -124,6 +147,9 @@ interface SizeGuideModalProps {
 function SizeGuideModal({
   sizeCategory,
   tallas,
+  tallaUnica,
+  tallaAjusteArriba,
+  tallaAjusteAbajo,
   guiaTallas,
   largoCadenaCm,
   diametroMm,
@@ -216,6 +242,19 @@ function SizeGuideModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {renderCategoryContent(sizeCategory, tallas, largoCadenaCm, diametroMm, activeTab)}
+
+          {/* Adjustable ring info */}
+          {tallaUnica && (tallaAjusteAbajo || tallaAjusteArriba) && (
+            <div className="mt-4 rounded-lg bg-accent/5 border border-accent/15 p-4">
+              <p className="text-sm font-medium text-accent">Talla ajustable</p>
+              <p className="mt-1 text-sm text-text-secondary">
+                Esta pieza es talla {tallaUnica} y puede ajustarse
+                {(tallaAjusteAbajo ?? 0) > 0 && ` ${tallaAjusteAbajo} ${tallaAjusteAbajo === 1 ? "talla" : "tallas"} hacia abajo`}
+                {(tallaAjusteAbajo ?? 0) > 0 && (tallaAjusteArriba ?? 0) > 0 && " y"}
+                {(tallaAjusteArriba ?? 0) > 0 && ` ${tallaAjusteArriba} ${tallaAjusteArriba === 1 ? "talla" : "tallas"} hacia arriba`}.
+              </p>
+            </div>
+          )}
 
           {/* Artisan note */}
           {guiaTallas && (
