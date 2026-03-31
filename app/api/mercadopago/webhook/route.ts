@@ -6,6 +6,7 @@ import { webhookLimiter } from "@/lib/rate-limit";
 import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
+  sendNewOrderAdminEmail,
   sendSubscriptionActivatedEmail,
   sendGiftCardRecipientEmail,
   sendGiftCardPurchaserEmail,
@@ -288,6 +289,28 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
         }
       }
     }
+    // Send admin notification
+    const ADMIN_EMAILS = ["carlos.irigoyen@gmail.com", "camilatorrespuga@gmail.com"];
+    for (const adminEmail of ADMIN_EMAILS) {
+      try {
+        const artisanMap = new Map(artisans.map((a: any) => [a.id, a.displayName]));
+        await sendNewOrderAdminEmail(adminEmail, {
+          orderNumber: order.orderNumber,
+          buyerName: buyer?.name || "Cliente",
+          buyerEmail: buyer?.email || "",
+          total: order.total,
+          items: order.items.map((i: any) => ({
+            productName: i.productName,
+            artisanName: artisanMap.get(i.artisanId) || "Orfebre",
+            quantity: i.quantity,
+            price: i.productPrice,
+          })),
+        });
+      } catch (e) {
+        console.error("Admin email failed:", e);
+      }
+    }
+
     // Create referral reward if buyer was referred
     try {
       await createReferralRewardIfApplicable(order.userId);

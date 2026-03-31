@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import {
+  sendOrderPreparingEmail,
   sendOrderShippedEmail,
   sendOrderDeliveredEmail,
   sendCertificateEmail,
@@ -20,6 +21,9 @@ export async function confirmPreparation(orderItemId: string) {
 
   const item = await prisma.orderItem.findFirst({
     where: { id: orderItemId, artisanId: artisan.id, fulfillmentStatus: "PENDING" },
+    include: {
+      order: { select: { orderNumber: true, userId: true } },
+    },
   });
   if (!item) return { error: "Pedido no encontrado" };
 
@@ -28,7 +32,28 @@ export async function confirmPreparation(orderItemId: string) {
     data: { fulfillmentStatus: "PREPARING" },
   });
 
+  // Send email notification to buyer
+  after(async () => {
+    try {
+      const buyer = await prisma.user.findUnique({
+        where: { id: item.order.userId },
+        select: { email: true, name: true },
+      });
+      if (buyer?.email) {
+        await sendOrderPreparingEmail(buyer.email, {
+          name: buyer.name || "Cliente",
+          orderNumber: item.order.orderNumber,
+          productName: item.productName,
+          artisanName: artisan.displayName,
+        });
+      }
+    } catch (e) {
+      console.error("[confirmPreparation] Email failed:", e);
+    }
+  });
+
   revalidatePath("/portal/orfebre/pedidos");
+  revalidatePath("/portal/comprador/pedidos");
   return { success: true };
 }
 

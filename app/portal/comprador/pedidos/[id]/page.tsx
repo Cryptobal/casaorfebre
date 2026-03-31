@@ -56,20 +56,23 @@ const fulfillmentColors: Record<FulfillmentStatus, string> = {
 const TIMELINE_STEPS = [
   { key: "PENDING_PAYMENT", label: "Pago", icon: CreditCardIcon },
   { key: "PAID", label: "Confirmado", icon: CheckCircleIcon },
+  { key: "PREPARING", label: "Preparando", icon: HammerIcon },
   { key: "SHIPPED", label: "Enviado", icon: TruckIcon },
   { key: "DELIVERED", label: "Entregado", icon: PackageIcon },
 ] as const;
 
-function statusIndex(status: OrderStatus): number {
-  const map: Record<string, number> = {
-    PENDING_PAYMENT: 0,
-    PAID: 1,
-    PARTIALLY_SHIPPED: 2,
-    SHIPPED: 2,
-    DELIVERED: 3,
-    COMPLETED: 3,
-  };
-  return map[status] ?? -1;
+function computeTimelineStep(orderStatus: OrderStatus, items: { fulfillmentStatus: string }[]): number {
+  // Check the most advanced fulfillment status across all items
+  const hasDelivered = items.some((i) => i.fulfillmentStatus === "DELIVERED");
+  const hasShipped = items.some((i) => i.fulfillmentStatus === "SHIPPED");
+  const hasPreparing = items.some((i) => i.fulfillmentStatus === "PREPARING");
+
+  if (orderStatus === "PENDING_PAYMENT") return 0;
+  if (hasDelivered || orderStatus === "DELIVERED" || orderStatus === "COMPLETED") return 4;
+  if (hasShipped || orderStatus === "SHIPPED" || orderStatus === "PARTIALLY_SHIPPED") return 3;
+  if (hasPreparing) return 2;
+  // PAID but all items still PENDING
+  return 1;
 }
 
 export default async function BuyerOrderDetailPage({
@@ -118,7 +121,7 @@ export default async function BuyerOrderDetailPage({
     grouped.set(key, group);
   }
 
-  const currentStep = statusIndex(order.status);
+  const currentStep = computeTimelineStep(order.status, order.items);
   const isCancelled =
     order.status === "CANCELLED" || order.status === "REFUNDED";
 
@@ -595,6 +598,16 @@ function CreditCardIcon() {
     >
       <rect width="20" height="14" x="2" y="5" rx="2" />
       <line x1="2" x2="22" y1="10" y2="10" />
+    </svg>
+  );
+}
+
+function HammerIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9" />
+      <path d="m18 15 4-4" />
+      <path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5" />
     </svg>
   );
 }

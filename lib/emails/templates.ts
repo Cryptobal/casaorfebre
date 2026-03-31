@@ -314,6 +314,84 @@ function getTrackingUrl(carrier: string, trackingNumber: string): string | null 
   return base ? `${base}${encodeURIComponent(trackingNumber)}` : null;
 }
 
+// ─── Order Preparing Email (buyer) ─────────────────────────────────
+export async function sendOrderPreparingEmail(
+  to: string,
+  { name, orderNumber, productName, artisanName }: {
+    name: string;
+    orderNumber: string;
+    productName: string;
+    artisanName: string;
+  },
+) {
+  const base = appUrl();
+  await sendEmail(
+    to,
+    `Tu pedido #${orderNumber} está siendo preparado`,
+    `<h1 style="font-family:Georgia,serif;font-size:24px;font-weight:400;color:#1a1a18;margin:0 0 16px;">
+       ${name}, tu pieza está en preparación
+     </h1>
+     <p style="font-size:15px;color:#4a4a48;line-height:1.6;margin:0 0 20px;">
+       <strong>${artisanName}</strong> ha comenzado a preparar tu pieza <strong>${productName}</strong> del pedido #${orderNumber}.
+     </p>
+     <div style="background:#FAFAF8;border:1px solid #e8e4de;border-radius:12px;padding:20px 24px;margin:0 0 24px;">
+       <p style="font-size:14px;color:#4a4a48;margin:0;">
+         Te notificaremos cuando tu pedido sea despachado con la información de seguimiento.
+       </p>
+     </div>
+     <p style="text-align:center;margin:0 0 8px;">
+       <a href="${base}/portal/comprador/pedidos" style="display:inline-block;background:#1a1a18;color:#FAFAF8;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;">Ver mis pedidos</a>
+     </p>`,
+  );
+}
+
+// ─── New Order Admin Notification ─────────────────────────────────
+export async function sendNewOrderAdminEmail(
+  to: string,
+  { orderNumber, buyerName, buyerEmail, total, items }: {
+    orderNumber: string;
+    buyerName: string;
+    buyerEmail: string;
+    total: number;
+    items: { productName: string; artisanName: string; quantity: number; price: number }[];
+  },
+) {
+  const base = appUrl();
+  const itemsHtml = items.map((i) =>
+    `<tr>
+       <td style="padding:8px 0;border-bottom:1px solid #f0ece6;font-size:14px;color:#4a4a48;">${i.productName}</td>
+       <td style="padding:8px 0;border-bottom:1px solid #f0ece6;font-size:14px;color:#4a4a48;">${i.artisanName}</td>
+       <td style="padding:8px 0;border-bottom:1px solid #f0ece6;font-size:14px;color:#4a4a48;text-align:right;">$${i.price.toLocaleString("es-CL")} x${i.quantity}</td>
+     </tr>`
+  ).join("");
+
+  await sendEmail(
+    to,
+    `Nueva venta #${orderNumber} — $${total.toLocaleString("es-CL")}`,
+    `<h1 style="font-family:Georgia,serif;font-size:24px;font-weight:400;color:#1a1a18;margin:0 0 16px;">
+       Nueva venta en Casa Orfebre
+     </h1>
+     <p style="font-size:15px;color:#4a4a48;line-height:1.6;margin:0 0 20px;">
+       <strong>${buyerName}</strong> (${buyerEmail}) acaba de completar una compra.
+     </p>
+     <div style="background:#FAFAF8;border:1px solid #e8e4de;border-radius:12px;padding:20px 24px;margin:0 0 24px;">
+       <p style="font-size:12px;color:#8B7355;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Pedido #${orderNumber}</p>
+       <table style="width:100%;border-collapse:collapse;">
+         <thead><tr>
+           <th style="text-align:left;padding:4px 0;font-size:11px;color:#8B7355;text-transform:uppercase;letter-spacing:1px;">Producto</th>
+           <th style="text-align:left;padding:4px 0;font-size:11px;color:#8B7355;text-transform:uppercase;letter-spacing:1px;">Orfebre</th>
+           <th style="text-align:right;padding:4px 0;font-size:11px;color:#8B7355;text-transform:uppercase;letter-spacing:1px;">Monto</th>
+         </tr></thead>
+         <tbody>${itemsHtml}</tbody>
+       </table>
+       <p style="font-size:18px;font-weight:600;color:#1a1a18;text-align:right;margin:12px 0 0;">Total: $${total.toLocaleString("es-CL")}</p>
+     </div>
+     <p style="text-align:center;margin:0 0 8px;">
+       <a href="${base}/portal/admin/pedidos" style="display:inline-block;background:#1a1a18;color:#FAFAF8;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;">Ver pedidos</a>
+     </p>`,
+  );
+}
+
 function getEstimatedDelivery(shippedAt: Date): string {
   const estimated = new Date(shippedAt.getTime() + 5 * 24 * 60 * 60 * 1000);
   return estimated.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" });
