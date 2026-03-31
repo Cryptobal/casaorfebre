@@ -1,6 +1,54 @@
 import Link from "next/link";
 import Image from "next/image";
 
+/* ─── SEO Internal Links ─── */
+
+const seoColumns = [
+  {
+    title: "Colección",
+    links: [
+      { href: "/coleccion/cadenas-de-plata", label: "Cadenas de Plata" },
+      { href: "/coleccion/aros-de-plata", label: "Aros de Plata" },
+      { href: "/coleccion/anillos-de-plata", label: "Anillos de Plata" },
+      { href: "/coleccion/pulseras-de-plata", label: "Pulseras de Plata" },
+      { href: "/coleccion/collares-de-plata", label: "Collares de Plata" },
+      { href: "/coleccion/colgantes-dijes-plata", label: "Colgantes y Dijes" },
+    ],
+  },
+  {
+    title: "Ocasiones",
+    links: [
+      { href: "/ocasion/anillos-de-compromiso-plata", label: "Anillos de Compromiso" },
+      { href: "/ocasion/anillos-matrimonio-plata", label: "Argollas de Matrimonio" },
+      { href: "/ocasion/joyas-para-parejas", label: "Joyas para Parejas" },
+      { href: "/ocasion/joyas-dia-de-la-madre", label: "Día de la Madre" },
+      { href: "/coleccion/joyas-hombre", label: "Joyas para Hombre" },
+      { href: "/coleccion/joyas-mujer", label: "Joyas para Mujer" },
+    ],
+  },
+  {
+    title: "Guías",
+    links: [
+      { href: "/blog", label: "Blog" },
+      { href: "/guia/plata-925-950", label: "Plata 925 vs 950" },
+      { href: "/galeria-santo-domingo", label: "Galería Santo Domingo" },
+      { href: "/orfebres", label: "Nuestros Orfebres" },
+    ],
+  },
+  {
+    title: "Ciudades",
+    links: [
+      { href: "/joyerias/santiago", label: "Joyerías en Santiago" },
+      { href: "/joyerias/concepcion", label: "Joyerías en Concepción" },
+      { href: "/joyerias/temuco", label: "Joyerías en Temuco" },
+      { href: "/joyerias/vina-del-mar", label: "Joyerías en Viña del Mar" },
+      { href: "/joyerias", label: "Ver todas las ciudades" },
+    ],
+  },
+];
+
+/* ─── General Footer Columns ─── */
+
 const footerColumns = [
   {
     title: "Explorar",
@@ -48,6 +96,33 @@ const footerColumns = [
 export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
+      {/* SEO Internal Links */}
+      <div className="bg-surface-alt border-b border-border">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {seoColumns.map((col) => (
+              <div key={col.title}>
+                <h3 className="font-serif text-sm font-medium uppercase tracking-wider text-text">
+                  {col.title}
+                </h3>
+                <ul className="mt-4 space-y-2.5">
+                  {col.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="font-sans text-sm text-text-secondary transition-colors hover:text-accent"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2 md:col-span-1">

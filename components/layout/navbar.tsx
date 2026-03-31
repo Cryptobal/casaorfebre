@@ -16,6 +16,7 @@ const navLinksLeft = [
 
 const navLinksRight = [
   { href: "/orfebres", label: "Orfebres", tourId: "nav-orfebres" },
+  { href: "/blog", label: "Blog", tourId: undefined },
   { href: "/postular", label: "Postular", tourId: undefined },
 ];
 
