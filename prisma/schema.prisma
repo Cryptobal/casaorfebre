@@ -1035,3 +1035,18 @@ model Specialty {
 
   @@map("specialties")
 }
+
+model AdminAsset {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  name       String
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+  uploadedBy String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("admin_assets")
+}

@@ -1369,11 +1369,13 @@ export async function sendPioneerInvitationEmail(
     code,
     planName,
     durationDays,
+    brochureUrl,
   }: {
     name: string;
     code: string;
     planName: string;
     durationDays: number;
+    brochureUrl?: string | null;
   },
 ) {
   const base = appUrl();
@@ -1418,6 +1420,17 @@ export async function sendPioneerInvitationEmail(
        <p style="font-size:14px;color:#1a1a18;margin:0 0 20px;">Comisión por venta: solo ${plan.commission}</p>
        <div style="text-align:left;max-width:320px;margin:0 auto;">${featuresHtml}</div>
      </div>
+
+     ${brochureUrl ? `
+     <!-- Brochure link -->
+     <p style="font-size:14px;color:#4a4a48;text-align:center;line-height:1.6;margin:0 0 20px;">
+       Te adjuntamos nuestra guía donde encontrarás todos los detalles sobre planes, beneficios y cómo funciona Casa Orfebre.
+     </p>
+     <p style="text-align:center;margin:0 0 28px;">
+       <a href="${brochureUrl}" style="display:inline-flex;align-items:center;gap:6px;color:#8B7355;font-size:14px;font-weight:500;text-decoration:none;border:1px solid #e8e4de;padding:10px 20px;border-radius:8px;">
+         📄 Ver Guía para Orfebres
+       </a>
+     </p>` : ""}
 
      <!-- CTA -->
      <p style="text-align:center;margin:0 0 24px;">

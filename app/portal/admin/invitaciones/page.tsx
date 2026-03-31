@@ -1,6 +1,8 @@
 import { getInvitations, getCampaignMetrics, getCampaigns } from "@/lib/actions/invitations";
 import { Card } from "@/components/ui/card";
 import { InvitacionesClient } from "./invitaciones-client";
+import { BrochureSection } from "@/components/admin/brochure-section";
+import { prisma } from "@/lib/prisma";
 
 export default async function InvitacionesPage({
   searchParams,
@@ -12,13 +14,14 @@ export default async function InvitacionesPage({
   const status = params.status || "";
   const search = params.search || "";
 
-  const [invitations, campaigns] = await Promise.all([
+  const [invitations, campaigns, brochureAsset] = await Promise.all([
     getInvitations({
       campaign: campaign || undefined,
       status: status || undefined,
       search: search || undefined,
     }),
     getCampaigns(),
+    prisma.adminAsset.findUnique({ where: { key: "brochure-orfebres" } }),
   ]);
 
   // Get metrics for the selected campaign, or the first one if none selected
@@ -30,6 +33,22 @@ export default async function InvitacionesPage({
   return (
     <div>
       <h1 className="font-serif text-3xl font-light">Invitaciones Pioneros</h1>
+
+      {/* Brochure section */}
+      <div className="mt-6">
+        <BrochureSection
+          initialAsset={brochureAsset ? {
+            id: brochureAsset.id,
+            key: brochureAsset.key,
+            name: brochureAsset.name,
+            fileName: brochureAsset.fileName,
+            fileUrl: brochureAsset.fileUrl,
+            fileSize: brochureAsset.fileSize,
+            uploadedBy: brochureAsset.uploadedBy,
+            updatedAt: brochureAsset.updatedAt.toISOString(),
+          } : null}
+        />
+      </div>
 
       {/* Campaign metrics */}
       {metrics && (
