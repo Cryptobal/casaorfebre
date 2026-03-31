@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Prefijo /es (p. ej. favoritos): misma app; URLs canónicas sin prefijo de idioma
+      { source: "/es", destination: "/", permanent: false },
+      { source: "/es/:path*", destination: "/:path*", permanent: false },
       { source: "/artesano/panel", destination: "/portal/orfebre", permanent: true },
       { source: "/artesano/productos", destination: "/portal/orfebre/productos", permanent: true },
       { source: "/artesano/preguntas", destination: "/portal/orfebre/preguntas", permanent: true },

@@ -35,6 +35,10 @@ interface CalculadoraClientProps {
 export function CalculadoraClient({ initialMaterials, commissionRate }: CalculadoraClientProps) {
   const [materials, setMaterials] = useState(initialMaterials);
   const [showAdmin, setShowAdmin] = useState(false);
+
+  useEffect(() => {
+    setMaterials(initialMaterials);
+  }, [initialMaterials]);
   const [lines, setLines] = useState<LineItem[]>([{ materialId: "", quantity: 0 }]);
   const [otherCosts, setOtherCosts] = useState(0);
   const [hours, setHours] = useState(0);

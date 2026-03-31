@@ -128,6 +128,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
       }
 
+      // Keep JWT role aligned with DB so portal access updates without re-login
+      // (e.g. user promoted to ARTISAN after approval — proxy checks token.role)
+      if (token.id && typeof token.id === "string") {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { role: true },
+          });
+          if (dbUser?.role) {
+            token.role = dbUser.role;
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
       // Admin auto-detection
       if (token.email && ADMIN_EMAILS.includes(token.email)) {
         if (token.role !== "ADMIN") {
