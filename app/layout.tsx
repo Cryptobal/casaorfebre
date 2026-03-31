@@ -120,6 +120,7 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "default",
     "theme-color": "#8B7355",
+    "p:domain_verify": "a4fe96f8e14863db982efca5a0ea9a21",
   },
 };
 
