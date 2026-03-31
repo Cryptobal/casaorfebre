@@ -114,3 +114,25 @@ export async function getArtisanBySlug(slug: string) {
     },
   });
 }
+
+export async function getArtisansByRegion(regionKeyword: string) {
+  return prisma.artisan.findMany({
+    where: {
+      status: "APPROVED",
+      OR: [
+        { region: { contains: regionKeyword, mode: "insensitive" } },
+        { location: { contains: regionKeyword, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { totalSales: "desc" },
+    select: {
+      id: true,
+      displayName: true,
+      slug: true,
+      specialty: true,
+      location: true,
+      region: true,
+      profileImage: true,
+    },
+  });
+}
