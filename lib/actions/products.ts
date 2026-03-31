@@ -94,6 +94,9 @@ function parseFormData(formData: FormData) {
   const guiaTallas = (formData.get("guiaTallas") as string) || null;
   const largoCadenaCmRaw = formData.get("largoCadenaCm") as string;
   const largoCadenaCm = largoCadenaCmRaw ? parseFloat(largoCadenaCmRaw) : null;
+  const tieneCadena = formData.get("tieneCadena") === "on";
+  const espesorCadenaMmRaw = formData.get("espesorCadenaMm") as string;
+  const espesorCadenaMm = espesorCadenaMmRaw ? parseFloat(espesorCadenaMmRaw) : null;
   const diametroMmRaw = formData.get("diametroMm") as string;
   const diametroMm = diametroMmRaw ? parseFloat(diametroMmRaw) : null;
   const personalizable = formData.get("personalizable") === "on";
@@ -132,6 +135,8 @@ function parseFormData(formData: FormData) {
     tallaAjusteAbajo,
     guiaTallas,
     largoCadenaCm,
+    tieneCadena,
+    espesorCadenaMm,
     diametroMm,
     personalizable,
     detallePersonalizacion,
@@ -226,6 +231,8 @@ export async function createProduct(
         tallaAjusteAbajo: data.tallaAjusteAbajo,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
+        tieneCadena: data.tieneCadena,
+        espesorCadenaMm: data.espesorCadenaMm,
         diametroMm: data.diametroMm,
         personalizable: data.personalizable,
         detallePersonalizacion: data.detallePersonalizacion,
@@ -319,6 +326,8 @@ export async function updateProduct(
         tallaAjusteAbajo: data.tallaAjusteAbajo,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
+        tieneCadena: data.tieneCadena,
+        espesorCadenaMm: data.espesorCadenaMm,
         diametroMm: data.diametroMm,
         personalizable: data.personalizable,
         detallePersonalizacion: data.detallePersonalizacion,
@@ -381,9 +390,14 @@ export async function submitForReview(
       return { error: "Los anillos con producción limitada requieren tallas o stock por talla para publicarse" };
     }
   }
-  if (categorySlugs.includes("collar") || categorySlugs.includes("colgante")) {
+  if (categorySlugs.includes("collar") || categorySlugs.includes("cadena")) {
     if (!product.largoCadenaCm) {
-      return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
+      return { error: "Los collares y cadenas requieren el largo de cadena (cm) para publicarse" };
+    }
+  }
+  if (categorySlugs.includes("colgante") && product.tieneCadena) {
+    if (!product.largoCadenaCm) {
+      return { error: "Los colgantes con cadena requieren el largo de cadena (cm) para publicarse" };
     }
   }
   if (categorySlugs.includes("aros")) {
@@ -458,8 +472,11 @@ export async function saveAndSubmitForReview(
   if (selectedSlugs.includes("anillo") && data.productionType === "LIMITED" && data.tallas.length === 0 && data.variants.length === 0) {
     return { error: "Los anillos con producción limitada requieren tallas o stock por talla para publicarse" };
   }
-  if ((selectedSlugs.includes("collar") || selectedSlugs.includes("colgante")) && !data.largoCadenaCm) {
-    return { error: "Los collares y colgantes requieren el largo de cadena (cm) para publicarse" };
+  if ((selectedSlugs.includes("collar") || selectedSlugs.includes("cadena")) && !data.largoCadenaCm) {
+    return { error: "Los collares y cadenas requieren el largo de cadena (cm) para publicarse" };
+  }
+  if (selectedSlugs.includes("colgante") && data.tieneCadena && !data.largoCadenaCm) {
+    return { error: "Los colgantes con cadena requieren el largo de cadena (cm) para publicarse" };
   }
   if (selectedSlugs.includes("aros") && !data.diametroMm) {
     return { error: "Los aros requieren el diámetro (mm) para publicarse" };
@@ -496,6 +513,8 @@ export async function saveAndSubmitForReview(
         tallaAjusteAbajo: data.tallaAjusteAbajo,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
+        tieneCadena: data.tieneCadena,
+        espesorCadenaMm: data.espesorCadenaMm,
         diametroMm: data.diametroMm,
         personalizable: data.personalizable,
         detallePersonalizacion: data.detallePersonalizacion,

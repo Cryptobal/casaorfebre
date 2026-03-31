@@ -246,6 +246,8 @@ model Product {
   tallaAjusteAbajo  Int?
   guiaTallas     String?
   largoCadenaCm  Float?
+  tieneCadena    Boolean?
+  espesorCadenaMm Float?
   diametroMm     Float?
   personalizable Boolean           @default(false)
   detallePersonalizacion String?

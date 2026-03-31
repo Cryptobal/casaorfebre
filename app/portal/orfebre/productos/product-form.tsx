@@ -58,6 +58,8 @@ interface ProductFormProps {
     tallaAjusteAbajo: number | null;
     guiaTallas: string | null;
     largoCadenaCm: number | null;
+    tieneCadena: boolean | null;
+    espesorCadenaMm: number | null;
     diametroMm: number | null;
     personalizable: boolean;
     detallePersonalizacion: string | null;
@@ -99,6 +101,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const [tallaUnica, setTallaUnica] = useState(product?.tallaUnica ?? "");
   const [tallaAjusteArriba, setTallaAjusteArriba] = useState(product?.tallaAjusteArriba?.toString() ?? "0");
   const [tallaAjusteAbajo, setTallaAjusteAbajo] = useState(product?.tallaAjusteAbajo?.toString() ?? "0");
+  const [tieneCadena, setTieneCadena] = useState<boolean>(product?.tieneCadena ?? false);
   const [reactivating, setReactivating] = useState(false);
   const [personalizable, setPersonalizable] = useState(product?.personalizable ?? false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>(product?.collectionId ?? "");
@@ -195,7 +198,9 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
   const selectedCategorySlugs = selectedCategory ? [selectedCategory.slug] : [];
   const needsTallas = selectedCategorySlugs.includes("anillo");
-  const needsLargoCadena = selectedCategorySlugs.includes("collar") || selectedCategorySlugs.includes("colgante");
+  const isColgante = selectedCategorySlugs.includes("colgante");
+  const needsLargoCadena = selectedCategorySlugs.includes("collar") || selectedCategorySlugs.includes("cadena") || (isColgante && tieneCadena);
+  const showCadenaToggle = isColgante;
   const needsDiametro = selectedCategorySlugs.includes("aros") || selectedCategorySlugs.includes("pulsera");
 
   const handleCreateInlineCollection = useCallback(async () => {
@@ -917,11 +922,40 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           </div>
         )}
 
+        {showCadenaToggle && (
+          <div className="space-y-3 rounded-md border border-accent/20 bg-accent/5 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>¿El colgante incluye cadena?</Label>
+                <p className="text-xs text-text-secondary">Indica si el colgante se vende con cadena.</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={tieneCadena}
+                onClick={() => setTieneCadena(!tieneCadena)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                  tieneCadena ? "bg-accent" : "bg-gray-300"
+                }`}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${tieneCadena ? "translate-x-5" : "translate-x-0"}`} />
+              </button>
+            </div>
+            <input type="hidden" name="tieneCadena" value={tieneCadena ? "on" : ""} />
+          </div>
+        )}
+
         {needsLargoCadena && (
-          <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
-            <Label htmlFor="largoCadenaCm">Largo de cadena (cm) <span className="text-red-500">*</span></Label>
-            <p className="text-xs text-text-secondary">Obligatorio para collares y colgantes.</p>
-            <Input id="largoCadenaCm" name="largoCadenaCm" type="number" step="0.1" defaultValue={product?.largoCadenaCm ?? ""} placeholder="Ej: 45" />
+          <div className="space-y-3 rounded-md border border-accent/20 bg-accent/5 p-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="largoCadenaCm">Largo de cadena (cm) <span className="text-red-500">*</span></Label>
+              <p className="text-xs text-text-secondary">Obligatorio para collares y cadenas.</p>
+              <Input id="largoCadenaCm" name="largoCadenaCm" type="number" step="0.1" defaultValue={product?.largoCadenaCm ?? ""} placeholder="Ej: 45" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="espesorCadenaMm">Espesor de cadena (mm) <span className="text-xs font-normal text-text-tertiary">(opcional)</span></Label>
+              <Input id="espesorCadenaMm" name="espesorCadenaMm" type="number" step="0.1" defaultValue={product?.espesorCadenaMm ?? ""} placeholder="Ej: 1.5" />
+            </div>
           </div>
         )}
 
