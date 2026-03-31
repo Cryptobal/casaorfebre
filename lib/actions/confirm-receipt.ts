@@ -8,6 +8,7 @@ import {
   calculatePayoutEligibleDate,
 } from "@/lib/payout-schedule";
 import { sendReceiptConfirmedToArtisanEmail } from "@/lib/emails/templates";
+import { getAdminEmails } from "@/lib/config";
 
 export async function confirmReceipt(orderItemId: string) {
   const session = await auth();
@@ -79,12 +80,30 @@ export async function confirmReceipt(orderItemId: string) {
         payoutDays,
       });
     } catch (e) {
-      console.error("[confirmReceipt] Email failed:", e);
+      console.error("[confirmReceipt] Artisan email failed:", e);
     }
+  }
+
+  // Send email to admins
+  try {
+    const adminEmails = getAdminEmails();
+    for (const adminEmail of adminEmails) {
+      await sendReceiptConfirmedToArtisanEmail(adminEmail, {
+        artisanName: `[Admin] ${item.artisan.displayName}`,
+        productName: item.productName,
+        orderNumber: item.order.orderNumber,
+        artisanPayout: item.artisanPayout,
+        payoutEligibleAt,
+        payoutDays,
+      });
+    }
+  } catch (e) {
+    console.error("[confirmReceipt] Admin email failed:", e);
   }
 
   revalidatePath(`/portal/comprador/pedidos/${item.order.id}`);
   revalidatePath("/portal/comprador/pedidos");
   revalidatePath("/portal/orfebre/pedidos");
+  revalidatePath("/portal/admin/pedidos");
   return { success: true };
 }

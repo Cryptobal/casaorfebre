@@ -212,14 +212,51 @@ export default async function OrderDetailPage({
         )}
 
         {item.fulfillmentStatus === "DELIVERED" && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
               Entregado
             </span>
             {item.deliveredAt && (
-              <p className="mt-2 text-sm text-text-secondary">
-                Entregado el {new Date(item.deliveredAt).toLocaleDateString("es-CL")}
+              <p className="text-sm text-text-secondary">
+                {item.receivedAt
+                  ? `Recepción confirmada por el comprador el ${new Date(item.receivedAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}`
+                  : item.autoReceivedAt
+                    ? `Recepción confirmada automáticamente el ${new Date(item.autoReceivedAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}`
+                    : `Entregado el ${new Date(item.deliveredAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}`}
               </p>
+            )}
+
+            {/* Payout info */}
+            <div className="rounded-md border border-border bg-background p-3 space-y-1">
+              <p className="text-sm">
+                <span className="text-text-secondary">Tu pago neto:</span>{" "}
+                <span className="font-semibold text-green-700">{formatCLP(item.artisanPayout)}</span>
+              </p>
+              {item.payoutStatus === "HELD" && item.payoutEligibleAt && (
+                <p className="text-sm text-text-secondary">
+                  Se liberará el{" "}
+                  <span className="font-medium text-text">
+                    {new Date(item.payoutEligibleAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
+                </p>
+              )}
+              {item.payoutStatus === "RELEASED" && (
+                <p className="text-sm text-green-700 font-medium">
+                  Pago liberado{item.payoutAt ? ` el ${new Date(item.payoutAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}` : ""}
+                </p>
+              )}
+              {item.payoutStatus === "DISPUTED" && (
+                <p className="text-sm text-red-600 font-medium">
+                  Pago retenido por disputa en curso
+                </p>
+              )}
+            </div>
+
+            {item.trackingNumber && (
+              <TrackingLink
+                carrier={item.trackingCarrier}
+                trackingNumber={item.trackingNumber}
+              />
             )}
           </div>
         )}
