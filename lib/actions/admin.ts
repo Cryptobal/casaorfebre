@@ -198,13 +198,20 @@ export async function approveProduct(
   });
   if (!product) return { error: "Producto no encontrado" };
 
-  await prisma.product.update({
-    where: { id: productId },
-    data: {
-      status: "APPROVED",
-      publishedAt: new Date(),
-    },
-  });
+  await prisma.$transaction([
+    prisma.product.update({
+      where: { id: productId },
+      data: {
+        status: "APPROVED",
+        publishedAt: new Date(),
+      },
+    }),
+    // Auto-approve all pending photos when product is approved
+    prisma.productImage.updateMany({
+      where: { productId, status: "PENDING_REVIEW" },
+      data: { status: "APPROVED" },
+    }),
+  ]);
 
   try {
     await sendProductApprovedEmail(product.artisan.user.email, {
@@ -216,6 +223,7 @@ export async function approveProduct(
   }
 
   revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/admin/fotos");
   revalidatePath("/portal/orfebre/productos");
   revalidatePath(`/orfebres/${product.artisan.slug}`);
   revalidatePath("/coleccion");
@@ -337,11 +345,12 @@ export async function rejectPhoto(
     where: { id: imageId },
     data: {
       status: "REJECTED",
-      altText: reason || null, // Workaround: store rejection reason in altText
+      rejectionReason: reason || null,
     },
   });
 
   revalidatePath("/portal/admin/fotos");
+  revalidatePath("/portal/admin/productos");
   return { success: true };
 }
 

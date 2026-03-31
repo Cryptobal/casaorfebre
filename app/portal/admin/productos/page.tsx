@@ -188,12 +188,24 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                   )}
 
                   <div>
-                    <p className="mb-2 text-sm font-medium text-text-tertiary">Imágenes ({product.images.length})</p>
+                    <div className="mb-2 flex items-center gap-2">
+                      <p className="text-sm font-medium text-text-tertiary">Imágenes ({product.images.length})</p>
+                      {product.images.some((img: { status: string }) => img.status === "PENDING_REVIEW") && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                          {product.images.filter((img: { status: string }) => img.status === "PENDING_REVIEW").length} por revisar
+                        </span>
+                      )}
+                      {product.images.some((img: { status: string }) => img.status === "REJECTED") && (
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">
+                          {product.images.filter((img: { status: string }) => img.status === "REJECTED").length} rechazadas
+                        </span>
+                      )}
+                    </div>
                     <ImageLightbox
                       productName={product.name}
                       images={product.images
-                        .filter((img) => !img.url.startsWith("r2://"))
-                        .map((img) => ({ id: img.id, url: img.url, alt: img.altText ?? product.name }))}
+                        .filter((img: { url: string }) => !img.url.startsWith("r2://"))
+                        .map((img: { id: string; url: string; altText: string | null; status: string }) => ({ id: img.id, url: img.url, alt: img.altText ?? product.name, status: img.status }))}
                     />
                   </div>
 

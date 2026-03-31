@@ -67,15 +67,17 @@ export default async function PortalLayout({ children }: { children: React.React
   let pendingPostulaciones = 0;
   let pendingProductModeration = 0;
   let pendingOrfebreApplications = 0;
+  let pendingPhotos = 0;
   let artisanPendingOrders = 0;
   let artisanUnansweredQuestions = 0;
   let artisanUnreadMessages = 0;
 
   if (session.user.role === "ADMIN") {
-    [pendingPostulaciones, pendingProductModeration, pendingOrfebreApplications] = await Promise.all([
+    [pendingPostulaciones, pendingProductModeration, pendingOrfebreApplications, pendingPhotos] = await Promise.all([
       prisma.artisanApplication.count({ where: { status: "PENDING" } }),
       prisma.product.count({ where: { status: "PENDING_REVIEW" } }),
       prisma.artisan.count({ where: { status: "PENDING" } }),
+      prisma.productImage.count({ where: { status: "PENDING_REVIEW" } }),
     ]);
   }
 
@@ -128,6 +130,7 @@ export default async function PortalLayout({ children }: { children: React.React
       ? ADMIN_LINKS.map((l) => {
           if (l.href === "/portal/admin/postulaciones") return { ...l, badge: pendingPostulaciones };
           if (l.href === "/portal/admin/productos") return { ...l, badge: pendingProductModeration };
+          if (l.href === "/portal/admin/fotos") return { ...l, badge: pendingPhotos };
           if (l.href === "/portal/admin/orfebres") return { ...l, badge: pendingOrfebreApplications };
           return l;
         })
@@ -167,7 +170,7 @@ export default async function PortalLayout({ children }: { children: React.React
                 )}
               </Link>
               <SidebarLink href="/portal/admin/productos" label="Productos" count={pendingProductModeration} />
-              <Link href="/portal/admin/fotos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Fotos</Link>
+              <SidebarLink href="/portal/admin/fotos" label="Fotos" count={pendingPhotos} />
               <SidebarLink href="/portal/admin/orfebres" label="Orfebres" count={pendingOrfebreApplications} />
               <Link href="/portal/admin/planes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Planes</Link>
               <Link href="/portal/admin/suscripciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Suscripciones</Link>

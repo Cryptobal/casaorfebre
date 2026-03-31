@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 
 interface ImageLightboxProps {
-  images: { id: string; url: string; alt: string }[];
+  images: { id: string; url: string; alt: string; status?: string }[];
   productName: string;
 }
 
@@ -41,7 +41,7 @@ export function ImageLightbox({ images, productName }: ImageLightboxProps) {
             key={img.id}
             type="button"
             onClick={() => setOpenIndex(i)}
-            className="h-24 w-24 flex-shrink-0 cursor-zoom-in overflow-hidden rounded transition-opacity hover:opacity-80"
+            className="relative h-24 w-24 flex-shrink-0 cursor-zoom-in overflow-hidden rounded transition-opacity hover:opacity-80"
           >
             <Image
               src={img.url}
@@ -50,6 +50,15 @@ export function ImageLightbox({ images, productName }: ImageLightboxProps) {
               height={96}
               className="h-full w-full object-cover"
             />
+            {img.status && img.status !== "APPROVED" && (
+              <span className={`absolute bottom-0 left-0 right-0 px-1 py-0.5 text-center text-[9px] font-medium ${
+                img.status === "PENDING_REVIEW" ? "bg-amber-500/90 text-white" :
+                img.status === "REJECTED" ? "bg-red-500/90 text-white" :
+                "bg-gray-500/90 text-white"
+              }`}>
+                {img.status === "PENDING_REVIEW" ? "Pendiente" : img.status === "REJECTED" ? "Rechazada" : img.status}
+              </span>
+            )}
           </button>
         ))}
       </div>
