@@ -31,7 +31,7 @@ interface ProductFormProps {
     description: string;
     story: string | null;
     categoryIds: string[];
-    materials: string[];
+    materialIds: string[];
     technique: string | null;
     price: number;
     compareAtPrice: number | null;
@@ -63,20 +63,20 @@ interface ProductFormProps {
   };
   artisanId: string;
   categories?: { id: string; name: string; slug: string }[];
+  materials?: { id: string; name: string }[];
   specialties?: { id: string; name: string }[];
   occasions?: { id: string; name: string }[];
   videoEnabled?: boolean;
 }
 
-export function ProductForm({ product, artisanId, categories = [], specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
+export function ProductForm({ product, artisanId, categories = [], materials = [], specialties = [], occasions = [], videoEnabled = false }: ProductFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const precioFromCalculadora = searchParams.get("precio");
   const isEditing = !!product;
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(product?.categoryIds ?? []);
-  const [materials, setMaterials] = useState<string[]>(product?.materials ?? []);
-  const [materialInput, setMaterialInput] = useState("");
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>(product?.materialIds ?? []);
   const [productionType, setProductionType] = useState(product?.productionType ?? "UNIQUE");
   const [isCustomizable, setIsCustomizable] = useState(product?.isCustomizable ?? false);
   const [elaborationDays, setElaborationDays] = useState<string>(
@@ -109,28 +109,6 @@ export function ProductForm({ product, artisanId, categories = [], specialties =
       router.push(`/portal/orfebre/productos/${state.productId}`);
     }
   }, [state, router]);
-
-  const addMaterial = useCallback(() => {
-    const value = materialInput.trim();
-    if (value && !materials.includes(value)) {
-      setMaterials((prev) => [...prev, value]);
-    }
-    setMaterialInput("");
-  }, [materialInput, materials]);
-
-  const removeMaterial = useCallback((mat: string) => {
-    setMaterials((prev) => prev.filter((m) => m !== mat));
-  }, []);
-
-  const handleMaterialKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        addMaterial();
-      }
-    },
-    [addMaterial]
-  );
 
   const addTalla = useCallback(() => {
     const value = tallaInput.trim();
@@ -415,43 +393,43 @@ export function ProductForm({ product, artisanId, categories = [], specialties =
           )}
         </div>
 
-        {/* Materials — tag input */}
+        {/* Materials — badge selector */}
         <div className="space-y-1.5">
           <Label>Materiales</Label>
-          <input type="hidden" name="materials" value={materials.join(",")} />
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              value={materialInput}
-              onChange={(e) => setMaterialInput(e.target.value)}
-              onKeyDown={handleMaterialKeyDown}
-              placeholder="Agrega un material y presiona Enter"
-            />
-            <Button type="button" variant="secondary" size="sm" onClick={addMaterial}>
-              Agregar
-            </Button>
-          </div>
+          <input type="hidden" name="materialIds" value={selectedMaterialIds.join(",")} />
+          <p className="text-xs text-text-secondary">
+            Selecciona los materiales utilizados en esta pieza
+          </p>
           {materials.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1">
-              {materials.map((mat) => (
-                <span
-                  key={mat}
-                  className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent"
-                >
-                  {mat}
+              {materials.map((m) => {
+                const isSelected = selectedMaterialIds.includes(m.id);
+                return (
                   <button
+                    key={m.id}
                     type="button"
-                    onClick={() => removeMaterial(mat)}
-                    className="ml-0.5 text-accent/60 hover:text-accent"
-                    aria-label={`Eliminar ${mat}`}
+                    onClick={() =>
+                      setSelectedMaterialIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== m.id)
+                          : [...prev, m.id]
+                      )
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {m.name}
                   </button>
-                </span>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

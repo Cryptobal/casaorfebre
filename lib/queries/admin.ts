@@ -249,6 +249,7 @@ export async function getPendingProducts() {
     include: {
       artisan: { select: { displayName: true, slug: true } },
       categories: { select: { name: true, slug: true } },
+      materials: { select: { id: true, name: true } },
       images: { orderBy: { position: "asc" } },
     },
   });
@@ -266,6 +267,7 @@ export async function getAllProductsForAdmin(statusFilter?: string) {
     include: {
       artisan: { select: { displayName: true, slug: true } },
       categories: { select: { name: true } },
+      materials: { select: { id: true, name: true } },
       images: { orderBy: { position: "asc" }, take: 1 },
       _count: { select: { orderItems: true } },
     },

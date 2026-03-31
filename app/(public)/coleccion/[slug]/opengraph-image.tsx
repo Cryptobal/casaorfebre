@@ -138,7 +138,7 @@ export default async function Image({
             >
               {product.materials.slice(0, 4).map((material) => (
                 <div
-                  key={material}
+                  key={material.id}
                   style={{
                     fontSize: 16,
                     color: '#8B7355',
@@ -148,7 +148,7 @@ export default async function Image({
                     fontFamily: 'sans-serif',
                   }}
                 >
-                  {material}
+                  {material.name}
                 </div>
               ))}
             </div>

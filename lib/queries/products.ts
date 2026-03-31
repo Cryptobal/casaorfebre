@@ -23,7 +23,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   const where: Record<string, unknown> = { status: "APPROVED" as const };
 
   if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
-  if (filters.material) where.materials = { has: filters.material };
+  if (filters.material) where.materials = { some: { name: filters.material } };
   if (filters.minPrice || filters.maxPrice) {
     where.price = {
       ...(filters.minPrice ? { gte: filters.minPrice } : {}),
@@ -70,6 +70,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
         },
       },
       categories: { select: { id: true, name: true, slug: true } },
+      materials: { select: { id: true, name: true } },
       images: approvedImagesFirst,
       specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
@@ -122,6 +123,7 @@ export async function getProductBySlug(slug: string) {
         },
       },
       categories: { select: { id: true, name: true, slug: true } },
+      materials: { select: { id: true, name: true } },
       images: { where: { status: "APPROVED" }, orderBy: { position: "asc" } },
       video: true,
       specialties: { select: { id: true, name: true, slug: true } },
@@ -152,12 +154,15 @@ export async function getUserFavoriteIds(userId?: string): Promise<Set<string>> 
 }
 
 export async function getAllMaterials() {
-  const products = await prisma.product.findMany({
-    where: { status: "APPROVED" },
-    select: { materials: true },
+  const materials = await prisma.material.findMany({
+    where: {
+      isActive: true,
+      products: { some: { status: "APPROVED" } },
+    },
+    select: { name: true },
+    orderBy: { name: "asc" },
   });
-  const materials = new Set(products.flatMap((p) => p.materials));
-  return Array.from(materials).sort();
+  return materials.map((m) => m.name);
 }
 
 export async function getNewProducts({
@@ -183,7 +188,7 @@ export async function getNewProducts({
     createdAt: { gte: cutoff },
   };
   if (categorySlug) where.categories = { some: { slug: categorySlug } };
-  if (material) where.materials = { has: material };
+  if (material) where.materials = { some: { name: material } };
   if (minPrice || maxPrice) {
     where.price = {
       ...(minPrice ? { gte: minPrice } : {}),
@@ -241,7 +246,7 @@ type SimilarProduct = Product & {
 export async function getSimilarProducts(product: {
   id: string;
   categorySlugs: string[];
-  materials: string[];
+  materials: { id: string; name: string }[];
   price: number;
   artisanId: string;
 }): Promise<SimilarProduct[]> {
@@ -262,7 +267,7 @@ export async function getSimilarProducts(product: {
   // Priority 1: same category + same main material (max 4)
   if (mainMaterial) {
     const p1 = await prisma.product.findMany({
-      where: { status: "APPROVED", ...catFilter, materials: { has: mainMaterial }, id: { notIn: [...collected] } },
+      where: { status: "APPROVED", ...catFilter, materials: { some: { id: mainMaterial.id } }, id: { notIn: [...collected] } },
       take: 4,
       orderBy: { publishedAt: "desc" },
       include,
@@ -316,7 +321,7 @@ export async function getTesorosProducts(
   const orConditions: Record<string, unknown>[] = [];
 
   for (const mat of materialKeywords) {
-    orConditions.push({ materials: { has: mat } });
+    orConditions.push({ materials: { some: { name: { equals: mat, mode: "insensitive" as const } } } });
   }
   for (const kw of textKeywords) {
     orConditions.push({ name: { contains: kw, mode: "insensitive" } });

@@ -109,7 +109,11 @@ async function seed() {
       price: 50000,
       stock: 5,
       status: 'APPROVED',
-      materials: ['Plata 950'],
+      materials: {
+        connectOrCreate: [
+          { where: { name: "Plata 950" }, create: { name: "Plata 950", position: 0 } },
+        ],
+      },
       productionType: "LIMITED" as const,
       categories: { connect: [{ slug: "anillo" }] },
       artisanId: artisan.id,

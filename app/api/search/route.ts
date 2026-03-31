@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
         OR: [
           { name: { contains: q, mode: "insensitive" } },
           { description: { contains: q, mode: "insensitive" } },
-          { materials: { hasSome: [q.toUpperCase()] } },
+          { materials: { some: { name: { contains: q, mode: "insensitive" } } } },
           { artisan: { displayName: { contains: q, mode: "insensitive" } } },
           { occasions: { some: { name: { contains: q, mode: "insensitive" } } } },
           { specialties: { some: { name: { contains: q, mode: "insensitive" } } } },

@@ -8,11 +8,12 @@ import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { toggleFavorite } from "@/lib/actions/favorites";
 import { trackAddToWishlist, trackSelectItem } from "@/lib/analytics-events";
-import type { Product, Artisan, ProductImage } from "@prisma/client";
+import type { Product, Artisan, ProductImage, Material } from "@prisma/client";
 
 type ProductWithRelations = Product & {
   artisan: Pick<Artisan, "displayName" | "slug">;
   images: ProductImage[];
+  materials?: Pick<Material, "id" | "name">[];
 };
 
 interface ProductCardProps {
@@ -115,9 +116,11 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
         <h3 className="font-serif text-base font-medium text-text">
           {product.name}
         </h3>
-        <p className="text-xs text-text-tertiary">
-          {product.materials[0]}
-        </p>
+        {product.materials?.[0] && (
+          <p className="text-xs text-text-tertiary">
+            {product.materials[0].name}
+          </p>
+        )}
         <PriceDisplay price={product.price} compareAtPrice={product.compareAtPrice} />
       </div>
     </Link>

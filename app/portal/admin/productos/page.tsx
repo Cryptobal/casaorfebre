@@ -145,8 +145,8 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
                     <div>
                       <p className="mb-1.5 text-sm text-text-tertiary">Materiales</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {product.materials.map((m) => (
-                          <MaterialBadge key={m} material={m} />
+                        {product.materials.map((m: { id: string; name: string }) => (
+                          <MaterialBadge key={m.id} material={m.name} />
                         ))}
                       </div>
                     </div>

@@ -37,7 +37,7 @@ export async function createCertificate(orderItemId: string) {
       productId: item.productId,
       orderItemId,
       code,
-      materials: item.product.materials.join(", "),
+      materials: item.product.materials.map((m: { name: string }) => m.name).join(", "),
       technique: item.product.technique,
       artisanName: item.artisan.displayName,
     },

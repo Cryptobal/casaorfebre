@@ -29,9 +29,9 @@ function parseFormData(formData: FormData) {
   const categoryIds = categoryIdsRaw
     ? categoryIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
     : [];
-  const materialsRaw = formData.get("materials") as string;
-  const materials = materialsRaw
-    ? materialsRaw.split(",").map((m) => m.trim()).filter(Boolean)
+  const materialIdsRaw = formData.get("materialIds") as string;
+  const materialIds = materialIdsRaw
+    ? materialIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
     : [];
   const technique = (formData.get("technique") as string) || null;
   const price = parseInt(formData.get("price") as string, 10);
@@ -106,7 +106,7 @@ function parseFormData(formData: FormData) {
     description,
     story,
     categoryIds,
-    materials,
+    materialIds,
     technique,
     price,
     compareAtPrice,
@@ -192,7 +192,9 @@ export async function createProduct(
         description: data.description,
         story: data.story,
         categories: { connect: data.categoryIds.map((id) => ({ id })) },
-        materials: data.materials,
+        materials: data.materialIds.length > 0
+          ? { connect: data.materialIds.map((id) => ({ id })) }
+          : undefined,
         specialties: data.specialtyIds.length > 0
           ? { connect: data.specialtyIds.map((id) => ({ id })) }
           : undefined,
@@ -273,11 +275,9 @@ export async function updateProduct(
   // If product was APPROVED and key fields changed, set to PENDING_REVIEW
   let newStatus = product.status;
   if (product.status === "APPROVED") {
-    const materialsChanged =
-      JSON.stringify(data.materials.sort()) !== JSON.stringify([...product.materials].sort());
     const priceChanged = data.price !== product.price;
 
-    if (materialsChanged || priceChanged) {
+    if (priceChanged) {
       newStatus = "PENDING_REVIEW";
     }
   }
@@ -290,7 +290,7 @@ export async function updateProduct(
         description: data.description,
         story: data.story,
         categories: { set: [], connect: data.categoryIds.map((id) => ({ id })) },
-        materials: data.materials,
+        materials: { set: [], connect: data.materialIds.map((id) => ({ id })) },
         specialties: { set: data.specialtyIds.map((id) => ({ id })) },
         occasions: { set: data.occasionIds.map((id) => ({ id })) },
         technique: data.technique,
@@ -459,7 +459,7 @@ export async function saveAndSubmitForReview(
         description: data.description,
         story: data.story,
         categories: { set: [], connect: data.categoryIds.map((id) => ({ id })) },
-        materials: data.materials,
+        materials: { set: [], connect: data.materialIds.map((id) => ({ id })) },
         specialties: { set: data.specialtyIds.map((id) => ({ id })) },
         occasions: { set: data.occasionIds.map((id) => ({ id })) },
         technique: data.technique,

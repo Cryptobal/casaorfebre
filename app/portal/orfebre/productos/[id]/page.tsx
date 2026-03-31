@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { ProductForm } from "../product-form";
-import { getActiveCategories, getActiveSpecialties, getActiveOccasions } from "@/lib/queries/catalog";
+import { getActiveCategories, getActiveMaterials, getActiveSpecialties, getActiveOccasions } from "@/lib/queries/catalog";
 
 export default async function EditProductPage({
   params,
@@ -27,19 +27,21 @@ export default async function EditProductPage({
     orderBy: { startDate: "desc" },
   });
 
-  const [product, categories, specialties, occasions] = await Promise.all([
+  const [product, categories, allMaterials, specialties, occasions] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: {
         images: { orderBy: { position: "asc" } },
         video: true,
         categories: { select: { id: true } },
+        materials: { select: { id: true } },
         occasions: { select: { id: true } },
         specialties: { select: { id: true } },
         variants: { orderBy: { size: "asc" } },
       },
     }),
     getActiveCategories(),
+    getActiveMaterials(),
     getActiveSpecialties(),
     getActiveOccasions(),
   ]);
@@ -64,6 +66,7 @@ export default async function EditProductPage({
       <ProductForm
         artisanId={artisan.id}
         categories={categories}
+        materials={allMaterials}
         specialties={specialties}
         occasions={occasions}
         videoEnabled={activeSub?.plan?.videoEnabled ?? false}
@@ -73,7 +76,7 @@ export default async function EditProductPage({
           description: product.description,
           story: product.story,
           categoryIds: product.categories.map((c) => c.id),
-          materials: product.materials,
+          materialIds: product.materials.map((m) => m.id),
           technique: product.technique,
           price: product.price,
           compareAtPrice: product.compareAtPrice,

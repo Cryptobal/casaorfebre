@@ -41,19 +41,24 @@ export default async function PiedrasNaturalesPage() {
       where: {
         status: "APPROVED",
         materials: {
-          hasSome: [
-            "Piedras Naturales",
-            "Cuarzo",
-            "Turquesa",
-            "Ágata",
-            "Amatista",
-            "Ojo de Tigre",
-          ],
+          some: {
+            name: {
+              in: [
+                "Piedras Naturales",
+                "Cuarzo",
+                "Turquesa",
+                "Ágata",
+                "Amatista",
+                "Ojo de Tigre",
+              ],
+            },
+          },
         },
       },
       include: {
         artisan: { select: { displayName: true, slug: true } },
         images: { orderBy: { position: "asc" }, take: 1 },
+        materials: { select: { id: true, name: true } },
         specialties: { select: { id: true, name: true, slug: true } },
         occasions: { select: { id: true, name: true, slug: true } },
       },

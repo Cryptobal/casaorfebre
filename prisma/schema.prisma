@@ -194,7 +194,7 @@ model Product {
   price          Int
   compareAtPrice Int?
   categories     Category[]
-  materials      String[]
+  materials      Material[]
   specialties    Specialty[]
   occasions      Occasion[]
   technique      String?
@@ -971,12 +971,13 @@ model Category {
 }
 
 model Material {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  position  Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String    @unique
+  position  Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 
   @@map("materials")
 }

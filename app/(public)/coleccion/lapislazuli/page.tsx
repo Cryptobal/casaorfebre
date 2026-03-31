@@ -40,11 +40,12 @@ export default async function LapislazuliPage() {
     prisma.product.findMany({
       where: {
         status: "APPROVED",
-        materials: { hasSome: ["Lapislázuli"] },
+        materials: { some: { name: { in: ["Lapislázuli"] } } },
       },
       include: {
         artisan: { select: { displayName: true, slug: true } },
         images: { orderBy: { position: "asc" }, take: 1 },
+        materials: { select: { id: true, name: true } },
         specialties: { select: { id: true, name: true, slug: true } },
         occasions: { select: { id: true, name: true, slug: true } },
       },

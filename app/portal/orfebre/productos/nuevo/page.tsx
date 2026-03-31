@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { ProductForm } from "../product-form";
-import { getActiveCategories, getActiveSpecialties, getActiveOccasions } from "@/lib/queries/catalog";
+import { getActiveCategories, getActiveMaterials, getActiveSpecialties, getActiveOccasions } from "@/lib/queries/catalog";
 
 export default async function NuevoProductoPage() {
   const session = await auth();
@@ -14,8 +14,9 @@ export default async function NuevoProductoPage() {
 
   if (!artisan) redirect("/");
 
-  const [categories, specialties, occasions] = await Promise.all([
+  const [categories, materials, specialties, occasions] = await Promise.all([
     getActiveCategories(),
+    getActiveMaterials(),
     getActiveSpecialties(),
     getActiveOccasions(),
   ]);
@@ -28,6 +29,7 @@ export default async function NuevoProductoPage() {
       <ProductForm
         artisanId={artisan.id}
         categories={categories}
+        materials={materials}
         specialties={specialties}
         occasions={occasions}
       />

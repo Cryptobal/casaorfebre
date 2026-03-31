@@ -54,7 +54,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const similarProducts = await getSimilarProducts({
     id: product.id,
     categorySlugs: product.categories.map((c: { slug: string }) => c.slug),
-    materials: product.materials,
+    materials: product.materials as { id: string; name: string }[],
     price: product.price,
     artisanId: product.artisanId,
   });
@@ -111,7 +111,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     image: productImages.length > 0 ? productImages : [`${baseUrl}/casaorfebre-og-image.png`],
     category: product.categories.map((c: { name: string }) => c.name).join(", ") || "Otro",
     ...(product.materials.length > 0
-      ? { material: product.materials.join(", ") }
+      ? { material: product.materials.map((m: { name: string }) => m.name).join(", ") }
       : {}),
     brand: {
       "@type": "Brand",
@@ -313,8 +313,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Materials */}
             {product.materials.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {product.materials.map((m: string) => (
-                  <MaterialBadge key={m} material={m} />
+                {product.materials.map((m: { id: string; name: string }) => (
+                  <MaterialBadge key={m.id} material={m.name} />
                 ))}
               </div>
             )}
@@ -533,11 +533,11 @@ function TruckIcon() {
 
 /* ─── Product Details & Measurements ─── */
 
-function ProductDetails({ product }: { product: Record<string, unknown> & { materials: string[]; tallas: string[]; categories: { name: string }[] } }) {
+function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string }[] } }) {
   const rows: { label: string; value: string }[] = [];
 
   if (product.materials.length > 0)
-    rows.push({ label: "Materiales", value: product.materials.join(", ") });
+    rows.push({ label: "Materiales", value: product.materials.map((m) => m.name).join(", ") });
   if (product.technique)
     rows.push({ label: "Técnica", value: product.technique as string });
   if (product.weight)
