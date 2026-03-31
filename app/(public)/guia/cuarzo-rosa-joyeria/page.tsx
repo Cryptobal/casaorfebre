@@ -74,9 +74,7 @@ const tocItems = [
 export default async function CuarzoRosaPage() {
   const session = await auth();
   const [products, favoriteIds] = await Promise.all([
-    getApprovedProducts({}).then((result) =>
-      (result?.products || []).slice(0, 4)
-    ),
+    getApprovedProducts({}).then((products) => products.slice(0, 4)),
     session ? getUserFavoriteIds(session.user?.id) : new Set(),
   ]);
 

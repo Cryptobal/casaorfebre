@@ -126,9 +126,7 @@ const tableData: TableRow[] = [
 export default async function PlataGuidePage() {
   const session = await auth();
   const [products, favoriteIds] = await Promise.all([
-    getApprovedProducts({}).then((result) =>
-      (result?.products || []).slice(0, 4)
-    ),
+    getApprovedProducts({}).then((items) => items.slice(0, 4)),
     session ? getUserFavoriteIds(session.user?.id) : new Set(),
   ]);
 

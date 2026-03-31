@@ -154,7 +154,6 @@ export default async function JoyasHombrePage() {
 
               {products && products.length > 0 ? (
                 <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-                  {/* @ts-expect-error - product type inference from async function */}
                   {products.map((product) => (
                     <FadeIn key={product.id} delay={0}>
                       <ProductCard
