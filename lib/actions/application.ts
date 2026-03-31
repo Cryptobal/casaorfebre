@@ -50,6 +50,14 @@ export async function submitApplication(
     portfolioImages = [];
   }
 
+  const acceptedSellerAgreement = formData.get("acceptedSellerAgreement") === "true";
+  const acceptedTerms = formData.get("acceptedTerms") === "true";
+  const acceptedPrivacy = formData.get("acceptedPrivacy") === "true";
+
+  if (!acceptedSellerAgreement || !acceptedTerms || !acceptedPrivacy) {
+    return { error: "Debes aceptar el Acuerdo de Orfebre, los Términos y la Política de Privacidad" };
+  }
+
   if (
     !firstName ||
     !lastName ||

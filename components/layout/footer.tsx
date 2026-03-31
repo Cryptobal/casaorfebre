@@ -38,6 +38,7 @@ const footerColumns = [
       { href: "/garantia", label: "Garantía" },
       { href: "/preguntas-frecuentes", label: "Preguntas Frecuentes" },
       { href: "/terminos", label: "Términos y Condiciones" },
+      { href: "/acuerdo-orfebre", label: "Acuerdo de Orfebre" },
       { href: "/privacidad", label: "Privacidad" },
       { href: "/contacto", label: "Contacto" },
     ],
