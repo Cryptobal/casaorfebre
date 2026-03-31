@@ -94,8 +94,12 @@ export function AddressAutocomplete({
 
     // Comuna: most specific local division
     const comuna = adminLevel3 || locality || sublocality || adminLevel2;
-    // Ciudad: broader city/province name
-    const ciudad = locality || adminLevel2 || adminLevel3;
+    // Ciudad: broader city/province name (distinct from comuna when possible)
+    const ciudad = (adminLevel2 && adminLevel2 !== comuna)
+      ? adminLevel2
+      : locality && locality !== comuna
+        ? locality
+        : adminLevel2 || locality || comuna;
 
     const region = googleRegionToChilean(googleRegion);
 

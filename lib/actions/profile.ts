@@ -21,6 +21,7 @@ export async function updateArtisanProfile(formData: FormData) {
       specialty: formData.get("specialty") as string || artisan.specialty,
       materials: (formData.get("materials") as string)?.split(",").map(m => m.trim()).filter(Boolean) || artisan.materials,
       location: formData.get("location") as string || artisan.location,
+      region: (formData.get("region") as string) || artisan.region,
       videoUrl: (formData.get("videoUrl") as string) || null,
       yearsExperience: formData.get("yearsExperience") ? parseInt(formData.get("yearsExperience") as string, 10) : null,
       awards: (formData.get("awards") as string)?.split("|||").filter(Boolean) || [],

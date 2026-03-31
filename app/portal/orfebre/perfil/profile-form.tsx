@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { updateArtisanProfile, updateProfileImage } from "@/lib/actions/profile";
 import { useState } from "react";
+import { CHILEAN_REGIONS, citiesForRegion } from "@/lib/chile-cities";
 
 interface ProfileFormProps {
   artisan: {
@@ -15,6 +17,7 @@ interface ProfileFormProps {
     specialty: string;
     materials: string[];
     location: string;
+    region: string | null;
     videoUrl: string | null;
     profileImage: string | null;
     slug: string;
@@ -30,6 +33,11 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
   const [uploading, setUploading] = useState(false);
   const [awards, setAwards] = useState<string[]>(artisan.awards);
   const [awardInput, setAwardInput] = useState("");
+  const [region, setRegion] = useState(artisan.region ?? "");
+  const [ciudad, setCiudad] = useState(artisan.location ?? "");
+
+  const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
+  const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function handleProfileSubmit(formData: FormData) {
@@ -159,13 +167,23 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
               />
             </div>
             <div>
-              <Label htmlFor="location">Ubicacion</Label>
-              <Input
-                id="location"
-                name="location"
-                defaultValue={artisan.location}
-                required
-                className="mt-1"
+              <input type="hidden" name="region" value={region} />
+              <input type="hidden" name="location" value={ciudad} />
+              <Label>Región</Label>
+              <SelectDropdown
+                options={regionOptions}
+                value={region}
+                onChange={(v) => { setRegion(v); setCiudad(""); }}
+                placeholder="Selecciona tu región..."
+              />
+            </div>
+            <div>
+              <Label>Ciudad</Label>
+              <SelectDropdown
+                options={cityOptions}
+                value={ciudad}
+                onChange={setCiudad}
+                placeholder={region ? "Selecciona tu ciudad..." : "Selecciona una región primero"}
               />
             </div>
           </div>

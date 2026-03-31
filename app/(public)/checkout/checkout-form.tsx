@@ -283,7 +283,7 @@ export function CheckoutForm({
               <Label htmlFor="shippingPhone">Teléfono</Label>
               <div className="mt-1 flex items-center gap-2">
                 <span className="flex h-9 items-center rounded-md border border-border bg-muted px-3 text-sm text-text-secondary">
-                  +56 9
+                  +56
                 </span>
                 <Input
                   id="shippingPhone"
@@ -291,7 +291,7 @@ export function CheckoutForm({
                   inputMode="numeric"
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  placeholder="1234 5678"
+                  placeholder="912345678"
                   className={`flex-1 ${phoneError ? "border-red-400 focus:ring-red-400" : ""}`}
                   maxLength={9}
                 />
@@ -299,7 +299,7 @@ export function CheckoutForm({
               {phoneError && (
                 <p className="mt-1 text-xs text-red-600">{phoneError}</p>
               )}
-              <p className="mt-1 text-xs text-text-tertiary">9 dígitos, para el courier</p>
+              <p className="mt-1 text-xs text-text-tertiary">9 dígitos (celular o fijo), para el courier</p>
             </div>
           </div>
 

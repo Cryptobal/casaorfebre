@@ -29,6 +29,7 @@ export default async function PerfilPage() {
             specialty: artisan.specialty,
             materials: artisan.materials,
             location: artisan.location,
+            region: artisan.region,
             videoUrl: artisan.videoUrl,
             profileImage: artisan.profileImage,
             slug: artisan.slug,
