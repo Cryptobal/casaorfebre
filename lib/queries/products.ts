@@ -344,3 +344,77 @@ export async function getTesorosProducts(
     },
   });
 }
+
+/**
+ * Get products filtered by gender keyword in name or description.
+ * Falls back to unfiltered category products if no gender-tagged items found.
+ */
+export async function getProductsByGender(
+  gender: "hombre" | "mujer",
+  categorySlug?: string,
+  limit = 4
+) {
+  const keywords =
+    gender === "hombre"
+      ? ["hombre", "masculin", "hombres", "unisex"]
+      : ["mujer", "femenin", "mujeres", "unisex"];
+
+  const catFilter = categorySlug
+    ? { categories: { some: { slug: categorySlug } } }
+    : {};
+
+  // Try gender-filtered first
+  const products = await prisma.product.findMany({
+    where: {
+      status: "APPROVED" as const,
+      ...catFilter,
+      OR: keywords.flatMap((kw) => [
+        { name: { contains: kw, mode: "insensitive" as const } },
+        { description: { contains: kw, mode: "insensitive" as const } },
+      ]),
+    },
+    take: limit,
+    orderBy: { publishedAt: "desc" },
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      categories: { select: { id: true, name: true, slug: true } },
+      materials: { select: { id: true, name: true } },
+      images: {
+        where: { status: "APPROVED" as const },
+        orderBy: { position: "asc" as const },
+        take: 1,
+      },
+      specialties: { select: { id: true, name: true, slug: true } },
+      occasions: { select: { id: true, name: true, slug: true } },
+    },
+  });
+
+  // Fallback: if not enough results, fill with general category products
+  if (products.length < limit && categorySlug) {
+    const existingIds = products.map((p) => p.id);
+    const fallback = await prisma.product.findMany({
+      where: {
+        status: "APPROVED" as const,
+        ...catFilter,
+        id: { notIn: existingIds },
+      },
+      take: limit - products.length,
+      orderBy: { publishedAt: "desc" },
+      include: {
+        artisan: { select: { displayName: true, slug: true } },
+        categories: { select: { id: true, name: true, slug: true } },
+        materials: { select: { id: true, name: true } },
+        images: {
+          where: { status: "APPROVED" as const },
+          orderBy: { position: "asc" as const },
+          take: 1,
+        },
+        specialties: { select: { id: true, name: true, slug: true } },
+        occasions: { select: { id: true, name: true, slug: true } },
+      },
+    });
+    products.push(...fallback);
+  }
+
+  return products;
+}
