@@ -181,6 +181,40 @@ export function generateLocalBusinessJsonLd() {
   };
 }
 
+export function generateDetailedLocalBusinessJsonLd(opts: {
+  name: string;
+  description: string;
+  streetAddress: string;
+  city: string;
+  region: string;
+  postalCode?: string;
+  lat?: number;
+  lng?: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: opts.name,
+    description: opts.description,
+    url: BASE_URL,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: opts.streetAddress,
+      addressLocality: opts.city,
+      addressRegion: opts.region,
+      ...(opts.postalCode && { postalCode: opts.postalCode }),
+      addressCountry: "CL",
+    },
+    ...(opts.lat !== undefined && opts.lng !== undefined && {
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: opts.lat,
+        longitude: opts.lng,
+      },
+    }),
+  };
+}
+
 /* ─── Collection page (existing, updated to return object) ─── */
 
 export function buildCollectionWithItemsJsonLd(opts: {
