@@ -63,6 +63,10 @@ export function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  // Store callback in a ref so the Google listener always calls the latest version
+  const callbackRef = useRef(onAddressSelect);
+  callbackRef.current = onAddressSelect;
+
   const [marker, setMarker] = useState(DEFAULT_CENTER);
   const [showMap, setShowMap] = useState(false);
 
@@ -85,25 +89,39 @@ export function AddressAutocomplete({
     const googleRegion = extractComponent(components, "administrative_area_level_1");
     const postalCode = extractComponent(components, "postal_code");
 
-    // In Chile: administrative_area_level_3 or locality = comuna,
-    // administrative_area_level_2 or locality = ciudad/province
+    // Chilean address hierarchy:
+    // administrative_area_level_1 = Región
+    // administrative_area_level_2 = Provincia (e.g. "Provincia de Santiago")
+    // administrative_area_level_3 = Comuna (e.g. "Lo Barnechea")
+    // locality = Ciudad/localidad (e.g. "Santiago", sometimes same as comuna)
+    // sublocality_level_1 = Barrio/sector
     const locality = extractComponent(components, "locality");
     const adminLevel3 = extractComponent(components, "administrative_area_level_3");
     const adminLevel2 = extractComponent(components, "administrative_area_level_2");
     const sublocality = extractComponent(components, "sublocality_level_1");
 
-    // Comuna: most specific local division
-    const comuna = adminLevel3 || locality || sublocality || adminLevel2;
-    // Ciudad: broader city/province name (distinct from comuna when possible)
-    const ciudad = (adminLevel2 && adminLevel2 !== comuna)
-      ? adminLevel2
-      : locality && locality !== comuna
-        ? locality
-        : adminLevel2 || locality || comuna;
+    // Comuna: the most specific local administrative division
+    const comuna = adminLevel3 || sublocality || locality || adminLevel2;
+
+    // Ciudad: the broader city name
+    // For Santiago-area addresses: locality is often "Santiago" while adminLevel3 is the comuna
+    // For smaller cities: locality IS the city and adminLevel3 may be empty
+    // Fallback chain ensures we always have a value
+    let ciudad = "";
+    if (locality && locality !== comuna) {
+      ciudad = locality;
+    } else if (adminLevel2) {
+      // Strip "Provincia de " prefix common in Chilean Google results
+      ciudad = adminLevel2.replace(/^Provincia de /i, "");
+    }
+    // If ciudad ended up same as comuna or empty, use comuna as fallback
+    if (!ciudad || ciudad === comuna) {
+      ciudad = locality || adminLevel2 || comuna;
+    }
 
     const region = googleRegionToChilean(googleRegion);
 
-    onAddressSelect({
+    callbackRef.current({
       formattedAddress: place.formatted_address ?? "",
       streetAddress: streetAddress || place.formatted_address?.split(",")[0] || "",
       region,
@@ -113,7 +131,7 @@ export function AddressAutocomplete({
       lat,
       lng,
     });
-  }, [onAddressSelect]);
+  }, []);
 
   useEffect(() => {
     if (!isLoaded || !inputRef.current || autocompleteRef.current) return;
