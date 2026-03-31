@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/products/image-upload";
 import { VideoUploader } from "@/components/products/video-uploader";
 import { ErrorModal } from "@/components/ui/error-modal";
-import { createProduct, updateProduct, saveAndSubmitForReview } from "@/lib/actions/products";
+import { createProduct, updateProduct, saveAndSubmitForReview, reactivateProduct } from "@/lib/actions/products";
 import { PresetSelector } from "@/components/forms/preset-selector";
 import { CARE_PRESETS, PACKAGING_PRESETS, WARRANTY_PRESETS } from "@/lib/constants";
 
@@ -18,6 +18,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   APPROVED: { label: "Aprobado", className: "border-green-300 bg-green-50 text-green-800" },
   REJECTED: { label: "Rechazado", className: "border-red-300 bg-red-50 text-red-700" },
   PAUSED: { label: "Pausado", className: "border-blue-300 bg-blue-50 text-blue-700" },
+  SOLD_OUT: { label: "Agotado", className: "border-zinc-300 bg-zinc-50 text-zinc-600" },
 };
 
 const RING_SIZES = [
@@ -52,6 +53,9 @@ interface ProductFormProps {
     variants: { size: string; stock: number }[];
     collectionId: string | null;
     tallas: string[];
+    tallaUnica: string | null;
+    tallaAjusteArriba: number | null;
+    tallaAjusteAbajo: number | null;
     guiaTallas: string | null;
     largoCadenaCm: number | null;
     diametroMm: number | null;
@@ -78,7 +82,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const precioFromCalculadora = searchParams.get("precio");
   const isEditing = !!product;
 
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(product?.categoryIds ?? []);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(product?.categoryIds?.[0] ?? "");
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>(product?.materialIds ?? []);
   const [productionType, setProductionType] = useState(product?.productionType ?? "UNIQUE");
   const [isCustomizable, setIsCustomizable] = useState(product?.isCustomizable ?? false);
@@ -92,6 +96,10 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const [selectedOccasionIds, setSelectedOccasionIds] = useState<string[]>(product?.occasionIds ?? []);
   const [tallas, setTallas] = useState<string[]>(product?.tallas ?? []);
   const [tallaInput, setTallaInput] = useState("");
+  const [tallaUnica, setTallaUnica] = useState(product?.tallaUnica ?? "");
+  const [tallaAjusteArriba, setTallaAjusteArriba] = useState(product?.tallaAjusteArriba?.toString() ?? "0");
+  const [tallaAjusteAbajo, setTallaAjusteAbajo] = useState(product?.tallaAjusteAbajo?.toString() ?? "0");
+  const [reactivating, setReactivating] = useState(false);
   const [personalizable, setPersonalizable] = useState(product?.personalizable ?? false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>(product?.collectionId ?? "");
   const [localCollections, setLocalCollections] = useState(collections);
@@ -184,9 +192,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
     [addTalla]
   );
 
-  const selectedCategorySlugs = categories
-    .filter((c) => selectedCategoryIds.includes(c.id))
-    .map((c) => c.slug);
+  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+  const selectedCategorySlugs = selectedCategory ? [selectedCategory.slug] : [];
   const needsTallas = selectedCategorySlugs.includes("anillo");
   const needsLargoCadena = selectedCategorySlugs.includes("collar") || selectedCategorySlugs.includes("colgante");
   const needsDiametro = selectedCategorySlugs.includes("aros") || selectedCategorySlugs.includes("pulsera");
@@ -343,28 +350,22 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           />
         </div>
 
-        {/* Categories */}
+        {/* Category — single select */}
         <div className="space-y-1.5">
-          <Label>Categorías</Label>
-          <input type="hidden" name="categoryIds" value={selectedCategoryIds.join(",")} />
+          <Label>Categoría</Label>
+          <input type="hidden" name="categoryIds" value={selectedCategoryId} />
           <p className="text-xs text-text-secondary">
-            Selecciona una o más categorías para tu pieza
+            Selecciona la categoría de tu pieza
           </p>
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1">
               {categories.map((c) => {
-                const isSelected = selectedCategoryIds.includes(c.id);
+                const isSelected = selectedCategoryId === c.id;
                 return (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() =>
-                      setSelectedCategoryIds((prev) =>
-                        isSelected
-                          ? prev.filter((id) => id !== c.id)
-                          : [...prev, c.id]
-                      )
-                    }
+                    onClick={() => setSelectedCategoryId(isSelected ? "" : c.id)}
                     className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
                       isSelected
                         ? "bg-accent/10 border-accent text-accent"
@@ -809,11 +810,73 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           </div>
         </div>
 
-        {/* ── Measurements by category ── */}
-        {needsTallas && (
+        {/* ── Ring sizing by category ── */}
+        {needsTallas && productionType !== "LIMITED" && (
+          <div className="space-y-3 rounded-md border border-accent/20 bg-accent/5 p-4">
+            <div>
+              <Label>Talla disponible <span className="text-red-500">*</span></Label>
+              <p className="text-xs text-text-secondary">Selecciona la talla de este anillo.</p>
+            </div>
+            <input type="hidden" name="tallaUnica" value={tallaUnica} />
+            <input type="hidden" name="tallas" value={tallaUnica || ""} />
+            <div className="flex flex-wrap gap-1.5">
+              {RING_SIZES.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setTallaUnica(tallaUnica === size ? "" : size)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    tallaUnica === size
+                      ? "bg-accent text-white"
+                      : "border border-border text-text-secondary hover:border-accent/50"
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-2 pt-2">
+              <Label>¿Se puede ajustar la talla?</Label>
+              <p className="text-xs text-text-secondary">Indica cuántas tallas se puede agrandar o achicar este anillo.</p>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-text-tertiary">Achicar</span>
+                  <Input
+                    name="tallaAjusteAbajo"
+                    type="number"
+                    min={0}
+                    max={4}
+                    value={tallaAjusteAbajo}
+                    onChange={(e) => setTallaAjusteAbajo(e.target.value)}
+                    className="w-16 text-center"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-text-tertiary">Agrandar</span>
+                  <Input
+                    name="tallaAjusteArriba"
+                    type="number"
+                    min={0}
+                    max={4}
+                    value={tallaAjusteArriba}
+                    onChange={(e) => setTallaAjusteArriba(e.target.value)}
+                    className="w-16 text-center"
+                  />
+                </div>
+                <span className="text-xs text-text-tertiary">tallas</span>
+              </div>
+              {tallaUnica && (parseInt(tallaAjusteAbajo) > 0 || parseInt(tallaAjusteArriba) > 0) && (
+                <p className="text-xs text-accent">
+                  Rango disponible: talla {Math.max(parseFloat(tallaUnica) - parseInt(tallaAjusteAbajo), 1)} a {parseFloat(tallaUnica) + parseInt(tallaAjusteArriba)}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        {needsTallas && productionType === "LIMITED" && (
           <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
             <Label>Tallas disponibles <span className="text-red-500">*</span></Label>
-            <p className="text-xs text-text-secondary">Obligatorio para anillos. Agrega las tallas disponibles.</p>
+            <p className="text-xs text-text-secondary">Para producción limitada, agrega las tallas disponibles. El stock por talla se gestiona arriba.</p>
             <input type="hidden" name="tallas" value={tallas.join(",")} />
             <div className="flex gap-2">
               <Input
@@ -1061,24 +1124,49 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
-          <Button
-            type="submit"
-            variant="secondary"
-            loading={pending}
-            disabled={pending}
-          >
-            Guardar Borrador
-          </Button>
-          {product && (product.status === "DRAFT" || product.status === "REJECTED") && (
+          {product?.status === "SOLD_OUT" ? (
             <Button
               type="button"
               variant="primary"
-              loading={submitting}
-              disabled={submitting || pending}
-              onClick={handleSubmitForReview}
+              loading={reactivating}
+              disabled={reactivating}
+              onClick={async () => {
+                setReactivating(true);
+                const stock = productionType === "UNIQUE" ? 1 : parseInt(prompt("¿Cuántas unidades tienes disponibles?") || "0", 10);
+                if (stock < 1) { setReactivating(false); return; }
+                const result = await reactivateProduct(product.id, stock);
+                if (result.error) {
+                  setErrorModal(result.error);
+                } else {
+                  router.refresh();
+                }
+                setReactivating(false);
+              }}
             >
-              Enviar a Revision
+              Reactivar publicación
             </Button>
+          ) : (
+            <>
+              <Button
+                type="submit"
+                variant="secondary"
+                loading={pending}
+                disabled={pending}
+              >
+                Guardar Borrador
+              </Button>
+              {product && (product.status === "DRAFT" || product.status === "REJECTED") && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  loading={submitting}
+                  disabled={submitting || pending}
+                  onClick={handleSubmitForReview}
+                >
+                  Enviar a Revision
+                </Button>
+              )}
+            </>
           )}
         </div>
       </form>

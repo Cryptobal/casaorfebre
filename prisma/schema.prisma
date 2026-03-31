@@ -226,6 +226,9 @@ model Product {
   collectionId   String?
   collection     Collection?   @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   tallas         String[]
+  tallaUnica     String?
+  tallaAjusteArriba Int?
+  tallaAjusteAbajo  Int?
   guiaTallas     String?
   largoCadenaCm  Float?
   diametroMm     Float?

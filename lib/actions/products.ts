@@ -86,6 +86,11 @@ function parseFormData(formData: FormData) {
   const tallas = tallasRaw
     ? tallasRaw.split(",").map((t) => t.trim()).filter(Boolean)
     : [];
+  const tallaUnica = (formData.get("tallaUnica") as string) || null;
+  const tallaAjusteArribaRaw = formData.get("tallaAjusteArriba") as string;
+  const tallaAjusteArriba = tallaAjusteArribaRaw ? parseInt(tallaAjusteArribaRaw, 10) : null;
+  const tallaAjusteAbajoRaw = formData.get("tallaAjusteAbajo") as string;
+  const tallaAjusteAbajo = tallaAjusteAbajoRaw ? parseInt(tallaAjusteAbajoRaw, 10) : null;
   const guiaTallas = (formData.get("guiaTallas") as string) || null;
   const largoCadenaCmRaw = formData.get("largoCadenaCm") as string;
   const largoCadenaCm = largoCadenaCmRaw ? parseFloat(largoCadenaCmRaw) : null;
@@ -122,6 +127,9 @@ function parseFormData(formData: FormData) {
     occasionIds,
     collectionId,
     tallas,
+    tallaUnica,
+    tallaAjusteArriba,
+    tallaAjusteAbajo,
     guiaTallas,
     largoCadenaCm,
     diametroMm,
@@ -213,6 +221,9 @@ export async function createProduct(
         weight: data.weight,
         collectionId: data.collectionId,
         tallas: data.tallas,
+        tallaUnica: data.tallaUnica,
+        tallaAjusteArriba: data.tallaAjusteArriba,
+        tallaAjusteAbajo: data.tallaAjusteAbajo,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
         diametroMm: data.diametroMm,
@@ -305,6 +316,9 @@ export async function updateProduct(
         weight: data.weight,
         collectionId: data.collectionId,
         tallas: data.tallas,
+        tallaUnica: data.tallaUnica,
+        tallaAjusteArriba: data.tallaAjusteArriba,
+        tallaAjusteAbajo: data.tallaAjusteAbajo,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
         diametroMm: data.diametroMm,
@@ -474,6 +488,9 @@ export async function saveAndSubmitForReview(
         weight: data.weight,
         collectionId: data.collectionId,
         tallas: data.tallas,
+        tallaUnica: data.tallaUnica,
+        tallaAjusteArriba: data.tallaAjusteArriba,
+        tallaAjusteAbajo: data.tallaAjusteAbajo,
         guiaTallas: data.guiaTallas,
         largoCadenaCm: data.largoCadenaCm,
         diametroMm: data.diametroMm,
@@ -534,6 +551,39 @@ export async function togglePauseProduct(
     return { success: true };
   } catch {
     return { error: "Error al cambiar estado del producto" };
+  }
+}
+
+export async function reactivateProduct(
+  productId: string,
+  newStock: number
+): Promise<{ error?: string; success?: boolean }> {
+  const artisan = await getArtisan();
+  if (!artisan) return { error: "No tienes permisos" };
+
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product || product.artisanId !== artisan.id) {
+    return { error: "Producto no encontrado" };
+  }
+
+  if (product.status !== "SOLD_OUT") {
+    return { error: "Solo se pueden reactivar productos agotados" };
+  }
+
+  if (newStock < 1) {
+    return { error: "El stock debe ser al menos 1" };
+  }
+
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { stock: newStock, status: "APPROVED" },
+    });
+
+    revalidatePath("/portal/orfebre/productos");
+    return { success: true };
+  } catch {
+    return { error: "Error al reactivar el producto" };
   }
 }
 
