@@ -1037,6 +1037,30 @@ model Specialty {
   @@map("specialties")
 }
 
+model ShippingZone {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  regions       String[]
+  price         Int
+  estimatedDays String
+  isActive      Boolean  @default(true)
+  position      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("shipping_zones")
+}
+
+model ShippingSettings {
+  id                    String   @id @default("default")
+  freeShippingEnabled   Boolean  @default(true)
+  freeShippingThreshold Int      @default(100000)
+  updatedAt             DateTime @updatedAt
+
+  @@map("shipping_settings")
+}
+
 model AdminAsset {
   id         String   @id @default(cuid())
   key        String   @unique

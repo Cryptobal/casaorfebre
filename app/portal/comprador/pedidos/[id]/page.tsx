@@ -573,11 +573,42 @@ export default async function BuyerOrderDetailPage({
       </div>
 
       {/* Order total */}
-      <div className="mt-6 flex items-center justify-between rounded-lg border border-border bg-surface px-6 py-4">
-        <span className="text-sm text-text-secondary">Total del pedido</span>
-        <span className="text-xl font-semibold text-text tabular-nums">
-          {formatCLP(order.total)}
-        </span>
+      <div className="mt-6 rounded-lg border border-border bg-surface px-6 py-4">
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-text-secondary">Subtotal</span>
+            <span className="text-text tabular-nums">{formatCLP(order.subtotal)}</span>
+          </div>
+          {order.shippingCost > 0 ? (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Envío</span>
+              <span className="text-text tabular-nums">{formatCLP(order.shippingCost)}</span>
+            </div>
+          ) : (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Envío</span>
+              <span className="font-medium text-green-700">Gratis</span>
+            </div>
+          )}
+          {order.discountAmount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Descuento</span>
+              <span className="text-green-700 tabular-nums">-{formatCLP(order.discountAmount)}</span>
+            </div>
+          )}
+          {order.giftCardDiscount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Gift Card</span>
+              <span className="text-green-700 tabular-nums">-{formatCLP(order.giftCardDiscount)}</span>
+            </div>
+          )}
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+          <span className="font-medium text-text">Total del pedido</span>
+          <span className="text-xl font-semibold text-text tabular-nums">
+            {formatCLP(order.total)}
+          </span>
+        </div>
       </div>
     </div>
   );

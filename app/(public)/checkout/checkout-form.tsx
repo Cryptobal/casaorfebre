@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,8 @@ interface CheckoutFormProps {
 }
 
 export function CheckoutForm({
+  items,
+  total: subtotal,
   hasCustomMade,
   savedAddress,
 }: CheckoutFormProps) {
@@ -82,6 +84,15 @@ export function CheckoutForm({
   const [gcError, setGcError] = useState("");
   const [gcValidating, setGcValidating] = useState(false);
 
+  // Shipping cost
+  const [shippingCost, setShippingCost] = useState<number | null>(null);
+  const [shippingZone, setShippingZone] = useState("");
+  const [shippingDays, setShippingDays] = useState("");
+  const [shippingFree, setShippingFree] = useState(false);
+  const [shippingError, setShippingError] = useState("");
+  const [shippingThreshold, setShippingThreshold] = useState(0);
+  const [loadingShipping, setLoadingShipping] = useState(false);
+
   const handleAddressSelect = useCallback((result: AddressResult) => {
     setAddressRegion(result.region ?? "");
     setAddressComuna(result.comuna);
@@ -90,11 +101,37 @@ export function CheckoutForm({
   }, []);
 
   function handlePhoneChange(value: string) {
-    // Only allow digits, max 9
     const digits = value.replace(/\D/g, "").slice(0, 9);
     setPhone(digits);
     setPhoneError("");
   }
+
+  // Fetch shipping cost when region changes
+  useEffect(() => {
+    if (!addressRegion) {
+      setShippingCost(null);
+      setShippingError("");
+      return;
+    }
+    setLoadingShipping(true);
+    setShippingError("");
+    fetch(`/api/shipping/calculate?region=${encodeURIComponent(addressRegion)}&subtotal=${subtotal}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          setShippingError(data.error);
+          setShippingCost(null);
+        } else {
+          setShippingCost(data.cost);
+          setShippingZone(data.zoneName);
+          setShippingDays(data.estimatedDays);
+          setShippingFree(data.isFreeShipping);
+          setShippingThreshold(data.freeShippingThreshold);
+        }
+      })
+      .catch(() => setShippingError("Error al calcular envío"))
+      .finally(() => setLoadingShipping(false));
+  }, [addressRegion, subtotal]);
 
   async function handleApplyDiscount() {
     const code = discountCode.trim().toUpperCase();
@@ -640,6 +677,47 @@ export function CheckoutForm({
             Tu carrito incluye piezas personalizadas que no admiten devolución.
             Al pagar, aceptas esta condición.
           </p>
+        </div>
+      )}
+
+      {/* Shipping & order summary */}
+      {addressRegion && (
+        <div className="rounded-lg border border-border bg-background p-4">
+          <h3 className="text-sm font-medium text-text">Resumen del pedido</h3>
+          <div className="mt-3 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Subtotal ({items.length} {items.length === 1 ? "pieza" : "piezas"})</span>
+              <span className="text-text">{formatCLP(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-text-secondary">
+                Envío {shippingZone && `(${shippingZone})`}
+              </span>
+              {loadingShipping ? (
+                <span className="text-text-tertiary">Calculando...</span>
+              ) : shippingError ? (
+                <span className="text-red-600 text-xs">{shippingError}</span>
+              ) : shippingFree ? (
+                <span className="font-medium text-green-700">Gratis</span>
+              ) : shippingCost !== null ? (
+                <span className="text-text">{formatCLP(shippingCost)}</span>
+              ) : (
+                <span className="text-text-tertiary">—</span>
+              )}
+            </div>
+            {shippingDays && !shippingError && (
+              <p className="text-xs text-text-tertiary">Entrega estimada: {shippingDays}</p>
+            )}
+            {!shippingFree && shippingCost !== null && shippingThreshold > 0 && subtotal < shippingThreshold && (
+              <p className="text-xs text-accent">
+                Agrega {formatCLP(shippingThreshold - subtotal)} más para envío gratis
+              </p>
+            )}
+            <div className="flex justify-between border-t border-border pt-2 font-medium">
+              <span className="text-text">Total</span>
+              <span className="text-text">{formatCLP(subtotal + (shippingCost ?? 0))}</span>
+            </div>
+          </div>
         </div>
       )}
 

@@ -87,7 +87,13 @@ export async function createCheckoutPreference(formData: FormData) {
     (sum: number, item: any) => sum + item.product.price * item.quantity,
     0
   );
-  const shippingCost = 0; // Free for MVP
+  // Calculate shipping cost based on region
+  const { calculateShippingCost } = await import("@/lib/queries/shipping");
+  const shippingResult = await calculateShippingCost(shippingRegion, subtotal);
+  if ("error" in shippingResult) {
+    return { error: shippingResult.error };
+  }
+  const shippingCost = shippingResult.cost;
 
   // Parse gift options
   const isGift = formData.get("isGift") === "true";
@@ -326,13 +332,23 @@ export async function createCheckoutPreference(formData: FormData) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const useSandbox = isSandbox();
 
-    const items = cartItems.map((item: any) => ({
+    const items: { id: string; title: string; quantity: number; unit_price: number; currency_id: "CLP" }[] = cartItems.map((item: any) => ({
       id: item.product.id,
       title: item.product.name,
       quantity: item.quantity,
       unit_price: item.product.price,
       currency_id: "CLP" as const,
     }));
+
+    if (shippingCost > 0) {
+      items.push({
+        id: "shipping",
+        title: `Despacho ${shippingResult.zoneName}`,
+        quantity: 1,
+        unit_price: shippingCost,
+        currency_id: "CLP",
+      });
+    }
 
     const backUrls = {
       success: `${appUrl}/checkout/success`,
@@ -472,13 +488,23 @@ export async function resumeOrderPayment(orderId: string) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const useSandbox = isSandbox();
 
-    const items = order.items.map((item) => ({
+    const items: { id: string; title: string; quantity: number; unit_price: number; currency_id: "CLP" }[] = order.items.map((item) => ({
       id: item.productId,
       title: item.productName,
       quantity: item.quantity,
       unit_price: item.productPrice,
       currency_id: "CLP" as const,
     }));
+
+    if (order.shippingCost > 0) {
+      items.push({
+        id: "shipping",
+        title: "Despacho",
+        quantity: 1,
+        unit_price: order.shippingCost,
+        currency_id: "CLP",
+      });
+    }
 
     const backUrls = {
       success: `${appUrl}/checkout/success`,
