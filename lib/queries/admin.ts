@@ -241,7 +241,7 @@ export async function getPendingApplications() {
   });
 }
 
-// Products for moderation (pending only — legacy)
+// Products for moderation (pending only)
 export async function getPendingProducts() {
   return prisma.product.findMany({
     where: { status: "PENDING_REVIEW" },
@@ -250,7 +250,10 @@ export async function getPendingProducts() {
       artisan: { select: { displayName: true, slug: true } },
       categories: { select: { name: true, slug: true } },
       materials: { select: { id: true, name: true } },
+      collection: { select: { name: true } },
       images: { orderBy: { position: "asc" } },
+      video: true,
+      _count: { select: { orderItems: true, images: true } },
     },
   });
 }
