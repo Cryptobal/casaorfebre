@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAllArtisans } from "@/lib/queries/admin";
 import { OverrideEditor } from "./override-editor";
 import { HighlightToggle } from "./highlight-toggle";
+import { PioneerToggle } from "./pioneer-toggle";
 import { ArtisanAccountActions } from "./artisan-account-actions";
 import { PlanChanger } from "./plan-changer";
 
@@ -73,6 +74,7 @@ export default async function OrfebresPage() {
                   >
                     Destaque home
                   </th>
+                  <th className="pb-3 pr-2 font-medium">Pionero</th>
                   <th className="pb-3 pl-1 font-medium">Acciones</th>
                 </tr>
               </thead>
@@ -152,6 +154,13 @@ export default async function OrfebresPage() {
                         ) : (
                           <span className="text-xs text-text-tertiary">—</span>
                         )}
+                      </td>
+                      <td className="min-w-0 py-3 pr-2">
+                        <PioneerToggle
+                          artisanId={artisan.id}
+                          initialValue={artisan.isPioneer}
+                          pioneerUntil={artisan.pioneerUntil?.toISOString() ?? null}
+                        />
                       </td>
                       <td className="min-w-0 py-3 pl-1 align-top">
                         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -240,6 +249,14 @@ export default async function OrfebresPage() {
                         />
                       </div>
                     )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-tertiary">Pionero</span>
+                      <PioneerToggle
+                        artisanId={artisan.id}
+                        initialValue={artisan.isPioneer}
+                        pioneerUntil={artisan.pioneerUntil?.toISOString() ?? null}
+                      />
+                    </div>
                     <OverrideEditor
                       artisanId={artisan.id}
                       artisanName={artisan.displayName}

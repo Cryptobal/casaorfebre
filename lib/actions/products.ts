@@ -283,14 +283,12 @@ export async function updateProduct(
     return { error: "Selecciona al menos una categoría" };
   }
 
-  // If product was APPROVED and key fields changed, set to PENDING_REVIEW
+  // When saving as borrador, keep current status for DRAFT/REJECTED/PENDING_REVIEW.
+  // If product was APPROVED, saving as borrador sets it back to DRAFT
+  // (the orfebre must use "Enviar a revisión" to re-publish).
   let newStatus = product.status;
   if (product.status === "APPROVED") {
-    const priceChanged = data.price !== product.price;
-
-    if (priceChanged) {
-      newStatus = "PENDING_REVIEW";
-    }
+    newStatus = "DRAFT";
   }
 
   try {

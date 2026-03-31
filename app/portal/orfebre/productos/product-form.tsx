@@ -1165,7 +1165,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
                   Guarda los cambios sin publicar. Puedes seguir editando después.
                 </p>
               </div>
-              {product && (product.status === "DRAFT" || product.status === "REJECTED") && (
+              {product && product.status !== "PENDING_REVIEW" && product.status !== "PAUSED" && (
                 <div className="flex flex-col items-center gap-1 sm:items-end">
                   <Button
                     type="button"
@@ -1177,7 +1177,9 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
                     Enviar a revisión
                   </Button>
                   <p className="text-[11px] text-text-tertiary">
-                    Envía tu pieza al equipo de Casa Orfebre para aprobación y publicación.
+                    {product.status === "APPROVED"
+                      ? "Guarda los cambios y envía a revisión. Tu pieza no estará visible hasta que sea aprobada."
+                      : "Envía tu pieza al equipo de Casa Orfebre para aprobación y publicación."}
                   </p>
                 </div>
               )}
