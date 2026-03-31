@@ -6,13 +6,13 @@ export const revalidate = 21600;
 
 // Map category slugs to Google Product Categories
 const GOOGLE_CATEGORIES: Record<string, string> = {
-  anillo: "188 - Jewelry > Rings",
-  aros: "189 - Jewelry > Earrings",
-  collar: "191 - Jewelry > Necklaces",
-  pulsera: "192 - Jewelry > Bracelets",
-  colgante: "190 - Jewelry > Pendants",
-  cadena: "191 - Jewelry > Necklaces",
-  broche: "194 - Jewelry > Brooches & Pins",
+  anillo: "200",
+  aros: "194",
+  collar: "196",
+  pulsera: "192",
+  colgante: "197",
+  cadena: "196",
+  broche: "198",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -64,7 +64,7 @@ export async function GET() {
         : `${baseUrl}${imageUrl}`;
 
       const categorySlug = product.categories[0]?.slug || "";
-      const googleCategory = GOOGLE_CATEGORIES[categorySlug] || "188 - Jewelry";
+      const googleCategory = GOOGLE_CATEGORIES[categorySlug] || "188";
       const categoryLabel = CATEGORY_LABELS[categorySlug] || "Joyería";
       const description = (product.description || "")
         .replace(/<[^>]*>/g, "")
