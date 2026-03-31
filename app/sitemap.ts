@@ -1,99 +1,151 @@
 import { prisma } from "@/lib/prisma";
+import { CITIES } from "@/lib/data/cities";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
 
-  // Static pages
-  const staticPages = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 1 },
-    { url: `${baseUrl}/coleccion`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
-    { url: `${baseUrl}/colecciones`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.85 },
-    { url: `${baseUrl}/orfebres`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
-    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
-    { url: `${baseUrl}/lo-nuevo`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.8 },
-    { url: `${baseUrl}/seleccion-del-curador`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
-    { url: `${baseUrl}/tesoros-de-chile`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
-    { url: `${baseUrl}/nosotros`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
-    { url: `${baseUrl}/contacto`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
-    { url: `${baseUrl}/garantia`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
-    { url: `${baseUrl}/preguntas-frecuentes`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
-    { url: `${baseUrl}/terminos`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
-    { url: `${baseUrl}/privacidad`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
-    { url: `${baseUrl}/postular`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
-    { url: `${baseUrl}/gift-cards`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.7 },
+  // Home page (priority 1.0, daily)
+  const homePage = [
+    { url: baseUrl, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1.0 },
   ];
 
-  // Category SEO pages
-  const categoryPages = ["aros", "collares", "anillos", "pulseras", "colgantes"].map((cat) => ({
+  // Collection landing page (priority 0.9, daily)
+  const collectionPage = [
+    { url: `${baseUrl}/coleccion`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+  ];
+
+  // Category landing pages (priority 0.9, weekly)
+  const categoryPages = [
+    "cadenas-de-plata",
+    "aros-de-plata",
+    "anillos-de-plata",
+    "pulseras-de-plata",
+    "collares-de-plata",
+    "colgantes-dijes-plata",
+  ].map((cat) => ({
     url: `${baseUrl}/coleccion/${cat}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
+  }));
+
+  // Hub pages (priority 0.9, weekly)
+  const hubPages = ["joyas-hombre", "joyas-mujer"].map((hub) => ({
+    url: `${baseUrl}/${hub}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
+  }));
+
+  // Occasion pages (priority 0.8, weekly)
+  const occasionPages = [
+    "anillos-de-compromiso-plata",
+    "anillos-matrimonio-plata",
+    "joyas-para-parejas",
+    "joyas-dia-de-la-madre",
+  ].map((occ) => ({
+    url: `${baseUrl}/${occ}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
-  // Material SEO landing pages
-  const materialPages = ["plata-925", "oro", "cobre", "piedras-naturales", "lapislazuli"].map((mat) => ({
-    url: `${baseUrl}/coleccion/${mat}`,
+  // Guide pages (priority 0.8, monthly)
+  const guidePages = ["plata-925-950", "galeria-santo-domingo"].map((guide) => ({
+    url: `${baseUrl}/${guide}`,
     lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
   }));
 
-  // Occasion SEO pages
-  const occasionPages = [
-    "compromiso", "matrimonio", "regalos",
-    "graduacion", "dia-de-la-madre", "aniversario", "autorregalo",
-  ].map((occ) => ({
-    url: `${baseUrl}/coleccion/${occ}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  // Blog hub (priority 0.7, daily)
+  const blogHub = [
+    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.7 },
+  ];
 
-  // Budget SEO pages
-  const budgetPages = ["regalos-bajo-30000", "regalos-bajo-50000", "regalos-bajo-100000"].map((slug) => ({
-    url: `${baseUrl}/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
-
-  // Blog posts (from DB)
+  // Blog posts (priority 0.7, monthly) - from DB
   const dbBlogPosts = await prisma.blogPost.findMany({
     where: { status: "PUBLISHED" },
     select: { slug: true, updatedAt: true },
   });
-  const blogPosts = dbBlogPosts.map((post) => ({
+  const blogPosts = dbBlogPosts.map((post: { slug: string; updatedAt: Date }) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: post.updatedAt,
     changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }));
-
-  // Dynamic: products
-  const products = await prisma.product.findMany({
-    where: { status: "APPROVED" },
-    select: { slug: true, updatedAt: true },
-  });
-  const productPages = products.map((p) => ({
-    url: `${baseUrl}/coleccion/${p.slug}`,
-    lastModified: p.updatedAt,
-    changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
 
-  // Dynamic: artisans
+  // Joyerias page (priority 0.7, weekly)
+  const joyeriasPage = [
+    { url: `${baseUrl}/joyerias`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
+  ];
+
+  // City pages (priority 0.7, monthly)
+  const cityPages = CITIES.map((city) => ({
+    url: `${baseUrl}/joyerias/${city.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  // Orfebres hub (priority 0.7, weekly)
+  const orfebresHub = [
+    { url: `${baseUrl}/orfebres`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
+  ];
+
+  // Artisans (priority 0.6, weekly)
   const artisans = await prisma.artisan.findMany({
     where: { status: "APPROVED" },
     select: { slug: true, updatedAt: true },
   });
-  const artisanPages = artisans.map((a) => ({
+  const artisanPages = artisans.map((a: { slug: string; updatedAt: Date }) => ({
     url: `${baseUrl}/orfebres/${a.slug}`,
     lastModified: a.updatedAt,
     changeFrequency: "weekly" as const,
-    priority: 0.7,
+    priority: 0.6,
   }));
 
-  return [...staticPages, ...categoryPages, ...materialPages, ...occasionPages, ...budgetPages, ...blogPosts, ...productPages, ...artisanPages];
+  // Products (priority 0.8, weekly, with lastModified)
+  const products = await prisma.product.findMany({
+    where: { status: "APPROVED" },
+    select: { slug: true, updatedAt: true },
+  });
+  const productPages = products.map((p: { slug: string; updatedAt: Date }) => ({
+    url: `${baseUrl}/coleccion/${p.slug}`,
+    lastModified: p.updatedAt,
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  // Other static pages (lower priority)
+  const otherPages = [
+    { url: `${baseUrl}/lo-nuevo`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
+    { url: `${baseUrl}/seleccion-del-curador`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
+    { url: `${baseUrl}/nosotros`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
+    { url: `${baseUrl}/contacto`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
+    { url: `${baseUrl}/postular`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
+    { url: `${baseUrl}/gift-cards`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
+    { url: `${baseUrl}/garantia`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${baseUrl}/preguntas-frecuentes`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+    { url: `${baseUrl}/terminos`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${baseUrl}/privacidad`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+  ];
+
+  return [
+    ...homePage,
+    ...collectionPage,
+    ...categoryPages,
+    ...hubPages,
+    ...occasionPages,
+    ...guidePages,
+    ...blogHub,
+    ...blogPosts,
+    ...joyeriasPage,
+    ...cityPages,
+    ...orfebresHub,
+    ...artisanPages,
+    ...productPages,
+    ...otherPages,
+  ];
 }
