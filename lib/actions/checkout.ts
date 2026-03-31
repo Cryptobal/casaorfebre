@@ -50,6 +50,7 @@ export async function createCheckoutPreference(formData: FormData) {
   const shippingRegion = formData.get("shippingRegion") as string;
   const shippingPostalCode =
     (formData.get("shippingPostalCode") as string) || null;
+  const phone = (formData.get("shippingPhone") as string) || null;
 
   if (!shippingName || !shippingAddress || !shippingCity || !shippingRegion) {
     return { error: "Completa todos los campos de envío" };
@@ -195,7 +196,7 @@ export async function createCheckoutPreference(formData: FormData) {
     },
   });
 
-  // Save shipping address to user profile for future pre-fill
+  // Save shipping address + phone to user profile for future pre-fill
   await prisma.user.update({
     where: { id: session.user.id },
     data: {
@@ -204,6 +205,7 @@ export async function createCheckoutPreference(formData: FormData) {
       shippingCity,
       shippingRegion,
       shippingPostalCode,
+      shippingPhone: phone,
     },
   });
 

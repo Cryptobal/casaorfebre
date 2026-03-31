@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useCallback } from "react";
 import { updateBuyerProfile, changePassword, updateShippingAddress } from "@/lib/actions/buyer-profile";
+import { AddressAutocomplete, type AddressResult } from "@/components/address-autocomplete";
 
 interface ShippingAddress {
   shippingName: string;
@@ -20,6 +21,16 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ name, email, hasPassword, shippingAddress }: ProfileFormProps) {
+  const [addrRegion, setAddrRegion] = useState(shippingAddress.shippingRegion);
+  const [addrCity, setAddrCity] = useState(shippingAddress.shippingCity);
+  const [addrPostal, setAddrPostal] = useState(shippingAddress.shippingPostalCode);
+
+  const handleAddressSelect = useCallback((result: AddressResult) => {
+    setAddrRegion(result.region ?? "");
+    setAddrCity(result.comuna);
+    setAddrPostal(result.postalCode);
+  }, []);
+
   const [profileState, profileAction, profilePending] = useActionState(
     async (_prev: { error?: string; success?: boolean } | null, formData: FormData) => {
       return updateBuyerProfile(formData);
@@ -110,78 +121,54 @@ export function ProfileForm({ name, email, hasPassword, shippingAddress }: Profi
           </div>
 
           <div>
-            <label htmlFor="shippingAddress" className="text-sm font-medium text-text mb-1 block">
-              Direcci&oacute;n
+            <label className="text-sm font-medium text-text mb-1 block">
+              Dirección
             </label>
-            <input
-              id="shippingAddress"
-              name="shippingAddress"
-              type="text"
+            <AddressAutocomplete
               defaultValue={shippingAddress.shippingAddress}
-              required
-              placeholder="Av. Principal 123, Depto 4B"
-              className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-background"
+              onAddressSelect={handleAddressSelect}
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="shippingCity" className="text-sm font-medium text-text mb-1 block">
-                Ciudad
-              </label>
-              <input
-                id="shippingCity"
-                name="shippingCity"
-                type="text"
-                defaultValue={shippingAddress.shippingCity}
-                required
-                placeholder="Santiago"
-                className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-background"
-              />
-            </div>
-            <div>
-              <label htmlFor="shippingRegion" className="text-sm font-medium text-text mb-1 block">
-                Regi&oacute;n
-              </label>
-              <input
-                id="shippingRegion"
-                name="shippingRegion"
-                type="text"
-                defaultValue={shippingAddress.shippingRegion}
-                required
-                placeholder="Metropolitana de Santiago"
-                className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-background"
-              />
-            </div>
-          </div>
+          <input type="hidden" name="shippingCity" value={addrCity} />
+          <input type="hidden" name="shippingRegion" value={addrRegion} />
+          <input type="hidden" name="shippingPostalCode" value={addrPostal} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="shippingPostalCode" className="text-sm font-medium text-text mb-1 block">
-                C&oacute;digo Postal
-              </label>
-              <input
-                id="shippingPostalCode"
-                name="shippingPostalCode"
-                type="text"
-                defaultValue={shippingAddress.shippingPostalCode}
-                placeholder="7500000"
-                className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-background"
-              />
+          {(addrRegion || addrCity) && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">Ciudad</label>
+                <input value={addrCity} readOnly tabIndex={-1} className="w-full border border-border rounded-lg px-4 py-2 text-sm bg-muted text-text-secondary cursor-default" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">Región</label>
+                <input value={addrRegion} readOnly tabIndex={-1} className="w-full border border-border rounded-lg px-4 py-2 text-sm bg-muted text-text-secondary cursor-default" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">Código Postal</label>
+                <input value={addrPostal} readOnly tabIndex={-1} className="w-full border border-border rounded-lg px-4 py-2 text-sm bg-muted text-text-secondary cursor-default" />
+              </div>
             </div>
-            <div>
-              <label htmlFor="shippingPhone" className="text-sm font-medium text-text mb-1 block">
-                Tel&eacute;fono
-              </label>
+          )}
+
+          <div>
+            <label htmlFor="shippingPhone" className="text-sm font-medium text-text mb-1 block">
+              Teléfono
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="flex h-[38px] items-center rounded-lg border border-border bg-muted px-3 text-sm text-text-secondary">+56</span>
               <input
                 id="shippingPhone"
                 name="shippingPhone"
-                type="text"
+                type="tel"
+                inputMode="numeric"
                 defaultValue={shippingAddress.shippingPhone}
-                placeholder="+56 9 1234 5678"
+                placeholder="912345678"
+                maxLength={9}
                 className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-background"
               />
             </div>
+            <p className="mt-1 text-xs text-text-tertiary">9 dígitos (celular o fijo)</p>
           </div>
 
           {shippingState?.error && (
