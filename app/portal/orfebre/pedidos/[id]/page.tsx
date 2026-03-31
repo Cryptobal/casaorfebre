@@ -5,11 +5,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getArtisanOrderDetail } from "@/lib/queries/orders";
-import { confirmPreparation, markAsShipped } from "@/lib/actions/orders";
+import { confirmPreparation } from "@/lib/actions/orders";
 import { TrackingLink } from "@/components/tracking-link";
+import { ShippingForm } from "./shipping-form";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendiente",
@@ -192,43 +191,7 @@ export default async function OrderDetailPage({
         )}
 
         {item.fulfillmentStatus === "PREPARING" && (
-          <form
-            action={async (formData: FormData) => {
-              "use server";
-              await markAsShipped(item.id, formData);
-            }}
-            className="mt-4 space-y-4"
-          >
-            <p className="text-sm text-text">
-              Ingresa los datos de envio para marcar como despachado.
-            </p>
-            <div>
-              <Label htmlFor="trackingCarrier">Courier</Label>
-              <select
-                id="trackingCarrier"
-                name="trackingCarrier"
-                required
-                className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-              >
-                <option value="">Seleccionar courier</option>
-                <option value="Chilexpress">Chilexpress</option>
-                <option value="Starken">Starken</option>
-                <option value="Blue Express">Blue Express</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="trackingNumber">Numero de seguimiento</Label>
-              <Input
-                id="trackingNumber"
-                name="trackingNumber"
-                required
-                placeholder="Ej: 99123456789"
-                className="mt-1"
-              />
-            </div>
-            <Button type="submit">Marcar como despachado</Button>
-          </form>
+          <ShippingForm orderItemId={item.id} />
         )}
 
         {item.fulfillmentStatus === "SHIPPED" && (
