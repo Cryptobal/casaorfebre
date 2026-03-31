@@ -47,7 +47,7 @@ interface ProductFormProps {
     status: string;
     adminNotes: string | null;
     images: { id: string; url: string; altText: string | null; position: number }[];
-    video?: { cloudflareStreamUid: string; status: string } | null;
+    video?: { cloudflareStreamUid: string; status: string; muted: boolean } | null;
     specialtyIds: string[];
     occasionIds: string[];
     variants: { size: string; stock: number }[];

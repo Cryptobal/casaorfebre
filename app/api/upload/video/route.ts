@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { productId } = body as { productId?: string };
+  const { productId, muted } = body as { productId?: string; muted?: boolean };
 
   if (!productId) {
     return NextResponse.json({ error: "productId requerido" }, { status: 400 });
@@ -103,6 +103,7 @@ export async function POST(request: Request) {
         productId,
         cloudflareStreamUid: uid,
         status: "PROCESSING",
+        muted: muted ?? false,
       },
     });
 

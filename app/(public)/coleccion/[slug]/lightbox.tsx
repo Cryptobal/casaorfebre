@@ -12,7 +12,7 @@ import Image from "next/image";
 
 interface LightboxProps {
   images: { id: string; url: string; altText: string | null }[];
-  video?: { cloudflareStreamUid: string; status: string } | null;
+  video?: { cloudflareStreamUid: string; status: string; muted: boolean } | null;
   productName: string;
   initialIndex: number;
   onClose: () => void;
@@ -235,7 +235,7 @@ export function Lightbox({
       >
         {isVideoSlide && cfCustomerCode ? (
           <iframe
-            src={`https://${cfCustomerCode}/${video!.cloudflareStreamUid}/iframe?autoplay=true&controls=true`}
+            src={`https://${cfCustomerCode}/${video!.cloudflareStreamUid}/iframe?autoplay=true&muted=${video!.muted ? "true" : "false"}&controls=true`}
             allow="autoplay"
             allowFullScreen
             style={{ border: "none" }}

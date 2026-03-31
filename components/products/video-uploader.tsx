@@ -9,6 +9,7 @@ interface VideoUploaderProps {
   existingVideo?: {
     cloudflareStreamUid: string;
     status: string;
+    muted: boolean;
   } | null;
 }
 
@@ -23,6 +24,7 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
   const [polling, setPolling] = useState(existingVideo?.status === "PROCESSING");
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [muteAudio, setMuteAudio] = useState(existingVideo?.muted ?? false);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -37,10 +39,10 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
         const data = await res.json();
 
         if (data.status === "READY") {
-          setVideo({ cloudflareStreamUid: data.uid, status: "READY" });
+          setVideo((prev) => ({ cloudflareStreamUid: data.uid, status: "READY", muted: prev?.muted ?? false }));
           setPolling(false);
         } else if (data.status === "ERROR") {
-          setVideo({ cloudflareStreamUid: data.uid, status: "ERROR" });
+          setVideo((prev) => ({ cloudflareStreamUid: data.uid, status: "ERROR", muted: prev?.muted ?? false }));
           setPolling(false);
           setError("Error al procesar el video. Intenta subirlo nuevamente.");
         }
@@ -109,7 +111,7 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
       const res = await fetch("/api/upload/video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({ productId, muted: muteAudio }),
       });
 
       if (!res.ok) {
@@ -146,7 +148,7 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
       });
 
       // Step 3: Start polling for processing status
-      setVideo({ cloudflareStreamUid: uid, status: "PROCESSING" });
+      setVideo({ cloudflareStreamUid: uid, status: "PROCESSING", muted: muteAudio });
       setPolling(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al subir el video");
@@ -154,7 +156,7 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
       setUploading(false);
       setProgress(0);
     }
-  }, [productId, validateFile, validateDuration]);
+  }, [productId, muteAudio, validateFile, validateDuration]);
 
   const handleDelete = useCallback(async () => {
     if (!confirm("¿Eliminar este video?")) return;
@@ -224,31 +226,42 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
 
       {/* No video yet — upload zone */}
       {!video && !uploading && (
-        <div
-          className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors hover:border-accent/50"
-          onClick={() => inputRef.current?.click()}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2 text-text-secondary">
-            <polygon points="23 7 16 12 23 17 23 7" />
-            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-          </svg>
-          <p className="text-sm text-text-secondary">
-            Haz clic para subir un video de tu pieza
-          </p>
-          <p className="mt-1 text-xs text-text-secondary/70">
-            MP4, MOV o WebM — máx. {MAX_DURATION_SECONDS} segundos — máx. {MAX_SIZE_MB} MB
-          </p>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mov,.mp4,.webm,.m4v"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleUpload(file);
-              e.target.value = "";
-            }}
-          />
+        <div className="space-y-3">
+          <div
+            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors hover:border-accent/50"
+            onClick={() => inputRef.current?.click()}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2 text-text-secondary">
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+            <p className="text-sm text-text-secondary">
+              Haz clic para subir un video de tu pieza
+            </p>
+            <p className="mt-1 text-xs text-text-secondary/70">
+              MP4, MOV o WebM — máx. {MAX_DURATION_SECONDS} segundos — máx. {MAX_SIZE_MB} MB
+            </p>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mov,.mp4,.webm,.m4v"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleUpload(file);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={muteAudio}
+              onChange={(e) => setMuteAudio(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+            />
+            <span className="text-sm text-text-secondary">Eliminar sonido del video</span>
+          </label>
         </div>
       )}
 
@@ -288,7 +301,7 @@ export function VideoUploader({ productId, videoEnabled, existingVideo }: VideoU
         <div className="space-y-2">
           <div className="overflow-hidden rounded-lg border border-border">
             <iframe
-              src={`https://${CF_CUSTOMER_CODE}/${video.cloudflareStreamUid}/iframe?muted=true&loop=true&controls=true`}
+              src={`https://${CF_CUSTOMER_CODE}/${video.cloudflareStreamUid}/iframe?muted=${video.muted ? "true" : "false"}&loop=true&controls=true`}
               allow="autoplay"
               allowFullScreen
               style={{ border: "none", width: "100%", aspectRatio: "16/9" }}

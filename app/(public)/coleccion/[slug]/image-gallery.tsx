@@ -9,7 +9,7 @@ import { Lightbox } from "./lightbox";
 interface ImageGalleryProps {
   images: { id: string; url: string; altText: string | null }[];
   productName: string;
-  video?: { cloudflareStreamUid: string; status: string } | null;
+  video?: { cloudflareStreamUid: string; status: string; muted: boolean } | null;
 }
 
 export function ImageGallery({ images, productName, video }: ImageGalleryProps) {
@@ -41,7 +41,7 @@ export function ImageGallery({ images, productName, video }: ImageGalleryProps) 
       >
         {isVideoSlide && cfCustomerCode ? (
           <iframe
-            src={`https://${cfCustomerCode}/${video.cloudflareStreamUid}/iframe?autoplay=true&muted=true&loop=true&controls=true`}
+            src={`https://${cfCustomerCode}/${video.cloudflareStreamUid}/iframe?autoplay=true&muted=${video.muted ? "true" : "false"}&loop=true&controls=true`}
             allow="autoplay"
             allowFullScreen
             style={{ border: "none", width: "100%", height: "100%" }}
