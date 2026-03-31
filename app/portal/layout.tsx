@@ -72,6 +72,7 @@ export default async function PortalLayout({ children }: { children: React.React
   let artisanPendingOrders = 0;
   let artisanUnansweredQuestions = 0;
   let artisanUnreadMessages = 0;
+  let buyerActiveOrders = 0;
 
   if (session.user.role === "ADMIN") {
     [pendingPostulaciones, pendingProductModeration, pendingOrfebreApplications, pendingPhotos, newPaidOrders] = await Promise.all([
@@ -102,6 +103,16 @@ export default async function PortalLayout({ children }: { children: React.React
   // When role-switching, show ONLY the active role's sidebar.
   // When NOT role-switching (normal user), show role links + buyer links.
   const showBuyerSection = !isRoleSwitcher || role === "BUYER";
+
+  // Buyer badge: count active orders (paid but not yet delivered/completed)
+  if (showBuyerSection) {
+    buyerActiveOrders = await prisma.order.count({
+      where: {
+        userId: session.user.id,
+        status: { in: ["PAID", "PARTIALLY_SHIPPED", "SHIPPED"] },
+      },
+    });
+  }
 
   // Fetch artisan counters for sidebar badges
   if (role === "ARTISAN") {
@@ -146,7 +157,10 @@ export default async function PortalLayout({ children }: { children: React.React
           return l;
         })
       : []),
-    ...(showBuyerSection ? BUYER_LINKS : []),
+    ...(showBuyerSection ? BUYER_LINKS.map((l) => {
+          if (l.href === "/portal/comprador/pedidos") return { ...l, badge: buyerActiveOrders };
+          return l;
+        }) : []),
   ];
 
   return (
@@ -208,7 +222,7 @@ export default async function PortalLayout({ children }: { children: React.React
               {(role === "ADMIN" || role === "ARTISAN") && (
                 <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-widest text-text-tertiary">Comprador</p>
               )}
-              <Link href="/portal/comprador/pedidos" data-tour="buyer-pedidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Pedidos</Link>
+              <SidebarLink href="/portal/comprador/pedidos" label="Mis Pedidos" count={buyerActiveOrders} dataTour="buyer-pedidos" />
               <Link href="/portal/comprador/gift-cards" data-tour="buyer-giftcards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
               <Link href="/portal/comprador/mensajes" data-tour="buyer-mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
               <Link href="/portal/comprador/favoritos" data-tour="buyer-favoritos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Favoritos</Link>
