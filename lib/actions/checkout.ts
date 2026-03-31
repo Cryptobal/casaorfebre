@@ -167,7 +167,7 @@ export async function createCheckoutPreference(formData: FormData) {
       items: {
         create: cartItems.map((item: any) => {
           const product = productMap.get(item.productId)!;
-          const commissionRate = product.artisan?.commissionRate ?? 0.18;
+          const commissionRate = product.artisan?.commissionOverride ?? product.artisan?.commissionRate ?? 0.18;
           const itemTotal = product.price * item.quantity;
           const commissionAmount = Math.round(itemTotal * commissionRate);
           const artisanPayout = itemTotal - commissionAmount;
