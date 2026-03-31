@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { hasAcceptedCurrentVersion } from "@/lib/legal/queries";
+import { LegalGate } from "@/components/legal/LegalGate";
 
 const ROLE_SWITCHER_EMAILS = [
   "carlos.irigoyen@gmail.com",
@@ -26,6 +28,16 @@ export default async function ArtisanPortalLayout({
     });
 
     if (!artisan || artisan.status !== "APPROVED") redirect("/");
+
+    // Check if the artisan has accepted the current Seller Agreement
+    const hasAccepted = await hasAcceptedCurrentVersion(
+      session.user.id,
+      "SELLER_AGREEMENT"
+    );
+
+    if (!hasAccepted) {
+      return <LegalGate />;
+    }
   }
 
   return <>{children}</>;

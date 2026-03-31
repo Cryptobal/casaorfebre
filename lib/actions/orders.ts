@@ -11,6 +11,7 @@ import {
   sendCertificateEmail,
 } from "@/lib/emails/templates";
 import { createCertificate } from "@/lib/certificates";
+import { validateTrackingNumber, sanitizeTrackingNumber } from "@/lib/tracking";
 
 import { getAdminEmails } from "@/lib/config";
 
@@ -77,6 +78,10 @@ export async function markAsShipped(orderItemId: string, formData: FormData) {
 
   if (!trackingNumber || !trackingCarrier) return { error: "Numero de tracking y courier son requeridos" };
 
+  const sanitized = sanitizeTrackingNumber(trackingNumber);
+  const validationError = validateTrackingNumber(trackingCarrier, sanitized);
+  if (validationError) return { error: validationError };
+
   const item = await prisma.orderItem.findFirst({
     where: { id: orderItemId, artisanId: artisan.id, fulfillmentStatus: "PREPARING" },
   });
@@ -87,13 +92,16 @@ export async function markAsShipped(orderItemId: string, formData: FormData) {
     where: { id: orderItemId },
     data: {
       fulfillmentStatus: "SHIPPED",
-      trackingNumber,
+      trackingNumber: sanitized,
       trackingCarrier,
       shippedAt,
     },
     include: {
       order: {
-        include: { user: { select: { email: true, name: true } } },
+        include: {
+          user: { select: { email: true, name: true } },
+          items: { select: { id: true, fulfillmentStatus: true } },
+        },
       },
       product: {
         select: {
@@ -103,6 +111,27 @@ export async function markAsShipped(orderItemId: string, formData: FormData) {
       },
     },
   });
+
+  // Update order-level status based on all items
+  const allItems = updatedItem.order.items;
+  const allShippedOrDelivered = allItems.every(
+    (i) => i.fulfillmentStatus === "SHIPPED" || i.fulfillmentStatus === "DELIVERED"
+  );
+  const someShipped = allItems.some(
+    (i) => i.fulfillmentStatus === "SHIPPED" || i.fulfillmentStatus === "DELIVERED"
+  );
+
+  if (allShippedOrDelivered) {
+    await prisma.order.update({
+      where: { id: updatedItem.order.id },
+      data: { status: "SHIPPED" },
+    });
+  } else if (someShipped) {
+    await prisma.order.update({
+      where: { id: updatedItem.order.id },
+      data: { status: "PARTIALLY_SHIPPED" },
+    });
+  }
 
   const buyerEmail = updatedItem.order.user.email;
 

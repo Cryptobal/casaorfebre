@@ -1571,6 +1571,39 @@ export async function sendReceiptConfirmedToArtisanEmail(
 }
 
 // ---------------------------------------------------------------------------
+// Receipt Reminder — to buyer (7 days after shipping)
+// ---------------------------------------------------------------------------
+export async function sendReceiptReminderEmail(
+  to: string,
+  {
+    buyerName,
+    orderNumber,
+    orderId,
+    productNames,
+  }: {
+    buyerName: string;
+    orderNumber: string;
+    orderId: string;
+    productNames: string[];
+  },
+) {
+  const base = appUrl();
+  const itemsList = productNames.map((n) => `<li>${n}</li>`).join("");
+  await sendEmail(
+    to,
+    `¿Recibiste tu pedido #${orderNumber}?`,
+    `<p style="margin:0 0 16px;">Hola ${buyerName},</p>
+     <p style="margin:0 0 16px;">Hace unos días despachamos tu pedido <strong>#${orderNumber}</strong> con los siguientes productos:</p>
+     <ul style="margin:0 0 16px;padding-left:20px;">${itemsList}</ul>
+     <p style="margin:0 0 16px;">Si ya lo recibiste, por favor confirma la recepción en tu portal. Esto nos permite liberar el pago al orfebre.</p>
+     <p style="margin:0 0 16px;font-size:13px;color:#6b6b6b;">Si no lo has recibido o tienes algún problema, puedes abrir un reclamo desde tu portal.</p>
+     <p style="margin:0 0 8px;">
+       <a href="${base}/portal/comprador/pedidos/${orderId}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Confirmar recepción</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Auto-confirm receipt — to buyer
 // ---------------------------------------------------------------------------
 export async function sendAutoConfirmToBuyerEmail(

@@ -1,0 +1,5 @@
+export const CURRENT_LEGAL_VERSIONS = {
+  SELLER_AGREEMENT: "1.0",
+  TERMS_AND_CONDITIONS: "1.0",
+  PRIVACY_POLICY: "1.0",
+} as const;

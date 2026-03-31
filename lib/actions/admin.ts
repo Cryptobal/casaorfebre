@@ -16,6 +16,7 @@ import {
   sendReturnReceivedEmail,
   sendRefundProcessedEmail,
 } from "@/lib/emails/templates";
+import { CURRENT_LEGAL_VERSIONS } from "@/lib/legal/constants";
 
 async function requireAdmin() {
   const session = await auth();
@@ -88,6 +89,30 @@ export async function approveApplication(
       status: "APPROVED",
       approvedAt: new Date(),
     },
+  });
+
+  // Record legal acceptances from the application form
+  await prisma.legalAcceptance.createMany({
+    data: [
+      {
+        userId: user.id,
+        documentType: "SELLER_AGREEMENT",
+        documentVersion: CURRENT_LEGAL_VERSIONS.SELLER_AGREEMENT,
+        method: "CHECKBOX",
+      },
+      {
+        userId: user.id,
+        documentType: "TERMS_AND_CONDITIONS",
+        documentVersion: CURRENT_LEGAL_VERSIONS.TERMS_AND_CONDITIONS,
+        method: "CHECKBOX",
+      },
+      {
+        userId: user.id,
+        documentType: "PRIVACY_POLICY",
+        documentVersion: CURRENT_LEGAL_VERSIONS.PRIVACY_POLICY,
+        method: "CHECKBOX",
+      },
+    ],
   });
 
   await prisma.artisanApplication.update({

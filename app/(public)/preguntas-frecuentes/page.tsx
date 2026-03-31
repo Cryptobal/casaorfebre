@@ -67,7 +67,7 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Cuál es la política de devoluciones?",
         answer:
-          "Tienes 30 días desde la recepción de tu pedido para solicitar una devolución, siempre que la pieza esté en su estado original, sin uso y con su empaque completo. Una vez recibida y verificada la devolución, procesamos el reembolso en un plazo de 5 a 10 días hábiles al mismo medio de pago utilizado.",
+          "Tienes 14 días naturales desde la recepción de tu pedido para solicitar una devolución, siempre que la pieza esté en su estado original, sin uso y con su empaque completo. Una vez recibida y verificada la devolución, procesamos el reembolso en un plazo de 5 a 10 días hábiles al mismo medio de pago utilizado.",
       },
       {
         question: "¿Las piezas personalizadas tienen devolución?",

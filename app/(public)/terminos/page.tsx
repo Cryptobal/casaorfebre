@@ -168,21 +168,27 @@ export default function TerminosPage() {
               los datos de tarjetas de crédito o débito de los compradores.
             </p>
             <p className="mb-4 font-light text-text-secondary">
-              Casa Orfebre cobra una comisión del 18% (dieciocho por ciento)
-              sobre el valor de cada venta realizada a través de la Plataforma.
-              Esta comisión es descontada automáticamente del monto recibido
-              antes de la transferencia al orfebre. Dicha comisión cubre los
-              costos de operación de la Plataforma, procesamiento de pagos,
-              soporte al cliente, infraestructura tecnológica y acciones de
-              marketing.
+              Casa Orfebre cobra una comisión sobre el valor de cada venta
+              realizada a través de la Plataforma. La tasa de comisión depende
+              del plan de membresía del orfebre: 18% para el plan Esencial
+              (gratuito), 12% para el plan Artesano y 9% para el plan Maestro.
+              La comisión se calcula sobre el precio de venta del producto (sin
+              incluir el costo de envío) y ya incluye el costo de procesamiento
+              de pagos de MercadoPago. Esta comisión es descontada
+              automáticamente del monto recibido antes de la transferencia al
+              orfebre, y cubre los costos de operación de la Plataforma,
+              procesamiento de pagos, soporte al cliente, infraestructura
+              tecnológica y acciones de marketing.
             </p>
             <p className="font-light text-text-secondary">
               Como medida de protección al comprador, los fondos de cada venta
-              son retenidos por un período de 14 (catorce) días calendario
-              contados desde la confirmación de entrega del pedido. Transcurrido
-              este plazo sin que se haya iniciado un reclamo o solicitud de
-              devolución, los fondos son liberados y transferidos al orfebre
-              según el calendario de pagos vigente.
+              son retenidos desde la confirmación de recepción del pedido. El
+              período de retención varía según el plan de membresía del orfebre:
+              2 días para el plan Maestro, 7 días para el plan Artesano y 14
+              días para el plan Esencial. Transcurrido este plazo sin que se
+              haya iniciado un reclamo o solicitud de devolución, los fondos son
+              liberados y transferidos al orfebre según el calendario de pagos
+              vigente.
             </p>
           </section>
 
@@ -210,10 +216,14 @@ export default function TerminosPage() {
             <p className="font-light text-text-secondary">
               El orfebre deberá proporcionar un número de seguimiento válido al
               despachar la pieza, el cual será compartido con el comprador a
-              través de la Plataforma. En caso de extravío o daño durante el
-              transporte, el orfebre y el comprador deberán gestionar el reclamo
-              ante la empresa de transporte, pudiendo Casa Orfebre mediar en el
-              proceso si fuera necesario.
+              través de la Plataforma. En caso de que el producto llegue dañado,
+              el comprador deberá reportar la situación con fotografías dentro
+              de las 48 horas siguientes a la recepción. Casa Orfebre evaluará
+              el caso y gestionará el reembolso o reenvío según corresponda. El
+              orfebre es responsable de embalar adecuadamente; si el daño se
+              debe a empaque insuficiente, el costo recae en el orfebre. Si el
+              daño es atribuible al courier, Casa Orfebre apoyará al orfebre en
+              el reclamo ante la empresa de transporte.
             </p>
           </section>
 

@@ -45,7 +45,7 @@ export default function GarantiaPage() {
                   Si llega algo <strong className="font-medium text-text">distinto a lo publicado</strong>: reembolso completo.
                 </BulletItem>
                 <BulletItem>
-                  Si llega <strong className="font-medium text-text">dañado</strong>: reembolso completo o reposición, a tu elección.
+                  Si llega <strong className="font-medium text-text">dañado</strong>: reporta con fotos dentro de <strong className="font-medium text-text">48 horas</strong>. Casa Orfebre evaluará el caso y gestionará reembolso o reenvío. Si el daño se debe a empaque insuficiente, el costo recae en el orfebre; si es atribuible al courier, apoyamos al orfebre en el reclamo.
                 </BulletItem>
                 <BulletItem>
                   Plazo para reclamar: <strong className="font-medium text-text">14 días</strong> desde la entrega confirmada.
@@ -63,7 +63,7 @@ export default function GarantiaPage() {
                   Todos los envíos incluyen <strong className="font-medium text-text">número de seguimiento obligatorio</strong>.
                 </BulletItem>
                 <BulletItem>
-                  Plazo máximo de despacho: <strong className="font-medium text-text">5 días hábiles</strong> desde la confirmación de pago.
+                  Plazo máximo de despacho: <strong className="font-medium text-text">3 días hábiles</strong> desde la confirmación de pago.
                 </BulletItem>
                 <BulletItem>
                   Si el orfebre no despacha en plazo:{" "}
