@@ -869,16 +869,50 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
         <div className="space-y-1.5">
           <Label>Coleccion (opcional)</Label>
           <input type="hidden" name="collectionId" value={selectedCollectionId} />
-          <select
-            value={selectedCollectionId}
-            onChange={(e) => setSelectedCollectionId(e.target.value)}
-            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-          >
-            <option value="">Sin coleccion</option>
-            {localCollections.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          {localCollections.length === 0 && !selectedCollectionId ? (
+            <p className="text-sm text-text-tertiary">Aún no tienes colecciones.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedCollectionId("")}
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                  !selectedCollectionId
+                    ? "bg-accent/10 border-accent text-accent"
+                    : "border-border text-text-secondary hover:border-accent/50"
+                }`}
+              >
+                {!selectedCollectionId && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+                Sin colección
+              </button>
+              {localCollections.map((c) => {
+                const isSelected = selectedCollectionId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCollectionId(isSelected ? "" : c.id)}
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {!showNewCollectionForm ? (
             <button
               type="button"
@@ -948,11 +982,6 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               />
             </div>
           )}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="tiempoElaboracionDias">Tiempo de elaboración (días)</Label>
-          <Input id="tiempoElaboracionDias" name="tiempoElaboracionDias" type="number" min={1} defaultValue={product?.tiempoElaboracionDias ?? ""} placeholder="Ej: 7" />
         </div>
 
         {productionType === "LIMITED" && (

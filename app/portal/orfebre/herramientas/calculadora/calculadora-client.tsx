@@ -489,13 +489,21 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
 
 function EmptyState({ onImported }: { onImported: (materials: Material[]) => void }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleImport() {
     setLoading(true);
+    setError(null);
     const result = await importReferencePrices();
     if (result.success) {
-      router.refresh();
+      if (result.count === 0) {
+        setError("No hay precios de referencia configurados aún. Contacta al administrador.");
+      } else {
+        router.refresh();
+      }
+    } else {
+      setError(result.error || "Error al importar precios de referencia");
     }
     setLoading(false);
   }
@@ -512,6 +520,11 @@ function EmptyState({ onImported }: { onImported: (materials: Material[]) => voi
         Puedes empezar con nuestros precios de referencia y ajustarlos a
         tus costos reales.
       </p>
+      {error && (
+        <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <Button className="mt-4" onClick={handleImport} loading={loading}>
         Importar precios de referencia
       </Button>

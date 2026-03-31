@@ -239,6 +239,7 @@ export async function getConversations() {
             where: {
               isRead: false,
               isBlocked: false,
+              deletedAt: null,
               senderId: { not: user.id },
             },
           },
@@ -486,8 +487,10 @@ export async function getUnreadMessageCount() {
     where: {
       isRead: false,
       isBlocked: false,
+      deletedAt: null,
       senderId: { not: user.id },
       conversation: {
+        deletedAt: null,
         OR: [
           { buyerId: user.id },
           ...(artisan ? [{ artisanId: artisan.id }] : []),

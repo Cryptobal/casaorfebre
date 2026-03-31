@@ -12,7 +12,9 @@ async function getArtisan() {
     where: { userId: session.user.id },
   });
 
-  if (!artisan || artisan.status !== "APPROVED") return null;
+  if (!artisan) return null;
+  // Allow ADMIN users regardless of artisan status
+  if (artisan.status !== "APPROVED" && session.user.role !== "ADMIN") return null;
   return artisan;
 }
 

@@ -39,7 +39,7 @@ export async function getAdminDashboardStats() {
     }),
     prisma.user.count({ where: { role: "BUYER" } }),
     prisma.review.count({ where: { createdAt: { gte: startOfMonth } } }),
-    prisma.conversation.count({ where: { hasBypassAttempt: true, status: "ACTIVE" } }),
+    prisma.conversation.count({ where: { hasBypassAttempt: true, status: "ACTIVE", deletedAt: null } }),
     prisma.membershipSubscription.findMany({
       where: {
         status: "ACTIVE",

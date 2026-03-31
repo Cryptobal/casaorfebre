@@ -31,10 +31,10 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
 
   const [totalActive, messagesToday, totalBlocked, bypassConversations, conversations] =
     await Promise.all([
-      prisma.conversation.count({ where: { status: "ACTIVE" } }),
-      prisma.message.count({ where: { createdAt: { gte: startOfDay } } }),
-      prisma.message.count({ where: { isBlocked: true } }),
-      prisma.conversation.count({ where: { hasBypassAttempt: true } }),
+      prisma.conversation.count({ where: { status: "ACTIVE", deletedAt: null } }),
+      prisma.message.count({ where: { createdAt: { gte: startOfDay }, deletedAt: null } }),
+      prisma.message.count({ where: { isBlocked: true, deletedAt: null } }),
+      prisma.conversation.count({ where: { hasBypassAttempt: true, deletedAt: null } }),
       prisma.conversation.findMany({
         where: {
           deletedAt: null,
