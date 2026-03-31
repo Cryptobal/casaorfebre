@@ -13,8 +13,9 @@ async function main() {
     { name: "Pulsera", slug: "pulsera", position: 4 },
     { name: "Broche", slug: "broche", position: 5 },
     { name: "Colgante", slug: "colgante", position: 6 },
-    { name: "Bisutería", slug: "bisuteria", position: 7 },
-    { name: "Otro", slug: "otro", position: 8 },
+    { name: "Cadena", slug: "cadena", position: 7 },
+    { name: "Bisutería", slug: "bisuteria", position: 8 },
+    { name: "Otro", slug: "otro", position: 9 },
   ];
 
   for (const cat of categories) {

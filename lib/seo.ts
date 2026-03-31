@@ -231,6 +231,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   PULSERA: "Pulseras",
   BROCHE: "Broches",
   COLGANTE: "Colgantes",
+  CADENA: "Cadenas",
   OTRO: "Otros",
 };
 
@@ -241,6 +242,7 @@ const CATEGORY_SLUGS: Record<string, string> = {
   PULSERA: "pulseras",
   BROCHE: "coleccion",
   COLGANTE: "colgantes",
+  CADENA: "cadenas",
   OTRO: "coleccion",
 };
 
