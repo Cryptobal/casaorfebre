@@ -253,6 +253,7 @@ export async function getPendingProducts() {
       collection: { select: { name: true } },
       images: { orderBy: { position: "asc" } },
       video: true,
+      stones: { orderBy: { position: "asc" } },
       _count: { select: { orderItems: true, images: true } },
     },
   });
@@ -274,6 +275,7 @@ export async function getAllProductsForAdmin(statusFilter?: string) {
       collection: { select: { name: true } },
       images: { orderBy: { position: "asc" } },
       video: true,
+      stones: { orderBy: { position: "asc" } },
       _count: { select: { orderItems: true, images: true } },
     },
     take: 200,

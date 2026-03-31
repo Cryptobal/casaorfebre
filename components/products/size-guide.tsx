@@ -351,7 +351,7 @@ function RingSizeTable({ tallas }: { tallas: string[] }) {
           <thead>
             <tr className="border-b border-border text-left">
               <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">US</th>
-              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">EU</th>
+              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Europea (EU)</th>
               <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">UK</th>
               <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Diametro</th>
               <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Circ.</th>

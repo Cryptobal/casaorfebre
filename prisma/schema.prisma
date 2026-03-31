@@ -249,11 +249,30 @@ model Product {
   tieneCadena    Boolean?
   espesorCadenaMm Float?
   diametroMm     Float?
+  audiencia      ProductAudience   @default(SIN_ESPECIFICAR)
+
+  // ── Colgantes y dijes ──
+  pendantWidth    Float?    // Ancho del colgante/dije en mm
+  pendantHeight   Float?    // Alto del colgante/dije en mm
+
+  // ── Aros ──
+  earringWidth    Float?    // Ancho del aro en mm
+  earringDrop     Float?    // Largo de caída desde lóbulo en mm
+
+  // ── Broches ──
+  broochWidth     Float?    // Ancho del broche en mm
+  broochHeight    Float?    // Alto del broche en mm
+
+  // ── Piercing ──
+  piercingGauge     String?   // Calibre: "20G", "18G", "16G", "14G"
+  piercingBarLength Float?    // Largo de barra en mm
+
   personalizable Boolean           @default(false)
   detallePersonalizacion String?
   tiempoElaboracionDias  Int?
   cantidadEdicion        Int?
   variants       ProductVariant[]
+  stones         ProductStone[]
   cuidados       String?
   empaque        String?
   garantia       String?
@@ -328,6 +347,24 @@ model ProductVideo {
   product             Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("product_videos")
+}
+
+model ProductStone {
+  id           String   @id @default(cuid())
+  productId    String
+  stoneType    String   // Rubí, Esmeralda, Lapislázuli, etc.
+  stoneCarat   Float?   // Peso en quilates (ct). 1 ct = 0.2 gramos
+  stoneColor   String?  // Color: azul intenso, verde esmeralda, etc.
+  stoneCut     String?  // Corte: cabujón, facetado, briolette, rosa, bruta
+  stoneOrigin  String?  // Origen: natural, laboratorio, sintética
+  stoneClarity String?  // Claridad: transparente, translúcida, opaca
+  quantity     Int      @default(1)
+  position     Int      @default(0) // 0 = piedra principal
+  createdAt    DateTime @default(now())
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_stones")
 }
 
 model CartItem {
@@ -891,6 +928,14 @@ enum ProductionType {
   UNIQUE        // Pieza única — stock siempre 1, desaparece al venderse
   MADE_TO_ORDER // Hecha por encargo — se fabrica al comprar, sin stock, sin devolución
   LIMITED       // Producción limitada/múltiple — tiene stock (global o por talla)
+}
+
+enum ProductAudience {
+  MUJER
+  HOMBRE
+  UNISEX
+  NINOS
+  SIN_ESPECIFICAR
 }
 
 enum InvitationStatus {

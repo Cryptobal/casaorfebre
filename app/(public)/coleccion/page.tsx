@@ -61,6 +61,7 @@ export default async function ColeccionPage({
   const artisanSlug = typeof params.artisan === "string" ? params.artisan : undefined;
   const occasionSlug = typeof params.occasion === "string" ? params.occasion : undefined;
   const specialtySlug = typeof params.specialty === "string" ? params.specialty : undefined;
+  const audiencia = typeof params.audiencia === "string" ? params.audiencia.toUpperCase() : undefined;
   const sortParam = typeof params.sort === "string" ? params.sort : undefined;
   const sort = (sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "newest" || sortParam === "rating")
     ? sortParam as "price_asc" | "price_desc" | "newest" | "rating"
@@ -70,7 +71,7 @@ export default async function ColeccionPage({
 
   const session = await auth();
   const [products, materials, artisans, favoriteIds, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
-    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, sort }),
+    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, audiencia, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
     getUserFavoriteIds(session?.user?.id),

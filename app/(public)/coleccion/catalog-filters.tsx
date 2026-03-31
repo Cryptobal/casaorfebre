@@ -40,6 +40,7 @@ export function CatalogFilters({ categories, materials, artisans, occasions, spe
   const occasion = searchParams.get("occasion") ?? "";
   const specialty = searchParams.get("specialty") ?? "";
   const sort = searchParams.get("sort") ?? "";
+  const audiencia = searchParams.get("audiencia") ?? "";
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -81,6 +82,10 @@ export function CatalogFilters({ categories, materials, artisans, occasions, spe
   if (specialty) {
     const found = specialties.find((s) => s.slug === specialty);
     activeFilters.push({ key: "specialty", label: found?.name ?? specialty });
+  }
+  if (audiencia) {
+    const audienciaLabels: Record<string, string> = { MUJER: "Mujer", HOMBRE: "Hombre", UNISEX: "Unisex", NINOS: "Niños" };
+    activeFilters.push({ key: "audiencia", label: audienciaLabels[audiencia] ?? audiencia });
   }
 
   const filterCount = activeFilters.length;
@@ -253,6 +258,22 @@ export function CatalogFilters({ categories, materials, artisans, occasions, spe
               options={[
                 { value: "", label: "Todas las especialidades" },
                 ...specialties.map((s) => ({ value: s.slug, label: s.name })),
+              ]}
+            />
+          </FilterField>
+
+          <FilterField label="Público">
+            <SelectDropdown
+              value={audiencia}
+              onChange={(v) => updateParam("audiencia", v)}
+              placeholder="Todos"
+              className="w-full"
+              options={[
+                { value: "", label: "Todos" },
+                { value: "MUJER", label: "Mujer" },
+                { value: "HOMBRE", label: "Hombre" },
+                { value: "UNISEX", label: "Unisex" },
+                { value: "NINOS", label: "Niños" },
               ]}
             />
           </FilterField>

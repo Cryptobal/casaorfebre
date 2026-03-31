@@ -16,6 +16,7 @@ interface ProductFilters {
   artisanSlug?: string;
   occasionSlug?: string;
   specialtySlug?: string;
+  audiencia?: string;
   sort?: "newest" | "price_asc" | "price_desc" | "rating";
 }
 
@@ -38,6 +39,9 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   }
   if (filters.specialtySlug) {
     where.specialties = { some: { slug: filters.specialtySlug } };
+  }
+  if (filters.audiencia) {
+    where.audiencia = filters.audiencia;
   }
 
   const isRelevanceSort = !filters.sort || filters.sort === "newest";
@@ -129,6 +133,7 @@ export async function getProductBySlug(slug: string) {
       specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
       collection: { select: { name: true } },
+      stones: { orderBy: { position: "asc" } },
     },
   });
 }

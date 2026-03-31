@@ -83,12 +83,20 @@ interface Product {
   cuidados: string | null;
   empaque: string | null;
   garantia: string | null;
+  audiencia: string;
+  pendantWidth: number | null;
+  pendantHeight: number | null;
+  earringWidth: number | null;
+  earringDrop: number | null;
+  broochWidth: number | null;
+  broochHeight: number | null;
   artisan: { displayName: string; slug: string };
   categories: { name: string }[];
   materials: { id: string; name: string }[];
   collection: { name: string } | null;
   images: ProductImage[];
   video: ProductVideo | null;
+  stones: { id: string; stoneType: string; stoneCarat: number | null; stoneColor: string | null; quantity: number }[];
   _count: { orderItems: number; images: number };
 }
 
@@ -222,6 +230,25 @@ export function ExpandableProductRow({ product }: ExpandableProductRowProps) {
             {product.diametroMm && <Detail label="Diametro" value={`${product.diametroMm} mm`} />}
             {product.dimensions && <Detail label="Dimensiones" value={product.dimensions} />}
             {product.weight && <Detail label="Peso" value={`${product.weight}g`} />}
+            {product.audiencia !== "SIN_ESPECIFICAR" && (
+              <Detail label="Publico" value={
+                product.audiencia === "MUJER" ? "Mujer" :
+                product.audiencia === "HOMBRE" ? "Hombre" :
+                product.audiencia === "UNISEX" ? "Unisex" :
+                product.audiencia === "NINOS" ? "Niños" : ""
+              } />
+            )}
+            {product.pendantWidth && product.pendantHeight && <Detail label="Colgante" value={`${product.pendantWidth} × ${product.pendantHeight} mm`} />}
+            {product.earringWidth && <Detail label="Ancho aro" value={`${product.earringWidth} mm`} />}
+            {product.earringDrop && <Detail label="Caida" value={`${product.earringDrop} mm`} />}
+            {product.broochWidth && product.broochHeight && <Detail label="Broche" value={`${product.broochWidth} × ${product.broochHeight} mm`} />}
+            {product.stones?.length > 0 && (
+              <Detail label="Piedras" value={
+                product.stones.map((s) =>
+                  `${s.quantity > 1 ? s.quantity + "× " : ""}${s.stoneType}${s.stoneCarat ? ` (${s.stoneCarat}ct)` : ""}`
+                ).join(", ")
+              } />
+            )}
           </div>
 
           {/* Description */}

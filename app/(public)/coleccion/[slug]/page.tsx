@@ -27,20 +27,34 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
-  const desc = product.description.slice(0, 155);
+  const categoryName = product.categories?.[0]?.name ?? "";
+  const sizeInfo = product.tallas?.length
+    ? ` | Talla EU ${product.tallas.join("/")}`
+    : product.tallaUnica
+      ? ` | Talla EU ${product.tallaUnica}`
+      : product.largoCadenaCm
+        ? ` | ${product.largoCadenaCm}cm`
+        : "";
+  const stoneInfo = product.stones?.[0]
+    ? ` | ${product.stones[0].stoneType}${product.stones[0].stoneCarat ? ` ${product.stones[0].stoneCarat}ct` : ""}`
+    : "";
+  const audienciaText = product.audiencia !== "SIN_ESPECIFICAR"
+    ? ` para ${product.audiencia === "MUJER" ? "mujer" : product.audiencia === "HOMBRE" ? "hombre" : product.audiencia === "NINOS" ? "niños" : "todos"}`
+    : "";
+  const desc = `${product.description.slice(0, 110)}${sizeInfo}${stoneInfo}. Joyería artesanal chilena con certificado de autenticidad.`;
   const images = product.images?.[0]?.url ? [{ url: product.images[0].url }] : undefined;
   return {
-    title: `${product.name} · Plata Artesanal`,
+    title: `${product.name} — ${categoryName}${audienciaText} | Casa Orfebre`,
     description: desc,
     alternates: { canonical: `/coleccion/${slug}` },
     openGraph: {
-      title: `${product.name} · Plata Artesanal | Casa Orfebre`,
+      title: `${product.name} | Casa Orfebre`,
       description: desc,
       images,
     },
     twitter: {
       card: "summary_large_image" as const,
-      title: `${product.name} · Plata Artesanal | Casa Orfebre`,
+      title: `${product.name} | Casa Orfebre`,
       description: desc,
       images: product.images?.[0]?.url ? [product.images[0].url] : undefined,
     },
@@ -98,6 +112,39 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const productImages = product.images.map((img: any) => img.url);
 
+  // ── Build additionalProperty for JSON-LD ──
+  const additionalProps: Record<string, unknown>[] = [];
+  if (product.tallas?.length > 0) {
+    additionalProps.push({ "@type": "PropertyValue", propertyID: "size", name: "Talla Europea (EU)", value: product.tallas.join(", ") });
+  }
+  if (product.tallaUnica) {
+    additionalProps.push({ "@type": "PropertyValue", propertyID: "size", name: "Talla Europea (EU)", value: product.tallaUnica });
+  }
+  if (product.largoCadenaCm) {
+    additionalProps.push({ "@type": "PropertyValue", name: "Largo de cadena", value: `${product.largoCadenaCm} cm`, unitCode: "CMT" });
+  }
+  if (product.pendantWidth && product.pendantHeight) {
+    additionalProps.push({ "@type": "PropertyValue", name: "Dimensiones colgante", value: `${product.pendantWidth} × ${product.pendantHeight} mm` });
+  }
+  if (product.earringDrop) {
+    additionalProps.push({ "@type": "PropertyValue", name: "Largo de caída", value: `${product.earringDrop} mm` });
+  }
+  if (product.stones?.length > 0) {
+    product.stones.forEach((stone: any) => {
+      additionalProps.push({
+        "@type": "PropertyValue",
+        name: "Piedra",
+        value: [stone.quantity > 1 ? `${stone.quantity}×` : "", stone.stoneType, stone.stoneCarat ? `${stone.stoneCarat} ct` : "", stone.stoneOrigin === "natural" ? "natural" : ""].filter(Boolean).join(" "),
+      });
+    });
+  }
+  if (product.technique) {
+    additionalProps.push({ "@type": "PropertyValue", name: "Técnica", value: product.technique });
+  }
+
+  const genderMap: Record<string, string> = { MUJER: "female", HOMBRE: "male", UNISEX: "unisex" };
+  const gender = genderMap[product.audiencia] ?? undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -108,6 +155,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
     ...(product.materials.length > 0
       ? { material: product.materials.map((m: { name: string }) => m.name).join(", ") }
       : {}),
+    ...(product.weight ? { weight: { "@type": "QuantitativeValue", value: product.weight, unitCode: "GRM" } } : {}),
+    ...(gender ? { audience: { "@type": "PeopleAudience", suggestedGender: gender } } : {}),
+    ...(product.stones?.[0]?.stoneColor ? { color: product.stones[0].stoneColor } : {}),
+    ...(additionalProps.length > 0 ? { additionalProperty: additionalProps } : {}),
     brand: {
       "@type": "Brand",
       name: "Casa Orfebre",
@@ -254,6 +305,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {product.isCustomizable && (
                 <span className="inline-block rounded-full border border-accent/40 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
                   Personalizable
+                </span>
+              )}
+              {product.audiencia && product.audiencia !== "SIN_ESPECIFICAR" && (
+                <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
+                  {product.audiencia === "MUJER" ? "Mujer" :
+                   product.audiencia === "HOMBRE" ? "Hombre" :
+                   product.audiencia === "UNISEX" ? "Unisex" :
+                   product.audiencia === "NINOS" ? "Niños" : ""}
                 </span>
               )}
             </div>
@@ -532,7 +591,7 @@ function TruckIcon() {
 
 /* ─── Product Details & Measurements ─── */
 
-function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string; slug: string }[]; collection: { name: string } | null } }) {
+function ProductDetails({ product }: { product: Record<string, unknown> & { materials: { id: string; name: string }[]; tallas: string[]; categories: { name: string; slug: string }[]; collection: { name: string } | null; stones?: { id: string; stoneType: string; stoneCarat: number | null; stoneColor: string | null; stoneCut: string | null; stoneOrigin: string | null; stoneClarity: string | null; quantity: number }[] } }) {
   const rows: { label: string; value: string }[] = [];
 
   if (product.materials.length > 0)
@@ -543,14 +602,25 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Peso", value: `${product.weight} g` });
   if (product.dimensions)
     rows.push({ label: "Dimensiones", value: product.dimensions as string });
+
+  // Category-specific measurements
+  if ((product.pendantWidth as number | null) && (product.pendantHeight as number | null))
+    rows.push({ label: "Colgante", value: `${product.pendantWidth} × ${product.pendantHeight} mm` });
+  if (product.earringWidth as number | null)
+    rows.push({ label: "Ancho del aro", value: `${product.earringWidth} mm` });
+  if (product.earringDrop as number | null)
+    rows.push({ label: "Largo de caída", value: `${product.earringDrop} mm` });
+  if ((product.broochWidth as number | null) && (product.broochHeight as number | null))
+    rows.push({ label: "Dimensiones", value: `${product.broochWidth} × ${product.broochHeight} mm` });
+
   if (product.tallaUnica) {
-    let tallaValue = `Talla ${product.tallaUnica}`;
+    let tallaValue = `Europea (EU) ${product.tallaUnica}`;
     if (product.tallaAjusteAbajo || product.tallaAjusteArriba) {
       tallaValue += ` (ajustable: ${product.tallaAjusteAbajo ?? 0} abajo, ${product.tallaAjusteArriba ?? 0} arriba)`;
     }
     rows.push({ label: "Talla", value: tallaValue });
   } else if (product.tallas.length > 0) {
-    rows.push({ label: "Tallas disponibles", value: product.tallas.join(", ") });
+    rows.push({ label: "Tallas disponibles", value: `Europeas (EU): ${product.tallas.join(", ")}` });
   }
   if (product.guiaTallas)
     rows.push({ label: "Guía de tallas", value: product.guiaTallas as string });
@@ -581,7 +651,7 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Categoría", value: product.categories.map((c) => c.name).join(", ") });
   }
 
-  if (rows.length === 0) return null;
+  if (rows.length === 0 && (!product.stones || product.stones.length === 0)) return null;
 
   return (
     <div className="rounded-lg border border-border p-6">
@@ -598,6 +668,34 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
         </tbody>
       </table>
       </div>
+
+      {/* Piedras */}
+      {product.stones && product.stones.length > 0 && (
+        <div className="border-t border-border pt-4 mt-4">
+          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
+            Piedra{product.stones.length > 1 ? "s" : ""}
+          </h3>
+          <table className="w-full text-sm">
+            <tbody>
+              {product.stones.map((stone) => (
+                <tr key={stone.id} className="border-b border-border/50 last:border-0">
+                  <td className="py-2 pr-4 font-medium text-text">
+                    {stone.quantity > 1 ? `${stone.quantity}× ` : ""}{stone.stoneType}
+                  </td>
+                  <td className="py-2 text-text-secondary">
+                    {[
+                      stone.stoneCarat ? `${stone.stoneCarat} ct` : null,
+                      stone.stoneColor,
+                      stone.stoneCut ? (stone.stoneCut === "cabujon" ? "Cabujón" : stone.stoneCut === "facetado" ? "Facetado" : stone.stoneCut === "briolette" ? "Briolette" : stone.stoneCut === "rosa" ? "Rosa" : stone.stoneCut === "bruta" ? "Bruta" : stone.stoneCut) : null,
+                      stone.stoneOrigin === "natural" ? "Natural" : stone.stoneOrigin === "laboratorio" ? "Laboratorio" : stone.stoneOrigin === "sintetica" ? "Sintética" : null,
+                    ].filter(Boolean).join(" · ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

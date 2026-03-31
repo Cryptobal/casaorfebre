@@ -61,6 +61,16 @@ interface ProductFormProps {
     tieneCadena: boolean | null;
     espesorCadenaMm: number | null;
     diametroMm: number | null;
+    audiencia: string;
+    pendantWidth: number | null;
+    pendantHeight: number | null;
+    earringWidth: number | null;
+    earringDrop: number | null;
+    broochWidth: number | null;
+    broochHeight: number | null;
+    piercingGauge: string | null;
+    piercingBarLength: number | null;
+    stones: { id: string; stoneType: string; stoneCarat: number | null; stoneColor: string | null; stoneCut: string | null; stoneOrigin: string | null; stoneClarity: string | null; quantity: number }[];
     personalizable: boolean;
     detallePersonalizacion: string | null;
     tiempoElaboracionDias: number | null;
@@ -112,6 +122,31 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const [submitting, setSubmitting] = useState(false);
   const [errorModal, setErrorModal] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const [selectedAudiencia, setSelectedAudiencia] = useState(
+    product?.audiencia ?? "SIN_ESPECIFICAR"
+  );
+  const [stones, setStones] = useState<Array<{
+    id?: string;
+    stoneType: string;
+    stoneCarat: string;
+    stoneColor: string;
+    stoneCut: string;
+    stoneOrigin: string;
+    stoneClarity: string;
+    quantity: string;
+  }>>(
+    product?.stones?.map((s) => ({
+      id: s.id,
+      stoneType: s.stoneType,
+      stoneCarat: s.stoneCarat?.toString() ?? "",
+      stoneColor: s.stoneColor ?? "",
+      stoneCut: s.stoneCut ?? "",
+      stoneOrigin: s.stoneOrigin ?? "",
+      stoneClarity: s.stoneClarity ?? "",
+      quantity: s.quantity?.toString() ?? "1",
+    })) ?? []
+  );
+  const [showStones, setShowStones] = useState(!!product?.stones?.length);
 
   // Preset selector state for cuidados, empaque, garantia
   const parsePresets = (value: string | null | undefined, presets: readonly string[]): { selected: string[]; custom: string } => {
@@ -393,6 +428,38 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               })}
             </div>
           )}
+        </div>
+
+        {/* Audiencia / Público objetivo */}
+        <div className="space-y-2">
+          <Label>Público objetivo</Label>
+          <p className="text-xs text-text-secondary">¿Para quién está diseñada esta pieza?</p>
+          <input type="hidden" name="audiencia" value={selectedAudiencia} />
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "MUJER", label: "Mujer" },
+              { value: "HOMBRE", label: "Hombre" },
+              { value: "UNISEX", label: "Unisex" },
+              { value: "NINOS", label: "Niños" },
+              { value: "SIN_ESPECIFICAR", label: "Sin especificar" },
+            ].map((opt) => {
+              const isSelected = selectedAudiencia === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSelectedAudiencia(opt.value)}
+                  className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+                    isSelected
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-border text-text-secondary hover:border-text-tertiary"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Specialties */}
@@ -966,6 +1033,234 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             <Input id="diametroMm" name="diametroMm" type="number" step="0.1" defaultValue={product?.diametroMm ?? ""} placeholder="Ej: 25" />
           </div>
         )}
+
+        {/* ── Medidas específicas por tipo de joya ── */}
+        {(selectedCategory?.slug === "colgante" || selectedCategory?.slug === "collar") && (
+          <div className="space-y-4 rounded-lg border border-border bg-surface/30 p-4">
+            <h3 className="text-sm font-medium text-text">
+              {selectedCategory.slug === "colgante" ? "Medidas del colgante" : "Medidas del dije (si tiene)"}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="pendantWidth">Ancho del {selectedCategory.slug === "colgante" ? "colgante" : "dije"} (mm)</Label>
+                <Input id="pendantWidth" name="pendantWidth" type="number" step="0.1"
+                  defaultValue={product?.pendantWidth ?? ""} placeholder="Ej: 18" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pendantHeight">Alto del {selectedCategory.slug === "colgante" ? "colgante" : "dije"} (mm)</Label>
+                <Input id="pendantHeight" name="pendantHeight" type="number" step="0.1"
+                  defaultValue={product?.pendantHeight ?? ""} placeholder="Ej: 25" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedCategory?.slug === "aros" && (
+          <div className="space-y-4 rounded-lg border border-border bg-surface/30 p-4">
+            <h3 className="text-sm font-medium text-text">Medidas de los aros</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="earringWidth">Ancho (mm)</Label>
+                <Input id="earringWidth" name="earringWidth" type="number" step="0.1"
+                  defaultValue={product?.earringWidth ?? ""} placeholder="Ej: 22" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="earringDrop">Largo de caída (mm)</Label>
+                <Input id="earringDrop" name="earringDrop" type="number" step="0.1"
+                  defaultValue={product?.earringDrop ?? ""} placeholder="Ej: 35" />
+                <p className="text-xs text-text-tertiary">Distancia desde el lóbulo hacia abajo</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(selectedCategory?.slug === "broche" || selectedCategory?.slug === "diadema-tiara" || selectedCategory?.slug === "gemelos") && (
+          <div className="space-y-4 rounded-lg border border-border bg-surface/30 p-4">
+            <h3 className="text-sm font-medium text-text">
+              Medidas {selectedCategory.slug === "broche" ? "del broche" : selectedCategory.slug === "diadema-tiara" ? "de la diadema" : "de los gemelos"}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="broochWidth">Ancho (mm)</Label>
+                <Input id="broochWidth" name="broochWidth" type="number" step="0.1"
+                  defaultValue={product?.broochWidth ?? ""} placeholder="Ej: 40" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="broochHeight">Alto (mm)</Label>
+                <Input id="broochHeight" name="broochHeight" type="number" step="0.1"
+                  defaultValue={product?.broochHeight ?? ""} placeholder="Ej: 30" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Piedras preciosas ── */}
+        <div className="space-y-4">
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={showStones}
+              onChange={(e) => {
+                setShowStones(e.target.checked);
+                if (!e.target.checked) setStones([]);
+              }}
+              className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+            />
+            <span className="text-sm font-medium text-text">Esta pieza incluye piedra(s)</span>
+          </label>
+
+          {showStones && (
+            <div className="ml-7 space-y-4">
+              {stones.map((stone, index) => (
+                <div key={index} className="relative rounded-lg border border-border p-4">
+                  <button
+                    type="button"
+                    onClick={() => setStones(stones.filter((_, i) => i !== index))}
+                    className="absolute right-2 top-2 text-text-tertiary hover:text-red-500"
+                    title="Eliminar piedra"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+                  <div className="mb-2 text-xs font-medium text-text-tertiary">
+                    Piedra {index + 1}{index === 0 ? " (principal)" : ""}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1">
+                      <Label>Tipo de piedra *</Label>
+                      <Input
+                        value={stone.stoneType}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], stoneType: e.target.value };
+                          setStones(updated);
+                        }}
+                        placeholder="Ej: Lapislázuli"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Quilates (ct)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={stone.stoneCarat}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], stoneCarat: e.target.value };
+                          setStones(updated);
+                        }}
+                        placeholder="Ej: 0.50"
+                      />
+                      <p className="text-xs text-text-tertiary">1 quilate = 0.2 gramos</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Cantidad</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={stone.quantity}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], quantity: e.target.value };
+                          setStones(updated);
+                        }}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Color</Label>
+                      <Input
+                        value={stone.stoneColor}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], stoneColor: e.target.value };
+                          setStones(updated);
+                        }}
+                        placeholder="Ej: azul intenso"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Corte / Talla</Label>
+                      <select
+                        value={stone.stoneCut}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], stoneCut: e.target.value };
+                          setStones(updated);
+                        }}
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="cabujon">Cabujón</option>
+                        <option value="facetado">Facetado</option>
+                        <option value="briolette">Briolette</option>
+                        <option value="rosa">Rosa</option>
+                        <option value="bruta">Bruta / Sin tallar</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Origen</Label>
+                      <select
+                        value={stone.stoneOrigin}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], stoneOrigin: e.target.value };
+                          setStones(updated);
+                        }}
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="natural">Natural</option>
+                        <option value="laboratorio">Laboratorio</option>
+                        <option value="sintetica">Sintética</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Claridad</Label>
+                      <select
+                        value={stone.stoneClarity}
+                        onChange={(e) => {
+                          const updated = [...stones];
+                          updated[index] = { ...updated[index], stoneClarity: e.target.value };
+                          setStones(updated);
+                        }}
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="transparente">Transparente</option>
+                        <option value="translucida">Translúcida</option>
+                        <option value="opaca">Opaca</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setStones([
+                    ...stones,
+                    {
+                      stoneType: "",
+                      stoneCarat: "",
+                      stoneColor: "",
+                      stoneCut: "",
+                      stoneOrigin: "",
+                      stoneClarity: "",
+                      quantity: "1",
+                    },
+                  ])
+                }
+                className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-3 py-2 text-sm text-text-secondary hover:border-accent hover:text-accent"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+                Agregar piedra
+              </button>
+
+              <input type="hidden" name="stonesJson" value={JSON.stringify(stones)} />
+            </div>
+          )}
+        </div>
 
         {/* ── Collection selector ── */}
         <div className="space-y-1.5">

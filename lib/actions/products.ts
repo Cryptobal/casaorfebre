@@ -109,6 +109,42 @@ function parseFormData(formData: FormData) {
   const empaque = (formData.get("empaque") as string) || null;
   const garantia = (formData.get("garantia") as string) || null;
 
+  // ── Audiencia ──
+  const audiencia = (formData.get("audiencia") as string) || "SIN_ESPECIFICAR";
+
+  // ── Medidas específicas por categoría ──
+  const pendantWidthRaw = formData.get("pendantWidth") as string;
+  const pendantWidth = pendantWidthRaw ? parseFloat(pendantWidthRaw) : null;
+  const pendantHeightRaw = formData.get("pendantHeight") as string;
+  const pendantHeight = pendantHeightRaw ? parseFloat(pendantHeightRaw) : null;
+  const earringWidthRaw = formData.get("earringWidth") as string;
+  const earringWidth = earringWidthRaw ? parseFloat(earringWidthRaw) : null;
+  const earringDropRaw = formData.get("earringDrop") as string;
+  const earringDrop = earringDropRaw ? parseFloat(earringDropRaw) : null;
+  const broochWidthRaw = formData.get("broochWidth") as string;
+  const broochWidth = broochWidthRaw ? parseFloat(broochWidthRaw) : null;
+  const broochHeightRaw = formData.get("broochHeight") as string;
+  const broochHeight = broochHeightRaw ? parseFloat(broochHeightRaw) : null;
+  const piercingGauge = (formData.get("piercingGauge") as string) || null;
+  const piercingBarLengthRaw = formData.get("piercingBarLength") as string;
+  const piercingBarLength = piercingBarLengthRaw ? parseFloat(piercingBarLengthRaw) : null;
+
+  // ── Piedras ──
+  const stonesJson = formData.get("stonesJson") as string;
+  let stonesData: Array<{
+    id?: string;
+    stoneType: string;
+    stoneCarat: string;
+    stoneColor: string;
+    stoneCut: string;
+    stoneOrigin: string;
+    stoneClarity: string;
+    quantity: string;
+  }> = [];
+  try {
+    if (stonesJson) stonesData = JSON.parse(stonesJson);
+  } catch { /* ignore */ }
+
   return {
     name,
     description,
@@ -145,6 +181,16 @@ function parseFormData(formData: FormData) {
     cuidados,
     empaque,
     garantia,
+    audiencia,
+    pendantWidth,
+    pendantHeight,
+    earringWidth,
+    earringDrop,
+    broochWidth,
+    broochHeight,
+    piercingGauge,
+    piercingBarLength,
+    stonesData,
   };
 }
 
@@ -241,9 +287,35 @@ export async function createProduct(
         cuidados: data.cuidados,
         empaque: data.empaque,
         garantia: data.garantia,
+        audiencia: data.audiencia as any,
+        pendantWidth: data.pendantWidth,
+        pendantHeight: data.pendantHeight,
+        earringWidth: data.earringWidth,
+        earringDrop: data.earringDrop,
+        broochWidth: data.broochWidth,
+        broochHeight: data.broochHeight,
+        piercingGauge: data.piercingGauge,
+        piercingBarLength: data.piercingBarLength,
         status: "DRAFT",
       },
     });
+
+    // Create stones
+    if (data.stonesData.length > 0) {
+      await prisma.productStone.createMany({
+        data: data.stonesData.map((s, i) => ({
+          productId: product.id,
+          stoneType: s.stoneType,
+          stoneCarat: s.stoneCarat ? parseFloat(s.stoneCarat) : null,
+          stoneColor: s.stoneColor || null,
+          stoneCut: s.stoneCut || null,
+          stoneOrigin: s.stoneOrigin || null,
+          stoneClarity: s.stoneClarity || null,
+          quantity: s.quantity ? parseInt(s.quantity) : 1,
+          position: i,
+        })),
+      });
+    }
 
     // Create variants if provided
     if (data.variants.length > 0) {
@@ -340,6 +412,15 @@ export async function updateProduct(
         cuidados: data.cuidados,
         empaque: data.empaque,
         garantia: data.garantia,
+        audiencia: data.audiencia as any,
+        pendantWidth: data.pendantWidth,
+        pendantHeight: data.pendantHeight,
+        earringWidth: data.earringWidth,
+        earringDrop: data.earringDrop,
+        broochWidth: data.broochWidth,
+        broochHeight: data.broochHeight,
+        piercingGauge: data.piercingGauge,
+        piercingBarLength: data.piercingBarLength,
         status: newStatus,
       },
     });
@@ -354,6 +435,31 @@ export async function updateProduct(
           stock: v.stock,
         })),
       });
+    }
+
+    // Manage stones
+    const existingStoneIds = data.stonesData.filter(s => s.id).map(s => s.id!);
+    await prisma.productStone.deleteMany({
+      where: { productId, id: { notIn: existingStoneIds } },
+    });
+    for (let i = 0; i < data.stonesData.length; i++) {
+      const s = data.stonesData[i];
+      const stonePayload = {
+        productId,
+        stoneType: s.stoneType,
+        stoneCarat: s.stoneCarat ? parseFloat(s.stoneCarat) : null,
+        stoneColor: s.stoneColor || null,
+        stoneCut: s.stoneCut || null,
+        stoneOrigin: s.stoneOrigin || null,
+        stoneClarity: s.stoneClarity || null,
+        quantity: s.quantity ? parseInt(s.quantity) : 1,
+        position: i,
+      };
+      if (s.id) {
+        await prisma.productStone.update({ where: { id: s.id }, data: stonePayload });
+      } else {
+        await prisma.productStone.create({ data: stonePayload });
+      }
     }
 
     revalidatePath("/portal/orfebre/productos");
@@ -527,6 +633,15 @@ export async function saveAndSubmitForReview(
         cuidados: data.cuidados,
         empaque: data.empaque,
         garantia: data.garantia,
+        audiencia: data.audiencia as any,
+        pendantWidth: data.pendantWidth,
+        pendantHeight: data.pendantHeight,
+        earringWidth: data.earringWidth,
+        earringDrop: data.earringDrop,
+        broochWidth: data.broochWidth,
+        broochHeight: data.broochHeight,
+        piercingGauge: data.piercingGauge,
+        piercingBarLength: data.piercingBarLength,
         status: "PENDING_REVIEW",
       },
     });
@@ -541,6 +656,31 @@ export async function saveAndSubmitForReview(
           stock: v.stock,
         })),
       });
+    }
+
+    // Manage stones
+    const existingStoneIds = data.stonesData.filter(s => s.id).map(s => s.id!);
+    await prisma.productStone.deleteMany({
+      where: { productId, id: { notIn: existingStoneIds } },
+    });
+    for (let i = 0; i < data.stonesData.length; i++) {
+      const s = data.stonesData[i];
+      const stonePayload = {
+        productId,
+        stoneType: s.stoneType,
+        stoneCarat: s.stoneCarat ? parseFloat(s.stoneCarat) : null,
+        stoneColor: s.stoneColor || null,
+        stoneCut: s.stoneCut || null,
+        stoneOrigin: s.stoneOrigin || null,
+        stoneClarity: s.stoneClarity || null,
+        quantity: s.quantity ? parseInt(s.quantity) : 1,
+        position: i,
+      };
+      if (s.id) {
+        await prisma.productStone.update({ where: { id: s.id }, data: stonePayload });
+      } else {
+        await prisma.productStone.create({ data: stonePayload });
+      }
     }
 
     revalidatePath("/portal/orfebre/productos");
