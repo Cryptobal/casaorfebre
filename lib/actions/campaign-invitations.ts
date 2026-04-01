@@ -49,86 +49,97 @@ export async function createAndSendInvitations(data: {
     return { success: false, sent: 0, failed: 0, skipped: 0, errors: ["No autorizado"] };
   }
 
-  const campaign = await prisma.invitationCampaign.create({
-    data: {
-      name: data.campaignName,
-      type: data.type,
-      description: data.campaignDescription || null,
-      createdById: session.user.id,
-    },
-  });
-
   let sent = 0;
   let failed = 0;
   let skipped = 0;
   const errors: string[] = [];
 
-  // Filter out emails that already have an active invitation
-  const emailsToProcess: string[] = [];
-  for (const email of data.emails) {
-    const existing = await prisma.invitation.findFirst({
-      where: {
-        email,
+  try {
+    const campaign = await prisma.invitationCampaign.create({
+      data: {
+        name: data.campaignName,
         type: data.type,
-        status: { in: ["SENT", "CLICKED", "ACCEPTED"] as CampaignInvitationStatus[] },
+        description: data.campaignDescription || null,
+        createdById: session.user.id,
       },
     });
-    if (existing) {
-      skipped++;
-    } else {
-      emailsToProcess.push(email);
-    }
-  }
 
-  // Process in batches of 10
-  for (let i = 0; i < emailsToProcess.length; i += 10) {
-    const batch = emailsToProcess.slice(i, i + 10);
-    const results = await Promise.allSettled(
-      batch.map(async (email) => {
-        const invitation = await prisma.invitation.create({
-          data: {
-            email,
-            type: data.type,
-            campaignId: campaign.id,
-            createdById: session.user.id,
-          },
-        });
-
-        try {
-          await emailSenders[data.type](email, { token: invitation.token });
-          return { email, success: true };
-        } catch (e) {
-          await prisma.invitation.update({
-            where: { id: invitation.id },
-            data: { status: "FAILED" },
-          });
-          return { email, success: false, error: e instanceof Error ? e.message : "Error" };
-        }
-      }),
-    );
-
-    for (const result of results) {
-      if (result.status === "fulfilled") {
-        if (result.value.success) {
-          sent++;
-        } else {
-          failed++;
-          errors.push(result.value.email);
-        }
+    // Filter out emails that already have an active invitation
+    const emailsToProcess: string[] = [];
+    for (const email of data.emails) {
+      const existing = await prisma.invitation.findFirst({
+        where: {
+          email,
+          type: data.type,
+          status: { in: ["SENT", "CLICKED", "ACCEPTED"] as CampaignInvitationStatus[] },
+        },
+      });
+      if (existing) {
+        skipped++;
       } else {
-        failed++;
+        emailsToProcess.push(email);
       }
     }
+
+    // Process in batches of 10
+    for (let i = 0; i < emailsToProcess.length; i += 10) {
+      const batch = emailsToProcess.slice(i, i + 10);
+      const results = await Promise.allSettled(
+        batch.map(async (email) => {
+          const invitation = await prisma.invitation.create({
+            data: {
+              email,
+              type: data.type,
+              campaignId: campaign.id,
+              createdById: session.user.id,
+            },
+          });
+
+          try {
+            await emailSenders[data.type](email, { token: invitation.token });
+            return { email, success: true };
+          } catch (e) {
+            await prisma.invitation.update({
+              where: { id: invitation.id },
+              data: { status: "FAILED" },
+            });
+            return { email, success: false, error: e instanceof Error ? e.message : "Error" };
+          }
+        }),
+      );
+
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          if (result.value.success) {
+            sent++;
+          } else {
+            failed++;
+            errors.push(result.value.email);
+          }
+        } else {
+          failed++;
+        }
+      }
+    }
+
+    await prisma.invitationCampaign.update({
+      where: { id: campaign.id },
+      data: { totalSent: sent },
+    });
+
+    revalidatePath("/portal/admin/invitaciones");
+
+    return { success: true, sent, failed, skipped, errors };
+  } catch (e) {
+    console.error("[CAMPAIGN INVITATIONS] Error:", e);
+    return {
+      success: false,
+      sent: 0,
+      failed: data.emails.length,
+      skipped: 0,
+      errors: ["La tabla de invitaciones no existe aún. Ejecuta la migración de base de datos."],
+    };
   }
-
-  await prisma.invitationCampaign.update({
-    where: { id: campaign.id },
-    data: { totalSent: sent },
-  });
-
-  revalidatePath("/portal/admin/invitaciones");
-
-  return { success: true, sent, failed, skipped, errors };
 }
 
 // ---------------------------------------------------------------------------

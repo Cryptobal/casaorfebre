@@ -1,7 +1,6 @@
 import { getInvitations, getCampaignMetrics, getCampaigns } from "@/lib/actions/invitations";
 import { Card } from "@/components/ui/card";
 import { InvitacionesClient } from "./invitaciones-client";
-import { BrochureSection } from "@/components/admin/brochure-section";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
@@ -15,14 +14,13 @@ export default async function InvitacionesPage({
   const status = params.status || "";
   const search = params.search || "";
 
-  const [invitations, campaigns, brochureAsset] = await Promise.all([
+  const [invitations, campaigns] = await Promise.all([
     getInvitations({
       campaign: campaign || undefined,
       status: status || undefined,
       search: search || undefined,
     }),
     getCampaigns(),
-    prisma.adminAsset.findUnique({ where: { key: "brochure-orfebres" } }),
   ]);
 
   // Get metrics for the selected campaign, or the first one if none selected
@@ -57,20 +55,32 @@ export default async function InvitacionesPage({
         <Card>
           <p className="text-xs uppercase tracking-widest text-text-tertiary">Pioneros</p>
           <p className="mt-1 text-2xl font-medium">{pioneerCount}</p>
-          <p className="text-xs text-text-tertiary">Aceptadas: {pioneerAccepted} ({pioneerCount > 0 ? Math.round((pioneerAccepted / pioneerCount) * 100) : 0}%)</p>
-          <Link href="/portal/admin/invitaciones/pioneros" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">Ver campañas &rarr;</Link>
+          <p className="text-xs text-text-tertiary">
+            {"Aceptadas: "}{pioneerAccepted}{" ("}{pioneerCount > 0 ? Math.round((pioneerAccepted / pioneerCount) * 100) : 0}{"%)"}
+          </p>
+          <Link href="/portal/admin/invitaciones/pioneros" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">
+            {"Ver campañas →"}
+          </Link>
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-widest text-text-tertiary">Orfebres</p>
           <p className="mt-1 text-2xl font-medium">{artisanCount}</p>
-          <p className="text-xs text-text-tertiary">Aceptadas: {artisanAccepted} ({artisanCount > 0 ? Math.round((artisanAccepted / artisanCount) * 100) : 0}%)</p>
-          <Link href="/portal/admin/invitaciones/orfebres" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">Ver campañas &rarr;</Link>
+          <p className="text-xs text-text-tertiary">
+            {"Aceptadas: "}{artisanAccepted}{" ("}{artisanCount > 0 ? Math.round((artisanAccepted / artisanCount) * 100) : 0}{"%)"}
+          </p>
+          <Link href="/portal/admin/invitaciones/orfebres" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">
+            {"Ver campañas →"}
+          </Link>
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-widest text-text-tertiary">Compradores</p>
           <p className="mt-1 text-2xl font-medium">{buyerCount}</p>
-          <p className="text-xs text-text-tertiary">Aceptadas: {buyerAccepted} ({buyerCount > 0 ? Math.round((buyerAccepted / buyerCount) * 100) : 0}%)</p>
-          <Link href="/portal/admin/invitaciones/compradores" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">Ver campañas &rarr;</Link>
+          <p className="text-xs text-text-tertiary">
+            {"Aceptadas: "}{buyerAccepted}{" ("}{buyerCount > 0 ? Math.round((buyerAccepted / buyerCount) * 100) : 0}{"%)"}
+          </p>
+          <Link href="/portal/admin/invitaciones/compradores" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">
+            {"Ver campañas →"}
+          </Link>
         </Card>
       </div>
 
@@ -83,27 +93,11 @@ export default async function InvitacionesPage({
 
       <h2 className="mt-10 font-serif text-2xl font-light">Invitaciones Pioneros (códigos)</h2>
 
-      {/* Brochure section */}
-      <div className="mt-6">
-        <BrochureSection
-          initialAsset={brochureAsset ? {
-            id: brochureAsset.id,
-            key: brochureAsset.key,
-            name: brochureAsset.name,
-            fileName: brochureAsset.fileName,
-            fileUrl: brochureAsset.fileUrl,
-            fileSize: brochureAsset.fileSize,
-            uploadedBy: brochureAsset.uploadedBy,
-            updatedAt: brochureAsset.updatedAt.toISOString(),
-          } : null}
-        />
-      </div>
-
       {/* Campaign metrics */}
       {metrics && (
         <div className="mt-6">
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-text-tertiary">
-            Campaña: {metricsCampaign}
+            {"Campaña: "}{metricsCampaign}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <Card>
