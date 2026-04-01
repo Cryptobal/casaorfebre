@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CITIES } from "@/lib/data/cities";
+import { slugify } from "@/lib/utils";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -67,13 +68,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Blog posts (priority 0.7, monthly) - from DB
   const dbBlogPosts = await prisma.blogPost.findMany({
     where: { status: "PUBLISHED" },
-    select: { slug: true, updatedAt: true },
+    select: { slug: true, updatedAt: true, category: true, tags: true },
   });
-  const blogPosts = dbBlogPosts.map((post: { slug: string; updatedAt: Date }) => ({
+  const blogPosts = dbBlogPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: post.updatedAt,
     changeFrequency: "monthly" as const,
     priority: 0.7,
+  }));
+
+  // Blog category pages
+  const categoryLabels: Record<string, string> = {
+    GUIAS: "Guías", TENDENCIAS: "Tendencias", ORFEBRES: "Orfebres",
+    CUIDADOS: "Cuidados", MATERIALES: "Materiales", CULTURA: "Cultura",
+  };
+  const blogCategories = [...new Set(dbBlogPosts.map((p) => p.category))];
+  const blogCategoryPages = blogCategories.map((cat) => ({
+    url: `${baseUrl}/blog/categoria/${slugify(categoryLabels[cat] || cat)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  // Blog tag pages
+  const blogTagSet = new Set<string>();
+  dbBlogPosts.forEach((p) => p.tags.forEach((t) => blogTagSet.add(t)));
+  const blogTagPages = Array.from(blogTagSet).map((tag) => ({
+    url: `${baseUrl}/blog/tag/${slugify(tag)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.5,
   }));
 
   // Joyerias page (priority 0.7, weekly)
@@ -141,6 +165,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...guidePages,
     ...blogHub,
     ...blogPosts,
+    ...blogCategoryPages,
+    ...blogTagPages,
     ...joyeriasPage,
     ...cityPages,
     ...orfebresHub,

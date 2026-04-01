@@ -5,6 +5,10 @@ import { renderMarkdown } from "@/lib/markdown";
 import { incrementViewCount } from "@/lib/actions/blog";
 import { FadeIn } from "@/components/shared/fade-in";
 import { BlogImage } from "@/components/shared/blog-image";
+import { ShareButtons } from "@/components/shared/share-buttons";
+import { BlogSidebar } from "@/components/blog/blog-sidebar";
+import { RelatedProducts } from "@/components/blog/related-products";
+import { slugify } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -65,6 +69,8 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.seoTitle || post.title,
       description: post.seoDescription || post.excerpt,
+      creator: "@casaorfebre",
+      site: "@casaorfebre",
     },
   };
 }
@@ -98,6 +104,19 @@ export default async function BlogPostPage({
     orderBy: { publishedAt: "desc" },
     take: 3,
   });
+
+  // Sidebar: posts sharing tags (different from category-based related)
+  const allPublished = await prisma.blogPost.findMany({
+    where: { status: "PUBLISHED", id: { not: post.id } },
+    select: { slug: true, title: true, publishedAt: true, category: true, tags: true },
+    orderBy: { publishedAt: "desc" },
+  });
+  const sidebarPosts = allPublished
+    .filter((p) => p.tags.some((t) => post.tags.includes(t)))
+    .slice(0, 3);
+  const allTags = Array.from(
+    new Set(allPublished.flatMap((p) => p.tags).concat(post.tags)),
+  ).sort();
 
   const jsonLdData = {
     "@context": "https://schema.org",
@@ -138,7 +157,8 @@ export default async function BlogPostPage({
         className="w-full aspect-[21/9] object-cover"
       />
 
-      <article className="mx-auto max-w-4xl px-4 pb-24 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12">
+      <article className="lg:col-span-8 pb-24">
         {/* Breadcrumb */}
         <nav className="pt-8 pb-6 text-sm font-light text-text-tertiary">
           <ol className="flex items-center gap-2">
@@ -184,23 +204,50 @@ export default async function BlogPostPage({
             {post.tags.length > 0 && (
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {post.tags.map((tag) => (
-                  <span key={tag} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-tertiary">
+                  <Link
+                    key={tag}
+                    href={`/blog/tag/${slugify(tag)}`}
+                    className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-tertiary hover:border-accent/30 hover:text-accent transition-colors"
+                  >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
           </header>
         </FadeIn>
 
-        {/* Article Content */}
+        {/* Article Content — contentHtml is sanitized by renderMarkdown() which strips scripts/event handlers */}
         <FadeIn>
           <div
             className="prose-blog pt-8"
             dangerouslySetInnerHTML={{ __html: contentHtml }}
           />
         </FadeIn>
+
+        {/* Share buttons */}
+        <div className="mt-12 border-t border-border pt-8">
+          <p className="text-xs text-text-tertiary mb-3">Compartir este artículo</p>
+          <ShareButtons
+            url={`https://casaorfebre.cl/blog/${post.slug}`}
+            title={post.title}
+            description={post.excerpt}
+            imageUrl={post.coverImage?.startsWith("http") ? post.coverImage : undefined}
+            type="product"
+          />
+        </div>
+
+        {/* Related products from the collection */}
+        <RelatedProducts tags={post.tags} maxProducts={4} />
       </article>
+
+      {/* Sidebar */}
+      <aside className="mt-12 lg:col-span-4 lg:mt-32">
+        <div className="lg:sticky lg:top-24">
+          <BlogSidebar relatedPosts={sidebarPosts} allTags={allTags} />
+        </div>
+      </aside>
+      </div>
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (

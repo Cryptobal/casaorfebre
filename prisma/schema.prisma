@@ -279,6 +279,7 @@ model Product {
   isReturnable   Boolean           @default(true)
   viewCount      Int               @default(0)
   favoriteCount  Int               @default(0)
+  pinterestPinId String?
   status         ProductStatus     @default(DRAFT)
   pauseReason    ProductPauseReason?
   pausedAt       DateTime?

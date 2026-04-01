@@ -13,6 +13,7 @@ import {
   adminReactivateProduct,
   adminDeleteProduct,
 } from "@/lib/actions/admin";
+import { publishProductToPinterest } from "@/lib/actions/pinterest-publish";
 import { ConfirmDestructiveModal } from "@/components/shared/confirm-destructive-modal";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -97,6 +98,7 @@ interface Product {
   images: ProductImage[];
   video: ProductVideo | null;
   stones: { id: string; stoneType: string; stoneCarat: number | null; stoneColor: string | null; quantity: number }[];
+  pinterestPinId: string | null;
   _count: { orderItems: number; images: number };
 }
 
@@ -435,6 +437,36 @@ export function ExpandableProductRow({ product }: ExpandableProductRowProps) {
             >
               Ver en tienda
             </a>
+
+            {/* Pinterest */}
+            {product.pinterestPinId ? (
+              <a
+                href={`https://pinterest.com/pin/${product.pinterestPinId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#E60023] hover:underline"
+              >
+                Ver en Pinterest ↗
+              </a>
+            ) : product.status === "APPROVED" && product.images.length > 0 ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="border-[#E60023]/30 text-[#E60023] hover:bg-[#E60023]/5 text-xs"
+                disabled={pending}
+                onClick={() =>
+                  doAction(
+                    async () => {
+                      const r = await publishProductToPinterest(product.id);
+                      return r.success ? { success: true } : { error: r.error };
+                    },
+                    "Publicado en Pinterest ✓",
+                  )
+                }
+              >
+                Publicar en Pinterest
+              </Button>
+            ) : null}
           </div>
 
           {/* Reject product form */}
