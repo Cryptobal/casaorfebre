@@ -11,7 +11,7 @@ export default async function NuevoProductoPage() {
     where: { userId: session.user.id },
   });
 
-  if (!artisan || artisan.status !== "APPROVED") redirect("/");
+  if (!artisan) redirect("/");
 
   const result = await createMinimalDraft();
 

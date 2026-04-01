@@ -195,11 +195,15 @@ function parseFormData(formData: FormData) {
 }
 
 export async function createMinimalDraft(): Promise<{ productId?: string; error?: string }> {
-  const artisan = await getArtisan();
+  const session = await auth();
+  if (!session?.user?.id) return { error: "No autorizado" };
+
+  const artisan = await prisma.artisan.findUnique({
+    where: { userId: session.user.id },
+  });
   if (!artisan) return { error: "No autorizado" };
 
-  const id = require("crypto").randomBytes(12).toString("hex");
-  const slug = `borrador-${id}`;
+  const slug = `borrador-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
   const product = await prisma.product.create({
     data: {
