@@ -1613,7 +1613,7 @@ export async function sendPioneerInvitationEmail(
        Conoce todo lo que Casa Orfebre tiene para ti: ecosistema de visibilidad, herramientas, planes y beneficios del Programa Pioneros.
      </p>
      <p style="text-align:center;margin:0 0 28px;">
-       <a href="${base}/para-pionero" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
+       <a href="${base}/pioneros" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
          Descubre el Programa Pioneros
        </a>
      </p>

@@ -33,6 +33,10 @@ const nextConfig: NextConfig = {
       { source: "/artesano/pedidos/:path*", destination: "/portal/orfebre/pedidos", permanent: true },
       { source: "/mis-pedidos", destination: "/portal/comprador/pedidos", permanent: true },
       { source: "/explorar", destination: "/coleccion", permanent: true },
+      // Landing page consolidation: singular → plural
+      { source: "/para-comprador", destination: "/para-compradores", permanent: true },
+      { source: "/para-orfebre", destination: "/para-orfebres", permanent: true },
+      { source: "/para-pionero", destination: "/pioneros", permanent: true },
     ];
   },
   images: {
