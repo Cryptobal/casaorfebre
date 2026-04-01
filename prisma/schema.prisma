@@ -278,6 +278,7 @@ model Product {
   garantia       String?
   isReturnable   Boolean           @default(true)
   viewCount      Int               @default(0)
+  favoriteCount  Int               @default(0)
   status         ProductStatus     @default(DRAFT)
   pauseReason    ProductPauseReason?
   pausedAt       DateTime?

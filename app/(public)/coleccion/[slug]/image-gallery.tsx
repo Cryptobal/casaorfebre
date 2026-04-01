@@ -3,16 +3,18 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
+import { PinItButton } from "@/components/shared/share-buttons";
 import { cn } from "@/lib/utils";
 import { Lightbox } from "./lightbox";
 
 interface ImageGalleryProps {
   images: { id: string; url: string; altText: string | null }[];
   productName: string;
+  productSlug?: string;
   video?: { cloudflareStreamUid: string; status: string; muted: boolean } | null;
 }
 
-export function ImageGallery({ images, productName, video }: ImageGalleryProps) {
+export function ImageGallery({ images, productName, productSlug, video }: ImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -36,7 +38,7 @@ export function ImageGallery({ images, productName, video }: ImageGalleryProps) 
       <button
         type="button"
         onClick={() => setLightboxOpen(true)}
-        className="relative aspect-[3/4] w-full cursor-zoom-in overflow-hidden rounded-lg bg-background"
+        className="group relative aspect-[3/4] w-full cursor-zoom-in overflow-hidden rounded-lg bg-background"
         aria-label="Ampliar imagen"
       >
         {isVideoSlide && cfCustomerCode ? (
@@ -57,6 +59,17 @@ export function ImageGallery({ images, productName, video }: ImageGalleryProps) 
             priority
           />
         ) : null}
+
+        {/* Pinterest Pin It overlay */}
+        {!isVideoSlide && images[selectedIndex]?.url && productSlug && (
+          <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <PinItButton
+              url={`https://casaorfebre.cl/coleccion/${productSlug}`}
+              imageUrl={images[selectedIndex].url}
+              description={`${productName} — Joyería artesanal chilena`}
+            />
+          </div>
+        )}
 
         {/* Zoom hint */}
         <div className="absolute bottom-3 right-3 rounded-full bg-black/40 p-1.5 text-white/80 backdrop-blur-sm">

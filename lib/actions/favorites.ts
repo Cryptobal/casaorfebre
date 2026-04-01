@@ -14,9 +14,22 @@ export async function toggleFavorite(productId: string) {
 
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
+    await prisma.product.update({
+      where: { id: productId },
+      data: { favoriteCount: { decrement: 1 } },
+    });
+    // Ensure favoriteCount never goes below 0
+    await prisma.product.updateMany({
+      where: { id: productId, favoriteCount: { lt: 0 } },
+      data: { favoriteCount: 0 },
+    });
   } else {
     await prisma.favorite.create({
       data: { userId: session.user.id, productId },
+    });
+    await prisma.product.update({
+      where: { id: productId },
+      data: { favoriteCount: { increment: 1 } },
     });
   }
 

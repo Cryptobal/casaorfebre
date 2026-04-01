@@ -14,19 +14,25 @@ import { auth } from "@/lib/auth";
 export const metadata = {
   title: "Colección",
   description:
-    "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
-  alternates: { canonical: "/coleccion" },
+    "Explora joyas artesanales únicas de orfebres independientes de Chile. Anillos, collares, aros y pulseras hechos a mano con plata, oro y piedras preciosas.",
+  alternates: { canonical: "https://casaorfebre.cl/coleccion" },
   openGraph: {
-    title: "Colección | Casa Orfebre",
+    type: "website" as const,
+    title: "Colección de Joyería Artesanal | Casa Orfebre",
     description:
-      "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
+      "Explora joyas artesanales únicas de orfebres independientes de Chile.",
+    url: "https://casaorfebre.cl/coleccion",
+    siteName: "Casa Orfebre",
+    locale: "es_CL",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Colección | Casa Orfebre",
+    title: "Colección de Joyería Artesanal | Casa Orfebre",
     description:
-      "Explora piezas únicas de joyería artesanal chilena. Aros, collares, anillos y más de orfebres verificados.",
+      "Explora joyas artesanales únicas de orfebres independientes de Chile.",
+    creator: "@casaorfebre",
+    site: "@casaorfebre",
     images: ["/casaorfebre-og-image.png"],
   },
 };
@@ -63,8 +69,8 @@ export default async function ColeccionPage({
   const specialtySlug = typeof params.specialty === "string" ? params.specialty : undefined;
   const audiencia = typeof params.audiencia === "string" ? params.audiencia.toUpperCase() : undefined;
   const sortParam = typeof params.sort === "string" ? params.sort : undefined;
-  const sort = (sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "newest" || sortParam === "rating")
-    ? sortParam as "price_asc" | "price_desc" | "newest" | "rating"
+  const sort = (sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "newest" || sortParam === "rating" || sortParam === "popular")
+    ? sortParam as "price_asc" | "price_desc" | "newest" | "rating" | "popular"
     : undefined;
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);

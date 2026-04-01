@@ -17,6 +17,7 @@ import { ViewTracker } from "./view-tracker";
 import { MessageArtisanButton } from "./message-artisan-button";
 import { ProductQuestions } from "./product-questions";
 import { SizeGuide } from "@/components/products/size-guide";
+import { ShareButtons } from "@/components/shared/share-buttons";
 import { prisma } from "@/lib/prisma";
 
 interface PageProps {
@@ -27,36 +28,54 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
-  const categoryName = product.categories?.[0]?.name ?? "";
-  const sizeInfo = product.tallas?.length
-    ? ` | Talla EU ${product.tallas.join("/")}`
-    : product.tallaUnica
-      ? ` | Talla EU ${product.tallaUnica}`
-      : product.largoCadenaCm
-        ? ` | ${product.largoCadenaCm}cm`
-        : "";
-  const stoneInfo = product.stones?.[0]
-    ? ` | ${product.stones[0].stoneType}${product.stones[0].stoneCarat ? ` ${product.stones[0].stoneCarat}ct` : ""}`
-    : "";
-  const audienciaText = product.audiencia !== "SIN_ESPECIFICAR"
-    ? ` para ${product.audiencia === "MUJER" ? "mujer" : product.audiencia === "HOMBRE" ? "hombre" : product.audiencia === "NINOS" ? "niños" : "todos"}`
-    : "";
-  const desc = `${product.description.slice(0, 110)}${sizeInfo}${stoneInfo}. Joyería artesanal chilena con certificado de autenticidad.`;
-  const images = product.images?.[0]?.url ? [{ url: product.images[0].url }] : undefined;
+
+  const url = `https://casaorfebre.cl/coleccion/${slug}`;
+  const imageUrl = product.images[0]?.url;
+  const description = product.description.slice(0, 160);
+  const title = `${product.name} por ${product.artisan.displayName} | Casa Orfebre`;
+
   return {
-    title: `${product.name} — ${categoryName}${audienciaText} | Casa Orfebre`,
-    description: desc,
-    alternates: { canonical: `/coleccion/${slug}` },
+    title: product.name,
+    description,
+    alternates: { canonical: url },
     openGraph: {
-      title: `${product.name} | Casa Orfebre`,
-      description: desc,
-      images,
+      type: "website" as const,
+      title,
+      description,
+      url,
+      siteName: "Casa Orfebre",
+      locale: "es_CL",
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              width: 1200,
+              height: 1600,
+              alt: product.images[0]?.altText ?? product.name,
+              type: "image/webp",
+            },
+          ]
+        : undefined,
     },
     twitter: {
       card: "summary_large_image" as const,
-      title: `${product.name} | Casa Orfebre`,
-      description: desc,
-      images: product.images?.[0]?.url ? [product.images[0].url] : undefined,
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : undefined,
+      creator: "@casaorfebre",
+      site: "@casaorfebre",
+    },
+    other: {
+      "og:price:amount": product.price.toString(),
+      "og:price:currency": "CLP",
+      "product:price:amount": product.price.toString(),
+      "product:price:currency": "CLP",
+      "product:availability": product.stock > 0 ? "instock" : "oos",
+      "product:condition": "new",
+      "product:brand": "Casa Orfebre",
+      "product:retailer_item_id": product.id,
+      "pin:media": imageUrl ?? "",
+      "pin:description": `${product.name} — ${product.description.slice(0, 200)} | Joyería artesanal chilena en Casa Orfebre`,
     },
   };
 }
@@ -250,6 +269,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
           })),
         }
       : {}),
+    isHandmade: true,
+    countryOfOrigin: "Chile",
   };
 
   return (
@@ -280,7 +301,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12">
           {/* Left column — gallery */}
           <div className="lg:col-span-3">
-            <ImageGallery images={product.images} productName={product.name} video={product.video} />
+            <ImageGallery images={product.images} productName={product.name} productSlug={product.slug} video={product.video} />
           </div>
 
           {/* Right column — info */}
@@ -332,6 +353,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {artisan.displayName}
               </Link>
             </p>
+
+            {/* Favorite count social proof */}
+            {product.favoriteCount > 0 && (
+              <span className="text-xs text-text-tertiary">
+                ❤️ {product.favoriteCount} {product.favoriteCount === 1 ? "persona guardó" : "personas guardaron"} esta pieza
+              </span>
+            )}
 
             {/* Specialty + technique badges */}
             {(product.specialties.length > 0 || product.technique) && (
@@ -483,6 +511,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </Link>
             </div>
             <MessageArtisanButton artisanId={artisan.id} productId={product.id} />
+          </div>
+
+          {/* Share buttons */}
+          <div>
+            <p className="text-xs text-text-tertiary mb-2">Compartir esta pieza</p>
+            <ShareButtons
+              url={`https://casaorfebre.cl/coleccion/${product.slug}`}
+              title={product.name}
+              description={product.description.slice(0, 120)}
+              imageUrl={product.images[0]?.url}
+              type="product"
+            />
           </div>
 
           {/* Story */}

@@ -17,7 +17,7 @@ interface ProductFilters {
   occasionSlug?: string;
   specialtySlug?: string;
   audiencia?: string;
-  sort?: "newest" | "price_asc" | "price_desc" | "rating";
+  sort?: "newest" | "price_asc" | "price_desc" | "rating" | "popular";
 }
 
 export async function getApprovedProducts(filters: ProductFilters = {}) {
@@ -51,7 +51,9 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
       ? { price: "asc" as const }
       : filters.sort === "price_desc"
         ? { price: "desc" as const }
-        : { publishedAt: "desc" as const };
+        : filters.sort === "popular"
+          ? { favoriteCount: "desc" as const }
+          : { publishedAt: "desc" as const };
 
   const products = await prisma.product.findMany({
     where,

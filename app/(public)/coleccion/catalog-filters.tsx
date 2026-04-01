@@ -18,6 +18,7 @@ const SORT_OPTIONS = [
   { label: "Más recientes", value: "" },
   { label: "Precio ↑", value: "price_asc" },
   { label: "Precio ↓", value: "price_desc" },
+  { label: "Más guardados", value: "popular" },
 ] as const;
 
 interface CatalogFiltersProps {

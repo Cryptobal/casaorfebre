@@ -11,6 +11,7 @@ import { FadeIn } from "@/components/shared/fade-in";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { ArtisanBadge } from "@/components/artisans/artisan-badge";
 import { ProductCard } from "@/components/products/product-card";
+import { ShareButtons } from "@/components/shared/share-buttons";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 
@@ -22,21 +23,33 @@ export async function generateMetadata({
   const { slug } = await params;
   const artisan = await getArtisanBySlug(slug);
   if (!artisan) return { title: "Orfebre no encontrado" };
-  const desc = artisan.bio.slice(0, 160);
+
+  const url = `https://casaorfebre.cl/orfebres/${slug}`;
+  const description = artisan.bio?.slice(0, 160) ?? `${artisan.displayName}, orfebre independiente en Casa Orfebre`;
+  const title = `${artisan.displayName} — Orfebre | Casa Orfebre`;
+
   return {
     title: artisan.displayName,
-    description: desc,
-    alternates: { canonical: `/orfebres/${slug}` },
+    description,
+    alternates: { canonical: url },
     openGraph: {
-      title: `${artisan.displayName} | Casa Orfebre`,
-      description: desc,
-      images: artisan.profileImage ? [{ url: artisan.profileImage }] : undefined,
+      type: "profile" as const,
+      title,
+      description,
+      url,
+      siteName: "Casa Orfebre",
+      locale: "es_CL",
+      images: artisan.profileImage
+        ? [{ url: artisan.profileImage, width: 800, height: 800, alt: artisan.displayName }]
+        : undefined,
     },
     twitter: {
-      card: "summary_large_image" as const,
-      title: `${artisan.displayName} | Casa Orfebre`,
-      description: desc,
+      card: "summary" as const,
+      title,
+      description,
       images: artisan.profileImage ? [artisan.profileImage] : undefined,
+      creator: "@casaorfebre",
+      site: "@casaorfebre",
     },
   };
 }
@@ -79,6 +92,11 @@ export default async function ArtisanProfilePage({
       addressLocality: artisan.location,
       ...(artisan.region ? { addressRegion: artisan.region } : {}),
       addressCountry: "CL",
+    },
+    parentOrganization: {
+      "@type": "Organization",
+      name: "Casa Orfebre",
+      url: "https://casaorfebre.cl",
     },
     ...(artisan.rating > 0 && artisan._count.reviews > 0
       ? {
@@ -187,6 +205,22 @@ export default async function ArtisanProfilePage({
               <span>{artisan._count.reviews} opiniones</span>
             )}
             <span>{artisan.products.length} {artisan.products.length === 1 ? "pieza" : "piezas"}</span>
+            {(() => {
+              const totalLikes = artisan.products.reduce((sum: number, p: { favoriteCount: number }) => sum + p.favoriteCount, 0);
+              return totalLikes > 0 ? <span>❤️ {totalLikes} guardados</span> : null;
+            })()}
+          </div>
+
+          {/* Share buttons */}
+          <div className="mt-5 flex flex-col items-center">
+            <p className="text-xs text-text-tertiary mb-2">Compartir este orfebre</p>
+            <ShareButtons
+              url={`https://casaorfebre.cl/orfebres/${artisan.slug}`}
+              title={artisan.displayName}
+              description={artisan.bio?.slice(0, 120) || "Orfebre en Casa Orfebre"}
+              imageUrl={artisan.profileImage ?? undefined}
+              type="artisan"
+            />
           </div>
         </div>
       </FadeIn>

@@ -12,21 +12,27 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { OrfebresFilters } from "./orfebres-filters";
 
 export const metadata = {
-  title: "Orfebres",
+  title: "Nuestros Orfebres",
   description:
-    "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
-  alternates: { canonical: "/orfebres" },
+    "Conoce a los orfebres independientes de Chile que crean joyas artesanales únicas. Cada pieza tiene una historia.",
+  alternates: { canonical: "https://casaorfebre.cl/orfebres" },
   openGraph: {
-    title: "Orfebres | Casa Orfebre",
+    type: "website" as const,
+    title: "Orfebres Artesanales de Chile | Casa Orfebre",
     description:
-      "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
+      "Conoce a los orfebres independientes de Chile que crean joyas artesanales únicas.",
+    url: "https://casaorfebre.cl/orfebres",
+    siteName: "Casa Orfebre",
+    locale: "es_CL",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Orfebres | Casa Orfebre",
+    title: "Orfebres Artesanales de Chile | Casa Orfebre",
     description:
-      "Conoce a los orfebres chilenos verificados de Casa Orfebre. Artesanos que crean piezas únicas de joyería artesanal.",
+      "Conoce a los orfebres independientes de Chile.",
+    creator: "@casaorfebre",
+    site: "@casaorfebre",
     images: ["/casaorfebre-og-image.png"],
   },
 };
