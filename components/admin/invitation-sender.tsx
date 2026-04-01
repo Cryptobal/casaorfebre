@@ -5,6 +5,7 @@ import {
   createAndSendInvitations,
   getCampaignDetail,
   resendCampaignInvitation,
+  deleteCampaignInvitation,
 } from "@/lib/actions/campaign-invitations";
 import type { InvitationCampaign, Invitation } from "@prisma/client";
 
@@ -122,7 +123,17 @@ export function InvitationSender({ type, campaigns }: InvitationSenderProps) {
   async function handleResend(id: string) {
     setResendingId(id);
     await resendCampaignInvitation(id);
-    // Refresh detail
+    if (expandedCampaign) {
+      const detail = await getCampaignDetail(expandedCampaign);
+      setDetailInvitations(detail?.invitations ?? []);
+    }
+    setResendingId(null);
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("¿Eliminar esta invitación?")) return;
+    setResendingId(id);
+    await deleteCampaignInvitation(id);
     if (expandedCampaign) {
       const detail = await getCampaignDetail(expandedCampaign);
       setDetailInvitations(detail?.invitations ?? []);
@@ -234,6 +245,7 @@ export function InvitationSender({ type, campaigns }: InvitationSenderProps) {
                     resendingId={resendingId}
                     onToggle={() => handleToggleDetail(c.id)}
                     onResend={handleResend}
+                    onDelete={handleDelete}
                   />
                 ))}
               </tbody>
@@ -257,6 +269,7 @@ function CampaignRow({
   resendingId,
   onToggle,
   onResend,
+  onDelete,
 }: {
   campaign: CampaignWithCount;
   isExpanded: boolean;
@@ -265,6 +278,7 @@ function CampaignRow({
   resendingId: string | null;
   onToggle: () => void;
   onResend: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <>
@@ -320,7 +334,7 @@ function CampaignRow({
                         <td className="py-2 text-text-tertiary">{formatDate(inv.clickedAt)}</td>
                         <td className="py-2 text-text-tertiary">{formatDate(inv.acceptedAt)}</td>
                         <td className="py-2">
-                          {(inv.status === "FAILED" || inv.status === "BOUNCED") && (
+                          <div className="flex gap-1">
                             <button
                               onClick={() => onResend(inv.id)}
                               disabled={resendingId === inv.id}
@@ -328,7 +342,14 @@ function CampaignRow({
                             >
                               Reenviar
                             </button>
-                          )}
+                            <button
+                              onClick={() => onDelete(inv.id)}
+                              disabled={resendingId === inv.id}
+                              className="rounded border border-red-200 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
