@@ -184,21 +184,25 @@ export async function getCampaignDetail(
 // ---------------------------------------------------------------------------
 
 export async function trackInvitationClick(token: string): Promise<void> {
-  const invitation = await prisma.invitation.findUnique({ where: { token } });
-  if (!invitation) return;
+  try {
+    const invitation = await prisma.invitation.findUnique({ where: { token } });
+    if (!invitation) return;
 
-  if (invitation.status === "SENT" || invitation.status === "OPENED") {
-    await prisma.invitation.update({
-      where: { id: invitation.id },
-      data: { clickedAt: new Date(), status: "CLICKED" },
-    });
-
-    if (invitation.campaignId) {
-      await prisma.invitationCampaign.update({
-        where: { id: invitation.campaignId },
-        data: { totalClicked: { increment: 1 } },
+    if (invitation.status === "SENT" || invitation.status === "OPENED") {
+      await prisma.invitation.update({
+        where: { id: invitation.id },
+        data: { clickedAt: new Date(), status: "CLICKED" },
       });
+
+      if (invitation.campaignId) {
+        await prisma.invitationCampaign.update({
+          where: { id: invitation.campaignId },
+          data: { totalClicked: { increment: 1 } },
+        });
+      }
     }
+  } catch {
+    // Table may not exist yet
   }
 }
 
@@ -207,19 +211,23 @@ export async function trackInvitationClick(token: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function trackInvitationAccepted(token: string): Promise<void> {
-  const invitation = await prisma.invitation.findUnique({ where: { token } });
-  if (!invitation) return;
+  try {
+    const invitation = await prisma.invitation.findUnique({ where: { token } });
+    if (!invitation) return;
 
-  await prisma.invitation.update({
-    where: { id: invitation.id },
-    data: { acceptedAt: new Date(), status: "ACCEPTED" },
-  });
-
-  if (invitation.campaignId) {
-    await prisma.invitationCampaign.update({
-      where: { id: invitation.campaignId },
-      data: { totalAccepted: { increment: 1 } },
+    await prisma.invitation.update({
+      where: { id: invitation.id },
+      data: { acceptedAt: new Date(), status: "ACCEPTED" },
     });
+
+    if (invitation.campaignId) {
+      await prisma.invitationCampaign.update({
+        where: { id: invitation.campaignId },
+        data: { totalAccepted: { increment: 1 } },
+      });
+    }
+  } catch {
+    // Table may not exist yet
   }
 }
 
