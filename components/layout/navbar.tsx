@@ -63,6 +63,16 @@ export function Navbar({
               </Link>
             </li>
           ))}
+          {(!user || user.role === "BUYER") && (
+            <li>
+              <Link
+                href="/para-orfebres"
+                className="text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text"
+              >
+                Para Orfebres
+              </Link>
+            </li>
+          )}
         </ul>
 
         <div className="flex items-center gap-4">

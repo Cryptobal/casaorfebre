@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { InvitacionesClient } from "./invitaciones-client";
 import { BrochureSection } from "@/components/admin/brochure-section";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function InvitacionesPage({
   searchParams,
@@ -30,9 +31,51 @@ export default async function InvitacionesPage({
     ? await getCampaignMetrics(metricsCampaign)
     : null;
 
+  // Campaign invitation stats
+  const [pioneerCount, artisanCount, buyerCount, pioneerAccepted, artisanAccepted, buyerAccepted] =
+    await Promise.all([
+      prisma.invitation.count({ where: { type: "PIONEER" } }),
+      prisma.invitation.count({ where: { type: "ARTISAN" } }),
+      prisma.invitation.count({ where: { type: "BUYER" } }),
+      prisma.invitation.count({ where: { type: "PIONEER", status: "ACCEPTED" } }),
+      prisma.invitation.count({ where: { type: "ARTISAN", status: "ACCEPTED" } }),
+      prisma.invitation.count({ where: { type: "BUYER", status: "ACCEPTED" } }),
+    ]);
+
   return (
     <div>
-      <h1 className="font-serif text-3xl font-light">Invitaciones Pioneros</h1>
+      <h1 className="font-serif text-3xl font-light">Invitaciones</h1>
+
+      {/* Campaign Invitations Summary */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card>
+          <p className="text-xs uppercase tracking-widest text-text-tertiary">Pioneros</p>
+          <p className="mt-1 text-2xl font-medium">{pioneerCount}</p>
+          <p className="text-xs text-text-tertiary">Aceptadas: {pioneerAccepted} ({pioneerCount > 0 ? Math.round((pioneerAccepted / pioneerCount) * 100) : 0}%)</p>
+          <Link href="/portal/admin/invitaciones/pioneros" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">Ver campañas &rarr;</Link>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-widest text-text-tertiary">Orfebres</p>
+          <p className="mt-1 text-2xl font-medium">{artisanCount}</p>
+          <p className="text-xs text-text-tertiary">Aceptadas: {artisanAccepted} ({artisanCount > 0 ? Math.round((artisanAccepted / artisanCount) * 100) : 0}%)</p>
+          <Link href="/portal/admin/invitaciones/orfebres" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">Ver campañas &rarr;</Link>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-widest text-text-tertiary">Compradores</p>
+          <p className="mt-1 text-2xl font-medium">{buyerCount}</p>
+          <p className="text-xs text-text-tertiary">Aceptadas: {buyerAccepted} ({buyerCount > 0 ? Math.round((buyerAccepted / buyerCount) * 100) : 0}%)</p>
+          <Link href="/portal/admin/invitaciones/compradores" className="mt-2 inline-block text-xs font-medium text-accent hover:text-accent-dark">Ver campañas &rarr;</Link>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <div className="mt-8 flex gap-4 border-b border-border pb-2">
+        <Link href="/portal/admin/invitaciones/pioneros" className="text-sm font-medium text-text-secondary hover:text-text">Pioneros</Link>
+        <Link href="/portal/admin/invitaciones/orfebres" className="text-sm font-medium text-text-secondary hover:text-text">Orfebres</Link>
+        <Link href="/portal/admin/invitaciones/compradores" className="text-sm font-medium text-text-secondary hover:text-text">Compradores</Link>
+      </div>
+
+      <h2 className="mt-10 font-serif text-2xl font-light">Invitaciones Pioneros (códigos)</h2>
 
       {/* Brochure section */}
       <div className="mt-6">

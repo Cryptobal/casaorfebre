@@ -82,6 +82,15 @@ const footerColumns = [
     ],
   },
   {
+    title: "Únete",
+    links: [
+      { href: "/para-compradores", label: "Para Compradores" },
+      { href: "/para-orfebres", label: "Para Orfebres" },
+      { href: "/pioneros", label: "Ser Pionero" },
+      { href: "/postular", label: "Postular como Orfebre" },
+    ],
+  },
+  {
     title: "Soporte",
     links: [
       { href: "/garantia", label: "Garantía" },
@@ -125,7 +134,7 @@ export function Footer() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           <div className="col-span-2 md:col-span-1">
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={180} height={42} />
             <p className="mt-3 text-sm font-light text-text-tertiary">Joyería de Autor</p>
