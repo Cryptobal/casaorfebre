@@ -665,7 +665,9 @@ model PromoCode {
   recipientName    String?
   recipientEmail   String?
   invitationStatus InvitationStatus @default(DRAFT)
+  emailMessageId   String?
   sentAt           DateTime?
+  deliveredAt      DateTime?
   openedAt         DateTime?
   appliedAt        DateTime?
   redeemedAt       DateTime?

@@ -8,14 +8,6 @@ import { revalidatePath } from "next/cache";
 // HELPERS
 // ============================================================
 
-async function getBrochureUrl(): Promise<string | null> {
-  const asset = await prisma.adminAsset.findUnique({
-    where: { key: "brochure-orfebres" },
-    select: { fileUrl: true },
-  });
-  return asset?.fileUrl ?? null;
-}
-
 function normalizeForCode(name: string): string {
   return name
     .split(" ")[0]
@@ -112,14 +104,18 @@ export async function createInvitation(data: {
 
   if (data.sendEmail) {
     try {
-      const brochureUrl = await getBrochureUrl();
-      await sendPioneerInvitationEmail(data.recipientEmail, {
+      const emailData = await sendPioneerInvitationEmail(data.recipientEmail, {
         name: data.recipientName,
         code,
         planName: data.planName,
         durationDays: data.durationDays,
-        brochureUrl,
       });
+      if (emailData?.id) {
+        await prisma.promoCode.update({
+          where: { id: promo.id },
+          data: { emailMessageId: emailData.id },
+        });
+      }
     } catch (error) {
       await prisma.promoCode.update({
         where: { id: promo.id },
@@ -149,19 +145,18 @@ export async function resendInvitation(promoCodeId: string) {
   if (promo.currentUses >= promo.maxUses)
     throw new Error("El código ya fue redimido");
 
-  const brochureUrl = await getBrochureUrl();
-  await sendPioneerInvitationEmail(promo.recipientEmail, {
+  const emailData = await sendPioneerInvitationEmail(promo.recipientEmail, {
     name: promo.recipientName ?? "Orfebre",
     code: promo.code,
     planName: promo.planName,
     durationDays: promo.durationDays,
-    brochureUrl,
   });
 
   await prisma.promoCode.update({
     where: { id: promoCodeId },
     data: {
       sentAt: new Date(),
+      emailMessageId: emailData?.id ?? promo.emailMessageId,
       invitationStatus:
         promo.invitationStatus === "DRAFT" ? "SENT" : promo.invitationStatus,
     },

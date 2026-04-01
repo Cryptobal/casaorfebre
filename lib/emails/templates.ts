@@ -19,7 +19,7 @@ export async function sendEmail(to: string, subject: string, html: string) {
   });
   if (error) {
     console.error(`Email failed [${subject}]:`, error);
-    return;
+    return null;
   }
   return data;
 }
@@ -1558,13 +1558,11 @@ export async function sendPioneerInvitationEmail(
     code,
     planName,
     durationDays,
-    brochureUrl,
   }: {
     name: string;
     code: string;
     planName: string;
     durationDays: number;
-    brochureUrl?: string | null;
   },
 ) {
   const base = appUrl();
@@ -1582,7 +1580,7 @@ export async function sendPioneerInvitationEmail(
     )
     .join("");
 
-  await sendEmail(
+  return await sendEmail(
     to,
     `${name}, has sido seleccionado — Programa Pioneros Casa Orfebre`,
     `<!-- Badge Pionero -->
@@ -1610,16 +1608,15 @@ export async function sendPioneerInvitationEmail(
        <div style="text-align:left;max-width:320px;margin:0 auto;">${featuresHtml}</div>
      </div>
 
-     ${brochureUrl ? `
-     <!-- Brochure link -->
+     <!-- Landing page link -->
      <p style="font-size:14px;color:#4a4a48;text-align:center;line-height:1.6;margin:0 0 20px;">
-       Te adjuntamos nuestra guía donde encontrarás todos los detalles sobre planes, beneficios y cómo funciona Casa Orfebre.
+       Conoce todo lo que Casa Orfebre tiene para ti: ecosistema de visibilidad, herramientas, planes y beneficios del Programa Pioneros.
      </p>
      <p style="text-align:center;margin:0 0 28px;">
-       <a href="${brochureUrl}" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
-         📄 Ver Guía para Orfebres (PDF)
+       <a href="${base}/para-pionero" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.5px;">
+         Descubre el Programa Pioneros
        </a>
-     </p>` : ""}
+     </p>
 
      <!-- CTA -->
      <p style="text-align:center;margin:0 0 24px;">
