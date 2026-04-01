@@ -35,6 +35,7 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/preguntas", label: "Preguntas" },
   { href: "/portal/admin/despacho", label: "Despacho" },
   { href: "/portal/admin/materiales-precio", label: "Materiales Ref." },
+  { href: "/portal/admin/analytics", label: "Analytics" },
 ];
 
 const ARTISAN_LINKS = [
@@ -205,6 +206,7 @@ export default async function PortalLayout({ children }: { children: React.React
               <Link href="/portal/admin/preguntas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Preguntas</Link>
               <Link href="/portal/admin/despacho" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Despacho</Link>
               <Link href="/portal/admin/materiales-precio" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Materiales Ref.</Link>
+              <Link href="/portal/admin/analytics" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Analytics</Link>
             </>
           )}
           {role === "ARTISAN" && (
