@@ -110,6 +110,28 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const [aiError, setAiError] = useState<string | null>(null);
   const [currentImages, setCurrentImages] = useState(product?.images ?? []);
 
+  // ── Controlled text fields (so AI can set them and React re-renders) ──
+  const [nameValue, setNameValue] = useState(product?.name ?? "");
+  const [descriptionValue, setDescriptionValue] = useState(product?.description ?? "");
+  const [storyValue, setStoryValue] = useState(product?.story ?? "");
+  const [priceValue, setPriceValue] = useState(precioFromCalculadora || product?.price?.toString() || "");
+  const [compareAtPriceValue, setCompareAtPriceValue] = useState(product?.compareAtPrice?.toString() ?? "");
+  const [dimensionsValue, setDimensionsValue] = useState(product?.dimensions ?? "");
+  const [weightValue, setWeightValue] = useState(product?.weight?.toString() ?? "");
+  const [stockValue, setStockValue] = useState(product?.stock?.toString() ?? "1");
+  const [diametroValue, setDiametroValue] = useState(product?.diametroMm?.toString() ?? "");
+  const [largoCadenaValue, setLargoCadenaValue] = useState(product?.largoCadenaCm?.toString() ?? "");
+  const [espesorCadenaValue, setEspesorCadenaValue] = useState(product?.espesorCadenaMm?.toString() ?? "");
+  const [cantidadEdicionValue, setCantidadEdicionValue] = useState(product?.cantidadEdicion?.toString() ?? "");
+  const [pendantWidthValue, setPendantWidthValue] = useState(product?.pendantWidth?.toString() ?? "");
+  const [pendantHeightValue, setPendantHeightValue] = useState(product?.pendantHeight?.toString() ?? "");
+  const [earringWidthValue, setEarringWidthValue] = useState(product?.earringWidth?.toString() ?? "");
+  const [earringDropValue, setEarringDropValue] = useState(product?.earringDrop?.toString() ?? "");
+  const [broochWidthValue, setBroochWidthValue] = useState(product?.broochWidth?.toString() ?? "");
+  const [broochHeightValue, setBroochHeightValue] = useState(product?.broochHeight?.toString() ?? "");
+  const [detallePersonalizacionValue, setDetallePersonalizacionValue] = useState(product?.detallePersonalizacion ?? "");
+  const [aiGenerated, setAiGenerated] = useState(false);
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(product?.categoryIds?.[0] ?? "");
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>(product?.materialIds ?? []);
   const [productionType, setProductionType] = useState(product?.productionType ?? "UNIQUE");
@@ -208,70 +230,37 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
     () => parsePresets(product?.garantia, WARRANTY_PRESETS).customTags
   );
 
-  // ── AI Generation: full field mapping ──
+  // ── AI Generation: full field mapping via React state ──
   const handleAiApply = useCallback((listing: ProductListing) => {
-    const form = formRef.current;
-    const nameInput = form?.querySelector<HTMLInputElement>('[name="name"]');
-    const descInput = form?.querySelector<HTMLTextAreaElement>('[name="description"]');
-    const hasContent = !!(nameInput?.value?.trim() || descInput?.value?.trim());
+    // Text fields — controlled state, React re-renders properly
+    setNameValue(listing.title || "");
+    setDescriptionValue(listing.description || "");
+    setStoryValue(listing.story || "");
+    if (listing.suggestedPrice) setPriceValue(String(listing.suggestedPrice));
+    if (listing.suggestedDimensions) setDimensionsValue(listing.suggestedDimensions);
+    if (listing.suggestedWeight) setWeightValue(String(listing.suggestedWeight));
+    setStockValue(String(listing.suggestedStock || 1));
+    if (listing.suggestedElaborationDays) setElaborationDays(String(listing.suggestedElaborationDays));
+    if (listing.suggestedCantidadEdicion) setCantidadEdicionValue(String(listing.suggestedCantidadEdicion));
+    if (listing.suggestedDiametroMm) setDiametroValue(String(listing.suggestedDiametroMm));
+    if (listing.suggestedLargoCadenaCm) setLargoCadenaValue(String(listing.suggestedLargoCadenaCm));
+    if (listing.suggestedEarringWidth) setEarringWidthValue(String(listing.suggestedEarringWidth));
+    if (listing.suggestedEarringDrop) setEarringDropValue(String(listing.suggestedEarringDrop));
+    if (listing.detallePersonalizacion) setDetallePersonalizacionValue(listing.detallePersonalizacion);
 
-    if (hasContent && !window.confirm("Esto reemplazará el título y descripción actuales. ¿Continuar?")) {
-      return;
-    }
-
-    // 1-3. Text fields via DOM
-    if (form) {
-      if (nameInput) nameInput.value = listing.title;
-      if (descInput) descInput.value = listing.description;
-      const storyInput = form.querySelector<HTMLTextAreaElement>('[name="story"]');
-      if (storyInput) storyInput.value = listing.story || "";
-      // Price
-      const priceInput = form.querySelector<HTMLInputElement>('[name="price"]');
-      if (priceInput && listing.suggestedPrice) priceInput.value = String(listing.suggestedPrice);
-      // Dimensions
-      const dimInput = form.querySelector<HTMLInputElement>('[name="dimensions"]');
-      if (dimInput && listing.suggestedDimensions) dimInput.value = listing.suggestedDimensions;
-      // Weight
-      const weightInput = form.querySelector<HTMLInputElement>('[name="weight"]');
-      if (weightInput && listing.suggestedWeight) weightInput.value = String(listing.suggestedWeight);
-      // Stock
-      const stockInput = form.querySelector<HTMLInputElement>('[name="stock"]');
-      if (stockInput) stockInput.value = String(listing.suggestedStock || 1);
-      // Elaboration days
-      const elabInput = form.querySelector<HTMLInputElement>('[name="elaborationDays"]');
-      if (elabInput && listing.suggestedElaborationDays) elabInput.value = String(listing.suggestedElaborationDays);
-      // Cantidad edicion
-      const cantInput = form.querySelector<HTMLInputElement>('[name="cantidadEdicion"]');
-      if (cantInput && listing.suggestedCantidadEdicion) cantInput.value = String(listing.suggestedCantidadEdicion);
-      // Diámetro
-      const diamInput = form.querySelector<HTMLInputElement>('[name="diametroMm"]');
-      if (diamInput && listing.suggestedDiametroMm) diamInput.value = String(listing.suggestedDiametroMm);
-      // Largo cadena
-      const cadenaInput = form.querySelector<HTMLInputElement>('[name="largoCadenaCm"]');
-      if (cadenaInput && listing.suggestedLargoCadenaCm) cadenaInput.value = String(listing.suggestedLargoCadenaCm);
-      // Earring dimensions
-      const ewInput = form.querySelector<HTMLInputElement>('[name="earringWidth"]');
-      if (ewInput && listing.suggestedEarringWidth) ewInput.value = String(listing.suggestedEarringWidth);
-      const edInput = form.querySelector<HTMLInputElement>('[name="earringDrop"]');
-      if (edInput && listing.suggestedEarringDrop) edInput.value = String(listing.suggestedEarringDrop);
-      // Personalizacion
-      const persInput = form.querySelector<HTMLTextAreaElement>('[name="detallePersonalizacion"]');
-      if (persInput && listing.detallePersonalizacion) persInput.value = listing.detallePersonalizacion;
-    }
-
-    // 4. Category
+    // Category (match by slug)
     const matchedCat = categories.find((c) => c.slug === listing.suggestedCategory);
     if (matchedCat) setSelectedCategoryId(matchedCat.id);
 
-    // 5. Materials
+    // Materials (match by name, case-insensitive)
     const matchedMatIds = materials
-      .filter((m) => listing.suggestedMaterials.some((s) =>
+      .filter((m) => listing.suggestedMaterials?.some((s) =>
         m.name.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(m.name.toLowerCase())
       ))
       .map((m) => m.id);
     if (matchedMatIds.length) setSelectedMaterialIds(matchedMatIds);
 
-    // 6. Technique / Specialties
+    // Technique / Specialties
     if (listing.suggestedTechnique) {
       const tech = listing.suggestedTechnique.toLowerCase();
       const matched = specialties.find(
@@ -283,7 +272,6 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
         setCustomTechniques((prev) => prev.includes(listing.suggestedTechnique) ? prev : [...prev, listing.suggestedTechnique]);
       }
     }
-    // Additional specialties
     if (listing.suggestedSpecialties?.length) {
       const ids = specialties
         .filter((s) => listing.suggestedSpecialties.some((name) =>
@@ -293,7 +281,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
       if (ids.length) setSelectedSpecialtyIds((prev) => [...new Set([...prev, ...ids])]);
     }
 
-    // 7. Occasions
+    // Occasions
     if (listing.suggestedOccasions?.length) {
       const ids = occasions
         .filter((o) => listing.suggestedOccasions.some((name) =>
@@ -303,38 +291,32 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
       if (ids.length) setSelectedOccasionIds(ids);
     }
 
-    // 8. Audiencia
+    // Audiencia
     const validAud = ["MUJER", "HOMBRE", "UNISEX", "NINOS", "SIN_ESPECIFICAR"];
     if (listing.suggestedAudiencia && validAud.includes(listing.suggestedAudiencia)) {
       setSelectedAudiencia(listing.suggestedAudiencia);
     }
 
-    // 9. Production type
+    // Production type
     const validProd = ["UNIQUE", "MADE_TO_ORDER", "LIMITED"];
     if (listing.suggestedProductionType && validProd.includes(listing.suggestedProductionType)) {
       setProductionType(listing.suggestedProductionType);
     }
 
-    // 10. Customizable
-    if (listing.isCustomizable) {
-      setPersonalizable(true);
-    }
+    // Customizable
+    if (listing.isCustomizable) setPersonalizable(true);
 
-    // 11. Cadena toggle
-    if (listing.suggestedTieneCadena !== null && listing.suggestedTieneCadena !== undefined) {
-      setTieneCadena(listing.suggestedTieneCadena);
-    }
+    // Cadena toggle
+    if (listing.suggestedTieneCadena != null) setTieneCadena(listing.suggestedTieneCadena);
 
-    // 12. Talla
-    if (listing.suggestedTallaUnica) {
-      setTallaUnica(listing.suggestedTallaUnica);
-    }
+    // Talla
+    if (listing.suggestedTallaUnica) setTallaUnica(listing.suggestedTallaUnica);
 
-    // 13. Stones
+    // Stones
     if (listing.suggestedStones?.length) {
       setShowStones(true);
       setStones(listing.suggestedStones.map((s) => ({
-        stoneType: s.type,
+        stoneType: s.type || "",
         stoneCarat: "",
         stoneColor: s.color || "",
         stoneCut: s.cut || "",
@@ -344,34 +326,26 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
       })));
     }
 
-    // 14. Cuidados preset matching
+    // Cuidados — set as custom text
     if (listing.suggestedCuidados) {
-      const lines = listing.suggestedCuidados.split(/[.\n]/).map((l) => l.trim()).filter(Boolean);
-      const matched = lines.filter((l) => (CARE_PRESETS as readonly string[]).includes(l));
-      const custom = lines.filter((l) => !(CARE_PRESETS as readonly string[]).includes(l));
-      if (matched.length) setCuidadosSelected(matched);
-      if (custom.length) setCuidadosCustom(custom);
+      setCuidadosCustom([listing.suggestedCuidados]);
+      setCuidadosSelected([]);
     }
 
-    // 15. Empaque preset matching
+    // Empaque
     if (listing.suggestedEmpaque) {
-      const lines = listing.suggestedEmpaque.split(/[.\n]/).map((l) => l.trim()).filter(Boolean);
-      const matched = lines.filter((l) => (PACKAGING_PRESETS as readonly string[]).includes(l));
-      const custom = lines.filter((l) => !(PACKAGING_PRESETS as readonly string[]).includes(l));
-      if (matched.length) setEmpaqueSelected(matched);
-      if (custom.length) setEmpaqueCustom(custom);
+      setEmpaqueCustom([listing.suggestedEmpaque]);
+      setEmpaqueSelected([]);
     }
 
-    // 16. Garantía preset matching
+    // Garantía
     if (listing.suggestedGarantia) {
-      const lines = listing.suggestedGarantia.split(/[.\n]/).map((l) => l.trim()).filter(Boolean);
-      const matched = lines.filter((l) => (WARRANTY_PRESETS as readonly string[]).includes(l));
-      const custom = lines.filter((l) => !(WARRANTY_PRESETS as readonly string[]).includes(l));
-      if (matched.length) setGarantiaSelected(matched);
-      if (custom.length) setGarantiaCustom(custom);
+      setGarantiaCustom([listing.suggestedGarantia]);
+      setGarantiaSelected([]);
     }
 
-    // Switch to form view
+    // Mark as AI-generated and switch to form view
+    setAiGenerated(true);
     setWizardStep("form");
   }, [categories, materials, specialties, occasions]);
 
@@ -656,8 +630,21 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
       )}
 
       <form ref={formRef} action={formAction} className="space-y-6">
-        {/* AI Generate button — only when product has images */}
-        {product?.images && product.images.length > 0 && (
+        {/* AI-generated banner with regenerate option */}
+        {aiGenerated && (
+          <div className="flex items-center gap-4 rounded-md border border-accent/20 bg-accent/5 px-4 py-3">
+            <span className="text-sm text-text-secondary">Listado generado con IA</span>
+            <button
+              type="button"
+              onClick={() => setWizardStep("upload")}
+              className="text-sm font-medium text-accent hover:underline"
+            >
+              Regenerar con otras fotos o descripción
+            </button>
+          </div>
+        )}
+        {/* AI button for existing products (not from wizard) */}
+        {!aiGenerated && product?.images && product.images.length > 0 && (
           <div className="flex items-center gap-3">
             <AIGeneratorButton
               imageUrls={product.images.sort((a, b) => a.position - b.position).map((img) => img.url)}
@@ -678,7 +665,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             name="name"
             type="text"
             required
-            defaultValue={product?.name ?? ""}
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
             placeholder="Ej: Anillo Ondas del Mar"
           />
         </div>
@@ -690,7 +678,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             id="description"
             name="description"
             required
-            defaultValue={product?.description ?? ""}
+            value={descriptionValue}
+            onChange={(e) => setDescriptionValue(e.target.value)}
             rows={4}
             className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
             placeholder="Describe tu pieza en detalle..."
@@ -704,7 +693,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           <textarea
             id="story"
             name="story"
-            defaultValue={product?.story ?? ""}
+            value={storyValue}
+            onChange={(e) => setStoryValue(e.target.value)}
             rows={3}
             className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
             placeholder="Que te inspiro a crear esta pieza..."
@@ -929,7 +919,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               inputMode="numeric"
               pattern="[0-9]+"
               required
-              defaultValue={precioFromCalculadora || product?.price || ""}
+              value={priceValue}
+              onChange={(e) => setPriceValue(e.target.value)}
               placeholder="50000"
               onKeyDown={(e) => {
                 if (e.key === "." || e.key === ",") e.preventDefault();
@@ -954,7 +945,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               type="text"
               inputMode="numeric"
               pattern="[0-9]+"
-              defaultValue={product?.compareAtPrice ?? ""}
+              value={compareAtPriceValue}
+              onChange={(e) => setCompareAtPriceValue(e.target.value)}
               placeholder="Opcional, para mostrar descuento"
               onKeyDown={(e) => {
                 if (e.key === "." || e.key === ",") e.preventDefault();
@@ -1145,7 +1137,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
                     name="stock"
                     type="number"
                     min={1}
-                    defaultValue={product?.stock ?? 1}
+                    value={stockValue}
+                    onChange={(e) => setStockValue(e.target.value)}
                   />
                 </div>
               )}
@@ -1180,7 +1173,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               id="dimensions"
               name="dimensions"
               type="text"
-              defaultValue={product?.dimensions ?? ""}
+              value={dimensionsValue}
+              onChange={(e) => setDimensionsValue(e.target.value)}
               placeholder="Ej: 2cm x 1.5cm"
             />
           </div>
@@ -1191,7 +1185,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               name="weight"
               type="number"
               step="0.1"
-              defaultValue={product?.weight ?? ""}
+              value={weightValue}
+              onChange={(e) => setWeightValue(e.target.value)}
               placeholder="Ej: 12.5"
             />
             <p className="text-[11px] text-text-secondary/70">Usa punto como separador decimal (ej: 12.5)</p>
@@ -1328,11 +1323,11 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             <div className="space-y-1.5">
               <Label htmlFor="largoCadenaCm">Largo de cadena (cm) <span className="text-red-500">*</span></Label>
               <p className="text-xs text-text-secondary">Obligatorio para collares y cadenas.</p>
-              <Input id="largoCadenaCm" name="largoCadenaCm" type="number" step="0.1" defaultValue={product?.largoCadenaCm ?? ""} placeholder="Ej: 45" />
+              <Input id="largoCadenaCm" name="largoCadenaCm" type="number" step="0.1" value={largoCadenaValue} onChange={(e) => setLargoCadenaValue(e.target.value)} placeholder="Ej: 45" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="espesorCadenaMm">Espesor de cadena (mm) <span className="text-xs font-normal text-text-tertiary">(opcional)</span></Label>
-              <Input id="espesorCadenaMm" name="espesorCadenaMm" type="number" step="0.1" defaultValue={product?.espesorCadenaMm ?? ""} placeholder="Ej: 1.5" />
+              <Input id="espesorCadenaMm" name="espesorCadenaMm" type="number" step="0.1" value={espesorCadenaValue} onChange={(e) => setEspesorCadenaValue(e.target.value)} placeholder="Ej: 1.5" />
             </div>
           </div>
         )}
@@ -1341,7 +1336,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           <div className="space-y-1.5 rounded-md border border-accent/20 bg-accent/5 p-4">
             <Label htmlFor="diametroMm">Diámetro / largo (mm) <span className="text-red-500">*</span></Label>
             <p className="text-xs text-text-secondary">Obligatorio para {selectedCategorySlugs.includes("aros") ? "aros" : "pulseras"}.</p>
-            <Input id="diametroMm" name="diametroMm" type="number" step="0.1" defaultValue={product?.diametroMm ?? ""} placeholder="Ej: 25" />
+            <Input id="diametroMm" name="diametroMm" type="number" step="0.1" value={diametroValue} onChange={(e) => setDiametroValue(e.target.value)} placeholder="Ej: 25" />
           </div>
         )}
 
@@ -1355,12 +1350,12 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               <div className="space-y-1.5">
                 <Label htmlFor="pendantWidth">Ancho del {selectedCategory.slug === "colgante" ? "colgante" : "dije"} (mm)</Label>
                 <Input id="pendantWidth" name="pendantWidth" type="number" step="0.1"
-                  defaultValue={product?.pendantWidth ?? ""} placeholder="Ej: 18" />
+                  value={pendantWidthValue} onChange={(e) => setPendantWidthValue(e.target.value)} placeholder="Ej: 18" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="pendantHeight">Alto del {selectedCategory.slug === "colgante" ? "colgante" : "dije"} (mm)</Label>
                 <Input id="pendantHeight" name="pendantHeight" type="number" step="0.1"
-                  defaultValue={product?.pendantHeight ?? ""} placeholder="Ej: 25" />
+                  value={pendantHeightValue} onChange={(e) => setPendantHeightValue(e.target.value)} placeholder="Ej: 25" />
               </div>
             </div>
           </div>
@@ -1373,12 +1368,12 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               <div className="space-y-1.5">
                 <Label htmlFor="earringWidth">Ancho (mm)</Label>
                 <Input id="earringWidth" name="earringWidth" type="number" step="0.1"
-                  defaultValue={product?.earringWidth ?? ""} placeholder="Ej: 22" />
+                  value={earringWidthValue} onChange={(e) => setEarringWidthValue(e.target.value)} placeholder="Ej: 22" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="earringDrop">Largo de caída (mm)</Label>
                 <Input id="earringDrop" name="earringDrop" type="number" step="0.1"
-                  defaultValue={product?.earringDrop ?? ""} placeholder="Ej: 35" />
+                  value={earringDropValue} onChange={(e) => setEarringDropValue(e.target.value)} placeholder="Ej: 35" />
                 <p className="text-xs text-text-tertiary">Distancia desde el lóbulo hacia abajo</p>
               </div>
             </div>
@@ -1394,12 +1389,12 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               <div className="space-y-1.5">
                 <Label htmlFor="broochWidth">Ancho (mm)</Label>
                 <Input id="broochWidth" name="broochWidth" type="number" step="0.1"
-                  defaultValue={product?.broochWidth ?? ""} placeholder="Ej: 40" />
+                  value={broochWidthValue} onChange={(e) => setBroochWidthValue(e.target.value)} placeholder="Ej: 40" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="broochHeight">Alto (mm)</Label>
                 <Input id="broochHeight" name="broochHeight" type="number" step="0.1"
-                  defaultValue={product?.broochHeight ?? ""} placeholder="Ej: 30" />
+                  value={broochHeightValue} onChange={(e) => setBroochHeightValue(e.target.value)} placeholder="Ej: 30" />
               </div>
             </div>
           </div>
@@ -1683,7 +1678,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               <textarea
                 id="detallePersonalizacion"
                 name="detallePersonalizacion"
-                defaultValue={product?.detallePersonalizacion ?? ""}
+                value={detallePersonalizacionValue}
+                onChange={(e) => setDetallePersonalizacionValue(e.target.value)}
                 rows={2}
                 className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
                 placeholder="Qué se puede personalizar..."
@@ -1696,7 +1692,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           <div className="space-y-1.5">
             <Label htmlFor="cantidadEdicion">Cantidad de edición</Label>
             <p className="text-xs text-text-secondary">Ej: &quot;5 de 20&quot; — el total de la edición</p>
-            <Input id="cantidadEdicion" name="cantidadEdicion" type="number" min={1} defaultValue={product?.cantidadEdicion ?? ""} placeholder="Ej: 20" />
+            <Input id="cantidadEdicion" name="cantidadEdicion" type="number" min={1} value={cantidadEdicionValue} onChange={(e) => setCantidadEdicionValue(e.target.value)} placeholder="Ej: 20" />
           </div>
         )}
 
