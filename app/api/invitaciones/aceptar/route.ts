@@ -13,11 +13,18 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
   if (!token) redirect("/");
 
-  const invitation = await prisma.invitation.findUnique({ where: { token } });
-  if (!invitation) redirect("/");
+  try {
+    const invitation = await prisma.invitation.findUnique({ where: { token } });
+    if (!invitation) redirect("/");
 
-  await trackInvitationClick(token);
+    await trackInvitationClick(token);
 
-  const destination = TYPE_REDIRECT[invitation.type] ?? "/";
-  redirect(destination);
+    const destination = TYPE_REDIRECT[invitation.type] ?? "/";
+    redirect(destination);
+  } catch (e) {
+    // Re-throw redirect errors (Next.js uses thrown responses for redirects)
+    if (e && typeof e === "object" && "digest" in e) throw e;
+    // Table may not exist yet — redirect home
+    redirect("/");
+  }
 }

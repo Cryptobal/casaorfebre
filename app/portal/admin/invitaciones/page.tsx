@@ -31,16 +31,22 @@ export default async function InvitacionesPage({
     ? await getCampaignMetrics(metricsCampaign)
     : null;
 
-  // Campaign invitation stats
-  const [pioneerCount, artisanCount, buyerCount, pioneerAccepted, artisanAccepted, buyerAccepted] =
-    await Promise.all([
-      prisma.invitation.count({ where: { type: "PIONEER" } }),
-      prisma.invitation.count({ where: { type: "ARTISAN" } }),
-      prisma.invitation.count({ where: { type: "BUYER" } }),
-      prisma.invitation.count({ where: { type: "PIONEER", status: "ACCEPTED" } }),
-      prisma.invitation.count({ where: { type: "ARTISAN", status: "ACCEPTED" } }),
-      prisma.invitation.count({ where: { type: "BUYER", status: "ACCEPTED" } }),
-    ]);
+  // Campaign invitation stats (gracefully handle missing table before migration)
+  let pioneerCount = 0, artisanCount = 0, buyerCount = 0;
+  let pioneerAccepted = 0, artisanAccepted = 0, buyerAccepted = 0;
+  try {
+    [pioneerCount, artisanCount, buyerCount, pioneerAccepted, artisanAccepted, buyerAccepted] =
+      await Promise.all([
+        prisma.invitation.count({ where: { type: "PIONEER" } }),
+        prisma.invitation.count({ where: { type: "ARTISAN" } }),
+        prisma.invitation.count({ where: { type: "BUYER" } }),
+        prisma.invitation.count({ where: { type: "PIONEER", status: "ACCEPTED" } }),
+        prisma.invitation.count({ where: { type: "ARTISAN", status: "ACCEPTED" } }),
+        prisma.invitation.count({ where: { type: "BUYER", status: "ACCEPTED" } }),
+      ]);
+  } catch {
+    // Table may not exist yet if migration hasn't been applied
+  }
 
   return (
     <div>

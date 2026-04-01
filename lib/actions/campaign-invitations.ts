@@ -141,11 +141,16 @@ export async function getCampaigns(
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return [];
 
-  return prisma.invitationCampaign.findMany({
-    where: type ? { type } : undefined,
-    include: { _count: { select: { invitations: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    return await prisma.invitationCampaign.findMany({
+      where: type ? { type } : undefined,
+      include: { _count: { select: { invitations: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    // Table may not exist yet if migration hasn't been applied
+    return [];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,16 +163,20 @@ export async function getCampaignDetail(
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return null;
 
-  const campaign = await prisma.invitationCampaign.findUnique({
-    where: { id: campaignId },
-    include: {
-      invitations: { orderBy: { sentAt: "desc" } },
-    },
-  });
+  try {
+    const campaign = await prisma.invitationCampaign.findUnique({
+      where: { id: campaignId },
+      include: {
+        invitations: { orderBy: { sentAt: "desc" } },
+      },
+    });
 
-  if (!campaign) return null;
+    if (!campaign) return null;
 
-  return { campaign, invitations: campaign.invitations };
+    return { campaign, invitations: campaign.invitations };
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -175,21 +184,25 @@ export async function getCampaignDetail(
 // ---------------------------------------------------------------------------
 
 export async function trackInvitationClick(token: string): Promise<void> {
-  const invitation = await prisma.invitation.findUnique({ where: { token } });
-  if (!invitation) return;
+  try {
+    const invitation = await prisma.invitation.findUnique({ where: { token } });
+    if (!invitation) return;
 
-  if (invitation.status === "SENT" || invitation.status === "OPENED") {
-    await prisma.invitation.update({
-      where: { id: invitation.id },
-      data: { clickedAt: new Date(), status: "CLICKED" },
-    });
-
-    if (invitation.campaignId) {
-      await prisma.invitationCampaign.update({
-        where: { id: invitation.campaignId },
-        data: { totalClicked: { increment: 1 } },
+    if (invitation.status === "SENT" || invitation.status === "OPENED") {
+      await prisma.invitation.update({
+        where: { id: invitation.id },
+        data: { clickedAt: new Date(), status: "CLICKED" },
       });
+
+      if (invitation.campaignId) {
+        await prisma.invitationCampaign.update({
+          where: { id: invitation.campaignId },
+          data: { totalClicked: { increment: 1 } },
+        });
+      }
     }
+  } catch {
+    // Table may not exist yet
   }
 }
 
@@ -198,19 +211,23 @@ export async function trackInvitationClick(token: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function trackInvitationAccepted(token: string): Promise<void> {
-  const invitation = await prisma.invitation.findUnique({ where: { token } });
-  if (!invitation) return;
+  try {
+    const invitation = await prisma.invitation.findUnique({ where: { token } });
+    if (!invitation) return;
 
-  await prisma.invitation.update({
-    where: { id: invitation.id },
-    data: { acceptedAt: new Date(), status: "ACCEPTED" },
-  });
-
-  if (invitation.campaignId) {
-    await prisma.invitationCampaign.update({
-      where: { id: invitation.campaignId },
-      data: { totalAccepted: { increment: 1 } },
+    await prisma.invitation.update({
+      where: { id: invitation.id },
+      data: { acceptedAt: new Date(), status: "ACCEPTED" },
     });
+
+    if (invitation.campaignId) {
+      await prisma.invitationCampaign.update({
+        where: { id: invitation.campaignId },
+        data: { totalAccepted: { increment: 1 } },
+      });
+    }
+  } catch {
+    // Table may not exist yet
   }
 }
 
