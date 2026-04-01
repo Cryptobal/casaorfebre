@@ -5,15 +5,22 @@ export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const category = params.get("category") ?? undefined;
   const material = params.get("material") ?? undefined;
+  const occasion = params.get("occasion") ?? undefined;
+  const style = params.get("style") ?? undefined;
+  const slug = params.get("slug") ?? undefined;
   const minPrice = params.get("minPrice") ? Number(params.get("minPrice")) : undefined;
   const maxPrice = params.get("maxPrice") ? Number(params.get("maxPrice")) : undefined;
   const limit = Math.min(Number(params.get("limit")) || 20, 100);
   const offset = Number(params.get("offset")) || 0;
+  const sort = params.get("sort") || "newest";
 
   const where: Record<string, unknown> = { status: "APPROVED" as const };
 
+  if (slug) where.slug = { in: slug.split(",") };
   if (category) where.categories = { some: { slug: category } };
   if (material) where.materials = { some: { name: { contains: material, mode: "insensitive" } } };
+  if (occasion) where.occasions = { some: { slug: occasion } };
+  if (style) where.specialties = { some: { slug: style } };
   if (minPrice || maxPrice) {
     where.price = {
       ...(minPrice ? { gte: minPrice } : {}),
@@ -21,10 +28,17 @@ export async function GET(req: NextRequest) {
     };
   }
 
+  // Sort order
+  type OrderBy = Record<string, string>;
+  let orderBy: OrderBy = { publishedAt: "desc" };
+  if (sort === "price_asc") orderBy = { price: "asc" };
+  else if (sort === "price_desc") orderBy = { price: "desc" };
+  else if (sort === "popular") orderBy = { viewCount: "desc" };
+
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: { publishedAt: "desc" },
+      orderBy,
       skip: offset,
       take: limit,
       select: {
@@ -37,6 +51,7 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         materials: { select: { name: true } },
         categories: { select: { name: true } },
+        occasions: { select: { name: true } },
         artisan: { select: { displayName: true, location: true } },
         images: {
           where: { status: "APPROVED" },
@@ -66,6 +81,7 @@ export async function GET(req: NextRequest) {
       currency: "CLP",
       materials: p.materials.map((m) => m.name),
       categories: p.categories.map((c) => c.name),
+      occasions: p.occasions.map((o) => o.name),
       artisanName: p.artisan.displayName,
       artisanLocation: p.artisan.location,
       images: p.images.map((i) => i.url),

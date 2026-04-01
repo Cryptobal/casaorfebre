@@ -201,6 +201,84 @@ export default async function PostulacionesPage() {
                   </div>
                 )}
 
+                {/* AI Review */}
+                {(app as unknown as { aiReview: { qualityScore: number; originalityScore: number; diversityScore: number; overallRecommendation: string; summary: string; strengths: string[]; concerns: string[] } | null }).aiReview && (() => {
+                  const review = (app as unknown as { aiReview: { qualityScore: number; originalityScore: number; diversityScore: number; overallRecommendation: string; summary: string; strengths: string[]; concerns: string[] } }).aiReview;
+                  return (
+                    <div className="rounded-lg border border-border bg-background p-4">
+                      <p className="mb-3 text-xs uppercase tracking-widest text-text-tertiary">
+                        Analisis IA del portfolio
+                      </p>
+
+                      {/* Recommendation badge */}
+                      <div className="mb-3 flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            review.overallRecommendation === "APPROVE"
+                              ? "bg-green-100 text-green-800"
+                              : review.overallRecommendation === "REJECT"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {review.overallRecommendation === "APPROVE"
+                            ? "Recomendar aprobación"
+                            : review.overallRecommendation === "REJECT"
+                              ? "Recomendar rechazo"
+                              : "Requiere revisión manual"}
+                        </span>
+                      </div>
+
+                      {/* Score bars */}
+                      <div className="mb-3 grid grid-cols-3 gap-3">
+                        {[
+                          { label: "Calidad", score: review.qualityScore },
+                          { label: "Originalidad", score: review.originalityScore },
+                          { label: "Diversidad", score: review.diversityScore },
+                        ].map((item) => (
+                          <div key={item.label}>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-text-secondary">{item.label}</span>
+                              <span className="font-medium text-text">{item.score}/10</span>
+                            </div>
+                            <div className="mt-1 h-1.5 rounded-full bg-border">
+                              <div
+                                className="h-1.5 rounded-full bg-accent transition-all"
+                                style={{ width: `${(item.score / 10) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Summary */}
+                      <p className="text-sm text-text-secondary">{review.summary}</p>
+
+                      {/* Strengths & Concerns */}
+                      {review.strengths.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-green-700">Fortalezas:</p>
+                          <ul className="mt-0.5 space-y-0.5">
+                            {review.strengths.map((s, i) => (
+                              <li key={i} className="text-xs text-text-secondary">+ {s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {review.concerns.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-amber-700">Observaciones:</p>
+                          <ul className="mt-0.5 space-y-0.5">
+                            {review.concerns.map((c, i) => (
+                              <li key={i} className="text-xs text-text-secondary">• {c}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 <div className="border-t border-border pt-4">
                   <ApplicationActions applicationId={app.id} />
                 </div>

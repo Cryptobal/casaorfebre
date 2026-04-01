@@ -30,6 +30,7 @@ const seoColumns = [
     title: "Guías",
     links: [
       { href: "/blog", label: "Blog" },
+      { href: "/regalos", label: "Encontrar regalo perfecto" },
       { href: "/guia/plata-925-950", label: "Plata 925 vs 950" },
       { href: "/galeria-santo-domingo", label: "Galería Santo Domingo" },
       { href: "/orfebres", label: "Nuestros Orfebres" },
@@ -69,6 +70,7 @@ const footerColumns = [
       { href: "/coleccion/dia-de-la-madre", label: "Día de la Madre" },
       { href: "/coleccion/graduacion", label: "Graduación" },
       { href: "/coleccion/autorregalo", label: "Autorregalo" },
+      { href: "/regalos", label: "Encontrar regalo perfecto" },
       { href: "/regalos-bajo-30000", label: "Bajo $30.000" },
       { href: "/regalos-bajo-50000", label: "Bajo $50.000" },
       { href: "/regalos-bajo-100000", label: "Bajo $100.000" },

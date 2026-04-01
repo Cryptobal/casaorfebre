@@ -8,6 +8,22 @@ import { cn, formatCLP } from "@/lib/utils";
 import { trackSearch } from "@/lib/analytics-events";
 
 /* ------------------------------------------------------------------ */
+/*  Visual Search Types                                                */
+/* ------------------------------------------------------------------ */
+
+interface VisualSearchResult {
+  products: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    image: string | null;
+    artisanName: string;
+  }[];
+  description: string;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -96,7 +112,11 @@ export function SearchModal() {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [visualLoading, setVisualLoading] = useState(false);
+  const [visualResults, setVisualResults] = useState<VisualSearchResult | null>(null);
+  const [visualPreview, setVisualPreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   // Portal needs document.body — only available after mount.
@@ -127,7 +147,54 @@ export function SearchModal() {
     setQuery("");
     setResults(null);
     setLoading(false);
+    setVisualResults(null);
+    setVisualPreview(null);
+    setVisualLoading(false);
   }, [open]);
+
+  // Visual search handler
+  const handleVisualSearch = useCallback(async (file: File) => {
+    setVisualLoading(true);
+    setVisualResults(null);
+    setResults(null);
+    setQuery("");
+
+    // Create preview
+    const previewUrl = URL.createObjectURL(file);
+    setVisualPreview(previewUrl);
+
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix
+          resolve(result.split(",")[1]);
+        };
+      });
+      reader.readAsDataURL(file);
+      const base64 = await base64Promise;
+
+      const res = await fetch("/api/search/visual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mediaType: file.type }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Error");
+      }
+
+      const data: VisualSearchResult = await res.json();
+      setVisualResults(data);
+    } catch (e) {
+      console.error("Visual search error:", e);
+      setVisualResults({ products: [], description: "No se pudo analizar la imagen." });
+    } finally {
+      setVisualLoading(false);
+    }
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -228,6 +295,30 @@ export function SearchModal() {
                 }}
               />
               {loading && <Spinner />}
+              {/* Visual search (camera) button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="shrink-0 text-text-tertiary hover:text-accent transition-colors"
+                aria-label="Buscar por imagen"
+                title="Buscar por imagen"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleVisualSearch(file);
+                  e.target.value = "";
+                }}
+              />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -244,8 +335,75 @@ export function SearchModal() {
 
             {/* Results area */}
             <div className="max-h-[60vh] max-md:flex-1 overflow-y-auto overscroll-contain">
+              {/* Visual search results */}
+              {(visualLoading || visualResults) && (
+                <div className="px-4 pt-4 pb-2">
+                  {visualPreview && (
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border">
+                        <Image src={visualPreview} alt="Imagen subida" fill className="object-cover" sizes="48px" />
+                      </div>
+                      <p className="text-xs text-text-secondary">
+                        {visualLoading ? "Buscando piezas similares..." : visualResults?.description}
+                      </p>
+                    </div>
+                  )}
+                  {visualLoading && (
+                    <div className="flex items-center justify-center py-6">
+                      <Spinner />
+                    </div>
+                  )}
+                  {visualResults && !visualLoading && (
+                    <>
+                      {visualResults.products.length > 0 ? (
+                        <>
+                          <p className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                            Piezas similares encontradas
+                          </p>
+                          <ul>
+                            {visualResults.products.map((product) => (
+                              <li key={product.slug}>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/coleccion/${product.slug}`)}
+                                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-black/[0.04] transition-colors"
+                                >
+                                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-black/[0.03]">
+                                    {product.image ? (
+                                      <Image src={product.image} alt={product.name} fill className="object-cover" sizes="40px" />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-text-tertiary text-xs">--</div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-sm font-serif text-text">{product.name}</p>
+                                    <p className="truncate text-xs text-text-secondary font-light">{product.artisanName}</p>
+                                  </div>
+                                  <span className="shrink-0 text-sm text-accent font-medium">{formatCLP(product.price)}</span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="py-6 text-center text-sm text-text-tertiary">
+                          No encontramos piezas similares a tu imagen
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => { setVisualResults(null); setVisualPreview(null); }}
+                        className="mt-2 w-full text-center text-xs text-accent hover:underline"
+                      >
+                        Limpiar búsqueda visual
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Empty state — no query yet */}
-              {!hasQuery && !loading && (
+              {!hasQuery && !loading && !visualResults && !visualLoading && (
                 <div className="px-4 py-10 text-center text-sm text-text-tertiary font-light">
                   Busca productos, orfebres, materiales...
                 </div>
