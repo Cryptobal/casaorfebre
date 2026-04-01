@@ -2,29 +2,19 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
-// Revalidate every 6 hours
-export const revalidate = 21600;
 
-// Map category slugs to Google Product Categories
-const GOOGLE_CATEGORIES: Record<string, string> = {
-  anillo: "200",
-  aros: "194",
-  collar: "196",
-  pulsera: "192",
-  colgante: "197",
-  cadena: "196",
-  broche: "198",
+// Google Product Taxonomy (full text for Google + Pinterest compatibility)
+const GOOGLE_CATEGORY: Record<string, string> = {
+  anillo: "Apparel &amp; Accessories &gt; Jewelry &gt; Rings",
+  aros: "Apparel &amp; Accessories &gt; Jewelry &gt; Earrings",
+  collar: "Apparel &amp; Accessories &gt; Jewelry &gt; Necklaces",
+  pulsera: "Apparel &amp; Accessories &gt; Jewelry &gt; Bracelets",
+  colgante: "Apparel &amp; Accessories &gt; Jewelry &gt; Charms &amp; Pendants",
+  cadena: "Apparel &amp; Accessories &gt; Jewelry &gt; Necklaces",
+  broche: "Apparel &amp; Accessories &gt; Jewelry &gt; Brooches &amp; Lapel Pins",
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  anillo: "Anillos",
-  aros: "Aros",
-  collar: "Collares",
-  pulsera: "Pulseras",
-  colgante: "Colgantes",
-  cadena: "Cadenas",
-  broche: "Broches",
-};
+const DEFAULT_CATEGORY = "Apparel &amp; Accessories &gt; Jewelry";
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
@@ -65,14 +55,25 @@ export async function GET() {
         : `${baseUrl}${imageUrl}`;
 
       const categorySlug = product.categories[0]?.slug || "";
-      const googleCategory = GOOGLE_CATEGORIES[categorySlug] || "188";
-      const categoryLabel = CATEGORY_LABELS[categorySlug] || "Joyería";
+      const googleCategory =
+        GOOGLE_CATEGORY[categorySlug] || DEFAULT_CATEGORY;
+
       const description = (product.description || "")
         .replace(/<[^>]*>/g, "")
         .replace(/\n/g, " ")
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 5000);
+
+      // UNIQUE/MADE_TO_ORDER pieces are in_stock while APPROVED
+      // (when sold, status changes to SOLD_OUT and they exit the feed)
+      const availability =
+        product.productionType === "UNIQUE" ||
+        product.productionType === "MADE_TO_ORDER"
+          ? "in_stock"
+          : product.stock > 0
+            ? "in_stock"
+            : "out_of_stock";
 
       return `    <item>
       <g:id>${escapeXml(product.id)}</g:id>
@@ -81,11 +82,10 @@ export async function GET() {
       <g:link>${baseUrl}/coleccion/${escapeXml(product.slug)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
       <g:price>${product.price} CLP</g:price>
-      <g:availability>${product.stock > 0 ? "in_stock" : "out_of_stock"}</g:availability>
+      <g:availability>${availability}</g:availability>
       <g:condition>new</g:condition>
       <g:brand>${escapeXml(product.artisan?.displayName || "Casa Orfebre")}</g:brand>
-      <g:google_product_category>${escapeXml(googleCategory)}</g:google_product_category>
-      <g:product_type>Joyería Artesanal &gt; ${escapeXml(categoryLabel)}</g:product_type>
+      <g:google_product_category>${googleCategory}</g:google_product_category>
       <g:identifier_exists>false</g:identifier_exists>
       <g:shipping>
         <g:country>CL</g:country>
@@ -97,7 +97,7 @@ export async function GET() {
     .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:g="http://schemas.google.com/g/2005">
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
     <title>Casa Orfebre — Joyería de Autor</title>
     <link>${baseUrl}</link>
@@ -108,8 +108,7 @@ ${items}
 
   return new NextResponse(xml, {
     headers: {
-      "Content-Type": "application/xml",
-      "Cache-Control": "public, max-age=21600, s-maxage=21600",
+      "Content-Type": "application/xml; charset=utf-8",
     },
   });
 }
