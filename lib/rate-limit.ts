@@ -40,3 +40,10 @@ export const applicationPhotoLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 h"),
   prefix: "rl:app-photo",
 });
+
+/** AI blog generation — 5 per hour per user */
+export const aiBlogLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "1 h"),
+  prefix: "rl:ai-blog",
+});

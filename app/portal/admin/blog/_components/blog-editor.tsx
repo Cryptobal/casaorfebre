@@ -6,6 +6,216 @@ import { createBlogPost, updateBlogPost, uploadBlogCover, checkSlugAvailability 
 import { slugify } from "@/lib/utils";
 import { renderMarkdown, calculateReadingTime } from "@/lib/markdown";
 
+/* ------------------------------------------------------------------ */
+/*  AI Generation sub-component                                        */
+/* ------------------------------------------------------------------ */
+
+interface AIFillCallback {
+  (data: {
+    title: string;
+    content: string;
+    excerpt: string;
+    tags: string;
+    seoTitle: string;
+    seoDescription: string;
+  }): void;
+}
+
+const aiCategories = [
+  { value: "GUIAS", label: "Guías" },
+  { value: "TENDENCIAS", label: "Tendencias" },
+  { value: "ORFEBRES", label: "Orfebres" },
+  { value: "CUIDADOS", label: "Cuidados" },
+  { value: "MATERIALES", label: "Materiales" },
+  { value: "CULTURA", label: "Cultura" },
+];
+
+function AIGeneratePanel({ onFill, currentCategory }: { onFill: AIFillCallback; currentCategory: string }) {
+  const [open, setOpen] = useState(false);
+  const [topic, setTopic] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [aiCategory, setAiCategory] = useState(currentCategory || "GUIAS");
+  const [includeLinks, setIncludeLinks] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [aiError, setAiError] = useState("");
+
+  const handleGenerate = async () => {
+    if (!topic.trim()) return;
+    setGenerating(true);
+    setAiError("");
+    try {
+      const res = await fetch("/api/ai/blog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate",
+          topic: topic.trim(),
+          keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
+          category: aiCategory,
+          includeProductLinks: includeLinks,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiError(data.error || "Error al generar");
+        return;
+      }
+      onFill({
+        title: data.title,
+        content: data.content,
+        excerpt: data.excerpt,
+        tags: data.tags.join(", "),
+        seoTitle: data.metaTitle,
+        seoDescription: data.metaDescription,
+      });
+      setOpen(false);
+    } catch {
+      setAiError("Error de conexión");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSuggest = async () => {
+    setSuggesting(true);
+    setAiError("");
+    try {
+      const res = await fetch("/api/ai/blog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "suggest-topics" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiError(data.error || "Error al sugerir");
+        return;
+      }
+      setSuggestions(data.topics);
+    } catch {
+      setAiError("Error de conexión");
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full rounded-lg border border-dashed border-accent/40 bg-accent/5 px-4 py-2.5 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
+      >
+        Generar con IA
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-accent">Generar con IA</span>
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-text-tertiary hover:text-text">
+          Cerrar
+        </button>
+      </div>
+
+      {aiError && (
+        <div className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">{aiError}</div>
+      )}
+
+      {/* Topic */}
+      <div>
+        <label className="text-xs text-text-tertiary">Tema</label>
+        <input
+          type="text"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          placeholder="Ej: Cómo elegir un anillo de compromiso artesanal"
+          className="mt-1 w-full rounded border border-border bg-surface px-3 py-1.5 text-sm"
+        />
+      </div>
+
+      {/* Suggest topics */}
+      <button
+        type="button"
+        onClick={handleSuggest}
+        disabled={suggesting}
+        className="text-xs text-accent hover:underline disabled:opacity-50"
+      >
+        {suggesting ? "Pensando..." : "Sugerir temas"}
+      </button>
+      {suggestions.length > 0 && (
+        <ul className="space-y-1">
+          {suggestions.map((s, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                onClick={() => { setTopic(s); setSuggestions([]); }}
+                className="w-full text-left rounded px-2 py-1 text-xs text-text hover:bg-accent/10 transition-colors"
+              >
+                {s}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Keywords */}
+      <div>
+        <label className="text-xs text-text-tertiary">Keywords (separadas por coma)</label>
+        <input
+          type="text"
+          value={keywords}
+          onChange={(e) => setKeywords(e.target.value)}
+          placeholder="plata 925, anillo artesanal, Chile"
+          className="mt-1 w-full rounded border border-border bg-surface px-3 py-1.5 text-sm"
+        />
+      </div>
+
+      {/* Category */}
+      <div>
+        <label className="text-xs text-text-tertiary">Categoría</label>
+        <select
+          value={aiCategory}
+          onChange={(e) => setAiCategory(e.target.value)}
+          className="mt-1 w-full rounded border border-border bg-surface px-3 py-1.5 text-sm"
+        >
+          {aiCategories.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Include product links */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={includeLinks}
+          onChange={(e) => setIncludeLinks(e.target.checked)}
+          className="rounded border-border"
+        />
+        <span className="text-xs">Incluir links a productos</span>
+      </label>
+
+      {/* Generate button */}
+      <button
+        type="button"
+        onClick={handleGenerate}
+        disabled={generating || !topic.trim()}
+        className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors disabled:opacity-50"
+      >
+        {generating ? "Generando artículo..." : "Generar borrador"}
+      </button>
+
+      {generating && (
+        <p className="text-xs text-text-tertiary text-center">Esto puede tomar 15-30 segundos</p>
+      )}
+    </div>
+  );
+}
+
 const categories = [
   { value: "GUIAS", label: "Guías" },
   { value: "TENDENCIAS", label: "Tendencias" },
@@ -56,6 +266,26 @@ export function BlogEditor({ post }: BlogEditorProps) {
   const [previewTab, setPreviewTab] = useState<"write" | "preview">("write");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleAIFill = useCallback((data: {
+    title: string;
+    content: string;
+    excerpt: string;
+    tags: string;
+    seoTitle: string;
+    seoDescription: string;
+  }) => {
+    setTitle(data.title);
+    setSlug(slugify(data.title));
+    setSlugManual(false);
+    setContent(data.content);
+    setExcerpt(data.excerpt);
+    setTagsInput(data.tags);
+    setSeoTitle(data.seoTitle);
+    setSeoDescription(data.seoDescription);
+    setReadingTime(calculateReadingTime(data.content));
+    setShowSeo(true);
+  }, []);
 
   const handleTitleChange = useCallback((value: string) => {
     setTitle(value);
@@ -339,6 +569,11 @@ export function BlogEditor({ post }: BlogEditorProps) {
             className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
           />
         </div>
+
+        {/* AI Generate */}
+        {!isEditing && (
+          <AIGeneratePanel onFill={handleAIFill} currentCategory={category} />
+        )}
 
         {/* Actions */}
         <div className="space-y-2 pt-4 border-t border-border">
