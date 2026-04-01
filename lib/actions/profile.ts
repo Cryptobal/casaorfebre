@@ -12,13 +12,23 @@ export async function updateArtisanProfile(formData: FormData) {
   const artisan = await prisma.artisan.findUnique({ where: { userId: session.user.id } });
   if (!artisan) return { error: "No autorizado" };
 
+  // Specialty IDs from catalog
+  const specialtyIdsRaw = formData.get("specialtyIds") as string;
+  const specialtyIds = specialtyIdsRaw
+    ? specialtyIdsRaw.split(",").map((id) => id.trim()).filter(Boolean)
+    : [];
+
+  // Custom specialties (stored in the specialty text field)
+  const customSpecialty = (formData.get("specialty") as string) || "";
+
   await prisma.artisan.update({
     where: { id: artisan.id },
     data: {
       displayName: formData.get("displayName") as string || artisan.displayName,
       bio: formData.get("bio") as string || artisan.bio,
       story: (formData.get("story") as string) || null,
-      specialty: formData.get("specialty") as string || artisan.specialty,
+      specialty: customSpecialty,
+      specialties: { set: specialtyIds.map((id) => ({ id })) },
       materials: (formData.get("materials") as string)?.split(",").map(m => m.trim()).filter(Boolean) || artisan.materials,
       location: formData.get("location") as string || artisan.location,
       region: (formData.get("region") as string) || artisan.region,
@@ -82,6 +92,8 @@ export async function updateProfileImage(formData: FormData) {
   }
 }
 
+const RUT_PATTERN = /^\d{7,8}-[\dkK]$/;
+
 export async function updateBankingData(formData: FormData) {
   const session = await auth();
   if (!session?.user) return { error: "No autorizado" };
@@ -97,6 +109,11 @@ export async function updateBankingData(formData: FormData) {
 
   if (!bankRut || !bankHolderName || !bankName || !bankAccountType || !bankAccountNumber) {
     return { error: "Todos los campos bancarios son requeridos" };
+  }
+
+  // Validate RUT format: 7-8 digits, dash, 1 digit or K. No dots.
+  if (!RUT_PATTERN.test(bankRut.trim())) {
+    return { error: "RUT inválido. Formato: 12345678-9 (sin puntos, con guión)" };
   }
 
   await prisma.artisan.update({

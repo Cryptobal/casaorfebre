@@ -113,10 +113,31 @@ export async function ReviewList({ productId }: ReviewListProps) {
                 {review.comment}
               </p>
 
-              {/* Images */}
-              {review.images.length > 0 && (
-                <ReviewImageLightbox images={review.images} />
-              )}
+              {/* Media (images + videos) */}
+              {review.images.length > 0 && (() => {
+                const images = review.images.filter((u) => !/\.(mp4|webm|mov)(\?|$)/i.test(u));
+                const videos = review.images.filter((u) => /\.(mp4|webm|mov)(\?|$)/i.test(u));
+                return (
+                  <>
+                    {images.length > 0 && (
+                      <ReviewImageLightbox images={images} />
+                    )}
+                    {videos.length > 0 && (
+                      <div className="mt-3 flex gap-2">
+                        {videos.map((url) => (
+                          <video
+                            key={url}
+                            src={url}
+                            controls
+                            preload="metadata"
+                            className="h-32 max-w-[200px] rounded-lg border border-border object-cover"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Artisan response */}
               {review.response && (

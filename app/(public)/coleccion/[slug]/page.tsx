@@ -333,12 +333,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </Link>
             </p>
 
-            {/* Specialty badges */}
-            {product.specialties.length > 0 && (
+            {/* Specialty + technique badges */}
+            {(product.specialties.length > 0 || product.technique) && (
               <div className="flex flex-wrap gap-1.5">
                 {product.specialties.map((s: { id: string; name: string }) => (
                   <span key={s.id} className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
                     {s.name}
+                  </span>
+                ))}
+                {product.technique && (product.technique as string).split(/[,\n]/).map((t: string) => t.replace(/^[•\-]\s*/, "").trim()).filter(Boolean).filter((t: string) => !product.specialties.some((s: { name: string }) => s.name.toLowerCase() === t.toLowerCase())).map((t: string) => (
+                  <span key={t} className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
+                    {t}
                   </span>
                 ))}
               </div>
@@ -374,22 +379,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Technique & dimensions */}
-            {(product.technique || product.dimensions) && (
-              <div className="space-y-1 text-sm text-text-secondary">
-                {product.technique && (
-                  <p>
-                    <span className="font-medium text-text">T&eacute;cnica:</span>{" "}
-                    {product.technique}
-                  </p>
-                )}
-                {product.dimensions && (
-                  <p>
-                    <span className="font-medium text-text">Dimensiones:</span>{" "}
-                    {product.dimensions}
-                  </p>
-                )}
-              </div>
+            {/* Dimensions */}
+            {product.dimensions && (
+              <p className="text-sm text-text-secondary">
+                <span className="font-medium text-text">Dimensiones:</span>{" "}
+                {product.dimensions}
+              </p>
             )}
 
             {/* Size guide */}
@@ -507,7 +502,41 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {product.cuidados && (
             <div className="rounded-lg border border-border p-6">
               <h2 className="mb-3 font-serif text-lg">Cuidados</h2>
-              <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-line">{product.cuidados}</p>
+              <div className="flex flex-wrap gap-2">
+                {(product.cuidados as string).split("\n").map((l: string) => l.replace(/^[•\-]\s*/, "").trim()).filter(Boolean).map((item: string) => (
+                  <span key={item} className="inline-block rounded-full bg-background border border-border px-3 py-1.5 text-xs text-text-secondary">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empaque */}
+          {product.empaque && (
+            <div className="rounded-lg border border-border p-6">
+              <h2 className="mb-3 font-serif text-lg">Empaque</h2>
+              <div className="flex flex-wrap gap-2">
+                {(product.empaque as string).split("\n").map((l: string) => l.replace(/^[•\-]\s*/, "").trim()).filter(Boolean).map((item: string) => (
+                  <span key={item} className="inline-block rounded-full bg-background border border-border px-3 py-1.5 text-xs text-text-secondary">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Garantía */}
+          {product.garantia && (
+            <div className="rounded-lg border border-border p-6">
+              <h2 className="mb-3 font-serif text-lg">Garant&iacute;a del orfebre</h2>
+              <div className="flex flex-wrap gap-2">
+                {(product.garantia as string).split("\n").map((l: string) => l.replace(/^[•\-]\s*/, "").trim()).filter(Boolean).map((item: string) => (
+                  <span key={item} className="inline-block rounded-full bg-background border border-border px-3 py-1.5 text-xs text-text-secondary">
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
@@ -596,8 +625,6 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
 
   if (product.materials.length > 0)
     rows.push({ label: "Materiales", value: product.materials.map((m) => m.name).join(", ") });
-  if (product.technique)
-    rows.push({ label: "Técnica", value: product.technique as string });
   if (product.weight)
     rows.push({ label: "Peso", value: `${product.weight} g` });
   if (product.dimensions)
@@ -639,10 +666,6 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Colección", value: product.collection.name });
   if (product.elaborationDays)
     rows.push({ label: "Tiempo de elaboración", value: `${product.elaborationDays} días` });
-  if (product.empaque)
-    rows.push({ label: "Empaque", value: product.empaque as string });
-  if (product.garantia)
-    rows.push({ label: "Garantía", value: product.garantia as string });
   if (product.personalizable)
     rows.push({ label: "Personalizable", value: (product.detallePersonalizacion as string) || "Sí" });
   if (product.cantidadEdicion)

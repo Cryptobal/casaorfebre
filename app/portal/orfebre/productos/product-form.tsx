@@ -10,6 +10,7 @@ import { VideoUploader } from "@/components/products/video-uploader";
 import { ErrorModal } from "@/components/ui/error-modal";
 import { createProduct, updateProduct, saveAndSubmitForReview, reactivateProduct } from "@/lib/actions/products";
 import { PresetSelector } from "@/components/forms/preset-selector";
+import { TagInput } from "@/components/forms/tag-input";
 import { CARE_PRESETS, PACKAGING_PRESETS, WARRANTY_PRESETS } from "@/lib/constants";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -148,48 +149,48 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   );
   const [showStones, setShowStones] = useState(!!product?.stones?.length);
 
+  // Custom technique tags (stored in technique field)
+  const [customTechniques, setCustomTechniques] = useState<string[]>(
+    () => (product?.technique ?? "").split(/[,\n]/).map((t) => t.trim()).filter(Boolean)
+  );
+
   // Preset selector state for cuidados, empaque, garantia
-  const parsePresets = (value: string | null | undefined, presets: readonly string[]): { selected: string[]; custom: string } => {
-    if (!value) return { selected: [], custom: "" };
-    const lines = value.split("\n").map((l) => l.trim()).filter(Boolean);
+  const parsePresets = (value: string | null | undefined, presets: readonly string[]): { selected: string[]; customTags: string[] } => {
+    if (!value) return { selected: [], customTags: [] };
+    const lines = value.split("\n").map((l) => l.replace(/^[•\-]\s*/, "").trim()).filter(Boolean);
     const selected: string[] = [];
-    const customLines: string[] = [];
+    const customTags: string[] = [];
     for (const line of lines) {
-      const clean = line.replace(/^[•\-]\s*/, "").trim();
-      if ((presets as readonly string[]).includes(clean)) {
-        selected.push(clean);
+      if ((presets as readonly string[]).includes(line)) {
+        selected.push(line);
       } else {
-        customLines.push(clean);
+        customTags.push(line);
       }
     }
-    return { selected, custom: customLines.join("\n") };
+    return { selected, customTags };
   };
 
-  const combinePresets = (selected: string[], custom: string): string => {
-    const parts = [
-      ...selected.map((s) => `• ${s}`),
-      ...(custom.trim() ? [custom.trim()] : []),
-    ];
-    return parts.join("\n");
+  const combinePresets = (selected: string[], customTags: string[]): string => {
+    return [...selected, ...customTags].join("\n");
   };
 
   const [cuidadosSelected, setCuidadosSelected] = useState<string[]>(
     () => parsePresets(product?.cuidados, CARE_PRESETS).selected
   );
-  const [cuidadosCustom, setCuidadosCustom] = useState(
-    () => parsePresets(product?.cuidados, CARE_PRESETS).custom
+  const [cuidadosCustom, setCuidadosCustom] = useState<string[]>(
+    () => parsePresets(product?.cuidados, CARE_PRESETS).customTags
   );
   const [empaqueSelected, setEmpaqueSelected] = useState<string[]>(
     () => parsePresets(product?.empaque, PACKAGING_PRESETS).selected
   );
-  const [empaqueCustom, setEmpaqueCustom] = useState(
-    () => parsePresets(product?.empaque, PACKAGING_PRESETS).custom
+  const [empaqueCustom, setEmpaqueCustom] = useState<string[]>(
+    () => parsePresets(product?.empaque, PACKAGING_PRESETS).customTags
   );
   const [garantiaSelected, setGarantiaSelected] = useState<string[]>(
     () => parsePresets(product?.garantia, WARRANTY_PRESETS).selected
   );
-  const [garantiaCustom, setGarantiaCustom] = useState(
-    () => parsePresets(product?.garantia, WARRANTY_PRESETS).custom
+  const [garantiaCustom, setGarantiaCustom] = useState<string[]>(
+    () => parsePresets(product?.garantia, WARRANTY_PRESETS).customTags
   );
 
   const updateBound = product
@@ -462,10 +463,11 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           </div>
         </div>
 
-        {/* Specialties */}
+        {/* Specialties + custom techniques */}
         <div className="space-y-1.5">
           <Label>Especialidades / Técnicas</Label>
           <input type="hidden" name="specialtyIds" value={selectedSpecialtyIds.join(",")} />
+          <input type="hidden" name="technique" value={customTechniques.join("\n")} />
           <p className="text-xs text-text-secondary">
             Selecciona las técnicas utilizadas en esta pieza
           </p>
@@ -501,6 +503,12 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               })}
             </div>
           )}
+          <TagInput
+            tags={customTechniques}
+            onTagsChange={setCustomTechniques}
+            placeholder="Agregar otra técnica..."
+            label="¿Usas otra técnica? Escríbela y presiona Enter"
+          />
         </div>
 
         {/* Occasions */}
@@ -583,18 +591,6 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
               })}
             </div>
           )}
-        </div>
-
-        {/* Technique */}
-        <div className="space-y-1.5">
-          <Label htmlFor="technique">Tecnica</Label>
-          <Input
-            id="technique"
-            name="technique"
-            type="text"
-            defaultValue={product?.technique ?? ""}
-            placeholder="Ej: Cera perdida, filigrana..."
-          />
         </div>
 
         {/* Price row */}
@@ -1394,9 +1390,9 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           presets={CARE_PRESETS}
           selected={cuidadosSelected}
           onSelectedChange={setCuidadosSelected}
-          customText={cuidadosCustom}
-          onCustomTextChange={setCuidadosCustom}
-          textareaPlaceholder="Agrega indicaciones de cuidado específicas..."
+          customTags={cuidadosCustom}
+          onCustomTagsChange={setCuidadosCustom}
+          customPlaceholder="Agregar indicación de cuidado..."
         />
         <input type="hidden" name="cuidados" value={combinePresets(cuidadosSelected, cuidadosCustom)} />
 
@@ -1405,9 +1401,9 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           presets={PACKAGING_PRESETS}
           selected={empaqueSelected}
           onSelectedChange={setEmpaqueSelected}
-          customText={empaqueCustom}
-          onCustomTextChange={setEmpaqueCustom}
-          textareaPlaceholder="Describe detalles adicionales del empaque..."
+          customTags={empaqueCustom}
+          onCustomTagsChange={setEmpaqueCustom}
+          customPlaceholder="Agregar detalle de empaque..."
         />
         <input type="hidden" name="empaque" value={combinePresets(empaqueSelected, empaqueCustom)} />
 
@@ -1416,9 +1412,9 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           presets={WARRANTY_PRESETS}
           selected={garantiaSelected}
           onSelectedChange={setGarantiaSelected}
-          customText={garantiaCustom}
-          onCustomTextChange={setGarantiaCustom}
-          textareaPlaceholder="Detalles adicionales de garantía..."
+          customTags={garantiaCustom}
+          onCustomTagsChange={setGarantiaCustom}
+          customPlaceholder="Agregar detalle de garantía..."
         />
         <input type="hidden" name="garantia" value={combinePresets(garantiaSelected, garantiaCustom)} />
 

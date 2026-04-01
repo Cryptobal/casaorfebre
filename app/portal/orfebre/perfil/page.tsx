@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "./profile-form";
 import { BankingForm } from "./banking-form";
+import { getActiveSpecialties, getActiveMaterials } from "@/lib/queries/catalog";
 
 export default async function PerfilPage() {
   const session = await auth();
@@ -10,9 +11,30 @@ export default async function PerfilPage() {
 
   const artisan = await prisma.artisan.findUnique({
     where: { userId: session.user.id },
+    include: {
+      specialties: { select: { id: true, name: true } },
+      products: {
+        where: { status: "APPROVED" },
+        select: { categories: { select: { id: true, name: true } } },
+      },
+    },
   });
 
   if (!artisan) redirect("/");
+
+  const [catalogSpecialties, catalogMaterials] = await Promise.all([
+    getActiveSpecialties(),
+    getActiveMaterials(),
+  ]);
+
+  // Derive unique categories from artisan's approved products
+  const categoryMap = new Map<string, string>();
+  for (const product of artisan.products) {
+    for (const cat of product.categories) {
+      categoryMap.set(cat.id, cat.name);
+    }
+  }
+  const artisanCategories = Array.from(categoryMap, ([id, name]) => ({ id, name }));
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -28,6 +50,7 @@ export default async function PerfilPage() {
             bio: artisan.bio,
             story: artisan.story,
             specialty: artisan.specialty,
+            specialtyIds: artisan.specialties.map((s) => s.id),
             materials: artisan.materials,
             location: artisan.location,
             region: artisan.region,
@@ -36,7 +59,10 @@ export default async function PerfilPage() {
             slug: artisan.slug,
             yearsExperience: artisan.yearsExperience,
             awards: artisan.awards,
+            categories: artisanCategories,
           }}
+          catalogSpecialties={catalogSpecialties}
+          catalogMaterials={catalogMaterials}
         />
       </div>
 

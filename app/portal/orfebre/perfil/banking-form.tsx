@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { updateBankingData } from "@/lib/actions/profile";
+
+const RUT_PATTERN = /^\d{7,8}-[\dkK]$/;
 
 const BANKS = [
   "Banco Santander",
@@ -42,9 +44,23 @@ export function BankingForm({ initialData }: BankingFormProps) {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [rutError, setRutError] = useState<string | null>(null);
+
+  const sanitizeRut = useCallback((value: string) => {
+    // Strip dots, keep only digits, dash, k/K
+    return value.replace(/\./g, "").replace(/[^\dkK-]/g, "");
+  }, []);
 
   function handleSubmit(formData: FormData) {
     setFeedback(null);
+    setRutError(null);
+
+    const rut = (formData.get("bankRut") as string)?.trim();
+    if (rut && !RUT_PATTERN.test(rut)) {
+      setRutError("Formato: 12345678-9 (sin puntos, con guión)");
+      return;
+    }
+
     startTransition(async () => {
       const result = await updateBankingData(formData);
       if (result.error) {
@@ -83,10 +99,20 @@ export function BankingForm({ initialData }: BankingFormProps) {
         <input
           name="bankRut"
           type="text"
-          placeholder="12.345.678-9"
+          placeholder="12345678-9"
           defaultValue={initialData.bankRut ?? ""}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          onChange={(e) => {
+            e.target.value = sanitizeRut(e.target.value);
+            setRutError(null);
+          }}
+          className={`mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-1 ${
+            rutError
+              ? "border-red-400 focus:border-red-400 focus:ring-red-400"
+              : "border-border focus:border-accent focus:ring-accent"
+          }`}
         />
+        <p className="mt-0.5 text-xs text-text-tertiary">Sin puntos, con guión. Ej: 12345678-9</p>
+        {rutError && <p className="mt-1 text-xs text-red-600">{rutError}</p>}
       </div>
 
       <div>

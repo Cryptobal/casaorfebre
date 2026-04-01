@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
+import { TagInput } from "@/components/forms/tag-input";
 import { updateArtisanProfile, updateProfileImage } from "@/lib/actions/profile";
 import { useState } from "react";
 import { CHILEAN_REGIONS, citiesForRegion } from "@/lib/chile-cities";
@@ -15,6 +16,7 @@ interface ProfileFormProps {
     bio: string;
     story: string | null;
     specialty: string;
+    specialtyIds: string[];
     materials: string[];
     location: string;
     region: string | null;
@@ -23,10 +25,13 @@ interface ProfileFormProps {
     slug: string;
     yearsExperience: number | null;
     awards: string[];
+    categories: { id: string; name: string }[];
   };
+  catalogSpecialties: { id: string; name: string }[];
+  catalogMaterials: { id: string; name: string }[];
 }
 
-export function ProfileForm({ artisan }: ProfileFormProps) {
+export function ProfileForm({ artisan, catalogSpecialties, catalogMaterials }: ProfileFormProps) {
   const [profileStatus, setProfileStatus] = useState<{ success?: boolean; error?: string } | null>(null);
   const [imageStatus, setImageStatus] = useState<{ success?: boolean; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -35,6 +40,26 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
   const [awardInput, setAwardInput] = useState("");
   const [region, setRegion] = useState(artisan.region ?? "");
   const [ciudad, setCiudad] = useState(artisan.location ?? "");
+
+  // Specialties: catalog selection + custom tags
+  const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState<string[]>(artisan.specialtyIds);
+  const customSpecialtiesFromField = (artisan.specialty ?? "")
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => !catalogSpecialties.some((cs) => cs.name.toLowerCase() === s.toLowerCase()));
+  const [customSpecialties, setCustomSpecialties] = useState<string[]>(customSpecialtiesFromField);
+
+  // Materials: catalog selection + custom tags
+  const catalogMaterialNames = catalogMaterials.map((m) => m.name.toLowerCase());
+  const initialSelectedMaterialNames = artisan.materials.filter((m) =>
+    catalogMaterialNames.includes(m.toLowerCase())
+  );
+  const initialCustomMaterials = artisan.materials.filter(
+    (m) => !catalogMaterialNames.includes(m.toLowerCase())
+  );
+  const [selectedMaterialNames, setSelectedMaterialNames] = useState<string[]>(initialSelectedMaterialNames);
+  const [customMaterials, setCustomMaterials] = useState<string[]>(initialCustomMaterials);
 
   const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
   const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
@@ -121,6 +146,13 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
       <Card>
         <h2 className="text-sm font-medium text-text-secondary">Informacion del perfil</h2>
         <form action={handleProfileSubmit} className="mt-4 space-y-4">
+          <input type="hidden" name="specialtyIds" value={selectedSpecialtyIds.join(",")} />
+          <input type="hidden" name="specialty" value={customSpecialties.join(",")} />
+          <input type="hidden" name="materials" value={[...selectedMaterialNames, ...customMaterials].join(",")} />
+          <input type="hidden" name="region" value={region} />
+          <input type="hidden" name="location" value={ciudad} />
+          <input type="hidden" name="awards" value={awards.join("|||")} />
+
           <div>
             <Label htmlFor="displayName">Nombre de artista</Label>
             <Input
@@ -155,20 +187,118 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
             />
           </div>
 
+          {/* Especialidades — catalog chips + custom tags */}
+          <div className="space-y-2">
+            <Label>Especialidades / Técnicas</Label>
+            <p className="text-xs text-text-secondary">
+              Selecciona tus especialidades del catálogo
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {catalogSpecialties.map((s) => {
+                const isSelected = selectedSpecialtyIds.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedSpecialtyIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== s.id)
+                          : [...prev, s.id]
+                      )
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {s.name}
+                  </button>
+                );
+              })}
+            </div>
+            <TagInput
+              tags={customSpecialties}
+              onTagsChange={setCustomSpecialties}
+              placeholder="Agregar otra especialidad..."
+              label="¿Tienes otra especialidad? Escríbela y presiona Enter"
+            />
+          </div>
+
+          {/* Materiales — catalog chips + custom tags */}
+          <div className="space-y-2">
+            <Label>Materiales que uso</Label>
+            <p className="text-xs text-text-secondary">
+              Selecciona los materiales con los que trabajas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {catalogMaterials.map((m) => {
+                const isSelected = selectedMaterialNames.some(
+                  (name) => name.toLowerCase() === m.name.toLowerCase()
+                );
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedMaterialNames((prev) =>
+                        isSelected
+                          ? prev.filter((name) => name.toLowerCase() !== m.name.toLowerCase())
+                          : [...prev, m.name]
+                      )
+                    }
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition ${
+                      isSelected
+                        ? "bg-accent/10 border-accent text-accent"
+                        : "border-border text-text-secondary hover:border-accent/50"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                    {m.name}
+                  </button>
+                );
+              })}
+            </div>
+            <TagInput
+              tags={customMaterials}
+              onTagsChange={setCustomMaterials}
+              placeholder="Agregar otro material..."
+              label="¿Usas otro material? Escríbelo y presiona Enter"
+            />
+          </div>
+
+          {/* Categorías (read-only, derived from products) */}
+          {artisan.categories.length > 0 && (
+            <div className="space-y-2">
+              <Label>Categorías de mis productos</Label>
+              <p className="text-xs text-text-secondary">
+                Se calculan automáticamente de tus piezas publicadas
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {artisan.categories.map((c) => (
+                  <span
+                    key={c.id}
+                    className="inline-block rounded-full bg-background border border-border px-3 py-1 text-xs text-text-secondary"
+                  >
+                    {c.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="specialty">Especialidad</Label>
-              <Input
-                id="specialty"
-                name="specialty"
-                defaultValue={artisan.specialty}
-                required
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <input type="hidden" name="region" value={region} />
-              <input type="hidden" name="location" value={ciudad} />
               <Label>Región</Label>
               <SelectDropdown
                 options={regionOptions}
@@ -189,17 +319,6 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="materials">Materiales (separados por coma)</Label>
-            <Input
-              id="materials"
-              name="materials"
-              defaultValue={artisan.materials.join(", ")}
-              placeholder="Plata 950, Cobre, Piedras naturales"
-              className="mt-1"
-            />
-          </div>
-
-          <div>
             <Label htmlFor="yearsExperience">¿Cuántos años llevas en la orfebrería?</Label>
             <Input
               id="yearsExperience"
@@ -215,7 +334,6 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
 
           <div>
             <Label>Premios, sellos de excelencia, certificaciones</Label>
-            <input type="hidden" name="awards" value={awards.join("|||")} />
             <div className="mt-1 flex gap-2">
               <Input
                 value={awardInput}
@@ -260,7 +378,7 @@ export function ProfileForm({ artisan }: ProfileFormProps) {
                       onClick={() => setAwards(awards.filter((a) => a !== award))}
                       className="ml-1 text-accent/60 hover:text-accent"
                     >
-                      ×
+                      &times;
                     </button>
                   </span>
                 ))}
