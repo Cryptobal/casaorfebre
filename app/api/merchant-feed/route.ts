@@ -69,11 +69,14 @@ export async function GET() {
       const categoryLabel = CATEGORY_LABELS[categorySlug] || "Joyería";
       const description = (product.description || "")
         .replace(/<[^>]*>/g, "")
+        .replace(/\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
         .slice(0, 5000);
 
       return `    <item>
       <g:id>${escapeXml(product.id)}</g:id>
-      <g:title>${escapeXml(product.name)}</g:title>
+      <g:title>${escapeXml(product.name.trim())}</g:title>
       <g:description>${escapeXml(description)}</g:description>
       <g:link>${baseUrl}/coleccion/${escapeXml(product.slug)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
@@ -94,7 +97,7 @@ export async function GET() {
     .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:g="http://schemas.google.com/g/2005">
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
     <title>Casa Orfebre — Joyería de Autor</title>
     <link>${baseUrl}</link>
