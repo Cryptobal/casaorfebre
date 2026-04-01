@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 model User {
@@ -305,9 +307,13 @@ model Product {
   wishlistItems  WishlistItem[]
   conversations  Conversation[]
 
+  // Búsqueda semántica (pgvector)
+  embedding Unsupported("vector(1536)")?
+
   @@index([artisanId])
   @@index([collectionId])
   @@index([status])
+  // HNSW index for embedding is created via raw SQL in the migration
   @@map("products")
 }
 
