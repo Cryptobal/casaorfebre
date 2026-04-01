@@ -47,3 +47,10 @@ export const aiBlogLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, "1 h"),
   prefix: "rl:ai-blog",
 });
+
+/** AI product listing generation — 10 per hour per user */
+export const aiProductLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 h"),
+  prefix: "rl:ai-product",
+});

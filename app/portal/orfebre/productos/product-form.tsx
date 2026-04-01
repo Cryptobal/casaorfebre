@@ -12,6 +12,13 @@ import { createProduct, updateProduct, saveAndSubmitForReview, reactivateProduct
 import { PresetSelector } from "@/components/forms/preset-selector";
 import { TagInput } from "@/components/forms/tag-input";
 import { CARE_PRESETS, PACKAGING_PRESETS, WARRANTY_PRESETS } from "@/lib/constants";
+import type { ProductListing } from "@/lib/ai/product-generator";
+import dynamic from "next/dynamic";
+
+const AIGeneratorButton = dynamic(
+  () => import("@/components/products/ai-generator-button").then((m) => m.AIGeneratorButton),
+  { ssr: false }
+);
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   DRAFT: { label: "Borrador", className: "border-gray-300 bg-gray-50 text-gray-700" },
@@ -193,6 +200,54 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
     () => parsePresets(product?.garantia, WARRANTY_PRESETS).customTags
   );
 
+  // ── AI Generation callback ──
+  const handleAiApply = useCallback((listing: ProductListing) => {
+    // Check if fields already have content — confirm before overwriting
+    const form = formRef.current;
+    const nameInput = form?.querySelector<HTMLInputElement>('[name="name"]');
+    const descInput = form?.querySelector<HTMLTextAreaElement>('[name="description"]');
+    const hasContent = !!(nameInput?.value?.trim() || descInput?.value?.trim());
+
+    if (hasContent && !window.confirm("Esto reemplazará el título y descripción actuales. ¿Continuar?")) {
+      return;
+    }
+
+    // Set uncontrolled text fields via DOM
+    if (form) {
+      if (nameInput) nameInput.value = listing.title;
+      if (descInput) descInput.value = listing.description;
+    }
+
+    // Set category by matching slug
+    const matchedCategory = categories.find(
+      (c) => c.slug === listing.suggestedCategory
+    );
+    if (matchedCategory) setSelectedCategoryId(matchedCategory.id);
+
+    // Set materials by matching name
+    const matchedMaterialIds = materials
+      .filter((m) => listing.suggestedMaterials.some((s) => m.name.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(m.name.toLowerCase())))
+      .map((m) => m.id);
+    if (matchedMaterialIds.length) setSelectedMaterialIds(matchedMaterialIds);
+
+    // Set technique — try to match specialties, add as custom if unmatched
+    if (listing.suggestedTechnique) {
+      const tech = listing.suggestedTechnique.toLowerCase();
+      const matchedSpecialty = specialties.find(
+        (s) => s.name.toLowerCase().includes(tech) || tech.includes(s.name.toLowerCase())
+      );
+      if (matchedSpecialty) {
+        setSelectedSpecialtyIds((prev) =>
+          prev.includes(matchedSpecialty.id) ? prev : [...prev, matchedSpecialty.id]
+        );
+      } else {
+        setCustomTechniques((prev) =>
+          prev.includes(listing.suggestedTechnique) ? prev : [...prev, listing.suggestedTechnique]
+        );
+      }
+    }
+  }, [categories, materials, specialties]);
+
   const updateBound = product
     ? updateProduct.bind(null, product.id)
     : null;
@@ -355,6 +410,20 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
       )}
 
       <form ref={formRef} action={formAction} className="space-y-6">
+        {/* AI Generate button — only when product has images */}
+        {product?.images && product.images.length > 0 && (
+          <div className="flex items-center gap-3">
+            <AIGeneratorButton
+              imageUrls={product.images.sort((a, b) => a.position - b.position).map((img) => img.url)}
+              artisanName=""
+              onApply={handleAiApply}
+            />
+            <p className="text-xs text-text-secondary">
+              Analiza tus fotos y pre-rellena nombre, descripción y atributos
+            </p>
+          </div>
+        )}
+
         {/* Name */}
         <div className="space-y-1.5">
           <Label htmlFor="name">Nombre</Label>
