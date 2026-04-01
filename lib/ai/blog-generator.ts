@@ -2,7 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import type { BlogCategory } from "@prisma/client";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let _anthropic: Anthropic | null = null;
+function getAnthropic() {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _anthropic;
+}
 
 interface GenerateParams {
   topic: string;
@@ -99,7 +103,7 @@ Keywords objetivo: ${params.keywords.join(", ")}
 Categoría: ${params.targetCategory}
 Sugiere 3-5 tags relevantes en español.${productContext}`;
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropic().messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 4096,
     messages: [{ role: "user", content: userPrompt }],
@@ -127,7 +131,7 @@ export async function suggestBlogTopics(existingTitles: string[]): Promise<strin
     ? existingTitles.map((t) => `- ${t}`).join("\n")
     : "- (ninguno aún)";
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropic().messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
     messages: [{

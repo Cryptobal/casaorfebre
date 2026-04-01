@@ -2,7 +2,11 @@ import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 import type { Product, Artisan, Category, Material, Specialty } from "@prisma/client";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let _openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 type ProductWithRelations = Product & {
   artisan: Pick<Artisan, "displayName" | "region" | "specialty">;
@@ -12,7 +16,7 @@ type ProductWithRelations = Product & {
 };
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
+  const response = await getOpenAI().embeddings.create({
     model: "text-embedding-3-small",
     input: text,
     dimensions: 1536,

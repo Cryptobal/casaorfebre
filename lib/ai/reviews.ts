@@ -1,6 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let _anthropic: Anthropic | null = null;
+function getAnthropic() {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _anthropic;
+}
 
 interface ReviewInput {
   rating: number;
@@ -14,7 +18,7 @@ export async function generateReviewHighlights(reviews: ReviewInput[]): Promise<
     .map((r, i) => `Reseña ${i + 1} (${r.rating}/5): ${r.comment}`)
     .join("\n");
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropic().messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 256,
     messages: [{
