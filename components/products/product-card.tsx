@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
+import { ReviewHighlights } from "@/components/products/review-highlights";
 import { toggleFavorite } from "@/lib/actions/favorites";
 import { trackAddToWishlist, trackSelectItem } from "@/lib/analytics-events";
 import type { Product, Artisan, ProductImage, Material } from "@prisma/client";
@@ -129,6 +130,7 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
           </p>
         )}
         <PriceDisplay price={product.price} compareAtPrice={product.compareAtPrice} />
+        <ReviewHighlights highlights={product.reviewHighlights as string[] | null} max={2} />
       </div>
     </Link>
   );

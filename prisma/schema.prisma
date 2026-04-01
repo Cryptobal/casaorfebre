@@ -307,6 +307,10 @@ model Product {
   wishlistItems  WishlistItem[]
   conversations  Conversation[]
 
+  // AI-generated review highlights (e.g. ["Envío rápido", "Calidad premium"])
+  reviewHighlights     Json?
+  reviewHighlightsAt   DateTime?
+
   // Búsqueda semántica (pgvector)
   embedding Unsupported("vector(1536)")?
 

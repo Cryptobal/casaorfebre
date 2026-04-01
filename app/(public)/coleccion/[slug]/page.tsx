@@ -13,6 +13,7 @@ import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart } from "./add-to-cart";
 import { ReviewList } from "@/components/reviews/review-list";
+import { ReviewHighlights } from "@/components/products/review-highlights";
 import { ViewTracker } from "./view-tracker";
 import { MessageArtisanButton } from "./message-artisan-button";
 import { ProductQuestions } from "./product-questions";
@@ -597,8 +598,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
             questions={questions}
           />
 
-          {/* Reviews */}
-          <ReviewList productId={product.id} />
+          {/* Review highlights + Reviews */}
+          <div className="space-y-4">
+            <ReviewHighlights highlights={product.reviewHighlights as string[] | null} />
+            <ReviewList productId={product.id} />
+          </div>
 
           {/* Similar products */}
           {similarProducts.length > 0 && (
