@@ -481,6 +481,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <TrustItem icon={<CertificateIcon />} text="Certificado Digital" />
               <TrustItem icon={<TruckIcon />} text="Env&iacute;o 3-7 d&iacute;as" />
             </div>
+
+            {/* Share buttons */}
+            <div className="border-t border-border pt-4 mt-2">
+              <p className="text-xs text-text-tertiary mb-2">Compartir esta pieza</p>
+              <ShareButtons
+                url={`https://casaorfebre.cl/coleccion/${product.slug}`}
+                title={product.name}
+                description={product.description.slice(0, 120)}
+                imageUrl={product.images[0]?.url}
+                type="product"
+              />
+            </div>
           </div>
         </div>
 
@@ -521,18 +533,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </Link>
             </div>
             <MessageArtisanButton artisanId={artisan.id} productId={product.id} />
-          </div>
-
-          {/* Share buttons */}
-          <div>
-            <p className="text-xs text-text-tertiary mb-2">Compartir esta pieza</p>
-            <ShareButtons
-              url={`https://casaorfebre.cl/coleccion/${product.slug}`}
-              title={product.name}
-              description={product.description.slice(0, 120)}
-              imageUrl={product.images[0]?.url}
-              type="product"
-            />
           </div>
 
           {/* Story */}

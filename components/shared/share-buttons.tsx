@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface ShareButtonsProps {
   url: string;
@@ -21,11 +21,6 @@ export function ShareButtons({
 }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
   const [instaCopied, setInstaCopied] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-  }, []);
 
   function openPopup(popupUrl: string) {
     window.open(popupUrl, "_blank", "width=600,height=600,scrollbars=yes");
@@ -53,10 +48,7 @@ export function ShareButtons({
         ? `Mira esta pieza: ${title} en Casa Orfebre 🔗 ${trackedUrl}`
         : `Conoce a ${title}, orfebre en Casa Orfebre 🔗 ${trackedUrl}`;
     const encoded = encodeURIComponent(text);
-    const whatsappUrl = isMobile
-      ? `whatsapp://send?text=${encoded}`
-      : `https://web.whatsapp.com/send?text=${encoded}`;
-    window.open(whatsappUrl, "_blank");
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
   }
 
   function handleInstagram() {

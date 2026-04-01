@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
+import { SupportBanner } from "@/components/portal/support-banner";
 import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
 import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
@@ -259,8 +260,9 @@ export default async function PortalLayout({ children }: { children: React.React
           {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
         </div>
 
-        <div className="max-w-full min-w-0 p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="max-w-full min-w-0 p-4 pb-16 sm:p-6 sm:pb-16 lg:p-8 lg:pb-16">{children}</div>
       </div>
+      <SupportBanner />
     </div>
   );
 }
