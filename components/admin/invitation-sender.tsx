@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { createAndSendInvitations } from "@/lib/actions/campaign-invitations";
+import {
+  createAndSendInvitations,
+  getCampaignDetail,
+  resendCampaignInvitation,
+} from "@/lib/actions/campaign-invitations";
 import type { InvitationCampaign, Invitation } from "@prisma/client";
-import { resendCampaignInvitation } from "@/lib/actions/campaign-invitations";
 
 // ---------------------------------------------------------------------------
 // Email parser
@@ -21,7 +24,7 @@ function parseEmails(text: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Props
+// Types
 // ---------------------------------------------------------------------------
 
 type CampaignWithCount = InvitationCampaign & { _count: { invitations: number } };
@@ -29,7 +32,6 @@ type CampaignWithCount = InvitationCampaign & { _count: { invitations: number } 
 interface InvitationSenderProps {
   type: "PIONEER" | "ARTISAN" | "BUYER";
   campaigns: CampaignWithCount[];
-  campaignDetail?: { campaign: InvitationCampaign; invitations: Invitation[] } | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,7 +56,7 @@ function formatDate(d: Date | string | null): string {
 // Component
 // ---------------------------------------------------------------------------
 
-export function InvitationSender({ type, campaigns, campaignDetail }: InvitationSenderProps) {
+export function InvitationSender({ type, campaigns }: InvitationSenderProps) {
   const [emailsText, setEmailsText] = useState("");
   const [campaignName, setCampaignName] = useState("");
   const [campaignDescription, setCampaignDescription] = useState("");
@@ -65,7 +67,11 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
     skipped: number;
     errors: string[];
   } | null>(null);
+
+  // Campaign detail expansion
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
+  const [detailInvitations, setDetailInvitations] = useState<Invitation[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
 
   const parsedEmails = useMemo(() => parseEmails(emailsText), [emailsText]);
@@ -84,7 +90,7 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
         campaignDescription: campaignDescription || undefined,
       });
       setResult({ sent: res.sent, failed: res.failed, skipped: res.skipped, errors: res.errors });
-      if (res.success) {
+      if (res.success && res.sent > 0) {
         setEmailsText("");
         setCampaignName("");
         setCampaignDescription("");
@@ -95,9 +101,32 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
     setIsSending(false);
   }
 
+  async function handleToggleDetail(campaignId: string) {
+    if (expandedCampaign === campaignId) {
+      setExpandedCampaign(null);
+      setDetailInvitations([]);
+      return;
+    }
+
+    setExpandedCampaign(campaignId);
+    setLoadingDetail(true);
+    try {
+      const detail = await getCampaignDetail(campaignId);
+      setDetailInvitations(detail?.invitations ?? []);
+    } catch {
+      setDetailInvitations([]);
+    }
+    setLoadingDetail(false);
+  }
+
   async function handleResend(id: string) {
     setResendingId(id);
     await resendCampaignInvitation(id);
+    // Refresh detail
+    if (expandedCampaign) {
+      const detail = await getCampaignDetail(expandedCampaign);
+      setDetailInvitations(detail?.invitations ?? []);
+    }
     setResendingId(null);
   }
 
@@ -119,7 +148,7 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary">Descripción (opcional)</label>
+            <label className="block text-sm font-medium text-text-secondary">{"Descripción (opcional)"}</label>
             <input
               type="text"
               value={campaignDescription}
@@ -133,7 +162,7 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
               rows={8}
               value={emailsText}
               onChange={(e) => setEmailsText(e.target.value)}
-              placeholder={`Pega los emails separados por coma, punto y coma, o uno por línea.\n\nEjemplo:\nmaria@gmail.com, jose@outlook.com\nana@hotmail.com`}
+              placeholder={"Pega los emails separados por coma, punto y coma, o uno por línea.\n\nEjemplo:\nmaria@gmail.com, jose@outlook.com\nana@hotmail.com"}
               className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm outline-none focus:border-accent"
             />
             <div className="mt-2">
@@ -141,11 +170,11 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
                 <p className="text-xs text-text-tertiary">No se detectaron emails válidos aún</p>
               ) : (
                 <p className="text-xs font-medium text-green-700">
-                  &#10003; {parsedEmails.length} emails válidos detectados
+                  {"\u2713 "}{parsedEmails.length}{" emails válidos detectados"}
                 </p>
               )}
               {duplicatesRemoved > 0 && (
-                <p className="text-xs text-text-tertiary">Se eliminaron {duplicatesRemoved} duplicados o inválidos</p>
+                <p className="text-xs text-text-tertiary">{"Se eliminaron "}{duplicatesRemoved}{" duplicados o inválidos"}</p>
               )}
             </div>
           </div>
@@ -160,9 +189,9 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
 
           {result && (
             <div className="rounded-md border border-border bg-background p-4 text-sm">
-              <p className="text-green-700">Enviadas: {result.sent}</p>
-              <p className="text-text-tertiary">Omitidas (ya invitadas): {result.skipped}</p>
-              <p className="text-red-600">Fallidas: {result.failed}</p>
+              <p className="text-green-700">{"Enviadas: "}{result.sent}</p>
+              <p className="text-text-tertiary">{"Omitidas (ya invitadas): "}{result.skipped}</p>
+              <p className="text-red-600">{"Fallidas: "}{result.failed}</p>
               {result.errors.length > 0 && (
                 <ul className="mt-2 list-disc pl-4 text-xs text-red-500">
                   {result.errors.map((e) => (
@@ -196,75 +225,16 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
               </thead>
               <tbody>
                 {campaigns.map((c) => (
-                  <>
-                    <tr key={c.id} className="border-b border-border last:border-0">
-                      <td className="px-4 py-3 font-medium">{c.name}</td>
-                      <td className="px-4 py-3 text-text-tertiary">{formatDate(c.createdAt)}</td>
-                      <td className="px-4 py-3">{c.totalSent}</td>
-                      <td className="px-4 py-3">{c.totalOpened}</td>
-                      <td className="px-4 py-3">{c.totalClicked}</td>
-                      <td className="px-4 py-3">{c.totalAccepted}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => setExpandedCampaign(expandedCampaign === c.id ? null : c.id)}
-                          className="text-xs font-medium text-accent hover:text-accent-dark"
-                        >
-                          {expandedCampaign === c.id ? "Ocultar" : "Ver detalle"}
-                        </button>
-                      </td>
-                    </tr>
-                    {expandedCampaign === c.id && campaignDetail?.campaign.id === c.id && (
-                      <tr key={`${c.id}-detail`}>
-                        <td colSpan={7} className="bg-surface px-4 py-4">
-                          {campaignDetail.invitations.length === 0 ? (
-                            <p className="text-xs text-text-tertiary">Sin invitaciones</p>
-                          ) : (
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-left text-text-tertiary">
-                                  <th className="pb-2">Email</th>
-                                  <th className="pb-2">Estado</th>
-                                  <th className="pb-2">Enviado</th>
-                                  <th className="pb-2">Click</th>
-                                  <th className="pb-2">Aceptado</th>
-                                  <th className="pb-2">Acciones</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {campaignDetail.invitations.map((inv) => {
-                                  const badge = STATUS_BADGES[inv.status] ?? STATUS_BADGES.SENT;
-                                  return (
-                                    <tr key={inv.id} className="border-t border-border/50">
-                                      <td className="py-2">{inv.email}</td>
-                                      <td className="py-2">
-                                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}>
-                                          {badge.label}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 text-text-tertiary">{formatDate(inv.sentAt)}</td>
-                                      <td className="py-2 text-text-tertiary">{formatDate(inv.clickedAt)}</td>
-                                      <td className="py-2 text-text-tertiary">{formatDate(inv.acceptedAt)}</td>
-                                      <td className="py-2">
-                                        {(inv.status === "FAILED" || inv.status === "BOUNCED") && (
-                                          <button
-                                            onClick={() => handleResend(inv.id)}
-                                            disabled={resendingId === inv.id}
-                                            className="rounded border border-border px-2 py-0.5 text-[10px] text-text-secondary hover:bg-background disabled:opacity-50"
-                                          >
-                                            Reenviar
-                                          </button>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          )}
-                        </td>
-                      </tr>
-                    )}
-                  </>
+                  <CampaignRow
+                    key={c.id}
+                    campaign={c}
+                    isExpanded={expandedCampaign === c.id}
+                    invitations={expandedCampaign === c.id ? detailInvitations : []}
+                    loadingDetail={expandedCampaign === c.id && loadingDetail}
+                    resendingId={resendingId}
+                    onToggle={() => handleToggleDetail(c.id)}
+                    onResend={handleResend}
+                  />
                 ))}
               </tbody>
             </table>
@@ -272,5 +242,103 @@ export function InvitationSender({ type, campaigns, campaignDetail }: Invitation
         )}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Campaign Row sub-component
+// ---------------------------------------------------------------------------
+
+function CampaignRow({
+  campaign: c,
+  isExpanded,
+  invitations,
+  loadingDetail,
+  resendingId,
+  onToggle,
+  onResend,
+}: {
+  campaign: CampaignWithCount;
+  isExpanded: boolean;
+  invitations: Invitation[];
+  loadingDetail: boolean;
+  resendingId: string | null;
+  onToggle: () => void;
+  onResend: (id: string) => void;
+}) {
+  return (
+    <>
+      <tr className="border-b border-border last:border-0">
+        <td className="px-4 py-3 font-medium">{c.name}</td>
+        <td className="px-4 py-3 text-text-tertiary">{formatDate(c.createdAt)}</td>
+        <td className="px-4 py-3">{c.totalSent}</td>
+        <td className="px-4 py-3">{c.totalOpened}</td>
+        <td className="px-4 py-3">{c.totalClicked}</td>
+        <td className="px-4 py-3">{c.totalAccepted}</td>
+        <td className="px-4 py-3">
+          <button
+            onClick={onToggle}
+            className="text-xs font-medium text-accent hover:text-accent-dark"
+          >
+            {isExpanded ? "Ocultar" : "Ver detalle"}
+          </button>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr>
+          <td colSpan={7} className="bg-surface px-4 py-4">
+            {loadingDetail ? (
+              <p className="text-xs text-text-tertiary">Cargando...</p>
+            ) : invitations.length === 0 ? (
+              <p className="text-xs text-text-tertiary">Sin invitaciones</p>
+            ) : (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-text-tertiary">
+                    <th className="pb-2">Email</th>
+                    <th className="pb-2">Estado</th>
+                    <th className="pb-2">Enviado</th>
+                    <th className="pb-2">Abierto</th>
+                    <th className="pb-2">Click</th>
+                    <th className="pb-2">Aceptado</th>
+                    <th className="pb-2">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invitations.map((inv) => {
+                    const badge = STATUS_BADGES[inv.status] ?? STATUS_BADGES.SENT;
+                    return (
+                      <tr key={inv.id} className="border-t border-border/50">
+                        <td className="py-2">{inv.email}</td>
+                        <td className="py-2">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                        </td>
+                        <td className="py-2 text-text-tertiary">{formatDate(inv.sentAt)}</td>
+                        <td className="py-2 text-text-tertiary">{formatDate(inv.openedAt)}</td>
+                        <td className="py-2 text-text-tertiary">{formatDate(inv.clickedAt)}</td>
+                        <td className="py-2 text-text-tertiary">{formatDate(inv.acceptedAt)}</td>
+                        <td className="py-2">
+                          {(inv.status === "FAILED" || inv.status === "BOUNCED") && (
+                            <button
+                              onClick={() => onResend(inv.id)}
+                              disabled={resendingId === inv.id}
+                              className="rounded border border-border px-2 py-0.5 text-[10px] text-text-secondary hover:bg-background disabled:opacity-50"
+                            >
+                              Reenviar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
