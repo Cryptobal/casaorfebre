@@ -32,26 +32,72 @@ export default async function InvitacionesPage({
   // Campaign invitation stats (gracefully handle missing table before migration)
   let pioneerCount = 0, artisanCount = 0, buyerCount = 0;
   let pioneerAccepted = 0, artisanAccepted = 0, buyerAccepted = 0;
+  let totalOpened = 0, totalClicked = 0, totalFollowUps = 0, pendingFollowUps = 0;
   try {
-    [pioneerCount, artisanCount, buyerCount, pioneerAccepted, artisanAccepted, buyerAccepted] =
-      await Promise.all([
-        prisma.invitation.count({ where: { type: "PIONEER" } }),
-        prisma.invitation.count({ where: { type: "ARTISAN" } }),
-        prisma.invitation.count({ where: { type: "BUYER" } }),
-        prisma.invitation.count({ where: { type: "PIONEER", status: "ACCEPTED" } }),
-        prisma.invitation.count({ where: { type: "ARTISAN", status: "ACCEPTED" } }),
-        prisma.invitation.count({ where: { type: "BUYER", status: "ACCEPTED" } }),
-      ]);
+    [
+      pioneerCount, artisanCount, buyerCount,
+      pioneerAccepted, artisanAccepted, buyerAccepted,
+      totalOpened, totalClicked, totalFollowUps, pendingFollowUps,
+    ] = await Promise.all([
+      prisma.invitation.count({ where: { type: "PIONEER" } }),
+      prisma.invitation.count({ where: { type: "ARTISAN" } }),
+      prisma.invitation.count({ where: { type: "BUYER" } }),
+      prisma.invitation.count({ where: { type: "PIONEER", status: "ACCEPTED" } }),
+      prisma.invitation.count({ where: { type: "ARTISAN", status: "ACCEPTED" } }),
+      prisma.invitation.count({ where: { type: "BUYER", status: "ACCEPTED" } }),
+      prisma.invitation.count({ where: { openedAt: { not: null } } }),
+      prisma.invitation.count({ where: { clickedAt: { not: null } } }),
+      prisma.invitation.count({ where: { followUpCount: { gt: 0 } } }),
+      prisma.invitation.count({ where: { status: { in: ["SENT", "OPENED"] }, followUpCount: { lt: 2 }, nextFollowUpAt: { not: null } } }),
+    ]);
   } catch {
     // Table may not exist yet if migration hasn't been applied
   }
+
+  const totalInvitations = pioneerCount + artisanCount + buyerCount;
+  const totalAccepted = pioneerAccepted + artisanAccepted + buyerAccepted;
+  const conversionRate = totalInvitations > 0 ? Math.round((totalAccepted / totalInvitations) * 100) : 0;
+  const openRate = totalInvitations > 0 ? Math.round((totalOpened / totalInvitations) * 100) : 0;
+  const clickRate = totalInvitations > 0 ? Math.round((totalClicked / totalInvitations) * 100) : 0;
 
   return (
     <div>
       <h1 className="font-serif text-3xl font-light">Invitaciones</h1>
 
-      {/* Campaign Invitations Summary */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Global Metrics */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-6">
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Total enviadas</p>
+          <p className="mt-1 text-xl font-medium">{totalInvitations}</p>
+        </Card>
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Abiertas</p>
+          <p className="mt-1 text-xl font-medium">{totalOpened}</p>
+          <p className="text-[10px] text-text-tertiary">{openRate}%</p>
+        </Card>
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Clicks</p>
+          <p className="mt-1 text-xl font-medium">{totalClicked}</p>
+          <p className="text-[10px] text-text-tertiary">{clickRate}%</p>
+        </Card>
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Registradas</p>
+          <p className="mt-1 text-xl font-medium">{totalAccepted}</p>
+          <p className="text-[10px] text-green-600 font-medium">{conversionRate}% conv.</p>
+        </Card>
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Follow-ups enviados</p>
+          <p className="mt-1 text-xl font-medium">{totalFollowUps}</p>
+        </Card>
+        <Card>
+          <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Pendientes</p>
+          <p className="mt-1 text-xl font-medium">{pendingFollowUps}</p>
+          <p className="text-[10px] text-text-tertiary">próx. seguimiento</p>
+        </Card>
+      </div>
+
+      {/* Per-type Summary */}
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <p className="text-xs uppercase tracking-widest text-text-tertiary">Pioneros</p>
           <p className="mt-1 text-2xl font-medium">{pioneerCount}</p>
