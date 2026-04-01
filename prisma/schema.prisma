@@ -50,6 +50,9 @@ model User {
   shippingPostalCode String?
   shippingPhone      String?
 
+  // Shipping addresses
+  shippingAddresses ShippingAddress[]
+
   // Chat relations
   buyerConversations Conversation[] @relation("BuyerConversations")
   sentMessages       Message[]
@@ -1175,4 +1178,53 @@ enum AcceptanceMethod {
   CHECKBOX
   CLICK_WRAP
   BROWSE_WRAP
+}
+
+model ShippingAddress {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String   @default("Casa")
+  fullName   String
+  phone      String
+  street     String
+  apartment  String?
+  commune    String
+  city       String
+  region     String
+  postalCode String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@map("shipping_addresses")
+}
+
+model ReferralVisit {
+  id               String   @id @default(cuid())
+  source           String   // pinterest, whatsapp, instagram, blog, google, direct, other
+  medium           String?  // social, organic, referral, share
+  campaign         String?  // utm_campaign
+  landingPage      String
+  productSlug      String?
+  artisanSlug      String?
+  sessionId        String
+  userId           String?
+  convertedToOrder Boolean  @default(false)
+  orderId          String?
+  createdAt        DateTime @default(now())
+
+  @@index([source, createdAt])
+  @@index([productSlug])
+  @@index([sessionId])
+  @@map("referral_visits")
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("system_settings")
 }

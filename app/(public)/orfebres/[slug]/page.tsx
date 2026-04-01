@@ -24,9 +24,11 @@ export async function generateMetadata({
   const artisan = await getArtisanBySlug(slug);
   if (!artisan) return { title: "Orfebre no encontrado" };
 
-  const url = `https://casaorfebre.cl/orfebres/${slug}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const url = `${baseUrl}/orfebres/${slug}`;
   const description = artisan.bio?.slice(0, 160) ?? `${artisan.displayName}, orfebre independiente en Casa Orfebre`;
   const title = `${artisan.displayName} — Orfebre | Casa Orfebre`;
+  const ogImageUrl = `${baseUrl}/api/og/artisan?name=${encodeURIComponent(artisan.displayName)}&region=${encodeURIComponent(artisan.region || "")}&products=${artisan.products.length}${artisan.profileImage ? `&image=${encodeURIComponent(artisan.profileImage)}` : ""}`;
 
   return {
     title: artisan.displayName,
@@ -39,9 +41,12 @@ export async function generateMetadata({
       url,
       siteName: "Casa Orfebre",
       locale: "es_CL",
-      images: artisan.profileImage
-        ? [{ url: artisan.profileImage, width: 800, height: 800, alt: artisan.displayName }]
-        : undefined,
+      images: [
+        { url: ogImageUrl, width: 1200, height: 630, alt: artisan.displayName },
+        ...(artisan.profileImage
+          ? [{ url: artisan.profileImage, width: 800, height: 800, alt: artisan.displayName }]
+          : []),
+      ],
     },
     twitter: {
       card: "summary" as const,

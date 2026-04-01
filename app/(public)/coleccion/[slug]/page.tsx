@@ -29,10 +29,13 @@ export async function generateMetadata({ params }: PageProps) {
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto no encontrado" };
 
-  const url = `https://casaorfebre.cl/coleccion/${slug}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const url = `${baseUrl}/coleccion/${slug}`;
   const imageUrl = product.images[0]?.url;
   const description = product.description.slice(0, 160);
   const title = `${product.name} por ${product.artisan.displayName} | Casa Orfebre`;
+  const priceFormatted = new Intl.NumberFormat("es-CL").format(product.price);
+  const ogImageUrl = `${baseUrl}/api/og/product?name=${encodeURIComponent(product.name)}&artisan=${encodeURIComponent(product.artisan.displayName)}&price=${encodeURIComponent(priceFormatted)}${imageUrl ? `&image=${encodeURIComponent(imageUrl)}` : ""}`;
 
   return {
     title: product.name,
@@ -45,23 +48,30 @@ export async function generateMetadata({ params }: PageProps) {
       url,
       siteName: "Casa Orfebre",
       locale: "es_CL",
-      images: imageUrl
-        ? [
-            {
-              url: imageUrl,
-              width: 1200,
-              height: 1600,
-              alt: product.images[0]?.altText ?? product.name,
-              type: "image/webp",
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        },
+        ...(imageUrl
+          ? [
+              {
+                url: imageUrl,
+                width: 1200,
+                height: 1600,
+                alt: product.images[0]?.altText ?? product.name,
+              },
+            ]
+          : []),
+      ],
     },
     twitter: {
       card: "summary_large_image" as const,
       title,
       description,
-      images: imageUrl ? [imageUrl] : undefined,
+      images: [ogImageUrl],
       creator: "@casaorfebre",
       site: "@casaorfebre",
     },

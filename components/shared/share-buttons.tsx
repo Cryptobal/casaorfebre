@@ -31,20 +31,27 @@ export function ShareButtons({
     window.open(popupUrl, "_blank", "width=600,height=600,scrollbars=yes");
   }
 
+  function withUtm(base: string, source: string, medium: string): string {
+    const sep = base.includes("?") ? "&" : "?";
+    return `${base}${sep}utm_source=${source}&utm_medium=${medium}`;
+  }
+
   function handlePinterest() {
     if (!imageUrl) return;
+    const trackedUrl = withUtm(url, "pinterest", "social");
     const pinDesc = encodeURIComponent(
       `${title} - ${description} | Casa Orfebre`
     );
-    const pinUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${pinDesc}`;
+    const pinUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(trackedUrl)}&media=${encodeURIComponent(imageUrl)}&description=${pinDesc}`;
     openPopup(pinUrl);
   }
 
   function handleWhatsApp() {
+    const trackedUrl = withUtm(url, "whatsapp", "share");
     const text =
       type === "product"
-        ? `Mira esta pieza: ${title} en Casa Orfebre 🔗 ${url}`
-        : `Conoce a ${title}, orfebre en Casa Orfebre 🔗 ${url}`;
+        ? `Mira esta pieza: ${title} en Casa Orfebre 🔗 ${trackedUrl}`
+        : `Conoce a ${title}, orfebre en Casa Orfebre 🔗 ${trackedUrl}`;
     const encoded = encodeURIComponent(text);
     const whatsappUrl = isMobile
       ? `whatsapp://send?text=${encoded}`
@@ -53,13 +60,15 @@ export function ShareButtons({
   }
 
   function handleInstagram() {
-    navigator.clipboard.writeText(url);
+    const trackedUrl = withUtm(url, "instagram", "share");
+    navigator.clipboard.writeText(trackedUrl);
     setInstaCopied(true);
     setTimeout(() => setInstaCopied(false), 2000);
   }
 
   function handleCopyLink() {
-    navigator.clipboard.writeText(url);
+    const trackedUrl = withUtm(url, "copy", "share");
+    navigator.clipboard.writeText(trackedUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }

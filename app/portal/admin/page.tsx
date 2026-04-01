@@ -9,14 +9,16 @@ import {
 import { formatCLP } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { SalesChart, PlanDistributionChart } from "@/components/admin/dashboard-charts";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminDashboardPage() {
-  const [stats, salesData, planData, topArtisans, topProducts] = await Promise.all([
+  const [stats, salesData, planData, topArtisans, topProducts, pinterestToken] = await Promise.all([
     getAdminDashboardStats(),
     getSalesLast6Months(),
     getArtisansByPlan(),
     getTopArtisansMonth(),
     getTopProductsMonth(),
+    prisma.systemSetting.findUnique({ where: { key: "PINTEREST_ACCESS_TOKEN" } }).catch(() => null),
   ]);
 
   const alerts: { count: number; label: string; href: string }[] = [
@@ -94,6 +96,43 @@ export default async function AdminDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Pinterest status */}
+      {process.env.PINTEREST_APP_ID && (
+        <div className="mt-4">
+          <Card>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xs uppercase tracking-widest text-text-tertiary">Pinterest</span>
+                {(() => {
+                  if (!pinterestToken) {
+                    return <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">Desconectado</span>;
+                  }
+                  const daysSinceUpdate = Math.floor((Date.now() - pinterestToken.updatedAt.getTime()) / 86400000);
+                  if (daysSinceUpdate > 30) {
+                    return <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">Token expirado</span>;
+                  }
+                  if (daysSinceUpdate > 25) {
+                    return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Por expirar</span>;
+                  }
+                  return <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Conectado</span>;
+                })()}
+                {pinterestToken && (
+                  <span className="text-xs text-text-tertiary">
+                    Último refresh: {pinterestToken.updatedAt.toLocaleDateString("es-CL")}
+                  </span>
+                )}
+              </div>
+              <a
+                href={`https://www.pinterest.com/oauth/?client_id=${process.env.PINTEREST_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/api/auth/pinterest/callback`)}&response_type=code&scope=boards:read,boards:write,pins:read,pins:write,user_accounts:read&state=casaorfebre`}
+                className="text-xs text-accent hover:underline"
+              >
+                {pinterestToken ? "Reconectar" : "Conectar Pinterest"}
+              </a>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Row 1: Main KPIs */}
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">

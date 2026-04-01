@@ -121,13 +121,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Artisans (priority 0.6, weekly)
   const artisans = await prisma.artisan.findMany({
     where: { status: "APPROVED" },
-    select: { slug: true, updatedAt: true },
+    select: { slug: true, updatedAt: true, region: true },
   });
-  const artisanPages = artisans.map((a: { slug: string; updatedAt: Date }) => ({
+  const artisanPages = artisans.map((a) => ({
     url: `${baseUrl}/orfebres/${a.slug}`,
     lastModified: a.updatedAt,
     changeFrequency: "weekly" as const,
     priority: 0.6,
+  }));
+
+  // Artisan region pages (priority 0.6, weekly)
+  const artisanRegions = [...new Set(artisans.map((a) => a.region).filter(Boolean))];
+  const artisanRegionPages = artisanRegions.map((region) => ({
+    url: `${baseUrl}/orfebres/region/${slugify(region!)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  // Category landing pages (SEO) (priority 0.8, weekly)
+  const dbCategories = await prisma.category.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+  });
+  const categorySeoPages = dbCategories.map((c) => ({
+    url: `${baseUrl}/coleccion/categoria/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
   }));
 
   // Products (priority 0.8, weekly, with lastModified)
@@ -171,6 +192,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...cityPages,
     ...orfebresHub,
     ...artisanPages,
+    ...artisanRegionPages,
+    ...categorySeoPages,
     ...productPages,
     ...otherPages,
   ];

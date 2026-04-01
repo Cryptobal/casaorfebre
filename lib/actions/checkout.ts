@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { preferenceClient } from "@/lib/mercadopago";
 import { createArtisanPreference } from "@/lib/mercadopago-split";
@@ -19,6 +20,20 @@ function generateOrderNumber(): string {
   const year = new Date().getFullYear();
   const random = Math.floor(10000 + Math.random() * 90000);
   return `CO-${year}-${random}`;
+}
+
+async function markReferralConversion(orderId: string) {
+  try {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get("co_sid")?.value;
+    if (!sessionId) return;
+    await prisma.referralVisit.updateMany({
+      where: { sessionId, convertedToOrder: false },
+      data: { convertedToOrder: true, orderId },
+    });
+  } catch {
+    // Non-critical — don't block checkout
+  }
 }
 
 export async function createCheckoutPreference(formData: FormData) {
@@ -310,6 +325,9 @@ export async function createCheckoutPreference(formData: FormData) {
       }
     }
 
+    // Mark referral conversion
+    markReferralConversion(order.id).catch(() => {});
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     return { success: true, redirectUrl: `${appUrl}/checkout/success` };
   }
@@ -433,6 +451,9 @@ export async function createCheckoutPreference(formData: FormData) {
         console.error("Failed to mark reward as used:", e);
       }
     }
+
+    // Mark referral conversion
+    markReferralConversion(order.id).catch(() => {});
 
     return { success: true, redirectUrl };
   } catch (error) {
