@@ -1,20 +1,14 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getCampaigns, getCampaignDetail } from "@/lib/actions/campaign-invitations";
+import { getCampaigns } from "@/lib/actions/campaign-invitations";
 import { InvitationSender } from "@/components/admin/invitation-sender";
 import Link from "next/link";
 
-export default async function InvitacionesPionerosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ campaign?: string }>;
-}) {
+export default async function InvitacionesPionerosPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
 
-  const params = await searchParams;
   const campaigns = await getCampaigns("PIONEER");
-  const detail = params.campaign ? await getCampaignDetail(params.campaign) : null;
 
   return (
     <div>
@@ -29,7 +23,7 @@ export default async function InvitacionesPionerosPage({
       </Link>
       <h1 className="font-serif text-3xl font-light text-text">{"Invitaciones · Pioneros"}</h1>
       <div className="mt-8">
-        <InvitationSender type="PIONEER" campaigns={campaigns} campaignDetail={detail} />
+        <InvitationSender type="PIONEER" campaigns={campaigns} />
       </div>
     </div>
   );
