@@ -300,7 +300,7 @@ function CampaignRow({
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={7} className="bg-surface px-4 py-4">
+          <td colSpan={8} className="bg-surface px-4 py-4">
             {loadingDetail ? (
               <p className="text-xs text-text-tertiary">Cargando...</p>
             ) : invitations.length === 0 ? (
@@ -311,10 +311,11 @@ function CampaignRow({
                   <tr className="text-left text-text-tertiary">
                     <th className="pb-2">Email</th>
                     <th className="pb-2">Estado</th>
+                    <th className="pb-2">Follow-ups</th>
                     <th className="pb-2">Enviado</th>
                     <th className="pb-2">Abierto</th>
                     <th className="pb-2">Click</th>
-                    <th className="pb-2">Aceptado</th>
+                    <th className="pb-2">Registrado</th>
                     <th className="pb-2">Acciones</th>
                   </tr>
                 </thead>
@@ -328,6 +329,15 @@ function CampaignRow({
                           <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}>
                             {badge.label}
                           </span>
+                        </td>
+                        <td className="py-2">
+                          {inv.followUpCount > 0 ? (
+                            <span className="inline-block rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700">
+                              {inv.followUpCount}/2
+                            </span>
+                          ) : (
+                            <span className="text-text-tertiary">{"\u2014"}</span>
+                          )}
                         </td>
                         <td className="py-2 text-text-tertiary">{formatDate(inv.sentAt)}</td>
                         <td className="py-2 text-text-tertiary">{formatDate(inv.openedAt)}</td>

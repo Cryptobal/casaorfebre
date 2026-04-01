@@ -13,6 +13,7 @@
     { "path": "/api/cron/pinterest-refresh", "schedule": "0 6 * * 1" },
     { "path": "/api/cron/embeddings", "schedule": "0 3 * * *" },
     { "path": "/api/cron/review-highlights", "schedule": "0 5 * * 0" },
-    { "path": "/api/cron/email-marketing", "schedule": "0 17 * * *" }
+    { "path": "/api/cron/email-marketing", "schedule": "0 17 * * *" },
+    { "path": "/api/cron/invitation-followups", "schedule": "0 14 * * 1-5" }
   ]
 }

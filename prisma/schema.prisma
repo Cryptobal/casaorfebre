@@ -756,19 +756,22 @@ model WishlistItem {
 // ---------------------------------------------------------------------------
 
 model Invitation {
-  id           String                  @id @default(cuid())
-  email        String
-  type         InvitationType
-  token        String                  @unique @default(cuid())
-  campaignId   String?
-  sentAt       DateTime                @default(now())
-  openedAt     DateTime?
-  clickedAt    DateTime?
-  acceptedAt   DateTime?
-  status       CampaignInvitationStatus @default(SENT)
-  createdById  String
-  notes        String?
-  campaign     InvitationCampaign?     @relation(fields: [campaignId], references: [id])
+  id              String                  @id @default(cuid())
+  email           String
+  type            InvitationType
+  token           String                  @unique @default(cuid())
+  campaignId      String?
+  sentAt          DateTime                @default(now())
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  acceptedAt      DateTime?
+  status          CampaignInvitationStatus @default(SENT)
+  createdById     String
+  notes           String?
+  followUpCount   Int                     @default(0)
+  lastFollowUpAt  DateTime?
+  nextFollowUpAt  DateTime?
+  campaign        InvitationCampaign?     @relation(fields: [campaignId], references: [id])
 
   @@index([email])
   @@index([type])

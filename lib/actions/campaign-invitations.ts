@@ -92,6 +92,7 @@ export async function createAndSendInvitations(data: {
               type: data.type,
               campaignId: campaign.id,
               createdById: session.user.id,
+              nextFollowUpAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
             },
           });
 
