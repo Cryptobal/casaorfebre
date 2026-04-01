@@ -61,3 +61,10 @@ export const aiSuggestLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(30, "1 d"),
   prefix: "rl:ai-suggest",
 });
+
+/** AI collection curation — 5 per hour per admin */
+export const aiCollectionLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "1 h"),
+  prefix: "rl:ai-collection",
+});

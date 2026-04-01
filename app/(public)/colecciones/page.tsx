@@ -1,6 +1,7 @@
 export const revalidate = 60;
 
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { getActiveCategories, getActiveOccasions } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -57,13 +58,29 @@ async function getOccasionCounts() {
   }));
 }
 
+async function getCuratedCollections() {
+  return prisma.curatedCollection.findMany({
+    where: { isActive: true },
+    include: {
+      products: {
+        where: { status: "APPROVED" },
+        select: { images: { take: 1, orderBy: { position: "asc" } } },
+        take: 1,
+      },
+      _count: { select: { products: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export default async function ColeccionesPage() {
-  const [categories, occasions, categoryCounts, occasionData] =
+  const [categories, occasions, categoryCounts, occasionData, curatedCollections] =
     await Promise.all([
       getActiveCategories(),
       getActiveOccasions(),
       getCategoryCounts(),
       getOccasionCounts(),
+      getCuratedCollections(),
     ]);
 
   const occasionCountMap = new Map(
@@ -126,6 +143,57 @@ export default async function ColeccionesPage() {
                     <span className="mt-1 text-xs text-text-tertiary">
                       {count} {count === 1 ? "pieza" : "piezas"}
                     </span>
+                  </Link>
+                </FadeIn>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Curated Collections */}
+      {curatedCollections.length > 0 && (
+        <div className="mt-16">
+          <h2 className="mb-6 font-serif text-xl font-light text-text">
+            Colecciones curadas
+          </h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {curatedCollections.map((col, i) => {
+              const coverImage = col.coverImage || col.products[0]?.images[0]?.url;
+              return (
+                <FadeIn key={col.id} delay={i * 80}>
+                  <Link
+                    href={`/colecciones/${col.slug}`}
+                    className="group block overflow-hidden rounded-lg border border-border bg-surface transition-all hover:border-accent hover:shadow-sm"
+                  >
+                    {coverImage ? (
+                      <div className="relative aspect-[16/9] overflow-hidden bg-background">
+                        <Image
+                          src={coverImage}
+                          alt={col.name}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex aspect-[16/9] items-center justify-center bg-background">
+                        <span className="text-3xl text-text-tertiary/30">&#9830;</span>
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-serif text-lg font-light text-text group-hover:text-accent">
+                        {col.name}
+                      </h3>
+                      {col.description && (
+                        <p className="mt-1 text-xs text-text-secondary line-clamp-2">
+                          {col.description}
+                        </p>
+                      )}
+                      <span className="mt-2 block text-xs text-text-tertiary">
+                        {col._count.products} {col._count.products === 1 ? "pieza" : "piezas"}
+                      </span>
+                    </div>
                   </Link>
                 </FadeIn>
               );

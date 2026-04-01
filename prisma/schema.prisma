@@ -223,6 +223,23 @@ model Collection {
   @@map("collections")
 }
 
+model CuratedCollection {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?   @db.Text
+  metaTitle       String?
+  metaDescription String?
+  coverImage      String?
+  isActive        Boolean   @default(false)
+  curatedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  products        Product[]
+
+  @@map("curated_collections")
+}
+
 model Product {
   id             String            @id @default(cuid())
   artisanId      String
@@ -306,6 +323,7 @@ model Product {
   reviews        Review[]
   wishlistItems  WishlistItem[]
   conversations  Conversation[]
+  curatedCollections CuratedCollection[]
 
   // AI-generated review highlights (e.g. ["Envío rápido", "Calidad premium"])
   reviewHighlights     Json?
