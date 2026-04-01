@@ -102,6 +102,14 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
   const precioFromCalculadora = searchParams.get("precio");
   const isEditing = !!product;
 
+  // Wizard: new empty drafts start in "upload" step, existing products go to "form"
+  const isNewDraft = product && !product.name && product.status === "DRAFT";
+  const [wizardStep, setWizardStep] = useState<"upload" | "form">(isNewDraft ? "upload" : "form");
+  const [artisanDescription, setArtisanDescription] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [currentImages, setCurrentImages] = useState(product?.images ?? []);
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(product?.categoryIds?.[0] ?? "");
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>(product?.materialIds ?? []);
   const [productionType, setProductionType] = useState(product?.productionType ?? "UNIQUE");
@@ -200,9 +208,8 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
     () => parsePresets(product?.garantia, WARRANTY_PRESETS).customTags
   );
 
-  // ── AI Generation callback ──
+  // ── AI Generation: full field mapping ──
   const handleAiApply = useCallback((listing: ProductListing) => {
-    // Check if fields already have content — confirm before overwriting
     const form = formRef.current;
     const nameInput = form?.querySelector<HTMLInputElement>('[name="name"]');
     const descInput = form?.querySelector<HTMLTextAreaElement>('[name="description"]');
@@ -212,41 +219,196 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
       return;
     }
 
-    // Set uncontrolled text fields via DOM
+    // 1-3. Text fields via DOM
     if (form) {
       if (nameInput) nameInput.value = listing.title;
       if (descInput) descInput.value = listing.description;
+      const storyInput = form.querySelector<HTMLTextAreaElement>('[name="story"]');
+      if (storyInput) storyInput.value = listing.story || "";
+      // Price
+      const priceInput = form.querySelector<HTMLInputElement>('[name="price"]');
+      if (priceInput && listing.suggestedPrice) priceInput.value = String(listing.suggestedPrice);
+      // Dimensions
+      const dimInput = form.querySelector<HTMLInputElement>('[name="dimensions"]');
+      if (dimInput && listing.suggestedDimensions) dimInput.value = listing.suggestedDimensions;
+      // Weight
+      const weightInput = form.querySelector<HTMLInputElement>('[name="weight"]');
+      if (weightInput && listing.suggestedWeight) weightInput.value = String(listing.suggestedWeight);
+      // Stock
+      const stockInput = form.querySelector<HTMLInputElement>('[name="stock"]');
+      if (stockInput) stockInput.value = String(listing.suggestedStock || 1);
+      // Elaboration days
+      const elabInput = form.querySelector<HTMLInputElement>('[name="elaborationDays"]');
+      if (elabInput && listing.suggestedElaborationDays) elabInput.value = String(listing.suggestedElaborationDays);
+      // Cantidad edicion
+      const cantInput = form.querySelector<HTMLInputElement>('[name="cantidadEdicion"]');
+      if (cantInput && listing.suggestedCantidadEdicion) cantInput.value = String(listing.suggestedCantidadEdicion);
+      // Diámetro
+      const diamInput = form.querySelector<HTMLInputElement>('[name="diametroMm"]');
+      if (diamInput && listing.suggestedDiametroMm) diamInput.value = String(listing.suggestedDiametroMm);
+      // Largo cadena
+      const cadenaInput = form.querySelector<HTMLInputElement>('[name="largoCadenaCm"]');
+      if (cadenaInput && listing.suggestedLargoCadenaCm) cadenaInput.value = String(listing.suggestedLargoCadenaCm);
+      // Earring dimensions
+      const ewInput = form.querySelector<HTMLInputElement>('[name="earringWidth"]');
+      if (ewInput && listing.suggestedEarringWidth) ewInput.value = String(listing.suggestedEarringWidth);
+      const edInput = form.querySelector<HTMLInputElement>('[name="earringDrop"]');
+      if (edInput && listing.suggestedEarringDrop) edInput.value = String(listing.suggestedEarringDrop);
+      // Personalizacion
+      const persInput = form.querySelector<HTMLTextAreaElement>('[name="detallePersonalizacion"]');
+      if (persInput && listing.detallePersonalizacion) persInput.value = listing.detallePersonalizacion;
     }
 
-    // Set category by matching slug
-    const matchedCategory = categories.find(
-      (c) => c.slug === listing.suggestedCategory
-    );
-    if (matchedCategory) setSelectedCategoryId(matchedCategory.id);
+    // 4. Category
+    const matchedCat = categories.find((c) => c.slug === listing.suggestedCategory);
+    if (matchedCat) setSelectedCategoryId(matchedCat.id);
 
-    // Set materials by matching name
-    const matchedMaterialIds = materials
-      .filter((m) => listing.suggestedMaterials.some((s) => m.name.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(m.name.toLowerCase())))
+    // 5. Materials
+    const matchedMatIds = materials
+      .filter((m) => listing.suggestedMaterials.some((s) =>
+        m.name.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(m.name.toLowerCase())
+      ))
       .map((m) => m.id);
-    if (matchedMaterialIds.length) setSelectedMaterialIds(matchedMaterialIds);
+    if (matchedMatIds.length) setSelectedMaterialIds(matchedMatIds);
 
-    // Set technique — try to match specialties, add as custom if unmatched
+    // 6. Technique / Specialties
     if (listing.suggestedTechnique) {
       const tech = listing.suggestedTechnique.toLowerCase();
-      const matchedSpecialty = specialties.find(
+      const matched = specialties.find(
         (s) => s.name.toLowerCase().includes(tech) || tech.includes(s.name.toLowerCase())
       );
-      if (matchedSpecialty) {
-        setSelectedSpecialtyIds((prev) =>
-          prev.includes(matchedSpecialty.id) ? prev : [...prev, matchedSpecialty.id]
-        );
+      if (matched) {
+        setSelectedSpecialtyIds((prev) => prev.includes(matched.id) ? prev : [...prev, matched.id]);
       } else {
-        setCustomTechniques((prev) =>
-          prev.includes(listing.suggestedTechnique) ? prev : [...prev, listing.suggestedTechnique]
-        );
+        setCustomTechniques((prev) => prev.includes(listing.suggestedTechnique) ? prev : [...prev, listing.suggestedTechnique]);
       }
     }
-  }, [categories, materials, specialties]);
+    // Additional specialties
+    if (listing.suggestedSpecialties?.length) {
+      const ids = specialties
+        .filter((s) => listing.suggestedSpecialties.some((name) =>
+          s.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(s.name.toLowerCase())
+        ))
+        .map((s) => s.id);
+      if (ids.length) setSelectedSpecialtyIds((prev) => [...new Set([...prev, ...ids])]);
+    }
+
+    // 7. Occasions
+    if (listing.suggestedOccasions?.length) {
+      const ids = occasions
+        .filter((o) => listing.suggestedOccasions.some((name) =>
+          o.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(o.name.toLowerCase())
+        ))
+        .map((o) => o.id);
+      if (ids.length) setSelectedOccasionIds(ids);
+    }
+
+    // 8. Audiencia
+    const validAud = ["MUJER", "HOMBRE", "UNISEX", "NINOS", "SIN_ESPECIFICAR"];
+    if (listing.suggestedAudiencia && validAud.includes(listing.suggestedAudiencia)) {
+      setSelectedAudiencia(listing.suggestedAudiencia);
+    }
+
+    // 9. Production type
+    const validProd = ["UNIQUE", "MADE_TO_ORDER", "LIMITED"];
+    if (listing.suggestedProductionType && validProd.includes(listing.suggestedProductionType)) {
+      setProductionType(listing.suggestedProductionType);
+    }
+
+    // 10. Customizable
+    if (listing.isCustomizable) {
+      setPersonalizable(true);
+    }
+
+    // 11. Cadena toggle
+    if (listing.suggestedTieneCadena !== null && listing.suggestedTieneCadena !== undefined) {
+      setTieneCadena(listing.suggestedTieneCadena);
+    }
+
+    // 12. Talla
+    if (listing.suggestedTallaUnica) {
+      setTallaUnica(listing.suggestedTallaUnica);
+    }
+
+    // 13. Stones
+    if (listing.suggestedStones?.length) {
+      setShowStones(true);
+      setStones(listing.suggestedStones.map((s) => ({
+        stoneType: s.type,
+        stoneCarat: "",
+        stoneColor: s.color || "",
+        stoneCut: s.cut || "",
+        stoneOrigin: "natural",
+        stoneClarity: "",
+        quantity: String(s.quantity || 1),
+      })));
+    }
+
+    // 14. Cuidados preset matching
+    if (listing.suggestedCuidados) {
+      const lines = listing.suggestedCuidados.split(/[.\n]/).map((l) => l.trim()).filter(Boolean);
+      const matched = lines.filter((l) => (CARE_PRESETS as readonly string[]).includes(l));
+      const custom = lines.filter((l) => !(CARE_PRESETS as readonly string[]).includes(l));
+      if (matched.length) setCuidadosSelected(matched);
+      if (custom.length) setCuidadosCustom(custom);
+    }
+
+    // 15. Empaque preset matching
+    if (listing.suggestedEmpaque) {
+      const lines = listing.suggestedEmpaque.split(/[.\n]/).map((l) => l.trim()).filter(Boolean);
+      const matched = lines.filter((l) => (PACKAGING_PRESETS as readonly string[]).includes(l));
+      const custom = lines.filter((l) => !(PACKAGING_PRESETS as readonly string[]).includes(l));
+      if (matched.length) setEmpaqueSelected(matched);
+      if (custom.length) setEmpaqueCustom(custom);
+    }
+
+    // 16. Garantía preset matching
+    if (listing.suggestedGarantia) {
+      const lines = listing.suggestedGarantia.split(/[.\n]/).map((l) => l.trim()).filter(Boolean);
+      const matched = lines.filter((l) => (WARRANTY_PRESETS as readonly string[]).includes(l));
+      const custom = lines.filter((l) => !(WARRANTY_PRESETS as readonly string[]).includes(l));
+      if (matched.length) setGarantiaSelected(matched);
+      if (custom.length) setGarantiaCustom(custom);
+    }
+
+    // Switch to form view
+    setWizardStep("form");
+  }, [categories, materials, specialties, occasions]);
+
+  // ── Wizard AI generate (inline, no modal) ──
+  const handleWizardGenerate = useCallback(async () => {
+    if (!currentImages.length) return;
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const imageUrls = currentImages
+        .sort((a, b) => a.position - b.position)
+        .slice(0, 4)
+        .map((img) => img.url);
+
+      const res = await fetch("/api/ai/product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrls,
+          extraContext: artisanDescription.trim() || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: "Error al generar" }));
+        throw new Error(data.error || "Error al generar el listado");
+      }
+
+      const data = await res.json();
+      handleAiApply(data.listing);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Error al generar el listado");
+    } finally {
+      setAiLoading(false);
+    }
+  }, [currentImages, artisanDescription, handleAiApply]);
 
   const updateBound = product
     ? updateProduct.bind(null, product.id)
@@ -379,8 +541,92 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
         </div>
       )}
 
+      {/* ═══ Wizard: Upload + Describe step ═══ */}
+      {wizardStep === "upload" && product?.id && (
+        <div className="space-y-6">
+          {/* Images */}
+          <div>
+            <h2 className="font-serif text-lg font-semibold text-text">
+              Sube las fotos de tu pieza
+            </h2>
+            <p className="mt-1 text-xs text-text-secondary">
+              Las fotos son lo más importante. Sube al menos una para que la IA pueda analizar tu pieza.
+            </p>
+            <div className="mt-4">
+              <ImageUpload
+                productId={product.id}
+                existingImages={product.images}
+                onImagesChange={(imgs) => setCurrentImages(imgs.map((img) => ({ ...img, altText: null })))}
+              />
+            </div>
+          </div>
+
+          {/* Description textarea */}
+          <div className="space-y-1.5">
+            <h2 className="font-serif text-lg font-semibold text-text">
+              Cuéntanos sobre tu pieza
+            </h2>
+            <textarea
+              value={artisanDescription}
+              onChange={(e) => setArtisanDescription(e.target.value)}
+              rows={4}
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              placeholder="Describe tu pieza: materiales, inspiración, técnica, lo que quieras que la IA sepa para generar el listado perfecto..."
+            />
+          </div>
+
+          {/* AI Generate button */}
+          <button
+            type="button"
+            disabled={aiLoading || currentImages.length === 0}
+            onClick={handleWizardGenerate}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#8B7355] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#7a6548] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {aiLoading ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Analizando fotos y generando listado...
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                Generar listado con IA
+              </>
+            )}
+          </button>
+
+          {aiError && (
+            <p className="text-sm text-red-600">{aiError}</p>
+          )}
+
+          {/* Manual fallback */}
+          <div className="text-center">
+            <div className="flex items-center gap-3 text-text-tertiary">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs">o</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <button
+              type="button"
+              onClick={() => setWizardStep("form")}
+              className="mt-3 text-sm text-accent hover:underline"
+            >
+              Completar formulario manualmente →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Full form (shown when wizardStep === "form") ═══ */}
+      {wizardStep === "form" && <>
+
       {/* Status badge */}
-      {product?.status && (
+      {product?.status && product.status !== "DRAFT" && (
         <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium ${STATUS_CONFIG[product.status]?.className ?? "border-border text-text-secondary"}`}>
           <span className="h-2 w-2 rounded-full bg-current opacity-60" />
           {STATUS_CONFIG[product.status]?.label ?? product.status}
@@ -1606,6 +1852,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           )}
         </div>
       </form>
+      </>}
     </div>
   );
 }

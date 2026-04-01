@@ -194,6 +194,27 @@ function parseFormData(formData: FormData) {
   };
 }
 
+export async function createMinimalDraft(): Promise<{ productId?: string; error?: string }> {
+  const artisan = await getArtisan();
+  if (!artisan) return { error: "No autorizado" };
+
+  const id = require("crypto").randomBytes(12).toString("hex");
+  const slug = `borrador-${id}`;
+
+  const product = await prisma.product.create({
+    data: {
+      artisanId: artisan.id,
+      name: "",
+      description: "",
+      slug,
+      price: 0,
+      status: "DRAFT",
+    },
+  });
+
+  return { productId: product.id };
+}
+
 export async function createProduct(
   _prevState: { error?: string; success?: boolean; productId?: string } | null,
   formData: FormData
