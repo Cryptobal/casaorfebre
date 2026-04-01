@@ -2,8 +2,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { answerQuestion } from "@/lib/actions/questions";
+import { AnswerForm } from "@/components/questions/answer-form";
 import Link from "next/link";
 
 export default async function PreguntasPage({
@@ -100,26 +100,13 @@ export default async function PreguntasPage({
                   )}
                 </div>
               ) : (
-                <form
-                  action={async (formData: FormData) => {
+                <AnswerForm
+                  questionId={q.id}
+                  answerAction={async (formData: FormData) => {
                     "use server";
                     await answerQuestion(q.id, formData);
                   }}
-                  className="mt-4"
-                >
-                  <textarea
-                    name="answer"
-                    required
-                    rows={3}
-                    placeholder="Escribe tu respuesta..."
-                    className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-                  />
-                  <div className="mt-2 flex justify-end">
-                    <Button type="submit" size="sm">
-                      Responder
-                    </Button>
-                  </div>
-                </form>
+                />
               )}
             </Card>
           ))}

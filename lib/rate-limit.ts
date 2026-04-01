@@ -54,3 +54,10 @@ export const aiProductLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(10, "1 h"),
   prefix: "rl:ai-product",
 });
+
+/** AI answer suggestion — 30 per day per user */
+export const aiSuggestLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, "1 d"),
+  prefix: "rl:ai-suggest",
+});
