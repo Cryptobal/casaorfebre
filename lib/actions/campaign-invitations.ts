@@ -296,10 +296,6 @@ export async function deleteCampaignInvitation(
   });
   if (!invitation) return { success: false };
 
-  if (invitation.status !== "FAILED" && invitation.status !== "BOUNCED") {
-    return { success: false };
-  }
-
   await prisma.invitation.delete({ where: { id: invitationId } });
   revalidatePath("/portal/admin/invitaciones");
   return { success: true };
