@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { SalesChart, RevenueChart } from "./sales-chart";
+import { AiInsights } from "./ai-insights";
 
 const MONTH_NAMES = [
   "Ene", "Feb", "Mar", "Abr", "May", "Jun",
@@ -226,6 +227,11 @@ export default async function EstadisticasPage() {
       <p className="mt-1 text-sm text-text-secondary">
         Resumen de rendimiento de tu taller
       </p>
+
+      {/* ── AI Insights ── */}
+      <div className="mt-6">
+        <AiInsights />
+      </div>
 
       {/* ── Basic Stats Cards ── */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

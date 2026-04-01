@@ -329,6 +329,9 @@ model Product {
   reviewHighlights     Json?
   reviewHighlightsAt   DateTime?
 
+  // AI moderation analysis (fraud detection)
+  aiModeration         Json?
+
   // Búsqueda semántica (pgvector)
   embedding Unsupported("vector(1536)")?
 
@@ -621,6 +624,9 @@ model ArtisanApplication {
   reviewedAt      DateTime?
   reviewNotes     String?
   createdAt       DateTime                 @default(now())
+
+  // AI review of application portfolio
+  aiReview        Json?
 
   @@map("artisan_applications")
 }

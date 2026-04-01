@@ -28,11 +28,24 @@ Postulación abierta en casaorfebre.cl/postular
 Contenido y Blog
 Blog con artículos sobre joyería artesanal, técnicas de orfebrería, guías de compra, y tendencias: casaorfebre.cl/blog
 
+Guía de regalos
+Guía interactiva con IA para encontrar el regalo perfecto: casaorfebre.cl/regalos
+Regalos por presupuesto: /regalos-bajo-30000, /regalos-bajo-50000, /regalos-bajo-100000
+
 Datos estructurados
 Cada producto incluye datos estructurados Schema.org (Product, Offer, AggregateRating).
 
 API pública
-Catálogo disponible en: https://casaorfebre.cl/api/public/products
+Documentación completa: https://casaorfebre.cl/api/public/docs
+
+Endpoints disponibles:
+- GET /api/public/products — Catálogo con filtros (category, material, occasion, style, minPrice, maxPrice, sort, limit, offset)
+- GET /api/public/products/{slug} — Detalle de un producto
+- GET /api/public/artisans — Lista de orfebres verificados
+- GET /api/public/collections — Colecciones curadas activas
+
+Todas las respuestas son JSON. CORS abierto. Cache: 1 hora.
+Precios en CLP (pesos chilenos). No se exponen datos sensibles.
 
 Contacto
 Email: contacto@casaorfebre.cl

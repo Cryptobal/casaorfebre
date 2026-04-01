@@ -99,6 +99,7 @@ interface Product {
   video: ProductVideo | null;
   stones: { id: string; stoneType: string; stoneCarat: number | null; stoneColor: string | null; quantity: number }[];
   pinterestPinId: string | null;
+  aiModeration: { riskLevel: string; reasons: string[]; score: number } | null;
   _count: { orderItems: number; images: number };
 }
 
@@ -172,6 +173,25 @@ export function ExpandableProductRow({ product }: ExpandableProductRowProps) {
           {pendingImages.length > 0 && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
               {pendingImages.length} foto{pendingImages.length !== 1 ? "s" : ""} pendiente{pendingImages.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          {/* AI Moderation risk badge */}
+          {product.aiModeration && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                product.aiModeration.riskLevel === "HIGH"
+                  ? "bg-red-100 text-red-800"
+                  : product.aiModeration.riskLevel === "MEDIUM"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-green-100 text-green-800"
+              }`}
+              title={product.aiModeration.reasons?.join(", ") || ""}
+            >
+              {product.aiModeration.riskLevel === "HIGH"
+                ? "IA: Riesgo alto"
+                : product.aiModeration.riskLevel === "MEDIUM"
+                  ? "IA: Revisar"
+                  : "IA: OK"}
             </span>
           )}
         </div>
@@ -369,6 +389,44 @@ export function ExpandableProductRow({ product }: ExpandableProductRowProps) {
                 Estado: {product.video.status === "READY" ? "Listo" : product.video.status}
                 {product.video.muted && " (silenciado)"}
               </p>
+            </div>
+          )}
+
+          {/* ── AI Moderation details ── */}
+          {product.aiModeration && (
+            <div className="mb-4">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+                Analisis IA de autenticidad
+              </p>
+              <div
+                className={`rounded-lg border p-3 ${
+                  product.aiModeration.riskLevel === "HIGH"
+                    ? "border-red-200 bg-red-50"
+                    : product.aiModeration.riskLevel === "MEDIUM"
+                      ? "border-yellow-200 bg-yellow-50"
+                      : "border-green-200 bg-green-50"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium">
+                    {product.aiModeration.riskLevel === "HIGH"
+                      ? "🔴 Riesgo alto — posible producto industrial"
+                      : product.aiModeration.riskLevel === "MEDIUM"
+                        ? "🟡 Riesgo medio — revisar fotos"
+                        : "🟢 Riesgo bajo"}
+                  </span>
+                  <span className="text-xs text-text-tertiary">
+                    Score: {product.aiModeration.score}/100
+                  </span>
+                </div>
+                {product.aiModeration.reasons.length > 0 && (
+                  <ul className="mt-1 space-y-0.5">
+                    {product.aiModeration.reasons.map((r, i) => (
+                      <li key={i} className="text-xs text-text-secondary">• {r}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
 

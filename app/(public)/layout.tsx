@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
+import { ShoppingChatbot } from "@/components/chat/shopping-chatbot";
 import { ReferralTracker } from "@/components/shared/referral-tracker";
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner";
 import { auth } from "@/lib/auth";
@@ -72,7 +72,7 @@ export default async function PublicLayout({
       {showVerificationBanner && <EmailVerificationBanner />}
       <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       <Footer />
-      <WhatsAppButton />
+      <ShoppingChatbot />
       <ReferralTracker />
     </>
   );
