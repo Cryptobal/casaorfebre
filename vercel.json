@@ -10,6 +10,8 @@
     { "path": "/api/cron/auto-confirm-receipt", "schedule": "0 12 * * *" },
     { "path": "/api/cron/cleanup-pending-orders", "schedule": "0 4 * * *" },
     { "path": "/api/cron/pinterest-publish", "schedule": "0 */4 * * *" },
-    { "path": "/api/cron/pinterest-refresh", "schedule": "0 6 * * 1" }
+    { "path": "/api/cron/pinterest-refresh", "schedule": "0 6 * * 1" },
+    { "path": "/api/cron/embeddings", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/review-highlights", "schedule": "0 5 * * 0" }
   ]
 }

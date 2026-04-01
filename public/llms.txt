@@ -1,0 +1,40 @@
+Casa Orfebre — Joyería de Autor
+
+Marketplace curado de joyería artesanal chilena. Conectamos compradores con orfebres independientes verificados.
+
+Qué es Casa Orfebre
+Casa Orfebre (casaorfebre.cl) es una plataforma de e-commerce especializada en joyería de autor hecha a mano por orfebres chilenos independientes. Cada artesano es verificado a través de un proceso de curaduría profesional. Operamos desde Chile con envíos a todo el país.
+
+Catálogo
+Categorías: Anillos, Collares, Aros, Pulseras, Broches, Colgantes
+Materiales: Plata 950, Plata 925, Oro 18k, Cobre, Bronce, Alpaca, Piedras naturales chilenas (lapislázuli, cuarzo, obsidiana)
+Tipos de producción: Pieza Única, Edición Limitada, Producción Artesanal
+Rango de precios: $15.000 - $500.000 CLP
+Técnicas: fundición, engaste, filigrana, repujado, esmaltado, forja, tejido en metal
+
+Garantías para compradores
+Pago seguro con tarjeta (Visa, Mastercard, débito) vía Mercado Pago
+Garantía de satisfacción de 14 días
+Certificado de autenticidad con código QR verificable por cada pieza
+Tracking de envío en tiempo real vía Chilexpress
+Todos los orfebres pasan por proceso de curaduría y verificación
+
+Para orfebres independientes
+Publicación de piezas con fotografía profesional
+Panel de gestión de pedidos y estadísticas
+Comisión del 18% sobre cada venta
+Postulación abierta en casaorfebre.cl/postular
+
+Contenido y Blog
+Blog con artículos sobre joyería artesanal, técnicas de orfebrería, guías de compra, y tendencias: casaorfebre.cl/blog
+
+Datos estructurados
+Cada producto incluye datos estructurados Schema.org (Product, Offer, AggregateRating).
+
+API pública
+Catálogo disponible en: https://casaorfebre.cl/api/public/products
+
+Contacto
+Email: contacto@casaorfebre.cl
+Web: https://casaorfebre.cl
+País: Chile

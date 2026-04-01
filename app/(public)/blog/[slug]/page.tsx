@@ -9,6 +9,7 @@ import { ShareButtons } from "@/components/shared/share-buttons";
 import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { RelatedProducts } from "@/components/blog/related-products";
 import { slugify } from "@/lib/utils";
+import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -148,6 +149,14 @@ export default async function BlogPostPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdHtml }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildBreadcrumbJsonLd([
+          { name: "Inicio", url: "/" },
+          { name: "Blog", url: "/blog" },
+          { name: post.title, url: `/blog/${post.slug}` },
+        ])) }}
       />
 
       {/* Hero Image */}

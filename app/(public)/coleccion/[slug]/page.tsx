@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductBySlug, getSimilarProducts } from "@/lib/queries/products";
 import { ProductCard } from "@/components/products/product-card";
-import { canonicalUrl } from "@/lib/seo";
+import { canonicalUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ImageGallery } from "./image-gallery";
@@ -298,6 +298,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
         }}
       />
       <JsonLd data={jsonLd} />
+      <JsonLd data={buildBreadcrumbJsonLd([
+        { name: "Inicio", url: "/" },
+        { name: "Colección", url: "/coleccion" },
+        { name: categoryLabel, url: `/coleccion/${categorySlug}` },
+        { name: product.name, url: `/coleccion/${slug}` },
+      ])} />
 
       <div className="mx-auto max-w-6xl px-4 pt-8 pb-20 sm:px-6 lg:px-8">
         <Breadcrumbs

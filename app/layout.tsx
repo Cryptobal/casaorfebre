@@ -6,6 +6,7 @@ import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
 import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
 import { RoleSwitcherWrapper } from "@/components/shared/role-switcher-wrapper";
+import { generateOrganizationJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -136,6 +137,10 @@ export default function RootLayout({
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationJsonLd()) }}
+        />
       </head>
       <body>
         <AuthProvider>
