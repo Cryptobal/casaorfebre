@@ -745,6 +745,63 @@ model WishlistItem {
   @@map("wishlist_items")
 }
 
+// ---------------------------------------------------------------------------
+// Invitation System (campaigns + tracking)
+// ---------------------------------------------------------------------------
+
+model Invitation {
+  id           String                  @id @default(cuid())
+  email        String
+  type         InvitationType
+  token        String                  @unique @default(cuid())
+  campaignId   String?
+  sentAt       DateTime                @default(now())
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  acceptedAt   DateTime?
+  status       CampaignInvitationStatus @default(SENT)
+  createdById  String
+  notes        String?
+  campaign     InvitationCampaign?     @relation(fields: [campaignId], references: [id])
+
+  @@index([email])
+  @@index([type])
+  @@index([status])
+  @@index([campaignId])
+  @@map("invitations")
+}
+
+model InvitationCampaign {
+  id            String         @id @default(cuid())
+  name          String
+  type          InvitationType
+  description   String?
+  totalSent     Int            @default(0)
+  totalOpened   Int            @default(0)
+  totalClicked  Int            @default(0)
+  totalAccepted Int            @default(0)
+  createdAt     DateTime       @default(now())
+  createdById   String
+  invitations   Invitation[]
+
+  @@map("invitation_campaigns")
+}
+
+enum InvitationType {
+  PIONEER
+  ARTISAN
+  BUYER
+}
+
+enum CampaignInvitationStatus {
+  SENT
+  OPENED
+  CLICKED
+  ACCEPTED
+  BOUNCED
+  FAILED
+}
+
 enum UserRole {
   BUYER
   ARTISAN
