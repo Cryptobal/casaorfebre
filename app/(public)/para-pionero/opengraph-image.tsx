@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { brandOgImageFonts, loadBrandOgFonts } from '@/lib/og/brand-fonts';
 
 export const runtime = 'nodejs';
 export const alt = '3 meses gratis \u2014 Programa Pioneros Casa Orfebre';
@@ -6,19 +7,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function Image() {
-  const cormorant = fetch(
-    new URL(
-      'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3bmX5slCNuHLi8bLeY9MK7whWMhyjYqXtK.ttf',
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const outfit = fetch(
-    new URL(
-      'https://fonts.gstatic.com/s/outfit/v11/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1O4a0EwItq6fNIg.ttf',
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const [cormorantData, outfitData] = await Promise.all([cormorant, outfit]);
+  const fontBuffers = await loadBrandOgFonts();
 
   return new ImageResponse(
     (
@@ -130,20 +119,7 @@ export default async function Image() {
     ),
     {
       ...size,
-      fonts: [
-        {
-          name: 'Cormorant Garamond',
-          data: cormorantData,
-          weight: 300,
-          style: 'normal',
-        },
-        {
-          name: 'Outfit',
-          data: outfitData,
-          weight: 300,
-          style: 'normal',
-        },
-      ],
+      fonts: brandOgImageFonts(fontBuffers),
     },
   );
 }
