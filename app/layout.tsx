@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-provider";
@@ -24,6 +24,12 @@ const outfit = Outfit({
   variable: "--font-outfit",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: {

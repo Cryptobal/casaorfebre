@@ -7,7 +7,8 @@ export async function GET(req: NextRequest) {
   const material = params.get("material") ?? undefined;
   const occasion = params.get("occasion") ?? undefined;
   const style = params.get("style") ?? undefined;
-  const slug = params.get("slug") ?? undefined;
+  const slugValues = params.getAll("slug");
+  const slug = slugValues.length > 0 ? slugValues.join(",") : undefined;
   const minPrice = params.get("minPrice") ? Number(params.get("minPrice")) : undefined;
   const maxPrice = params.get("maxPrice") ? Number(params.get("maxPrice")) : undefined;
   const limit = Math.min(Number(params.get("limit")) || 20, 100);
