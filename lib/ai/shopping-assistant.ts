@@ -92,36 +92,111 @@ export async function chat(params: {
 
   let productContext: ProductContext[] = [];
 
+  const productSelect = {
+    name: true,
+    slug: true,
+    price: true,
+    description: true,
+    materials: { select: { name: true } },
+    artisan: { select: { displayName: true } },
+  } as const;
+
+  function toProductContext(products: Array<{
+    name: string; slug: string; price: number; description: string;
+    materials: { name: string }[]; artisan: { displayName: string };
+  }>): ProductContext[] {
+    return products.map((p) => ({
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      materials: p.materials.map((m) => m.name),
+      artisanName: p.artisan.displayName,
+      description: p.description.substring(0, 150),
+    }));
+  }
+
   // Search for products if the user seems to be looking for something
   if (detectSearchIntent(lastUserMessage)) {
+    // Intento 1: búsqueda semántica (embeddings)
     try {
       const results = await semanticSearch(lastUserMessage, undefined, 8);
-
       if (results.length > 0) {
         const productIds = results.map((r) => r.id);
         const products = await prisma.product.findMany({
           where: { id: { in: productIds } },
-          select: {
-            name: true,
-            slug: true,
-            price: true,
-            description: true,
-            materials: { select: { name: true } },
-            artisan: { select: { displayName: true } },
-          },
+          select: productSelect,
         });
-
-        productContext = products.map((p) => ({
-          name: p.name,
-          slug: p.slug,
-          price: p.price,
-          materials: p.materials.map((m) => m.name),
-          artisanName: p.artisan.displayName,
-          description: p.description.substring(0, 150),
-        }));
+        productContext = toProductContext(products);
       }
     } catch (e) {
-      console.error("Error searching products for chat:", e);
+      console.error("Semantic search failed, falling back to SQL:", e);
+    }
+
+    // Intento 2: fallback a búsqueda SQL si semántica retorna 0
+    if (productContext.length === 0) {
+      try {
+        const lower = lastUserMessage.toLowerCase();
+
+        const categoryMatch = [
+          "anillo", "collar", "aros", "pulsera", "broche", "colgante", "cadena", "tobillera",
+        ].find((cat) => lower.includes(cat));
+
+        const materialMatch = [
+          "plata", "oro", "cobre", "bronce", "alpaca", "acero", "lapislazuli",
+        ].find((mat) => lower.includes(mat));
+
+        const priceMatch = lastUserMessage.match(/(\d{1,3}[\.,]?\d{3})/);
+        const maxPrice = priceMatch ? parseInt(priceMatch[1].replace(/[\.,]/g, ""), 10) : undefined;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const where: any = { status: "APPROVED" };
+        if (categoryMatch) {
+          where.categories = { some: { slug: { contains: categoryMatch } } };
+        }
+        if (materialMatch) {
+          where.materials = { some: { name: { contains: materialMatch, mode: "insensitive" } } };
+        }
+        if (maxPrice) {
+          where.price = { lte: maxPrice };
+        }
+
+        const fallbackProducts = await prisma.product.findMany({
+          where,
+          select: productSelect,
+          orderBy: { createdAt: "desc" },
+          take: 8,
+        });
+
+        if (fallbackProducts.length > 0) {
+          productContext = toProductContext(fallbackProducts);
+        } else {
+          // Sin resultados filtrados → mostrar los más recientes
+          const recentProducts = await prisma.product.findMany({
+            where: { status: "APPROVED" },
+            select: productSelect,
+            orderBy: { createdAt: "desc" },
+            take: 6,
+          });
+          productContext = toProductContext(recentProducts);
+        }
+      } catch (e) {
+        console.error("Fallback SQL search also failed:", e);
+      }
+    }
+  }
+
+  // Último recurso: primeros mensajes sin intención de búsqueda → productos populares
+  if (productContext.length === 0 && messages.length <= 3) {
+    try {
+      const popularProducts = await prisma.product.findMany({
+        where: { status: "APPROVED" },
+        select: productSelect,
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      });
+      productContext = toProductContext(popularProducts);
+    } catch (e) {
+      console.error("Popular products fetch failed:", e);
     }
   }
 
@@ -164,6 +239,10 @@ export async function chat(params: {
       )
       .join("\n");
     augmentedUserMessage = `${lastUserMessage}\n\nCONTEXTO DE PRODUCTOS DISPONIBLES:\n${contextStr}\n\nIMPORTANTE: DEBES recomendar al menos 2-3 productos del contexto e incluir [PRODUCTS: slug1, slug2, ...] con sus slugs exactos.`;
+  }
+
+  if (productContext.length === 0) {
+    augmentedUserMessage += "\n\nNo se encontraron productos en el catálogo para esta búsqueda. Responde de forma útil sugiriendo que exploren el catálogo completo en casaorfebre.cl/coleccion o que prueben con otro estilo/material. NUNCA digas que no tienes acceso al inventario.";
   }
 
   const anthropicMessages = messages.slice(0, -1).map((m) => ({

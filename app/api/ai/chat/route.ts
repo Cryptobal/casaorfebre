@@ -17,6 +17,9 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  console.log("[Chat] OPENAI_API_KEY configured:", !!process.env.OPENAI_API_KEY);
+  console.log("[Chat] ANTHROPIC_API_KEY configured:", !!process.env.ANTHROPIC_API_KEY);
+
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
   if (!checkRateLimit(ip)) {
