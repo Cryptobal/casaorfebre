@@ -27,40 +27,57 @@ interface ProductCard {
 /* ------------------------------------------------------------------ */
 
 function ChatProductCards({ products }: { products: ProductCard[] }) {
+  if (products.length === 0) return null;
+
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 pt-2 scrollbar-thin">
-      {products.map((p) => (
-        <a
-          key={p.slug}
-          href={`/coleccion/${p.slug}`}
-          className="flex min-w-[160px] max-w-[180px] shrink-0 flex-col overflow-hidden rounded-lg border border-[#e8e5df] bg-white transition-shadow hover:shadow-md"
-        >
-          <div className="relative aspect-square w-full bg-[#f5f3ef]">
-            {p.image ? (
-              <Image
-                src={p.image}
-                alt={p.name}
-                fill
-                className="object-cover"
-                sizes="180px"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-xs text-[#9e9a90]">
-                Sin imagen
-              </div>
-            )}
-          </div>
-          <div className="p-2">
-            <p className="line-clamp-2 font-serif text-xs leading-tight text-[#1a1a18]">
-              {p.name}
-            </p>
-            <p className="mt-0.5 text-[10px] text-[#9e9a90]">{p.artisanName}</p>
-            <p className="mt-1 text-xs font-medium text-[#8B7355]">
-              {formatCLP(p.price)}
-            </p>
-          </div>
-        </a>
-      ))}
+    <div className="relative pt-2">
+      <div
+        className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-2 scrollbar-thin"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        {products.map((p) => (
+          <a
+            key={p.slug}
+            href={`/coleccion/${p.slug}`}
+            className="flex w-[150px] min-w-[150px] snap-start flex-col overflow-hidden rounded-lg border border-[#e8e5df] bg-white transition-shadow hover:shadow-md"
+          >
+            <div className="relative aspect-square w-full bg-[#f5f3ef]">
+              {p.image ? (
+                <Image
+                  src={p.image}
+                  alt={p.name}
+                  fill
+                  className="object-cover"
+                  sizes="150px"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-xs text-[#9e9a90]">
+                  Sin imagen
+                </div>
+              )}
+            </div>
+            <div className="p-2">
+              <p className="line-clamp-2 font-serif text-xs leading-tight text-[#1a1a18]">
+                {p.name}
+              </p>
+              <p className="mt-0.5 text-[10px] text-[#9e9a90]">{p.artisanName}</p>
+              <p className="mt-1 text-xs font-medium text-[#8B7355]">
+                {formatCLP(p.price)}
+              </p>
+            </div>
+          </a>
+        ))}
+      </div>
+      {products.length > 2 && (
+        <div className="mt-1 flex justify-center gap-1">
+          {products.map((p, i) => (
+            <span
+              key={i}
+              className="h-1 w-1 rounded-full bg-[#8B7355]/30"
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -98,6 +115,32 @@ function TypingIndicator() {
 const WELCOME_MESSAGE =
   "¡Hola! Soy tu asistente de Casa Orfebre. ¿Buscas una joya especial o necesitas ayuda para elegir un regalo? ✨";
 
+const ALL_SUGGESTIONS = [
+  "Anillos de plata",
+  "Regalo para ella",
+  "Aros minimalistas",
+  "Colgantes de autor",
+  "Collares artesanales",
+  "Pulseras de plata",
+  "Joyas para regalar",
+  "Plata 950",
+  "Joyas rústicas",
+  "Aros de plata",
+  "Anillos orgánicos",
+  "Regalo de aniversario",
+];
+
+function pickSuggestions(count: number): string[] {
+  const shuffled = [...ALL_SUGGESTIONS];
+  // Fisher-Yates shuffle seeded by the current hour so it rotates
+  const seed = new Date().getHours();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = (seed * (i + 1) * 7 + 13) % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
+}
+
 export function ShoppingChatbot() {
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
@@ -107,6 +150,7 @@ export function ShoppingChatbot() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [productCache, setProductCache] = useState<Record<string, ProductCard>>({});
+  const [suggestions] = useState(() => pickSuggestions(4));
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -270,6 +314,7 @@ export function ShoppingChatbot() {
           className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-[#e8e5df] bg-white shadow-2xl
             max-md:inset-0 max-md:rounded-none max-md:border-0
             md:bottom-24 md:right-6 md:h-[500px] md:w-[400px]"
+          style={{ maxHeight: "100dvh" }}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#e8e5df] bg-[#FAFAF8] px-4 py-3">
@@ -319,7 +364,7 @@ export function ShoppingChatbot() {
                 )}
                 {i === 0 && msg.role === "assistant" && !loading && messages.length === 1 && (
                   <div className="flex flex-wrap gap-2 px-1 mt-2">
-                    {["Anillos de plata", "Regalo para ella", "Aros minimalistas", "Colgantes de autor"].map((suggestion) => (
+                    {suggestions.map((suggestion) => (
                       <button
                         key={suggestion}
                         type="button"
@@ -338,7 +383,10 @@ export function ShoppingChatbot() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-[#e8e5df] bg-[#FAFAF8] px-3 py-2">
+          <div
+            className="shrink-0 border-t border-[#e8e5df] bg-[#FAFAF8] px-3 py-2"
+            style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
+          >
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -353,7 +401,7 @@ export function ShoppingChatbot() {
                 }}
                 placeholder="Escribe tu mensaje..."
                 className="flex-1 rounded-lg border border-[#e8e5df] bg-white px-3 py-2 text-sm text-[#1a1a18] placeholder:text-[#9e9a90] outline-none focus:border-[#8B7355]/50"
-                style={{ fontFamily: "var(--font-outfit, Outfit, sans-serif)" }}
+                style={{ fontFamily: "var(--font-outfit, Outfit, sans-serif)", fontSize: "16px" }}
                 disabled={loading}
               />
               <button
