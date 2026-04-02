@@ -1042,6 +1042,19 @@ export async function sendCertificateEmail(
             Verifica este certificado en
             <a href="${verifyUrl}" style="color:#c9a96e;text-decoration:none;">${verifyUrl}</a>
           </p>
+          <p style="font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#8a8478;line-height:1.6;margin:0 0 14px;">
+            &iquest;Dudas o comentarios? Escr&iacute;benos a<br>
+            <a href="mailto:contacto@casaorfebre.cl" style="color:#c9a96e;text-decoration:none;font-weight:600;">contacto@casaorfebre.cl</a>
+          </p>
+          <table cellpadding="0" cellspacing="0" role="presentation" align="center" style="margin:0 auto 14px;">
+            <tr>
+              <td style="padding:0 4px;"><a href="https://www.instagram.com/casaorfebre" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background-color:#8a8478;color:#FDFCFA;font-size:12px;text-decoration:none;" target="_blank">IG</a></td>
+              <td style="padding:0 4px;"><a href="https://www.facebook.com/casaorfebre" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background-color:#8a8478;color:#FDFCFA;font-size:12px;text-decoration:none;" target="_blank">Fb</a></td>
+              <td style="padding:0 4px;"><a href="https://cl.pinterest.com/casaorfebre/" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background-color:#8a8478;color:#FDFCFA;font-size:12px;text-decoration:none;" target="_blank">Pi</a></td>
+              <td style="padding:0 4px;"><a href="https://x.com/casaorfebre" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background-color:#8a8478;color:#FDFCFA;font-size:12px;text-decoration:none;" target="_blank">X</a></td>
+              <td style="padding:0 4px;"><a href="https://www.tiktok.com/@casaorfebre" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background-color:#8a8478;color:#FDFCFA;font-size:12px;text-decoration:none;" target="_blank">Tk</a></td>
+            </tr>
+          </table>
           <p style="font-size:11px;color:#4a4740;margin:0 0 4px;">
             <a href="${baseUrl}" style="color:#8a8478;text-decoration:none;letter-spacing:1px;">casaorfebre.cl</a>
           </p>

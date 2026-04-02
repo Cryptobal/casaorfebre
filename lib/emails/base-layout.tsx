@@ -17,6 +17,20 @@ export function emailLayout(content: string): string {
         </td></tr>
         <!-- Footer -->
         <tr><td style="padding:24px 40px 32px;border-top:1px solid #e8e5df;text-align:center;">
+          <p style="font-size:13px;color:#4a4a48;line-height:1.6;margin:0 0 16px;">
+            &iquest;Dudas o comentarios? Escr&iacute;benos a<br>
+            <a href="mailto:contacto@casaorfebre.cl" style="color:#8B7355;text-decoration:none;font-weight:600;">contacto@casaorfebre.cl</a>
+          </p>
+          <!-- Social icons -->
+          <table cellpadding="0" cellspacing="0" role="presentation" align="center" style="margin:0 auto 16px;">
+            <tr>
+              <td style="padding:0 5px;"><a href="https://www.instagram.com/casaorfebre" style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background-color:#8B7355;color:#FFFFFF;font-size:14px;text-decoration:none;" target="_blank">IG</a></td>
+              <td style="padding:0 5px;"><a href="https://www.facebook.com/casaorfebre" style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background-color:#8B7355;color:#FFFFFF;font-size:14px;text-decoration:none;" target="_blank">Fb</a></td>
+              <td style="padding:0 5px;"><a href="https://cl.pinterest.com/casaorfebre/" style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background-color:#8B7355;color:#FFFFFF;font-size:14px;text-decoration:none;" target="_blank">Pi</a></td>
+              <td style="padding:0 5px;"><a href="https://x.com/casaorfebre" style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background-color:#8B7355;color:#FFFFFF;font-size:14px;text-decoration:none;" target="_blank">X</a></td>
+              <td style="padding:0 5px;"><a href="https://www.tiktok.com/@casaorfebre" style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:50%;background-color:#8B7355;color:#FFFFFF;font-size:14px;text-decoration:none;" target="_blank">Tk</a></td>
+            </tr>
+          </table>
           <span style="font-size:12px;color:#9e9a90;">Casa Orfebre &middot; Joyer&iacute;a de Autor</span><br>
           <a href="https://casaorfebre.cl" style="font-size:12px;color:#8B7355;text-decoration:none;">casaorfebre.cl</a>
         </td></tr>
