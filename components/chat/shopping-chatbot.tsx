@@ -286,27 +286,33 @@ export function ShoppingChatbot() {
 
   return (
     <>
-      {/* Floating button */}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        aria-label="Abrir chat de compras"
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-500 hover:scale-105 sm:h-14 sm:w-14"
-        style={{
-          backgroundColor: "#8B7355",
-          opacity: visible ? 1 : 0,
-          pointerEvents: visible ? "auto" : "none",
-        }}
+      {/* Floating button with label */}
+      <div
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 transition-all duration-500"
+        style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
       >
-        {open ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        ) : (
-          <span className="text-lg text-white font-medium">✦</span>
+        {!open && (
+          <span className="hidden rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#8B7355] shadow-md border border-[#e8e5df] sm:block">
+            Asistente AI
+          </span>
         )}
-      </button>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-label="Asistente AI de compras"
+          className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:scale-105 sm:h-14 sm:w-14"
+          style={{ backgroundColor: "#8B7355" }}
+        >
+          {open ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <span className="text-lg text-white font-medium">✦</span>
+          )}
+        </button>
+      </div>
 
       {/* Chat panel */}
       {open && (
@@ -319,10 +325,8 @@ export function ShoppingChatbot() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#e8e5df] bg-[#FAFAF8] px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="text-[#8B7355]">✦</span>
-              <span className="font-serif text-sm font-medium text-[#1a1a18]">
-                Casa Orfebre
-              </span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-[10px] font-bold text-white">AI</span>
+              <span className="font-serif text-sm font-medium text-[#1a1a18]">Asistente AI · Casa Orfebre</span>
             </div>
             <button
               type="button"

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 
 interface PortalMobileNavProps {
   title: string;
-  links: { href: string; label: string; badge?: number }[];
+  links: { href: string; label: string; badge?: number; ai?: boolean }[];
 }
 
 export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
@@ -75,7 +75,14 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
                         : "text-text-secondary hover:bg-background hover:text-text"
                     }`}
                   >
-                    <span>{link.label}</span>
+                    <span className="flex items-center">
+                      {link.label}
+                      {link.ai && (
+                        <span className="ml-1 inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+                          AI
+                        </span>
+                      )}
+                    </span>
                     {link.badge != null && link.badge > 0 && (
                       <span
                         className={`min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ${badgeBg}`}

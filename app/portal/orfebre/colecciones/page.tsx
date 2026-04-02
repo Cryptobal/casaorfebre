@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { DeleteCollectionButton } from "./delete-collection-button";
+import { AiCollectionsButton } from "./ai-collections-button";
 
 export default async function ColeccionesPage() {
   const session = await auth();
@@ -31,6 +32,9 @@ export default async function ColeccionesPage() {
         >
           + Nueva Coleccion
         </Link>
+      </div>
+      <div className="mt-4">
+        <AiCollectionsButton />
       </div>
 
       {collections.length === 0 ? (

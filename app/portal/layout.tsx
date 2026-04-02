@@ -8,6 +8,7 @@ import { SupportBanner } from "@/components/portal/support-banner";
 import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
 import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
+import { PortalChatbot } from "@/components/chat/portal-chatbot";
 
 const ROLE_SWITCHER_EMAILS = [
   "carlos.irigoyen@gmail.com",
@@ -18,9 +19,9 @@ const ADMIN_LINKS = [
   { href: "/portal/admin", label: "Dashboard" },
   { href: "/portal/admin/invitaciones", label: "Invitaciones" },
   { href: "/portal/admin/postulaciones", label: "Postulaciones" },
-  { href: "/portal/admin/productos", label: "Productos" },
-  { href: "/portal/admin/fotos", label: "Fotos" },
-  { href: "/portal/admin/orfebres", label: "Orfebres" },
+  { href: "/portal/admin/productos", label: "Productos", ai: true },
+  { href: "/portal/admin/fotos", label: "Fotos", ai: true },
+  { href: "/portal/admin/orfebres", label: "Orfebres", ai: true },
   { href: "/portal/admin/compradores", label: "Compradores" },
   { href: "/portal/admin/planes", label: "Planes" },
   { href: "/portal/admin/suscripciones", label: "Suscripciones" },
@@ -29,29 +30,29 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/devoluciones", label: "Devoluciones" },
   { href: "/portal/admin/pagos", label: "Pagos" },
   { href: "/portal/admin/catalogo", label: "Catálogo" },
-  { href: "/portal/admin/colecciones", label: "Colecciones IA" },
+  { href: "/portal/admin/colecciones", label: "Colecciones", ai: true },
   { href: "/portal/admin/gift-cards", label: "Gift Cards" },
   { href: "/portal/admin/finanzas", label: "Finanzas" },
   { href: "/portal/admin/mensajes", label: "Mensajes" },
   { href: "/portal/admin/preguntas", label: "Preguntas" },
   { href: "/portal/admin/despacho", label: "Despacho" },
   { href: "/portal/admin/materiales-precio", label: "Materiales Ref." },
-  { href: "/portal/admin/analytics", label: "Analytics" },
-  { href: "/portal/admin/blog", label: "Blog" },
-  { href: "/portal/admin/pipeline", label: "Pipeline" },
+  { href: "/portal/admin/analytics", label: "Analytics", ai: true },
+  { href: "/portal/admin/blog", label: "Blog", ai: true },
+  { href: "/portal/admin/pipeline", label: "Pipeline", ai: true },
 ];
 
 const ARTISAN_LINKS = [
   { href: "/portal/orfebre", label: "Mi Taller" },
-  { href: "/portal/orfebre/productos", label: "Mis Piezas" },
-  { href: "/portal/orfebre/colecciones", label: "Colecciones" },
+  { href: "/portal/orfebre/productos", label: "Mis Piezas", ai: true },
+  { href: "/portal/orfebre/colecciones", label: "Colecciones", ai: true },
   { href: "/portal/orfebre/pedidos", label: "Pedidos" },
-  { href: "/portal/orfebre/preguntas", label: "Preguntas" },
+  { href: "/portal/orfebre/preguntas", label: "Preguntas", ai: true },
   { href: "/portal/orfebre/mensajes", label: "Mensajes" },
   { href: "/portal/orfebre/finanzas", label: "Finanzas" },
-  { href: "/portal/orfebre/estadisticas", label: "Estadísticas" },
-  { href: "/portal/orfebre/herramientas/calculadora", label: "Calculadora" },
-  { href: "/portal/orfebre/ia", label: "Asistente IA" },
+  { href: "/portal/orfebre/estadisticas", label: "Estadísticas", ai: true },
+  { href: "/portal/orfebre/herramientas/calculadora", label: "Calculadora", ai: true },
+  { href: "/portal/orfebre/ia", label: "Asistente IA", ai: true },
   { href: "/portal/orfebre/blog", label: "Blog" },
   { href: "/portal/orfebre/perfil", label: "Mi Perfil" },
 ];
@@ -60,7 +61,7 @@ const BUYER_LINKS = [
   { href: "/portal/comprador/pedidos", label: "Mis Pedidos" },
   { href: "/portal/comprador/gift-cards", label: "Gift Cards" },
   { href: "/portal/comprador/mensajes", label: "Mensajes" },
-  { href: "/portal/comprador/favoritos", label: "Favoritos" },
+  { href: "/portal/comprador/favoritos", label: "Favoritos", ai: true },
   { href: "/portal/comprador/listas", label: "Mis Listas" },
   { href: "/portal/comprador/referidos", label: "Invita Amigos" },
   { href: "/portal/comprador/perfil", label: "Mi Cuenta" },
@@ -166,10 +167,12 @@ export default async function PortalLayout({ children }: { children: React.React
           return l;
         })
       : []),
-    ...(showBuyerSection ? BUYER_LINKS.map((l) => {
+    ...(showBuyerSection
+      ? BUYER_LINKS.map((l) => {
           if (l.href === "/portal/comprador/pedidos") return { ...l, badge: buyerActiveOrders };
           return l;
-        }) : []),
+        })
+      : []),
   ];
 
   return (
@@ -182,55 +185,56 @@ export default async function PortalLayout({ children }: { children: React.React
         <nav className="space-y-2">
           {role === "ADMIN" && (
             <>
-              <Link href="/portal/admin" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Dashboard</Link>
-              <Link href="/portal/admin/invitaciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Invitaciones</Link>
-              <Link
-                href="/portal/admin/postulaciones"
-                className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
-              >
-                <span>Postulaciones</span>
-                {pendingPostulaciones > 0 && (
-                  <span className="min-w-[1.25rem] rounded-full bg-accent px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
-                    {pendingPostulaciones > 99 ? "99+" : pendingPostulaciones}
-                  </span>
-                )}
-              </Link>
-              <SidebarLink href="/portal/admin/productos" label="Productos" count={pendingProductModeration} />
-              <SidebarLink href="/portal/admin/fotos" label="Fotos" count={pendingPhotos} />
-              <SidebarLink href="/portal/admin/orfebres" label="Orfebres" count={pendingOrfebreApplications} />
-              <Link href="/portal/admin/planes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Planes</Link>
-              <Link href="/portal/admin/suscripciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Suscripciones</Link>
-              <SidebarLink href="/portal/admin/pedidos" label="Pedidos" count={newPaidOrders} />
-              <Link href="/portal/admin/disputas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Disputas</Link>
-              <Link href="/portal/admin/devoluciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Devoluciones</Link>
-              <Link href="/portal/admin/catalogo" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Catálogo</Link>
-              <Link href="/portal/admin/colecciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Colecciones IA</Link>
-              <Link href="/portal/admin/compradores" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Compradores</Link>
-              <Link href="/portal/admin/gift-cards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
-              <Link href="/portal/admin/finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
-              <Link href="/portal/admin/mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
-              <Link href="/portal/admin/preguntas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Preguntas</Link>
-              <Link href="/portal/admin/despacho" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Despacho</Link>
-              <Link href="/portal/admin/materiales-precio" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Materiales Ref.</Link>
-              <Link href="/portal/admin/analytics" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Analytics</Link>
-              <Link href="/portal/admin/blog" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Blog</Link>
-              <Link href="/portal/admin/pipeline" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Pipeline</Link>
+              {ADMIN_LINKS.map((link) => {
+                const badgeCounts: Record<string, number> = {
+                  "/portal/admin/postulaciones": pendingPostulaciones,
+                  "/portal/admin/productos": pendingProductModeration,
+                  "/portal/admin/fotos": pendingPhotos,
+                  "/portal/admin/orfebres": pendingOrfebreApplications,
+                  "/portal/admin/pedidos": newPaidOrders,
+                };
+                const count = badgeCounts[link.href] ?? 0;
+                if (count > 0 || link.ai) {
+                  return <SidebarLink key={link.href} href={link.href} label={link.label} count={count} ai={link.ai} />;
+                }
+                return (
+                  <Link key={link.href} href={link.href} className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">
+                    {link.label}
+                  </Link>
+                );
+              })}
             </>
           )}
           {role === "ARTISAN" && (
             <>
-              <Link href="/portal/orfebre" data-tour="orfebre-dashboard" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Taller</Link>
-              <Link href="/portal/orfebre/productos" data-tour="orfebre-productos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Piezas</Link>
-              <Link href="/portal/orfebre/colecciones" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Colecciones</Link>
-              <SidebarLink href="/portal/orfebre/pedidos" label="Pedidos" count={artisanPendingOrders} dataTour="orfebre-pedidos" />
-              <SidebarLink href="/portal/orfebre/preguntas" label="Preguntas" count={artisanUnansweredQuestions} dataTour="orfebre-preguntas" />
-              <SidebarLink href="/portal/orfebre/mensajes" label="Mensajes" count={artisanUnreadMessages} dataTour="orfebre-mensajes" />
-              <Link href="/portal/orfebre/finanzas" data-tour="orfebre-finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
-              <Link href="/portal/orfebre/estadisticas" data-tour="orfebre-estadisticas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Estadísticas</Link>
-              <Link href="/portal/orfebre/herramientas/calculadora" data-tour="orfebre-calculadora" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Calculadora</Link>
-              <Link href="/portal/orfebre/ia" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Asistente IA</Link>
-              <Link href="/portal/orfebre/blog" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Blog</Link>
-              <Link href="/portal/orfebre/perfil" data-tour="orfebre-perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Perfil</Link>
+              {ARTISAN_LINKS.map((link) => {
+                const badgeCounts: Record<string, number> = {
+                  "/portal/orfebre/pedidos": artisanPendingOrders,
+                  "/portal/orfebre/preguntas": artisanUnansweredQuestions,
+                  "/portal/orfebre/mensajes": artisanUnreadMessages,
+                };
+                const dataTours: Record<string, string> = {
+                  "/portal/orfebre": "orfebre-dashboard",
+                  "/portal/orfebre/productos": "orfebre-productos",
+                  "/portal/orfebre/pedidos": "orfebre-pedidos",
+                  "/portal/orfebre/preguntas": "orfebre-preguntas",
+                  "/portal/orfebre/mensajes": "orfebre-mensajes",
+                  "/portal/orfebre/finanzas": "orfebre-finanzas",
+                  "/portal/orfebre/estadisticas": "orfebre-estadisticas",
+                  "/portal/orfebre/herramientas/calculadora": "orfebre-calculadora",
+                  "/portal/orfebre/perfil": "orfebre-perfil",
+                };
+                const count = badgeCounts[link.href] ?? 0;
+                const tour = dataTours[link.href];
+                if (count > 0 || link.ai) {
+                  return <SidebarLink key={link.href} href={link.href} label={link.label} count={count} dataTour={tour} ai={link.ai} />;
+                }
+                return (
+                  <Link key={link.href} href={link.href} data-tour={tour} className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">
+                    {link.label}
+                  </Link>
+                );
+              })}
             </>
           )}
           {showBuyerSection && (
@@ -238,13 +242,30 @@ export default async function PortalLayout({ children }: { children: React.React
               {(role === "ADMIN" || role === "ARTISAN") && (
                 <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-widest text-text-tertiary">Comprador</p>
               )}
-              <SidebarLink href="/portal/comprador/pedidos" label="Mis Pedidos" count={buyerActiveOrders} dataTour="buyer-pedidos" />
-              <Link href="/portal/comprador/gift-cards" data-tour="buyer-giftcards" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Gift Cards</Link>
-              <Link href="/portal/comprador/mensajes" data-tour="buyer-mensajes" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mensajes</Link>
-              <Link href="/portal/comprador/favoritos" data-tour="buyer-favoritos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Favoritos</Link>
-              <Link href="/portal/comprador/listas" data-tour="buyer-listas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mis Listas</Link>
-              <Link href="/portal/comprador/referidos" data-tour="buyer-referidos" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Invita Amigos</Link>
-              <Link href="/portal/comprador/perfil" data-tour="buyer-perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Cuenta</Link>
+              {BUYER_LINKS.map((link) => {
+                const badgeCounts: Record<string, number> = {
+                  "/portal/comprador/pedidos": buyerActiveOrders,
+                };
+                const dataTours: Record<string, string> = {
+                  "/portal/comprador/pedidos": "buyer-pedidos",
+                  "/portal/comprador/gift-cards": "buyer-giftcards",
+                  "/portal/comprador/mensajes": "buyer-mensajes",
+                  "/portal/comprador/favoritos": "buyer-favoritos",
+                  "/portal/comprador/listas": "buyer-listas",
+                  "/portal/comprador/referidos": "buyer-referidos",
+                  "/portal/comprador/perfil": "buyer-perfil",
+                };
+                const count = badgeCounts[link.href] ?? 0;
+                const tour = dataTours[link.href];
+                if (count > 0 || link.ai) {
+                  return <SidebarLink key={link.href} href={link.href} label={link.label} count={count} dataTour={tour} ai={link.ai} />;
+                }
+                return (
+                  <Link key={link.href} href={link.href} data-tour={tour} className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">
+                    {link.label}
+                  </Link>
+                );
+              })}
             </>
           )}
 
@@ -274,19 +295,33 @@ export default async function PortalLayout({ children }: { children: React.React
 
         <div className="max-w-full min-w-0 p-4 pb-16 sm:p-6 sm:pb-16 lg:p-8 lg:pb-16">{children}</div>
       </div>
+      {(role === "ARTISAN" || role === "BUYER") && (
+        <PortalChatbot portalContext={role === "ARTISAN" ? "orfebre" : "comprador"} />
+      )}
       <SupportBanner />
     </div>
   );
 }
 
-function SidebarLink({ href, label, count, dataTour }: { href: string; label: string; count: number; dataTour?: string }) {
+function AiBadge() {
+  return (
+    <span className="ml-1 inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+      AI
+    </span>
+  );
+}
+
+function SidebarLink({ href, label, count, dataTour, ai }: { href: string; label: string; count: number; dataTour?: string; ai?: boolean }) {
   return (
     <Link
       href={href}
       data-tour={dataTour}
       className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
     >
-      <span>{label}</span>
+      <span className="flex items-center">
+        {label}
+        {ai && <AiBadge />}
+      </span>
       {count > 0 && (
         <span className="min-w-[1.25rem] rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
           {count > 99 ? "99+" : count}
