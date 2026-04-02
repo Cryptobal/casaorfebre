@@ -550,6 +550,65 @@ export async function adminDeletePhoto(
   return { success: true };
 }
 
+// 8f. Admin: batch delete products (only those without sales)
+export async function adminDeleteProductsBatch(
+  formData: FormData
+): Promise<{ error?: string; success?: boolean; deleted: number; skipped: number }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado", deleted: 0, skipped: 0 };
+  }
+
+  const idsRaw = formData.get("productIds");
+  if (!idsRaw || typeof idsRaw !== "string") return { error: "IDs requeridos", deleted: 0, skipped: 0 };
+
+  const productIds: string[] = JSON.parse(idsRaw);
+  if (!Array.isArray(productIds) || productIds.length === 0) return { error: "IDs requeridos", deleted: 0, skipped: 0 };
+
+  let deleted = 0;
+  let skipped = 0;
+
+  for (const productId of productIds) {
+    const result = await adminDeleteProduct(productId);
+    if (result.success) {
+      deleted++;
+    } else {
+      skipped++;
+    }
+  }
+
+  revalidatePath("/portal/admin/productos");
+  return { success: true, deleted, skipped };
+}
+
+// 8g. Admin: batch delete photos
+export async function adminDeletePhotosBatch(
+  formData: FormData
+): Promise<{ error?: string; success?: boolean; deleted: number }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado", deleted: 0 };
+  }
+
+  const idsRaw = formData.get("imageIds");
+  if (!idsRaw || typeof idsRaw !== "string") return { error: "IDs requeridos", deleted: 0 };
+
+  const imageIds: string[] = JSON.parse(idsRaw);
+  if (!Array.isArray(imageIds) || imageIds.length === 0) return { error: "IDs requeridos", deleted: 0 };
+
+  let deleted = 0;
+
+  for (const imageId of imageIds) {
+    const result = await adminDeletePhoto(imageId);
+    if (result.success) deleted++;
+  }
+
+  revalidatePath("/portal/admin/fotos");
+  return { success: true, deleted };
+}
+
 // 9. Update artisan commission rate
 export async function updateArtisanCommission(
   artisanId: string,

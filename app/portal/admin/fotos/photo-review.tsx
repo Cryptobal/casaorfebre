@@ -10,7 +10,9 @@ import {
   rejectPhoto,
   replacePhoto,
   adminDeletePhoto,
+  adminDeletePhotosBatch,
 } from "@/lib/actions/admin";
+import { ConfirmDestructiveModal } from "@/components/shared/confirm-destructive-modal";
 
 interface PhotoItem {
   id: string;
@@ -53,6 +55,7 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
   const [rejectReason, setRejectReason] = useState("");
   const [feedback, setFeedback] = useState<Record<string, { type: "success" | "error"; message: string }>>({});
   const [isPending, startTransition] = useTransition();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const filtered = photos.filter((p) => p.status === activeTab);
@@ -125,7 +128,6 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
     startTransition(async () => {
       const result = await approvePhotosBatch(formData);
       if (result.error) {
-        // Show generic error
         setFeedback((prev) => ({
           ...prev,
           __batch: { type: "error", message: result.error! },
@@ -139,6 +141,29 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
         });
         setSelected(new Set());
       }
+    });
+  }
+
+  function handleBatchDelete() {
+    const formData = new FormData();
+    formData.set("imageIds", JSON.stringify(Array.from(selected)));
+    startTransition(async () => {
+      const result = await adminDeletePhotosBatch(formData);
+      if (result.error) {
+        setFeedback((prev) => ({
+          ...prev,
+          __batch: { type: "error", message: result.error! },
+        }));
+      } else {
+        selected.forEach((id) => {
+          setFeedback((prev) => ({
+            ...prev,
+            [id]: { type: "success", message: "Eliminada" },
+          }));
+        });
+        setSelected(new Set());
+      }
+      setDeleteModalOpen(false);
     });
   }
 
@@ -173,14 +198,32 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
           <span className="text-sm">
             {selected.size} seleccionada{selected.size > 1 ? "s" : ""}
           </span>
+          {activeTab === "PENDING_REVIEW" && (
+            <Button
+              size="sm"
+              className="bg-green-700 text-white hover:bg-green-800"
+              onClick={handleBatchApprove}
+              disabled={isPending}
+              loading={isPending}
+            >
+              Aprobar ({selected.size})
+            </Button>
+          )}
           <Button
             size="sm"
-            className="bg-green-700 text-white hover:bg-green-800"
-            onClick={handleBatchApprove}
+            className="bg-red-700 text-white hover:bg-red-800"
+            onClick={() => setDeleteModalOpen(true)}
             disabled={isPending}
-            loading={isPending}
           >
-            Aprobar Seleccionadas ({selected.size})
+            Eliminar ({selected.size})
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setSelected(new Set())}
+            disabled={isPending}
+          >
+            Deseleccionar
           </Button>
           {feedback.__batch && (
             <span
@@ -210,7 +253,7 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
             >
               {/* Checkbox + image */}
               <div className="relative">
-                {activeTab === "PENDING_REVIEW" && !feedback[photo.id] && (
+                {!feedback[photo.id] && (
                   <label className="absolute left-2 top-2 z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded border border-border bg-white/80">
                     <input
                       type="checkbox"
@@ -367,6 +410,16 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
           ))}
         </div>
       )}
+      {/* Delete confirmation modal */}
+      <ConfirmDestructiveModal
+        open={deleteModalOpen}
+        title={`Eliminar ${selected.size} foto${selected.size !== 1 ? "s" : ""}`}
+        description={`Se eliminarán ${selected.size} foto${selected.size !== 1 ? "s" : ""} de forma permanente. Esta acción es irreversible y las fotos se desasociarán de sus productos.`}
+        confirmLabel={`Eliminar ${selected.size} foto${selected.size !== 1 ? "s" : ""}`}
+        onConfirm={handleBatchDelete}
+        onCancel={() => setDeleteModalOpen(false)}
+        pending={isPending}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { getPendingProducts, getAllProductsForAdmin } from "@/lib/queries/admin";
 import { ExpandableProductRow } from "./expandable-product-row";
+import { ProductListManager } from "./product-list-manager";
 import Link from "next/link";
 
 interface PageProps {
@@ -100,23 +101,10 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
             ))}
           </div>
 
-          {allProducts.length === 0 ? (
-            <p className="mt-8 text-center text-sm text-text-tertiary">
-              No hay productos en esta categoria
-            </p>
-          ) : (
-            <>
-              <p className="mt-4 text-xs text-text-tertiary">{allProducts.length} producto{allProducts.length !== 1 ? "s" : ""}</p>
-              <div className="mt-2 space-y-2">
-                {allProducts.map((product) => (
-                  <ExpandableProductRow
-                    key={product.id}
-                    product={product as unknown as Parameters<typeof ExpandableProductRow>[0]["product"]}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          <ProductListManager
+            products={allProducts as unknown as Parameters<typeof ProductListManager>[0]["products"]}
+            showBulkActions
+          />
         </>
       )}
     </div>
