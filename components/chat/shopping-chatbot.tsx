@@ -66,6 +66,16 @@ function ChatProductCards({ products }: { products: ProductCard[] }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Simple markdown-to-text stripper (removes ** and *)                */
+/* ------------------------------------------------------------------ */
+
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1");
+}
+
+/* ------------------------------------------------------------------ */
 /*  Typing indicator                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -297,7 +307,7 @@ export function ShoppingChatbot() {
                     }`}
                     style={{ fontFamily: "var(--font-outfit, Outfit, sans-serif)" }}
                   >
-                    {msg.content}
+                    {stripMarkdown(msg.content)}
                   </div>
                 </div>
                 {msg.productSlugs && msg.productSlugs.length > 0 && (
