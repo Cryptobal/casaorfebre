@@ -28,8 +28,9 @@ export async function generateWeeklyInsights(stats: ArtisanStats): Promise<strin
     max_tokens: 512,
     system: `Eres un analista de datos de Casa Orfebre, marketplace de joyería artesanal chilena.
 Generas insights accionables y concretos para orfebres.
-Español chileno, tuteas, tono profesional pero cercano.
-Responde SOLO con un JSON array de strings, cada uno un insight de 1-2 oraciones. Sin markdown.`,
+Español neutro latinoamericano, tutea con "tú" formal (tienes, quieres, puedes). Nunca uses voseo chileno (tenís, querís, podís).
+Tono profesional pero cercano.
+Responde SOLO con un JSON array de strings, cada uno un insight de 1-2 oraciones. Sin markdown, sin code fences.`,
     messages: [
       {
         role: "user",
@@ -56,14 +57,23 @@ Genera insights que sean específicos a estos datos, no genéricos.`,
     ],
   });
 
-  const text = response.content[0].type === "text" ? response.content[0].text : "[]";
+  const raw = response.content[0].type === "text" ? response.content[0].text : "[]";
+
+  // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+  const text = raw.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
   try {
     const parsed = JSON.parse(text);
-    if (Array.isArray(parsed)) return parsed.slice(0, 5);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item) => typeof item === "string" && item.trim()).slice(0, 5);
+    }
   } catch {
-    // Try to extract insights from non-JSON response
-    return [text.trim()];
+    // If JSON parse fails, split by line breaks and return clean strings
+    const lines = text
+      .split(/\n+/)
+      .map((line) => line.replace(/^[\d\-\.\*\s]+/, "").trim())
+      .filter((line) => line.length > 10);
+    if (lines.length > 0) return lines.slice(0, 5);
   }
 
   return ["Visita tus estadísticas regularmente para identificar tendencias."];
