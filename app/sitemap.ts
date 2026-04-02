@@ -182,6 +182,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Joyeria artesanal city pages (priority 0.7, monthly)
+  const artisanLocations = await prisma.artisan.findMany({
+    where: { status: "APPROVED", location: { not: "" } },
+    select: { location: true },
+  });
+  const artisanCities = [...new Set(artisanLocations.map((a) => slugify(a.location)))];
+  const joyeriaArtesanalPages = artisanCities.map((city) => ({
+    url: `${baseUrl}/joyeria-artesanal/${city}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
   // Curated collections (priority 0.7, weekly)
   const curatedCollections = await prisma.curatedCollection.findMany({
     where: { isActive: true },
@@ -228,6 +241,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...productPages,
     ...landingPages,
     ...materialPages,
+    ...joyeriaArtesanalPages,
     ...curatedCollectionPages,
     ...otherPages,
   ];
