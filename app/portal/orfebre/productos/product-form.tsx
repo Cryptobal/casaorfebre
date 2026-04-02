@@ -313,7 +313,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
     if (listing.suggestedTallaUnica) setTallaUnica(listing.suggestedTallaUnica);
 
     // Stones
-    if (listing.suggestedStones?.length) {
+    if (Array.isArray(listing.suggestedStones) && listing.suggestedStones.length) {
       setShowStones(true);
       setStones(listing.suggestedStones.map((s) => ({
         stoneType: s.type || "",

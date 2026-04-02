@@ -171,8 +171,7 @@ export function ShoppingChatbot() {
     [productCache],
   );
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
+  const sendText = useCallback(async (text: string) => {
     if (!text || loading) return;
 
     const userMessage: ChatMessage = { role: "user", content: text };
@@ -223,7 +222,13 @@ export function ShoppingChatbot() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, fetchProductCards]);
+  }, [loading, messages, fetchProductCards]);
+
+  const sendMessage = useCallback(async () => {
+    const text = input.trim();
+    if (!text) return;
+    sendText(text);
+  }, [input, sendText]);
 
   return (
     <>
@@ -301,6 +306,20 @@ export function ShoppingChatbot() {
                       .map((slug) => productCache[slug])
                       .filter(Boolean)}
                   />
+                )}
+                {i === 0 && msg.role === "assistant" && !loading && messages.length === 1 && (
+                  <div className="flex flex-wrap gap-2 px-1 mt-2">
+                    {["Anillos de plata", "Regalo para ella", "Aros minimalistas", "Colgantes de autor"].map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => sendText(suggestion)}
+                        className="rounded-full border border-[#e8e5df] bg-white px-3 py-1.5 text-xs text-[#6b6860] hover:border-[#8B7355] hover:text-[#8B7355] transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}

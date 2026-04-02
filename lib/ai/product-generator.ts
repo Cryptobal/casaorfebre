@@ -166,5 +166,17 @@ export async function analyzeAndGenerateListing(params: {
 
   const text = message.content[0].type === "text" ? message.content[0].text : "";
   const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
-  return JSON.parse(cleaned) as ProductListing;
+  const parsed = JSON.parse(cleaned) as ProductListing;
+
+  // Sanitizar campos que deben ser arrays — la IA a veces devuelve null, strings, u objetos
+  const ensureArray = <T>(val: unknown): T[] | null =>
+    Array.isArray(val) ? val : null;
+
+  parsed.suggestedStones = ensureArray(parsed.suggestedStones);
+  parsed.suggestedMaterials = ensureArray(parsed.suggestedMaterials) ?? [];
+  parsed.suggestedSpecialties = ensureArray(parsed.suggestedSpecialties) ?? [];
+  parsed.suggestedOccasions = ensureArray(parsed.suggestedOccasions) ?? [];
+  parsed.altTexts = ensureArray(parsed.altTexts) ?? [];
+
+  return parsed;
 }
