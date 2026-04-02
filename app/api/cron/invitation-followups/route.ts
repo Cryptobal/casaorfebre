@@ -3,14 +3,15 @@ import { prisma } from "@/lib/prisma";
 import {
   sendFollowUp1Email,
   sendFollowUp2Email,
+  sendFollowUp3Email,
 } from "@/lib/emails/invitation-templates";
 
 // Vercel Cron calls this daily. We check which invitations need follow-ups.
-// Schedule: Day 3 → Follow-up 1, Day 7 → Follow-up 2. Max 2 follow-ups.
+// Schedule: Day 3 → Follow-up 1, Day 7 → Follow-up 2, Day 14 → Follow-up 3. Max 3 follow-ups.
 // Never send on weekends (Saturday=6, Sunday=0 in Chile time).
 
-const FOLLOW_UP_DELAYS_DAYS = [3, 7]; // Day 3, Day 7 after initial send
-const MAX_FOLLOW_UPS = 2;
+const FOLLOW_UP_DELAYS_DAYS = [3, 7, 14]; // Day 3, Day 7, Day 14 after initial send
+const MAX_FOLLOW_UPS = 3;
 
 function isWeekend(): boolean {
   // Chile is UTC-3 or UTC-4 depending on DST
@@ -89,8 +90,10 @@ export async function GET(request: NextRequest) {
       try {
         if (inv.followUpCount === 0) {
           await sendFollowUp1Email(inv.email, { token: inv.token, type: inv.type });
-        } else {
+        } else if (inv.followUpCount === 1) {
           await sendFollowUp2Email(inv.email, { token: inv.token, type: inv.type });
+        } else {
+          await sendFollowUp3Email(inv.email, { token: inv.token, type: inv.type });
         }
 
         const newCount = inv.followUpCount + 1;

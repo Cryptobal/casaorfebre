@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
 
 export const revalidate = 3600;
 
@@ -152,23 +153,44 @@ const faqSections: FaqSection[] = [
 ];
 
 // Build all FAQ items for JSON-LD structured data
-const allFaqItems = faqSections.flatMap((section) => section.items);
+const allStaticFaqItems = faqSections.flatMap((section) => section.items);
 
-// Static JSON-LD — all values are hardcoded constants, no user input involved
-const jsonLd = JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: allFaqItems.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
+export default async function PreguntasFrecuentesPage() {
+  // Fetch top answered questions from the community
+  const communityQuestions = await prisma.productQuestion.findMany({
+    where: {
+      answer: { not: null },
+      isPublic: true,
+      isBlocked: false,
     },
-  })),
-});
+    select: {
+      question: true,
+      answer: true,
+      product: { select: { name: true } },
+    },
+    orderBy: { answeredAt: "desc" },
+    take: 10,
+  });
 
-export default function PreguntasFrecuentesPage() {
+  const communityFaqItems = communityQuestions.map((q) => ({
+    question: q.question,
+    answer: q.answer!,
+  }));
+
+  const allFaqItems = [...allStaticFaqItems, ...communityFaqItems];
+
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: allFaqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  });
   return (
     <>
       <script
@@ -218,6 +240,39 @@ export default function PreguntasFrecuentesPage() {
             </div>
           </section>
         ))}
+
+        {communityFaqItems.length > 0 && (
+          <section>
+            <h2 className="mb-6 mt-12 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+              Preguntas de la Comunidad
+            </h2>
+            <div className="divide-y divide-border">
+              {communityFaqItems.map((item) => (
+                <details key={item.question} className="group">
+                  <summary className="flex cursor-pointer items-center justify-between py-4 font-medium text-text transition-colors hover:text-accent">
+                    <span>{item.question}</span>
+                    <span className="ml-4 flex-shrink-0 text-text-tertiary transition-transform group-open:rotate-45">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <line x1="8" y1="2" x2="8" y2="14" />
+                        <line x1="2" y1="8" x2="14" y2="8" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p className="pb-4 font-light leading-relaxed text-text-secondary">
+                    {item.answer}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="mt-16 rounded-lg border border-border bg-surface p-8 text-center">
           <h2 className="font-serif text-xl font-light">

@@ -37,6 +37,8 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/despacho", label: "Despacho" },
   { href: "/portal/admin/materiales-precio", label: "Materiales Ref." },
   { href: "/portal/admin/analytics", label: "Analytics" },
+  { href: "/portal/admin/blog", label: "Blog" },
+  { href: "/portal/admin/pipeline", label: "Pipeline" },
 ];
 
 const ARTISAN_LINKS = [
@@ -49,6 +51,8 @@ const ARTISAN_LINKS = [
   { href: "/portal/orfebre/finanzas", label: "Finanzas" },
   { href: "/portal/orfebre/estadisticas", label: "Estadísticas" },
   { href: "/portal/orfebre/herramientas/calculadora", label: "Calculadora" },
+  { href: "/portal/orfebre/ia", label: "Asistente IA" },
+  { href: "/portal/orfebre/blog", label: "Blog" },
   { href: "/portal/orfebre/perfil", label: "Mi Perfil" },
 ];
 
@@ -209,6 +213,8 @@ export default async function PortalLayout({ children }: { children: React.React
               <Link href="/portal/admin/despacho" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Despacho</Link>
               <Link href="/portal/admin/materiales-precio" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Materiales Ref.</Link>
               <Link href="/portal/admin/analytics" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Analytics</Link>
+              <Link href="/portal/admin/blog" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Blog</Link>
+              <Link href="/portal/admin/pipeline" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Pipeline</Link>
             </>
           )}
           {role === "ARTISAN" && (
@@ -222,6 +228,8 @@ export default async function PortalLayout({ children }: { children: React.React
               <Link href="/portal/orfebre/finanzas" data-tour="orfebre-finanzas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Finanzas</Link>
               <Link href="/portal/orfebre/estadisticas" data-tour="orfebre-estadisticas" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Estadísticas</Link>
               <Link href="/portal/orfebre/herramientas/calculadora" data-tour="orfebre-calculadora" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Calculadora</Link>
+              <Link href="/portal/orfebre/ia" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Asistente IA</Link>
+              <Link href="/portal/orfebre/blog" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Blog</Link>
               <Link href="/portal/orfebre/perfil" data-tour="orfebre-perfil" className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">Mi Perfil</Link>
             </>
           )}

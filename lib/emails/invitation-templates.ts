@@ -346,3 +346,70 @@ export async function sendFollowUp2Email(
     console.error(`[FOLLOW-UP 2] Failed to send to ${to}:`, e);
   }
 }
+
+/* ================================================================== */
+/*  FOLLOW-UP 3 (Day 14) — Final urgency, invitation expiring         */
+/* ================================================================== */
+
+export async function sendFollowUp3Email(
+  to: string,
+  { token, type }: { token: string; type: "PIONEER" | "ARTISAN" | "BUYER" },
+): Promise<void> {
+  const config = {
+    PIONEER: {
+      subject: "Última oportunidad — tu invitación vence pronto",
+      badge: "Invitación por vencer",
+      heading: "Tu invitación de Pionero expira en días",
+      body: "Esta es tu última oportunidad. Tu invitación al programa Pionero será desactivada pronto y los beneficios permanentes se perderán.",
+      urgency: "Una vez que expire, no podremos garantizar los mismos beneficios. Los Pioneros actuales ya disfrutan de acceso exclusivo, precios preferenciales y prioridad en todo.",
+      cta: "Activar antes de que expire",
+    },
+    ARTISAN: {
+      subject: "Última oportunidad — tu invitación vence pronto",
+      badge: "Invitación por vencer",
+      heading: "Tu vitrina se cerrará pronto",
+      body: "Tu invitación a Casa Orfebre está por vencer. Después de esta fecha, deberás postular nuevamente y no garantizamos disponibilidad.",
+      urgency: "Cada día que pasa, más orfebres se suman y la competencia por visibilidad crece. Los primeros en llegar tienen ventaja permanente en posicionamiento y clientes.",
+      cta: "Activar mi vitrina ahora",
+    },
+    BUYER: {
+      subject: "Última oportunidad — tu invitación vence pronto",
+      badge: "Invitación por vencer",
+      heading: "Tu acceso exclusivo está por expirar",
+      body: "Tu invitación a Casa Orfebre vence pronto. Después no podremos garantizarte el mismo acceso a piezas y orfebres exclusivos.",
+      urgency: "Las piezas artesanales son únicas — cuando se van, no vuelven. Cada semana se agotan las más buscadas y los coleccionistas registrados tienen prioridad.",
+      cta: "Activar mi acceso ahora",
+    },
+  };
+
+  const c = config[type];
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: c.subject,
+      html: emailLayout(`
+        ${BADGE(c.badge)}
+        ${HEADING(c.heading)}
+        ${SUBTEXT(c.body)}
+
+        <div style="background:#8B7355;border-radius:8px;padding:20px 24px;margin:0 0 24px;">
+          <p style="font-size:14px;color:#FAFAF8;margin:0;line-height:1.6;text-align:center;">
+            ⏳ ${c.urgency}
+          </p>
+        </div>
+
+        ${CTA_CENTER(trackingUrl(token), c.cta, CTA_DARK)}
+
+        <p style="font-size:12px;color:#9e9a90;text-align:center;margin:0;">
+          Este es nuestro mensaje final. Tu invitación será desactivada automáticamente si no la aceptas.
+        </p>
+
+        ${openPixel(token)}
+      `),
+    });
+  } catch (e) {
+    console.error(`[FOLLOW-UP 3] Failed to send to ${to}:`, e);
+  }
+}

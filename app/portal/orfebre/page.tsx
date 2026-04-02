@@ -59,7 +59,10 @@ export default async function ArtisanDashboard({
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const [activeProducts, pendingOrders, unansweredQuestions, monthlySales] =
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [activeProducts, pendingOrders, unansweredQuestions, monthlySales, lastProduct, newFavorites] =
     await Promise.all([
       prisma.product.count({
         where: { artisanId: artisan.id, status: "APPROVED" },
@@ -74,7 +77,22 @@ export default async function ArtisanDashboard({
           createdAt: { gte: startOfMonth },
         },
       }),
+      prisma.product.findFirst({
+        where: { artisanId: artisan.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      }),
+      prisma.favorite.count({
+        where: {
+          product: { artisanId: artisan.id },
+          createdAt: { gte: sevenDaysAgo },
+        },
+      }),
     ]);
+
+  const daysSinceLastProduct = lastProduct
+    ? Math.floor((Date.now() - new Date(lastProduct.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   const stats = [
     {
@@ -262,6 +280,41 @@ export default async function ArtisanDashboard({
         commissionRate={artisan.commissionOverride ?? artisan.commissionRate}
         maxProductsOverride={artisan.maxProductsOverride}
       />
+
+      {/* AI Assistant Section */}
+      <div className="mt-8 rounded-lg border border-accent/20 bg-accent/5 p-6">
+        <h2 className="text-sm font-medium text-accent mb-4">Tu Asistente</h2>
+
+        {/* Actionable alerts */}
+        <div className="space-y-2">
+          {unansweredQuestions > 0 && (
+            <Link href="/portal/orfebre/preguntas" className="flex items-center gap-2 text-sm text-text-secondary hover:text-text">
+              <span>💬</span>
+              <span>Tienes <strong>{unansweredQuestions}</strong> pregunta{unansweredQuestions > 1 ? "s" : ""} sin responder</span>
+              <span className="ml-auto text-xs text-accent">→</span>
+            </Link>
+          )}
+          {/* If no product published in 14+ days */}
+          {daysSinceLastProduct !== null && daysSinceLastProduct >= 14 && (
+            <Link href="/portal/orfebre/productos/nuevo" className="flex items-center gap-2 text-sm text-text-secondary hover:text-text">
+              <span>🆕</span>
+              <span>Hace {daysSinceLastProduct} días que no publicas — ¿crear una pieza nueva con IA?</span>
+              <span className="ml-auto text-xs text-accent">→</span>
+            </Link>
+          )}
+          {/* New favorites this week */}
+          {newFavorites > 0 && (
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <span>❤️</span>
+              <span><strong>{newFavorites}</strong> nuevo{newFavorites > 1 ? "s" : ""} favorito{newFavorites > 1 ? "s" : ""} esta semana</span>
+            </div>
+          )}
+          {/* Link to full AI hub */}
+          <Link href="/portal/orfebre/ia" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-dark">
+            Ver todas las herramientas IA →
+          </Link>
+        </div>
+      </div>
 
       {/* Stats grid: un solo <a> con estilos de tarjeta para toda el área sea clicable */}
       <div className="mt-8 grid grid-cols-2 gap-4">

@@ -170,6 +170,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/pioneros`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.8 },
   ];
 
+  // Material pages (priority 0.7, monthly)
+  const dbMaterials = await prisma.material.findMany({
+    where: { isActive: true },
+    select: { name: true },
+  });
+  const materialPages = dbMaterials.map((m: { name: string }) => ({
+    url: `${baseUrl}/materiales/${slugify(m.name)}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  // Curated collections (priority 0.7, weekly)
+  const curatedCollections = await prisma.curatedCollection.findMany({
+    where: { isActive: true },
+    select: { slug: true, updatedAt: true },
+  });
+  const curatedCollectionPages = curatedCollections.map((c: { slug: string; updatedAt: Date }) => ({
+    url: `${baseUrl}/colecciones/${c.slug}`,
+    lastModified: c.updatedAt,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   // Other static pages (lower priority)
   const otherPages = [
     { url: `${baseUrl}/lo-nuevo`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
@@ -203,6 +227,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categorySeoPages,
     ...productPages,
     ...landingPages,
+    ...materialPages,
+    ...curatedCollectionPages,
     ...otherPages,
   ];
 }

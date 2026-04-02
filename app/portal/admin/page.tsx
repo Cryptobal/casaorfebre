@@ -59,9 +59,125 @@ export default async function AdminDashboardPage() {
     },
   ];
 
+  // Additional intelligence queries
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const [
+    unansweredQuestions48h,
+    inactiveArtisans30d,
+    pendingShipments,
+    salesThisWeek,
+    salesLastWeek,
+    lastBlogPost,
+  ] = await Promise.all([
+    prisma.productQuestion.count({
+      where: { answer: null, createdAt: { lte: fortyEightHoursAgo } },
+    }),
+    prisma.artisan.count({
+      where: {
+        status: "APPROVED",
+        products: { none: { createdAt: { gte: thirtyDaysAgo } } },
+      },
+    }),
+    prisma.orderItem.count({
+      where: { fulfillmentStatus: "PENDING", order: { status: "PAID" } },
+    }),
+    prisma.orderItem.count({
+      where: { createdAt: { gte: sevenDaysAgo } },
+    }),
+    prisma.orderItem.count({
+      where: {
+        createdAt: {
+          gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+          lt: sevenDaysAgo,
+        },
+      },
+    }),
+    prisma.blogPost.findFirst({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+      select: { publishedAt: true },
+    }),
+  ]);
+
+  const salesChange = salesLastWeek > 0
+    ? Math.round(((salesThisWeek - salesLastWeek) / salesLastWeek) * 100)
+    : salesThisWeek > 0 ? 100 : 0;
+
+  const daysSinceLastBlog = lastBlogPost?.publishedAt
+    ? Math.floor((Date.now() - lastBlogPost.publishedAt.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const intelligenceAlerts: { icon: string; text: string; href: string; color: string }[] = [];
+
+  if (unansweredQuestions48h > 0) {
+    intelligenceAlerts.push({
+      icon: "🔴",
+      text: `${unansweredQuestions48h} preguntas de compradores sin responder hace 48h+`,
+      href: "/portal/admin/preguntas",
+      color: "text-red-800",
+    });
+  }
+  if (inactiveArtisans30d > 0) {
+    intelligenceAlerts.push({
+      icon: "🟡",
+      text: `${inactiveArtisans30d} orfebres no han publicado desde hace 30 días`,
+      href: "/portal/admin/pipeline",
+      color: "text-amber-800",
+    });
+  }
+  if (salesChange !== 0) {
+    intelligenceAlerts.push({
+      icon: salesChange > 0 ? "🟢" : "🔻",
+      text: `Ventas ${salesChange > 0 ? "+" : ""}${salesChange}% vs semana pasada`,
+      href: "/portal/admin/finanzas",
+      color: salesChange > 0 ? "text-green-800" : "text-red-800",
+    });
+  }
+  if (pendingShipments > 0) {
+    intelligenceAlerts.push({
+      icon: "📦",
+      text: `${pendingShipments} pedidos pendientes de despacho`,
+      href: "/portal/admin/pedidos",
+      color: "text-amber-800",
+    });
+  }
+  if (daysSinceLastBlog !== null && daysSinceLastBlog > 14) {
+    intelligenceAlerts.push({
+      icon: "📝",
+      text: `El blog no tiene artículo nuevo hace ${daysSinceLastBlog} días`,
+      href: "/portal/admin/blog",
+      color: "text-amber-800",
+    });
+  }
+
   return (
     <div>
       <h1 className="font-serif text-3xl font-light">Panel Administrativo</h1>
+
+      {/* Marketplace Intelligence */}
+      {intelligenceAlerts.length > 0 && (
+        <div className="mt-6 rounded-lg border border-accent/20 bg-accent/5 p-5">
+          <h2 className="text-xs font-medium uppercase tracking-widest text-accent mb-3">
+            Inteligencia del Marketplace
+          </h2>
+          <div className="space-y-2">
+            {intelligenceAlerts.map((alert) => (
+              <Link
+                key={alert.text}
+                href={alert.href}
+                className={`flex items-center gap-2 text-sm ${alert.color} hover:opacity-80 transition-opacity`}
+              >
+                <span>{alert.icon}</span>
+                <span>{alert.text}</span>
+                <span className="ml-auto text-xs text-accent">&rarr;</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Alert banners */}
       <div className="mt-6 space-y-2">
