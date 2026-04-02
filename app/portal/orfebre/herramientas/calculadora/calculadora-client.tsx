@@ -50,6 +50,19 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
   });
   const [copiedPrice, setCopiedPrice] = useState<number | null>(null);
   const [customMult, setCustomMult] = useState<number>(0);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    suggestedMin: number;
+    suggestedMax: number;
+    reasoning: string;
+    tips: string[];
+  } | null>(null);
+  const [marketData, setMarketData] = useState<{
+    min: number;
+    max: number;
+    median: number;
+    count: number;
+  } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     if (hourlyRate > 0) {
@@ -85,6 +98,35 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
     : fixedMultipliers;
 
   const commissionPct = Math.round(commissionRate * 100);
+
+  async function handleAiSuggestion() {
+    if (costWithOverhead <= 0) return;
+    setAiLoading(true);
+    try {
+      const materialNames = lines
+        .map(l => materials.find(m => m.id === l.materialId)?.name)
+        .filter(Boolean);
+
+      const res = await fetch("/api/ai/price-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          materialCost: subtotal,
+          laborCost,
+          totalCost: costWithOverhead,
+          materials: materialNames,
+          hours,
+        }),
+      });
+      const data = await res.json();
+      setAiSuggestion(data.suggestion);
+      setMarketData(data.marketData);
+    } catch {
+      // silently fail
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   function handleCopyPrice(price: number) {
     navigator.clipboard.writeText(String(price));
@@ -479,6 +521,76 @@ export function CalculadoraClient({ initialMaterials, commissionRate }: Calculad
               Precio copiado al portapapeles. Pégalo en tu nuevo producto.
             </p>
           </div>
+        </section>
+      )}
+
+      {/* ─── Section 5: AI Price Suggestion ─── */}
+      {costWithOverhead > 0 && (
+        <section className="rounded-lg border-2 border-accent/30 bg-accent/5 p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium text-accent">Sugerencia IA</h2>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleAiSuggestion}
+              loading={aiLoading}
+              disabled={aiLoading}
+            >
+              {aiSuggestion ? "Recalcular" : "Sugerir precio con IA"}
+            </Button>
+          </div>
+
+          {marketData && (
+            <div className="mt-4 rounded-md bg-background p-3">
+              <p className="text-xs font-medium uppercase tracking-widest text-text-tertiary mb-2">
+                Datos del mercado ({marketData.count} piezas similares)
+              </p>
+              <div className="grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-text-tertiary">Minimo</p>
+                  <p className="font-medium text-text">{formatCLP(marketData.min)}</p>
+                </div>
+                <div>
+                  <p className="text-text-tertiary">Mediana</p>
+                  <p className="font-medium text-text">{formatCLP(marketData.median)}</p>
+                </div>
+                <div>
+                  <p className="text-text-tertiary">Maximo</p>
+                  <p className="font-medium text-text">{formatCLP(marketData.max)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {aiSuggestion && (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p className="text-xs text-text-tertiary">Precio sugerido</p>
+                  <p className="text-xl font-semibold text-accent">
+                    {formatCLP(aiSuggestion.suggestedMin)} — {formatCLP(aiSuggestion.suggestedMax)}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-text-secondary">{aiSuggestion.reasoning}</p>
+              {aiSuggestion.tips?.length > 0 && (
+                <ul className="space-y-1">
+                  {aiSuggestion.tips.map((tip, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-text-secondary">
+                      <span className="text-accent mt-0.5">&#8226;</span>
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {!aiSuggestion && !aiLoading && (
+            <p className="mt-3 text-sm text-text-tertiary">
+              La IA analiza productos similares en el marketplace y sugiere un precio competitivo basado en tus costos.
+            </p>
+          )}
         </section>
       )}
     </div>

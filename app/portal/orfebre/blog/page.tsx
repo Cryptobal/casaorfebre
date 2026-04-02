@@ -70,7 +70,7 @@ export default async function BlogOrfebrePage() {
           </p>
         </div>
         <Link
-          href="/portal/admin/blog/nuevo"
+          href="/portal/orfebre/blog/nuevo"
           className="rounded-lg bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-dark"
         >
           + Nuevo artículo
@@ -106,7 +106,7 @@ export default async function BlogOrfebrePage() {
             detrás de tus piezas. Tu conocimiento inspira a otros.
           </p>
           <Link
-            href="/portal/admin/blog/nuevo"
+            href="/portal/orfebre/blog/nuevo"
             className="mt-6 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
           >
             Escribir mi primer artículo
@@ -119,7 +119,7 @@ export default async function BlogOrfebrePage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/portal/admin/blog/${post.id}`}
+                    href={`/portal/orfebre/blog/${post.id}`}
                     className="truncate font-medium text-text hover:underline"
                   >
                     {post.title}
@@ -145,7 +145,7 @@ export default async function BlogOrfebrePage() {
                 </div>
               </div>
               <Link
-                href={`/portal/admin/blog/${post.id}`}
+                href={`/portal/orfebre/blog/${post.id}`}
                 className="ml-4 shrink-0 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-zinc-50 hover:text-text"
               >
                 Editar

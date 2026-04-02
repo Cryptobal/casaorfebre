@@ -30,8 +30,9 @@ export default async function EstadisticasPage() {
   if (!artisan) redirect("/");
 
   const plan = artisan.subscriptions[0]?.plan;
-  const hasBasicStats = plan?.hasBasicStats ?? false;
-  const hasAdvancedStats = plan?.hasAdvancedStats ?? false;
+  const isAdmin = session.user.role === "ADMIN";
+  const hasBasicStats = isAdmin || (plan?.hasBasicStats ?? false);
+  const hasAdvancedStats = isAdmin || (plan?.hasAdvancedStats ?? false);
 
   // If no plan with stats access, show upgrade prompt
   if (!hasBasicStats) {
