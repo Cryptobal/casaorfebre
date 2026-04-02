@@ -7,6 +7,7 @@ import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
 import { RoleSwitcherWrapper } from "@/components/shared/role-switcher-wrapper";
 import { generateOrganizationJsonLd } from "@/lib/seo";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -152,6 +153,7 @@ export default function RootLayout({
           <RoleSwitcherWrapper />
         </AuthProvider>
         <GoogleAnalytics />
+        <Analytics />
       </body>
     </html>
   );
