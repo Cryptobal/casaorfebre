@@ -16,6 +16,7 @@
     { "path": "/api/cron/email-marketing", "schedule": "0 17 * * *" },
     { "path": "/api/cron/invitation-followups", "schedule": "0 14 * * 1-5" },
     { "path": "/api/cron/orfebre-onboarding", "schedule": "0 11 * * *" },
-    { "path": "/api/cron/blog-auto-generate", "schedule": "0 6 * * 1" }
+    { "path": "/api/cron/blog-auto-generate", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/gsc-indexing", "schedule": "0 2 * * *" }
   ]
 }
