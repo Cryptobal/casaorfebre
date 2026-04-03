@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Messages required" }, { status: 400 });
     }
 
-    if (!["orfebre", "comprador"].includes(portalContext)) {
+    if (!["orfebre", "comprador", "admin"].includes(portalContext)) {
       return Response.json({ error: "Invalid portal context" }, { status: 400 });
     }
 

@@ -12,6 +12,8 @@ const WELCOME_MESSAGES: Record<string, string> = {
     "Hola, soy tu asistente AI del portal. Puedo ayudarte a gestionar tus piezas, entender tus estadísticas, usar las herramientas AI y más. ¿En qué te ayudo?",
   comprador:
     "Hola, soy tu asistente AI. Puedo ayudarte con tus pedidos, favoritos, mensajes y cualquier duda sobre tu cuenta. ¿En qué te ayudo?",
+  admin:
+    "Hola, soy tu asistente AI de administración. Puedo ayudarte con finanzas, ventas, pedidos, orfebres, productos y cualquier consulta operativa. ¿En qué te ayudo?",
 };
 
 const SUGGESTIONS: Record<string, string[]> = {
@@ -27,7 +29,36 @@ const SUGGESTIONS: Record<string, string[]> = {
     "¿Cómo uso gift cards?",
     "¿Cómo funcionan los favoritos?",
   ],
+  admin: [
+    "¿Cómo van las finanzas?",
+    "¿Cómo gestiono pedidos?",
+    "¿Cómo modero productos?",
+    "¿Cómo veo las ventas?",
+  ],
 };
+
+const FOLLOWUP_SUGGESTIONS: Record<string, string[][]> = {
+  orfebre: [
+    ["¿Algo más sobre mis piezas?", "¿Cómo mejoro mis ventas?"],
+    ["¿Necesitas más detalles?", "¿Tienes otra consulta?"],
+    ["¿Te ayudo con otra cosa?", "¿Quieres saber sobre las herramientas AI?"],
+  ],
+  comprador: [
+    ["¿Te fue útil?", "¿Tienes otra pregunta?"],
+    ["¿Necesitas más ayuda?", "¿Quieres saber algo más?"],
+    ["¿Algo más sobre tu pedido?", "¿Puedo ayudarte con otra cosa?"],
+  ],
+  admin: [
+    ["¿Te fue útil?", "¿Consultar otra área?"],
+    ["¿Necesitas más detalle?", "¿Otra consulta operativa?"],
+    ["¿Algo más sobre finanzas?", "¿Ver otra métrica?"],
+  ],
+};
+
+function getFollowups(context: string, msgIndex: number): string[] {
+  const pool = FOLLOWUP_SUGGESTIONS[context] || FOLLOWUP_SUGGESTIONS.comprador;
+  return pool[msgIndex % pool.length];
+}
 
 function TypingIndicator() {
   return (
@@ -50,7 +81,7 @@ function TypingIndicator() {
   );
 }
 
-export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "comprador" }) {
+export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "comprador" | "admin" }) {
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -124,18 +155,35 @@ export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "c
     if (text) sendText(text);
   }, [input, sendText]);
 
-  const label = portalContext === "orfebre" ? "Asistente AI del Taller" : "Asistente AI";
+  const label =
+    portalContext === "orfebre"
+      ? "Asistente del Taller"
+      : portalContext === "admin"
+        ? "Asistente Admin"
+        : "Asistente";
+
+  const buttonHint =
+    portalContext === "orfebre"
+      ? "¿Dudas? Pregúntame"
+      : portalContext === "admin"
+        ? "Consultas operativas aquí"
+        : "¿Necesitas ayuda? Escríbeme";
+
+  // Count assistant messages (excluding welcome) to rotate follow-ups
+  const assistantCount = messages.filter((m) => m.role === "assistant").length;
+  const lastMsg = messages[messages.length - 1];
+  const showFollowups = !loading && lastMsg?.role === "assistant" && messages.length > 1;
 
   return (
     <>
-      {/* Floating button with label */}
+      {/* Floating button with subtle hint */}
       <div
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 transition-all duration-500"
         style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
       >
         {!open && (
-          <span className="hidden rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#8B7355] shadow-md border border-[#e8e5df] sm:block">
-            {label}
+          <span className="hidden rounded-full bg-white/90 backdrop-blur-sm px-3 py-1.5 text-[11px] text-[#8B7355]/70 shadow-sm border border-[#e8e5df]/60 sm:block">
+            {buttonHint}
           </span>
         )}
         <button
@@ -171,7 +219,7 @@ export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "c
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#e8e5df] bg-[#FAFAF8] px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-[10px] font-bold text-white">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#8B7355] text-[10px] font-bold text-white">
                 AI
               </span>
               <span className="font-serif text-sm font-medium text-[#1a1a18]">{label}</span>
@@ -214,6 +262,7 @@ export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "c
                     {msg.content}
                   </div>
                 </div>
+                {/* Initial suggestions on welcome message */}
                 {i === 0 &&
                   msg.role === "assistant" &&
                   !loading &&
@@ -225,6 +274,24 @@ export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "c
                           type="button"
                           onClick={() => sendText(s)}
                           className="rounded-full border border-[#e8e5df] bg-white px-3 py-1.5 text-xs text-[#6b6860] hover:border-[#8B7355] hover:text-[#8B7355] transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                {/* Follow-up suggestions after each assistant response (except welcome) */}
+                {i === messages.length - 1 &&
+                  i > 0 &&
+                  msg.role === "assistant" &&
+                  showFollowups && (
+                    <div className="flex flex-wrap gap-2 px-1 mt-2">
+                      {getFollowups(portalContext, assistantCount).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => sendText(s)}
+                          className="rounded-full border border-[#e8e5df]/80 bg-[#FAFAF8] px-3 py-1.5 text-[11px] text-[#8B7355]/70 hover:border-[#8B7355]/50 hover:text-[#8B7355] transition-colors"
                         >
                           {s}
                         </button>

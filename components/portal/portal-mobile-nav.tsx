@@ -78,7 +78,7 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
                     <span className="flex items-center">
                       {link.label}
                       {link.ai && (
-                        <span className="ml-1 inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+                        <span className="ml-1 inline-flex items-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-[#8B7355]">
                           AI
                         </span>
                       )}
