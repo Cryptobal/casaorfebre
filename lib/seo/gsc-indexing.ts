@@ -1,50 +1,31 @@
-import { createSign } from "crypto";
-
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
-const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const INDEXING_API = "https://indexing.googleapis.com/v3/urlNotifications:publish";
 
-// ── JWT con Service Account de Google ────────────────────────────────────────
+// ── OAuth2 refresh token para Google ─────────────────────────────────────────
 export async function getGoogleAccessToken(): Promise<string | null> {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const rawKey = process.env.GOOGLE_PRIVATE_KEY;
-  if (!email || !rawKey) {
-    console.warn("[GSC] GOOGLE_SERVICE_ACCOUNT_EMAIL o GOOGLE_PRIVATE_KEY no configurados");
+  const clientId     = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    console.warn("[GSC] Variables GOOGLE_OAUTH_* no configuradas");
     return null;
   }
 
-  // Vercel escapa los saltos de línea — los restauramos
-  const privateKey = rawKey.replace(/\\n/g, "\n");
-  const now = Math.floor(Date.now() / 1000);
-
-  const header  = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
-  const payload = Buffer.from(JSON.stringify({
-    iss: email,
-    scope: "https://www.googleapis.com/auth/indexing",
-    aud: TOKEN_ENDPOINT,
-    iat: now,
-    exp: now + 3600,
-  })).toString("base64url");
-
-  const signingInput = `${header}.${payload}`;
-  const sign = createSign("RSA-SHA256");
-  sign.update(signingInput);
-  const signature = sign.sign(privateKey, "base64url");
-  const jwt = `${signingInput}.${signature}`;
-
   try {
-    const res = await fetch(TOKEN_ENDPOINT, {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-        assertion: jwt,
+        client_id:     clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type:    "refresh_token",
       }),
     });
 
     if (!res.ok) {
-      const err = await res.text();
-      console.error(`[GSC] Token error ${res.status}: ${err}`);
+      console.error(`[GSC] Token refresh error ${res.status}: ${await res.text()}`);
       return null;
     }
 
