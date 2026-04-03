@@ -109,6 +109,20 @@ function TypingIndicator() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Follow-up suggestions                                              */
+/* ------------------------------------------------------------------ */
+
+const FOLLOWUP_POOL = [
+  ["¿Te gustó algo?", "¿Quieres ver más opciones?"],
+  ["¿Buscas otro estilo?", "¿Puedo ayudarte con algo más?"],
+  ["¿Quieres más detalles?", "¿Seguimos buscando?"],
+];
+
+function getFollowups(msgIndex: number): string[] {
+  return FOLLOWUP_POOL[msgIndex % FOLLOWUP_POOL.length];
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main Chatbot Component                                             */
 /* ------------------------------------------------------------------ */
 
@@ -284,16 +298,20 @@ export function ShoppingChatbot() {
     sendText(text);
   }, [input, sendText]);
 
+  const assistantCount = messages.filter((m) => m.role === "assistant").length;
+  const lastMsg = messages[messages.length - 1];
+  const showFollowups = !loading && lastMsg?.role === "assistant" && messages.length > 1;
+
   return (
     <>
-      {/* Floating button with label */}
+      {/* Floating button with subtle hint */}
       <div
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 transition-all duration-500"
         style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
       >
         {!open && (
-          <span className="hidden rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#8B7355] shadow-md border border-[#e8e5df] sm:block">
-            Asistente AI
+          <span className="hidden rounded-full bg-white/90 backdrop-blur-sm px-3 py-1.5 text-[11px] text-[#8B7355]/70 shadow-sm border border-[#e8e5df]/60 sm:block">
+            ¿Buscas algo? Pregúntame
           </span>
         )}
         <button
@@ -325,8 +343,8 @@ export function ShoppingChatbot() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#e8e5df] bg-[#FAFAF8] px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-[10px] font-bold text-white">AI</span>
-              <span className="font-serif text-sm font-medium text-[#1a1a18]">Asistente AI · Casa Orfebre</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#8B7355] text-[10px] font-bold text-white">AI</span>
+              <span className="font-serif text-sm font-medium text-[#1a1a18]">Asistente · Casa Orfebre</span>
             </div>
             <button
               type="button"
@@ -366,6 +384,7 @@ export function ShoppingChatbot() {
                       .filter(Boolean)}
                   />
                 )}
+                {/* Initial suggestions on welcome */}
                 {i === 0 && msg.role === "assistant" && !loading && messages.length === 1 && (
                   <div className="flex flex-wrap gap-2 px-1 mt-2">
                     {suggestions.map((suggestion) => (
@@ -380,6 +399,24 @@ export function ShoppingChatbot() {
                     ))}
                   </div>
                 )}
+                {/* Follow-up suggestions after each assistant response */}
+                {i === messages.length - 1 &&
+                  i > 0 &&
+                  msg.role === "assistant" &&
+                  showFollowups && (
+                    <div className="flex flex-wrap gap-2 px-1 mt-2">
+                      {getFollowups(assistantCount).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => sendText(s)}
+                          className="rounded-full border border-[#e8e5df]/80 bg-[#FAFAF8] px-3 py-1.5 text-[11px] text-[#8B7355]/70 hover:border-[#8B7355]/50 hover:text-[#8B7355] transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
               </div>
             ))}
             {loading && <TypingIndicator />}

@@ -63,7 +63,7 @@ export function AiCollectionsButton() {
         disabled={loading}
         className="inline-flex items-center gap-2 rounded-md border border-[#e8e5df] bg-white px-4 py-2 text-sm font-medium text-[#8B7355] transition-colors hover:bg-[#FAFAF8] disabled:opacity-50"
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-[9px] font-bold text-white">AI</span>
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 text-[9px] font-semibold text-[#8B7355]">AI</span>
         {loading ? "Analizando tus piezas..." : "Sugerir colecciones con IA"}
       </button>
 

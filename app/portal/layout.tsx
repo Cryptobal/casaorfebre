@@ -295,8 +295,8 @@ export default async function PortalLayout({ children }: { children: React.React
 
         <div className="max-w-full min-w-0 p-4 pb-16 sm:p-6 sm:pb-16 lg:p-8 lg:pb-16">{children}</div>
       </div>
-      {(role === "ARTISAN" || role === "BUYER") && (
-        <PortalChatbot portalContext={role === "ARTISAN" ? "orfebre" : "comprador"} />
+      {(role === "ARTISAN" || role === "BUYER" || role === "ADMIN") && (
+        <PortalChatbot portalContext={role === "ADMIN" ? "admin" : role === "ARTISAN" ? "orfebre" : "comprador"} />
       )}
       <SupportBanner />
     </div>
@@ -305,7 +305,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
 function AiBadge() {
   return (
-    <span className="ml-1 inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+    <span className="ml-1 inline-flex items-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-[#8B7355]">
       AI
     </span>
   );
