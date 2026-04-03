@@ -9,7 +9,7 @@
     { "path": "/api/cron/receipt-reminders", "schedule": "0 11 * * *" },
     { "path": "/api/cron/auto-confirm-receipt", "schedule": "0 12 * * *" },
     { "path": "/api/cron/cleanup-pending-orders", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/pinterest-publish", "schedule": "0 */4 * * *" },
+    { "path": "/api/cron/pinterest-publish", "schedule": "0 4 * * *" },
     { "path": "/api/cron/pinterest-refresh", "schedule": "0 6 * * 1" },
     { "path": "/api/cron/embeddings", "schedule": "0 3 * * *" },
     { "path": "/api/cron/review-highlights", "schedule": "0 5 * * 0" },
@@ -17,6 +17,15 @@
     { "path": "/api/cron/invitation-followups", "schedule": "0 14 * * 1-5" },
     { "path": "/api/cron/orfebre-onboarding", "schedule": "0 11 * * *" },
     { "path": "/api/cron/blog-auto-generate", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/gsc-indexing", "schedule": "0 2 * * *" }
+    { "path": "/api/cron/gsc-indexing", "schedule": "0 2 * * *" },
+    { "path": "/api/cron/enrich-descriptions", "schedule": "0 2 */3 * *" },
+    { "path": "/api/cron/gsc-report", "schedule": "0 6 * * 1" },
+    { "path": "/api/cron/blog-city-pages", "schedule": "0 3 * * 3" },
+    { "path": "/api/cron/schema-validator", "schedule": "0 4 * * 0" },
+    { "path": "/api/cron/social-captions", "schedule": "0 5 * * 5" },
+    { "path": "/api/cron/alt-texts", "schedule": "0 4 */3 * *" },
+    { "path": "/api/cron/internal-links", "schedule": "0 5 */3 * *" },
+    { "path": "/api/cron/blog-faq-generator", "schedule": "0 3 1 * *" },
+    { "path": "/api/cron/seo-audit", "schedule": "0 7 1 * *" }
   ]
 }
