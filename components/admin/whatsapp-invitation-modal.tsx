@@ -14,33 +14,33 @@ function buildMessage(name: string, type: WhatsAppInvitationData["type"]): strin
   const firstName = name.split(" ")[0] || name;
 
   if (type === "ARTISAN") {
-    return `Hola ${firstName} 👋 Soy Camila de Casa Orfebre. Te acabamos de enviar por mail la invitación para que vendas tus piezas en nuestra plataforma.
+    return `Hola ${firstName}, soy Camila de Casa Orfebre. Te acabamos de enviar por mail la invitación para que vendas tus piezas en nuestra plataforma.
 
 Mira acá todos los beneficios y cómo funciona: https://casaorfebre.cl/para-orfebre
 
 Dato clave: nosotros no tocamos ni almacenamos tus productos. Tú despachas directo al comprador. Nosotros nos encargamos de la visibilidad, el cobro seguro y el posicionamiento.
 
-¿Alguna duda? Escríbenos por acá 🙌`;
+¿Alguna duda? Escríbenos por acá.`;
   }
 
   if (type === "BUYER") {
-    return `Hola ${firstName} 👋 Te escribimos de Casa Orfebre. Te acabamos de enviar un mail con tu invitación para descubrir joyería de autor hecha a mano por orfebres chilenos verificados.
+    return `Hola ${firstName}, te escribimos de Casa Orfebre. Te acabamos de enviar un mail con tu invitación para descubrir joyería de autor hecha a mano por orfebres chilenos verificados.
 
 Mira todo lo que tenemos para ti acá: https://casaorfebre.cl/para-comprador
 
-Pago seguro, garantía de 14 días, certificado de autenticidad y tracking real. Todo lo que no tienes comprando por Instagram 😉
+Pago seguro, garantía de 14 días, certificado de autenticidad y tracking real. Todo lo que no tienes comprando por Instagram.
 
-¿Dudas? Escríbenos por acá 🙌`;
+¿Dudas? Escríbenos por acá.`;
   }
 
   // PIONEER (default)
-  return `Hola ${firstName} 👋 Soy Camila de Casa Orfebre. Te acabamos de enviar por mail tu invitación como Pionera de Casa Orfebre con tu código exclusivo.
+  return `Hola ${firstName}, soy Camila de Casa Orfebre. Te acabamos de enviar por mail tu invitación como Pionera de Casa Orfebre con tu código exclusivo.
 
 Acá te dejo el link donde te explicamos todos los beneficios y en qué consiste: https://casaorfebre.cl/para-pionero
 
 Lo más importante: nosotros no tocamos tus productos. Tú despachas directo al comprador. Nosotros somos el canal que te posiciona, te da visibilidad y te gestiona el cobro seguro.
 
-¿Tienes alguna duda? Escríbenos por acá mismo 🙌`;
+¿Tienes alguna duda? Escríbenos por acá mismo.`;
 }
 
 function formatPhoneDisplay(phone: string): string {

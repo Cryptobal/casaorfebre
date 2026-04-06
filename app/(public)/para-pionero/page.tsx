@@ -234,7 +234,7 @@ export default function ParaPioneroPage() {
         <div className="relative mx-auto max-w-3xl">
           <FadeIn>
             <span className="inline-block rounded-full border border-[#8B7355]/40 px-4 py-1.5 text-xs font-medium tracking-widest text-[#8B7355]">
-              Programa Pioneros \u00b7 Cupos limitados
+              {'Programa Pioneros \u00b7 Cupos limitados'}
             </span>
           </FadeIn>
 
@@ -252,7 +252,9 @@ export default function ParaPioneroPage() {
 
           <FadeIn delay={200}>
             <p className="mx-auto mt-6 max-w-2xl text-base font-light leading-relaxed text-[rgba(250,250,248,0.7)]">
-              S\u00e9 de los primeros orfebres en exhibir en Casa Orfebre. Plan Maestro completo \u2014 $0 de suscripci\u00f3n y 0% de comisi\u00f3n durante 90 d\u00edas. Sin contratos, sin permanencia, sin letra chica.
+              {
+                'Sé de los primeros orfebres en exhibir en Casa Orfebre. Plan Maestro completo — $0 de suscripción y 0% de comisión durante 90 días. Sin contratos, sin permanencia, sin letra chica.'
+              }
             </p>
           </FadeIn>
 
