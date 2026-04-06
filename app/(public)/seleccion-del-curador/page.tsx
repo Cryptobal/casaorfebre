@@ -2,12 +2,11 @@ export const revalidate = 120;
 
 import Link from "next/link";
 import Image from "next/image";
-import { getCuratorPicks, getUserFavoriteIds } from "@/lib/queries/products";
+import { getCuratorPicks } from "@/lib/queries/products";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
-import { auth } from "@/lib/auth";
 
 export const metadata = {
   title: "Selección del Curador — Lo Mejor de Casa Orfebre",
@@ -30,11 +29,7 @@ export const metadata = {
 };
 
 export default async function SeleccionDelCuradorPage() {
-  const session = await auth();
-  const [picks, favoriteIds] = await Promise.all([
-    getCuratorPicks(),
-    getUserFavoriteIds(session?.user?.id),
-  ]);
+    const picks = await getCuratorPicks();
 
   return (
     <section className="mx-auto max-w-5xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">

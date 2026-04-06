@@ -2,8 +2,7 @@ export const revalidate = 300;
 
 import { notFound } from "next/navigation";
 import { getArtisanBySlug } from "@/lib/queries/artisans";
-import { getUserFavoriteIds } from "@/lib/queries/products";
-import { auth } from "@/lib/auth";
+
 import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -65,12 +64,9 @@ export default async function ArtisanProfilePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const session = await auth();
   const artisan = await getArtisanBySlug(slug);
 
   if (!artisan) notFound();
-
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
 
   const initials = artisan.displayName
     .split(" ")
@@ -277,7 +273,7 @@ export default async function ArtisanProfilePage({
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {artisan.products.map((product, index) => (
               <FadeIn key={product.id} delay={index * 100}>
-                <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} />
+                <ProductCard product={product} />
               </FadeIn>
             ))}
           </div>

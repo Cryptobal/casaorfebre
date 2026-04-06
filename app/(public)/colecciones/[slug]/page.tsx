@@ -2,8 +2,7 @@ export const revalidate = 300;
 
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { buildCollectionWithItemsJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo";
@@ -63,9 +62,6 @@ export default async function CuratedCollectionPage({ params }: PageProps) {
   const collection = await getCollection(slug);
   if (!collection) notFound();
 
-  const session = await auth();
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
-
   const jsonLd = buildCollectionWithItemsJsonLd({
     name: collection.name,
     description: collection.description || "",
@@ -101,7 +97,6 @@ export default async function CuratedCollectionPage({ params }: PageProps) {
               <FadeIn key={product.id} delay={i * 60}>
                 <ProductCard
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                 />
               </FadeIn>
             ))}

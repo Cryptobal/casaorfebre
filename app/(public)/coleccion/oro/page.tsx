@@ -3,8 +3,7 @@ export const revalidate = 300;
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import type { Metadata } from "next";
@@ -36,9 +35,7 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 ]);
 
 export default async function OroPage() {
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
         materials: {
@@ -63,9 +60,7 @@ export default async function OroPage() {
         occasions: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { publishedAt: "desc" },
-    }),
-    getUserFavoriteIds(session?.user?.id),
-  ]);
+    });
 
   const jsonLd = buildCollectionWithItemsJsonLd({
     name: "Joyería en Oro Artesanal",
@@ -98,7 +93,6 @@ export default async function OroPage() {
               <FadeIn key={product.id} delay={i * 60}>
                 <ProductCard
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                 />
               </FadeIn>
             ))}

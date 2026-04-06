@@ -1,13 +1,12 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { ReviewHighlights } from "@/components/products/review-highlights";
-import { toggleFavorite } from "@/lib/actions/favorites";
+import { useFavorites } from "@/lib/favorites-context";
 import { trackAddToWishlist, trackSelectItem } from "@/lib/analytics-events";
 import type { Product, Artisan, ProductImage, Material } from "@prisma/client";
 
@@ -19,13 +18,15 @@ type ProductWithRelations = Product & {
 
 interface ProductCardProps {
   product: ProductWithRelations;
+  /** @deprecated favoritos se hidratan client-side via FavoritesProvider */
   isFavorited?: boolean;
   listName?: string;
 }
 
-export function ProductCard({ product, isFavorited = false, listName }: ProductCardProps) {
-  const router = useRouter();
+export function ProductCard({ product, listName }: ProductCardProps) {
   const [isPending, startTransition] = useTransition();
+  const { isFavorite, toggle } = useFavorites();
+  const favorited = isFavorite(product.id);
 
   const badge = product.productionType === "MADE_TO_ORDER"
     ? "Hecha por Encargo"
@@ -47,10 +48,9 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
   function handleToggleFavorite(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!isFavorited) trackAddToWishlist(ga4Item);
+    if (!favorited) trackAddToWishlist(ga4Item);
     startTransition(async () => {
-      await toggleFavorite(product.id);
-      router.refresh();
+      await toggle(product.id);
     });
   }
 
@@ -78,16 +78,16 @@ export function ProductCard({ product, isFavorited = false, listName }: ProductC
         <div className="absolute right-3 top-3 flex items-center gap-1">
           <button
             className={`rounded-full bg-surface/80 p-2 backdrop-blur-sm transition-colors ${
-              isFavorited ? "text-accent" : "text-text-tertiary hover:text-accent"
+              favorited ? "text-accent" : "text-text-tertiary hover:text-accent"
             } ${isPending ? "opacity-50" : ""}`}
             onClick={handleToggleFavorite}
-            aria-label={isFavorited ? "Quitar de favoritos" : "Guardar en favoritos"}
+            aria-label={favorited ? "Quitar de favoritos" : "Guardar en favoritos"}
           >
             <svg
               width="16"
               height="16"
               viewBox="0 0 24 24"
-              fill={isFavorited ? "currentColor" : "none"}
+              fill={favorited ? "currentColor" : "none"}
               stroke="currentColor"
               strokeWidth="1.5"
             >

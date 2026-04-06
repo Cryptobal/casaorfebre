@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { SectionHeading } from "@/components/shared/section-heading";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import { buildBreadcrumbJsonLd, buildCollectionWithItemsJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -31,9 +30,7 @@ export const metadata = {
 
 
 export default async function DiaDeLaMadrePage() {
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
         occasions: { some: { slug: "dia-de-la-madre" } },
@@ -45,9 +42,7 @@ export default async function DiaDeLaMadrePage() {
         occasions: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { publishedAt: "desc" },
-    }),
-    getUserFavoriteIds(session?.user?.id),
-  ]);
+    });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Inicio", url: "/" },
@@ -83,7 +78,6 @@ export default async function DiaDeLaMadrePage() {
             <FadeIn key={product.id} delay={i * 60}>
               <ProductCard
                 product={product}
-                isFavorited={favoriteIds.has(product.id)}
               />
             </FadeIn>
           ))}

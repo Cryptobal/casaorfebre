@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-provider";
+import { FavoritesProvider } from "@/lib/favorites-context";
 import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
 import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
@@ -151,12 +152,14 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <GuestCartMerge />
-          <Suspense fallback={null}>
-            <RefCatcher />
-          </Suspense>
-          {children}
-          <RoleSwitcherWrapper />
+          <FavoritesProvider>
+            <GuestCartMerge />
+            <Suspense fallback={null}>
+              <RefCatcher />
+            </Suspense>
+            {children}
+            <RoleSwitcherWrapper />
+          </FavoritesProvider>
         </AuthProvider>
         <GoogleAnalytics />
         <Analytics />

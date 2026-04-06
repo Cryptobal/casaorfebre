@@ -3,8 +3,7 @@ export const revalidate = 120;
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTesorosProducts } from "@/lib/queries/products";
-import { getUserFavoriteIds } from "@/lib/queries/products";
-import { auth } from "@/lib/auth";
+
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { ProductCard } from "@/components/products/product-card";
@@ -76,8 +75,6 @@ const SECTIONS = [
 ] as const;
 
 export default async function TesorosDeChilePage() {
-  const session = await auth();
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
 
   const sectionProducts = await Promise.all(
     SECTIONS.map((s) =>
@@ -164,7 +161,6 @@ export default async function TesorosDeChilePage() {
                         <FadeIn key={product.id} delay={pIdx * 80}>
                           <ProductCard
                             product={product}
-                            isFavorited={favoriteIds.has(product.id)}
                           />
                         </FadeIn>
                       ))}

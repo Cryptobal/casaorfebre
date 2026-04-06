@@ -2,8 +2,7 @@ export const revalidate = 60;
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateItemListJsonLd, generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -46,14 +45,11 @@ const faqs: FAQ[] = [
 ];
 
 export default async function CouplesJewelryPage() {
-  const session = await auth();
 
   // Fetch products by category
   const rings = (await getApprovedProducts({ categorySlug: "anillo" })).slice(0, 4);
   const necklaces = (await getApprovedProducts({ categorySlug: "collar" })).slice(0, 4);
   const bracelets = (await getApprovedProducts({ categorySlug: "pulsera" })).slice(0, 4);
-
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
 
   // Combine all products for JSON-LD
   const allProducts = [...rings, ...necklaces, ...bracelets];
@@ -103,7 +99,6 @@ export default async function CouplesJewelryPage() {
                 <FadeIn key={product.id} delay={i * 60}>
                   <ProductCard
                     product={product}
-                    isFavorited={favoriteIds.has(product.id)}
                     listName="Anillos para Parejas"
                   />
                 </FadeIn>
@@ -127,7 +122,6 @@ export default async function CouplesJewelryPage() {
                 <FadeIn key={product.id} delay={i * 60}>
                   <ProductCard
                     product={product}
-                    isFavorited={favoriteIds.has(product.id)}
                     listName="Collares para Parejas"
                   />
                 </FadeIn>
@@ -151,7 +145,6 @@ export default async function CouplesJewelryPage() {
                 <FadeIn key={product.id} delay={i * 60}>
                   <ProductCard
                     product={product}
-                    isFavorited={favoriteIds.has(product.id)}
                     listName="Pulseras para Parejas"
                   />
                 </FadeIn>

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { buildCollectionWithItemsJsonLd, generateFAQJsonLd, canonicalUrl } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -63,11 +62,7 @@ export async function CategoryLanding({
     if (!Number.isNaN(hi) && hi < 999999) maxPrice = hi;
   }
 
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, sort }),
-    getUserFavoriteIds(session?.user?.id),
-  ]);
+    const products = await getApprovedProducts({ categorySlug, material, minPrice, maxPrice, sort });
 
   const collectionJsonLd = buildCollectionWithItemsJsonLd({
     name: h1,
@@ -115,7 +110,6 @@ export async function CategoryLanding({
               <FadeIn key={product.id} delay={i * 60}>
                 <ProductCard
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                   listName={breadcrumbLabel}
                 />
               </FadeIn>

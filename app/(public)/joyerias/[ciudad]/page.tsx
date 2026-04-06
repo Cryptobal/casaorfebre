@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import { getArtisansByRegion } from "@/lib/queries/artisans";
 import { generateFAQJsonLd, generateLocalBusinessJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -63,11 +62,7 @@ export default async function CityPage({
   if (!cityData) {
     notFound();
   }
-
-  const session = await auth();
-  const userFavIds = session?.user?.id
-    ? await getUserFavoriteIds(session.user.id)
-    : [];
+  // removed userFavIds (favorites are now client-side)
 
   const artisans = await getArtisansByRegion(cityData.region);
 
@@ -127,7 +122,6 @@ export default async function CityPage({
   const faqJsonLd = generateFAQJsonLd(cityData.faqs);
   const localBusinessJsonLd = generateLocalBusinessJsonLd();
 
-  const favSet = new Set(userFavIds);
 
   return (
     <>
@@ -212,7 +206,6 @@ export default async function CityPage({
                 <FadeIn key={product.id} delay={index * 100}>
                   <ProductCard
                     product={product as any}
-                    isFavorited={favSet.has(product.id)}
                   />
                 </FadeIn>
               ))}

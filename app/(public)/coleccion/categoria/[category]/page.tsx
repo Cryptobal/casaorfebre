@@ -5,8 +5,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -172,9 +171,7 @@ export default async function CategoryLandingPage({
   });
   if (!category) notFound();
 
-  const session = await auth();
-
-  const [products, favoriteIds, artisans] = await Promise.all([
+  const [products, artisans] = await Promise.all([
     prisma.product.findMany({
       where: {
         status: "APPROVED",
@@ -192,7 +189,6 @@ export default async function CategoryLandingPage({
       orderBy: { publishedAt: "desc" },
       take: 48,
     }),
-    getUserFavoriteIds(session?.user?.id),
     prisma.artisan.findMany({
       where: {
         status: "APPROVED",
@@ -279,7 +275,6 @@ export default async function CategoryLandingPage({
               <FadeIn key={product.id} delay={i * 50}>
                 <ProductCard
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                 />
               </FadeIn>
             ))}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -133,11 +132,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function AlianzasDeBodaPage() {
-  const session = await auth();
-  const [allProducts, favoriteIds] = await Promise.all([
-    getApprovedProducts({}).then((result) => result.slice(0, 4)),
-    session ? getUserFavoriteIds(session.user?.id) : new Set<string>(),
-  ]);
+  const allProducts = await getApprovedProducts({}).then((result) => result.slice(0, 4));
 
   const products = allProducts;
 
@@ -196,7 +191,6 @@ export default async function AlianzasDeBodaPage() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                 />
               ))}
             </div>

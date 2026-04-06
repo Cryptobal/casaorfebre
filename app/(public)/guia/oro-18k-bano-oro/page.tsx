@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -96,11 +95,7 @@ const tableData: TableRow[] = [
 ];
 
 export default async function OroGuiaPage() {
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    getApprovedProducts({}).then((items) => items.slice(0, 4)),
-    session ? getUserFavoriteIds(session.user?.id) : new Set(),
-  ]);
+  const products = await getApprovedProducts({}).then((items) => items.slice(0, 4));
 
   const faqJsonLd = generateFAQJsonLd(faqs);
 
@@ -379,7 +374,6 @@ export default async function OroGuiaPage() {
                       <ProductCard
                         key={product.id}
                         product={product}
-                        isFavorited={favoriteIds.has(product.id)}
                         listName="oro-18k-bano-oro-guide"
                       />
                     ))}

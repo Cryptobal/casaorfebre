@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -72,11 +71,7 @@ const tocItems = [
 ];
 
 export default async function CuarzoRosaPage() {
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    getApprovedProducts({}).then((products) => products.slice(0, 4)),
-    session ? getUserFavoriteIds(session.user?.id) : new Set(),
-  ]);
+  const products = await getApprovedProducts({}).then((products) => products.slice(0, 4));
 
   const faqJsonLd = generateFAQJsonLd(faqs);
 
@@ -410,7 +405,6 @@ export default async function CuarzoRosaPage() {
                       <ProductCard
                         key={product.id}
                         product={product}
-                        isFavorited={favoriteIds.has(product.id)}
                         listName="cuarzo-rosa-guide"
                       />
                     ))}

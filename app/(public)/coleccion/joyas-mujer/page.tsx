@@ -2,8 +2,7 @@ export const revalidate = 60;
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getProductsByGender, getUserFavoriteIds } from "@/lib/queries/products";
+import { getProductsByGender } from "@/lib/queries/products";
 import { generateItemListJsonLd, generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -108,8 +107,6 @@ const SECTIONS: ProductSection[] = [
 ];
 
 export default async function JoyasMujerPage() {
-  const session = await auth();
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
 
   // Fetch products for each section in parallel
   const sectionProducts = await Promise.all(
@@ -163,7 +160,6 @@ export default async function JoyasMujerPage() {
                     <FadeIn key={product.id} delay={0}>
                       <ProductCard
                         product={product}
-                        isFavorited={favoriteIds.has(product.id)}
                         listName={section.title}
                       />
                     </FadeIn>

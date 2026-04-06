@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { SectionHeading } from "@/components/shared/section-heading";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 
 export const metadata = {
   title: "Regalos de Joyería Artesanal bajo $100.000 | Casa Orfebre",
@@ -28,9 +27,7 @@ export const metadata = {
 };
 
 export default async function RegalosBajo100000Page() {
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
         price: { lte: 100000 },
@@ -42,9 +39,7 @@ export default async function RegalosBajo100000Page() {
         occasions: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { publishedAt: "desc" },
-    }),
-    getUserFavoriteIds(session?.user?.id),
-  ]);
+    });
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
@@ -64,7 +59,6 @@ export default async function RegalosBajo100000Page() {
             <FadeIn key={product.id} delay={i * 60}>
               <ProductCard
                 product={product}
-                isFavorited={favoriteIds.has(product.id)}
               />
             </FadeIn>
           ))}

@@ -3,8 +3,7 @@ export const revalidate = 3600;
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import { getArtisansByRegion } from "@/lib/queries/artisans";
 import {
   generateFAQJsonLd,
@@ -40,10 +39,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default async function GaleriaSantoDomingoPage() {
-  const session = await auth();
-  const userFavIds = session?.user?.id
-    ? await getUserFavoriteIds(session.user.id)
-    : [];
+  // removed userFavIds (favorites are now client-side)
 
   // Get artisans from Metropolitana region
   const artisans = await getArtisansByRegion("Metropolitana");
@@ -146,7 +142,6 @@ export default async function GaleriaSantoDomingoPage() {
     lng: -70.6643,
   });
 
-  const favSet = new Set(userFavIds);
 
   return (
     <>
@@ -272,7 +267,6 @@ export default async function GaleriaSantoDomingoPage() {
                 <FadeIn key={product.id} delay={index * 100}>
                   <ProductCard
                     product={product as any}
-                    isFavorited={favSet.has(product.id)}
                   />
                 </FadeIn>
               ))}

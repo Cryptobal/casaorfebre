@@ -2,8 +2,7 @@ export const revalidate = 60;
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateItemListJsonLd, generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -46,13 +45,10 @@ const faqs: FAQ[] = [
 ];
 
 export default async function MothersDayJewelryPage() {
-  const session = await auth();
 
   // Fetch products - latest 8 items across all categories
   let allProducts = await getApprovedProducts({});
   const featuredProducts = allProducts.slice(0, 8);
-
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
 
   // Generate JSON-LD
   const itemListJsonLd = generateItemListJsonLd(featuredProducts);
@@ -190,7 +186,6 @@ export default async function MothersDayJewelryPage() {
                 <FadeIn key={product.id} delay={i * 60}>
                   <ProductCard
                     product={product}
-                    isFavorited={favoriteIds.has(product.id)}
                     listName="Día de la Madre"
                   />
                 </FadeIn>

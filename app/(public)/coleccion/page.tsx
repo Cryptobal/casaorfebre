@@ -1,7 +1,7 @@
 export const revalidate = 60;
 
 import { Suspense } from "react";
-import { getApprovedProducts, getAllMaterials, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts, getAllMaterials } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
 import { getActiveCategories, getActiveMaterials, getActiveOccasions, getActiveSpecialties } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -9,7 +9,6 @@ import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { CatalogFilters } from "./catalog-filters";
 import { ListTracker } from "./list-tracker";
-import { auth } from "@/lib/auth";
 
 export const metadata = {
   title: "Colección",
@@ -74,13 +73,10 @@ export default async function ColeccionPage({
     : undefined;
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
-
-  const session = await auth();
-  const [products, materials, artisans, favoriteIds, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
+  const [products, materials, artisans, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
     getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, audiencia, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
-    getUserFavoriteIds(session?.user?.id),
     getActiveCategories(),
     getActiveMaterials(),
     getActiveOccasions(),
@@ -125,7 +121,7 @@ export default async function ColeccionPage({
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
           {products.map((product, i) => (
             <FadeIn key={product.id} delay={i * 60}>
-              <ProductCard product={product} isFavorited={favoriteIds.has(product.id)} listName={categorySlug ?? "Colección"} />
+              <ProductCard product={product} listName={categorySlug ?? "Colección"} />
             </FadeIn>
           ))}
         </div>

@@ -2,13 +2,12 @@ export const revalidate = 60;
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { getNewProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getNewProducts } from "@/lib/queries/products";
 import { getActiveCategories, getActiveMaterials } from "@/lib/queries/catalog";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { LoNuevoFilters } from "./lo-nuevo-filters";
-import { auth } from "@/lib/auth";
 
 export const metadata = {
   title: "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre",
@@ -59,10 +58,8 @@ export default async function LoNuevoPage({
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
 
-  const session = await auth();
-  const [{ products, total, totalPages }, favoriteIds, dbCategories, dbMaterials] = await Promise.all([
+  const [{ products, total, totalPages }, dbCategories, dbMaterials] = await Promise.all([
     getNewProducts({ page, categorySlug, material, minPrice, maxPrice }),
-    getUserFavoriteIds(session?.user?.id),
     getActiveCategories(),
     getActiveMaterials(),
   ]);
@@ -91,7 +88,6 @@ export default async function LoNuevoPage({
               <FadeIn key={product.id} delay={i * 60}>
                 <ProductCard
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                   listName="Lo Nuevo"
                 />
               </FadeIn>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -111,11 +110,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function TobillierasPage() {
-  const session = await auth();
-  const [products, favoriteIds] = await Promise.all([
-    getApprovedProducts({}).then((result) => result.slice(0, 4)),
-    session ? getUserFavoriteIds(session.user?.id) : new Set<string>(),
-  ]);
+  const products = await getApprovedProducts({}).then((result) => result.slice(0, 4));
 
   const breadcrumbs = [
     { label: 'Inicio', href: '/' },
@@ -394,7 +389,6 @@ export default async function TobillierasPage() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  isFavorited={favoriteIds.has(product.id)}
                 />
               ))}
             </div>

@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { getUserFavoriteIds } from "@/lib/queries/products";
+
 import { ProductCard } from "@/components/products/product-card";
 import {
   generateBreadcrumbJsonLd,
@@ -126,10 +125,7 @@ export default async function CityPage({
   const artisanIds = cityArtisans.map((a) => a.id);
 
   // Authenticated user favorites
-  const session = await auth();
-  const userFavIds = session?.user?.id
-    ? await getUserFavoriteIds(session.user.id)
-    : new Set<string>();
+  // removed userFavIds (favorites are now client-side)
 
   // Products from artisans in this city
   const products = await prisma.product.findMany({
@@ -220,7 +216,6 @@ export default async function CityPage({
                 <ProductCard
                   key={product.id}
                   product={product as any}
-                  isFavorited={userFavIds.has(product.id)}
                 />
               ))}
             </div>

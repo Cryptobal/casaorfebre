@@ -2,8 +2,7 @@ export const revalidate = 60;
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getApprovedProducts, getUserFavoriteIds } from "@/lib/queries/products";
+import { getApprovedProducts } from "@/lib/queries/products";
 import { generateItemListJsonLd, generateFAQJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -46,15 +45,12 @@ const faqs: FAQ[] = [
 ];
 
 export default async function WeddingRingsPage() {
-  const session = await auth();
 
   // Fetch products - try occasion filter first, fallback to rings category
   let products = await getApprovedProducts({ occasionSlug: "matrimonio" });
   if (products.length === 0) {
     products = await getApprovedProducts({ categorySlug: "anillo" });
   }
-
-  const favoriteIds = await getUserFavoriteIds(session?.user?.id);
 
   // Generate JSON-LD
   const itemListJsonLd = generateItemListJsonLd(products);
@@ -113,7 +109,6 @@ export default async function WeddingRingsPage() {
                 <FadeIn key={product.id} delay={i * 60}>
                   <ProductCard
                     product={product}
-                    isFavorited={favoriteIds.has(product.id)}
                     listName="Argollas de Matrimonio"
                   />
                 </FadeIn>
