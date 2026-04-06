@@ -29,6 +29,17 @@ export default async function InvitacionesPage({
     ? await getCampaignMetrics(metricsCampaign)
     : null;
 
+  // WhatsApp KPIs (PromoCode-based invitations)
+  const [waSent, waWithPhone] = await Promise.all([
+    prisma.promoCode.count({
+      where: { recipientEmail: { not: null }, whatsappSentAt: { not: null } },
+    }),
+    prisma.promoCode.count({
+      where: { recipientEmail: { not: null }, phone: { not: null } },
+    }),
+  ]);
+  const waRate = waWithPhone > 0 ? Math.round((waSent / waWithPhone) * 100) : 0;
+
   // Campaign invitation stats (gracefully handle missing table before migration)
   let pioneerCount = 0, artisanCount = 0, buyerCount = 0;
   let pioneerAccepted = 0, artisanAccepted = 0, buyerAccepted = 0;
@@ -145,7 +156,7 @@ export default async function InvitacionesPage({
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-text-tertiary">
             {"Campaña: "}{metricsCampaign}
           </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
             <Card>
               <p className="text-xs uppercase tracking-widest text-text-tertiary">Enviados</p>
               <p className="mt-1 text-2xl font-medium">{metrics.sent}</p>
@@ -168,6 +179,11 @@ export default async function InvitacionesPage({
             <Card>
               <p className="text-xs uppercase tracking-widest text-text-tertiary">Expirados</p>
               <p className="mt-1 text-2xl font-medium">{metrics.expired}</p>
+            </Card>
+            <Card>
+              <p className="text-xs uppercase tracking-widest text-text-tertiary">WhatsApp</p>
+              <p className="mt-1 text-2xl font-medium">{waSent}</p>
+              <p className="text-xs text-text-tertiary">{waRate}% de {waWithPhone}</p>
             </Card>
           </div>
         </div>

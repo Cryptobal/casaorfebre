@@ -64,7 +64,18 @@ export async function createInvitation(data: {
   campaign: string;
   expiresAt: Date;
   sendEmail: boolean;
+  phone?: string | null;
 }) {
+  // Sanitize phone: must be 8 digits → store as +569XXXXXXXX
+  let sanitizedPhone: string | null = null;
+  if (data.phone) {
+    const digits = data.phone.replace(/\D/g, "");
+    if (digits.length !== 8) {
+      throw new Error("El teléfono debe tener 8 dígitos (sin código país ni 9 inicial).");
+    }
+    sanitizedPhone = `+569${digits}`;
+  }
+
   const existingInvitation = await prisma.promoCode.findFirst({
     where: {
       recipientEmail: data.recipientEmail,
@@ -93,6 +104,7 @@ export async function createInvitation(data: {
       campaign: data.campaign,
       recipientName: data.recipientName,
       recipientEmail: data.recipientEmail,
+      phone: sanitizedPhone,
       invitationStatus: data.sendEmail ? "SENT" : "DRAFT",
       sentAt: data.sendEmail ? new Date() : null,
       metadata: {
@@ -356,6 +368,23 @@ export async function getCampaignMetrics(campaign: string) {
 
 // ============================================================
 // OBTENER CAMPAÑAS EXISTENTES
+// ============================================================
+
+// ============================================================
+// TRACKING WHATSAPP
+// ============================================================
+
+export async function trackWhatsAppSent(promoCodeId: string) {
+  await prisma.promoCode.update({
+    where: { id: promoCodeId },
+    data: { whatsappSentAt: new Date() },
+  });
+  revalidatePath("/portal/admin/invitaciones");
+  return { success: true };
+}
+
+// ============================================================
+// OBTENER CAMPAÑAS
 // ============================================================
 
 export async function getCampaigns() {
