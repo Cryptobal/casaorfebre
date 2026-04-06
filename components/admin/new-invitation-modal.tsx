@@ -5,6 +5,13 @@ import { createInvitation } from "@/lib/actions/invitations";
 
 type Campaign = { name: string; count: number };
 
+export type WhatsAppModalData = {
+  invitationId: string;
+  name: string;
+  phone: string; // E.164 +569XXXXXXXX
+  type: "PIONEER" | "ARTISAN" | "BUYER";
+};
+
 function normalizeForCode(name: string): string {
   return name
     .split(" ")[0]
@@ -17,13 +24,16 @@ function normalizeForCode(name: string): string {
 export function NewInvitationModal({
   campaigns,
   onClose,
+  onWhatsAppReady,
 }: {
   campaigns: Campaign[];
   onClose: () => void;
+  onWhatsAppReady?: (data: WhatsAppModalData) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [planName, setPlanName] = useState("maestro");
   const [durationDays, setDurationDays] = useState(90);
   const [campaign, setCampaign] = useState(
@@ -64,9 +74,15 @@ export function NewInvitationModal({
       return;
     }
 
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits && phoneDigits.length !== 8) {
+      setError("El teléfono debe tener 8 dígitos");
+      return;
+    }
+
     startTransition(async () => {
       try {
-        await createInvitation({
+        const created = await createInvitation({
           recipientName: name.trim(),
           recipientEmail: email.trim().toLowerCase(),
           planName,
@@ -74,7 +90,16 @@ export function NewInvitationModal({
           campaign: finalCampaign,
           expiresAt: new Date(expiresAt),
           sendEmail,
+          phone: phoneDigits || null,
         });
+        if (created.phone && onWhatsAppReady) {
+          onWhatsAppReady({
+            invitationId: created.id,
+            name: created.recipientName ?? name.trim(),
+            phone: created.phone,
+            type: "PIONEER", // este modal crea siempre invitaciones de pionero
+          });
+        }
         onClose();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
@@ -120,6 +145,28 @@ export function NewInvitationModal({
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               placeholder="orfebre@email.com"
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-text-secondary">
+              WhatsApp <span className="text-text-tertiary">(opcional)</span>
+            </label>
+            <div className="flex items-center gap-1">
+              <span className="rounded-l-md border border-r-0 border-border bg-background px-3 py-2 text-sm text-text-tertiary">
+                +56 9
+              </span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) =>
+                  setPhone(e.target.value.replace(/\D/g, "").slice(0, 8))
+                }
+                maxLength={8}
+                pattern="[0-9]{8}"
+                placeholder="8765 4321"
+                className="flex-1 rounded-r-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

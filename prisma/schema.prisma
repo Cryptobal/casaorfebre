@@ -701,6 +701,7 @@ model PromoCode {
   // Invitation tracking
   recipientName    String?
   recipientEmail   String?
+  phone            String?
   invitationStatus InvitationStatus @default(DRAFT)
   emailMessageId   String?
   sentAt           DateTime?
@@ -708,6 +709,8 @@ model PromoCode {
   openedAt         DateTime?
   appliedAt        DateTime?
   redeemedAt       DateTime?
+  whatsappSentAt    DateTime?
+  whatsappClickedAt DateTime?
 
   @@index([campaign])
   @@index([code])
