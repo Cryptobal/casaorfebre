@@ -1617,7 +1617,7 @@ export async function sendPioneerInvitationEmail(
        <p style="font-family:Georgia,serif;font-size:28px;font-weight:600;color:#1a1a18;margin:0 0 4px;">${months} meses de Plan ${plan.displayName}</p>
        <p style="font-size:14px;color:#8B7355;margin:0 0 4px;">Completamente gratis</p>
        <p style="font-size:14px;color:#999;margin:0 0 4px;text-decoration:line-through;">Valor: ${totalValue}</p>
-       <p style="font-size:14px;color:#1a1a18;margin:0 0 20px;">Comisión por venta: solo ${plan.commission}</p>
+       <p style="font-size:14px;color:#999;margin:0 0 20px;text-decoration:line-through;">Comisión por venta: solo ${plan.commission}</p>
        <div style="text-align:left;max-width:320px;margin:0 auto;">${featuresHtml}</div>
      </div>
 

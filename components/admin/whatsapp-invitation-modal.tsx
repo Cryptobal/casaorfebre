@@ -64,15 +64,20 @@ export function WhatsAppInvitationModal({
   const message = buildMessage(data.name, data.type);
   const waNumber = data.phone.replace(/\D/g, ""); // 569XXXXXXXX
 
-  async function handleSend() {
+  function handleSend() {
     setIsSending(true);
-    try {
-      await trackWhatsAppSent(data.invitationId);
-    } catch {
-      // no bloquear el envío si tracking falla
-    }
+    // IMPORTANTE: navegar de forma síncrona dentro del gesto del usuario.
+    // En móviles, abrir WhatsApp tras un `await` es bloqueado por el navegador.
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Tracking en background — no esperar para no perder el gesto del usuario.
+    trackWhatsAppSent(data.invitationId).catch(() => {
+      // no bloquear el envío si tracking falla
+    });
+    // window.open puede ser bloqueado en móvil; usar location.href como fallback confiable.
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      window.location.href = url;
+    }
     setIsSending(false);
     onClose();
   }
