@@ -13,6 +13,7 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+export const dynamic = "force-static";
 
 const categoryLabels: Record<string, string> = {
   GUIAS: "Guías",

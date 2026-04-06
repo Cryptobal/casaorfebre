@@ -108,6 +108,7 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 3600;
+export const dynamic = "force-static";
 
 export default async function TobillierasPage() {
   const products = await getApprovedProducts({}).then((result) => result.slice(0, 4));

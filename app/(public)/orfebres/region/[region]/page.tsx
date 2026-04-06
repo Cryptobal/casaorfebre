@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+export const dynamic = "force-static";
 
 function findRegion(slug: string): string | undefined {
   return CHILEAN_REGIONS.find((r) => slugify(r) === slug);

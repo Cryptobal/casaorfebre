@@ -1,4 +1,5 @@
 export const revalidate = 300;
+export const dynamic = "force-static";
 
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/product-card";

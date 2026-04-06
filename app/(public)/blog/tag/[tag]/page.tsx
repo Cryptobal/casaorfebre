@@ -7,6 +7,7 @@ import { BlogImage } from "@/components/shared/blog-image";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+export const dynamic = "force-static";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("es-CL", {

@@ -1,4 +1,5 @@
 export const revalidate = 300;
+export const dynamic = "force-static";
 
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
