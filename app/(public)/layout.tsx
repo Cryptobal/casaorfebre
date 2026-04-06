@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ShoppingChatbot } from "@/components/chat/shopping-chatbot";
@@ -20,7 +21,10 @@ export default function PublicLayout({
       <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       <Footer />
       <ShoppingChatbot />
-      <ReferralTracker />
+      {/* ReferralTracker usa useSearchParams; Suspense permite prerender estático del layout. */}
+      <Suspense fallback={null}>
+        <ReferralTracker />
+      </Suspense>
     </>
   );
 }
