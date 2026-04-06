@@ -1631,11 +1631,6 @@ export async function sendPioneerInvitationEmail(
        </a>
      </p>
 
-     <!-- CTA -->
-     <p style="text-align:center;margin:0 0 24px;">
-       <a href="${registerUrl}" style="display:inline-block;background:#1a1a18;color:#FAFAF8;padding:14px 40px;border-radius:8px;font-size:16px;font-weight:500;text-decoration:none;letter-spacing:0.5px;">Postular como Pionero</a>
-     </p>
-
      <p style="font-size:13px;color:#999;text-align:center;margin:0 0 8px;">Tu código personal:</p>
      <p style="font-family:monospace;font-size:18px;color:#8B7355;text-align:center;letter-spacing:2px;margin:0 0 28px;font-weight:600;">${code}</p>
 

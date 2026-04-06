@@ -155,7 +155,7 @@ export async function sendArtisanInvitationEmail(
           El proceso de postulación es simple.<br>Revisamos tu trabajo en <strong>3 a 7 días hábiles</strong>.
         </p>
 
-        ${CTA_CENTER(trackingUrl(token), "Conocer la plataforma")}
+        ${CTA_CENTER(`https://casaorfebre.cl/para-orfebres?token=${token}`, "Conocer la plataforma")}
 
         ${DIVIDER}
 
