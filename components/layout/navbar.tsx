@@ -1,12 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { MobileMenu } from "./mobile-menu";
 import { CartButton } from "./cart-button";
 import { UserMenu } from "./user-menu";
 import { RegalarDropdown } from "./regalar-dropdown";
 import { ColeccionMegaMenu } from "./coleccion-mega-menu";
 import { SearchModal } from "@/components/shared/search-modal";
-import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 const navLinksLeft = [
   { href: "/lo-nuevo", label: "Lo Nuevo", tourId: undefined },
@@ -22,19 +24,22 @@ const navLinksRight = [
 
 const navLinks = [...navLinksLeft, ...navLinksRight];
 
-interface NavbarProps {
-  cartItems?: SerializedCartItem[];
-  cartTotal?: number;
-  isLoggedIn?: boolean;
-  user?: { name?: string | null; email?: string | null; image?: string | null; role?: string } | null;
-}
+export function Navbar() {
+  const { data: session, status } = useSession();
+  const user = session?.user
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+        role: (session.user as { role?: string }).role,
+      }
+    : null;
+  const isAuthenticated = status === "authenticated";
+  const isUnauthenticated = status === "unauthenticated";
+  // Mientras la sesión no esté resuelta, asumimos visitante público
+  // (mismo comportamiento que un usuario no logueado, sin parpadeos extraños).
+  const showParaOrfebres = !user || user.role === "BUYER";
 
-export function Navbar({
-  cartItems = [],
-  cartTotal = 0,
-  isLoggedIn = false,
-  user,
-}: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -63,7 +68,7 @@ export function Navbar({
               </Link>
             </li>
           ))}
-          {(!user || user.role === "BUYER") && (
+          {showParaOrfebres && (
             <li>
               <Link
                 href="/para-orfebres"
@@ -79,27 +84,26 @@ export function Navbar({
           <div data-tour="nav-search">
             <SearchModal />
           </div>
-          {user?.role === "ADMIN" && (
+          {isAuthenticated && user?.role === "ADMIN" && (
             <Link href="/portal/admin" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark lg:block">
               Panel Admin
             </Link>
           )}
-          {user?.role === "ARTISAN" && (
+          {isAuthenticated && user?.role === "ARTISAN" && (
             <Link href="/portal/orfebre" className="hidden text-xs font-medium tracking-wide text-accent transition-colors hover:text-accent-dark lg:block">
               Mi Portal
             </Link>
           )}
-          <CartButton
-            initialItems={cartItems}
-            initialTotal={cartTotal}
-            isLoggedIn={isLoggedIn}
-          />
-          {user ? (
+          <CartButton />
+          {isAuthenticated && user ? (
             <UserMenu user={user} />
-          ) : (
+          ) : isUnauthenticated ? (
             <Link href="/login" className="hidden text-sm font-light tracking-wide text-text-secondary transition-colors hover:text-text lg:block">
               Ingresar
             </Link>
+          ) : (
+            // status === "loading": placeholder neutral para evitar layout shift
+            <span className="hidden h-5 w-16 lg:block" aria-hidden />
           )}
           <MobileMenu links={navLinks} user={user} />
         </div>

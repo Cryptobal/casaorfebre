@@ -49,6 +49,7 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
     }
     startTransition(async () => {
       await updateCartQuantity(item.id, newQty);
+      window.dispatchEvent(new Event("casaorfebre:cart-updated"));
     });
   }
 
@@ -69,6 +70,7 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
     }
     startTransition(async () => {
       await removeFromCart(item.id);
+      window.dispatchEvent(new Event("casaorfebre:cart-updated"));
     });
   }
 

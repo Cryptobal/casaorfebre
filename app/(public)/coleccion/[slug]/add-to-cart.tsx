@@ -48,6 +48,7 @@ export function AddToCart({ productId, price, productionType, stock, ga4Item }: 
         } else {
           if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
           setSuccessMsg("¡Agregado al carrito!");
+          window.dispatchEvent(new Event("casaorfebre:cart-updated"));
           router.refresh();
           setTimeout(() => setSuccessMsg(null), 2000);
         }
