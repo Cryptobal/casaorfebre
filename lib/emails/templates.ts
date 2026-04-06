@@ -1571,18 +1571,25 @@ export async function sendPioneerInvitationEmail(
     code,
     planName,
     durationDays,
+    invitationKind = "PIONEER",
   }: {
     name: string;
     code: string;
     planName: string;
     durationDays: number;
+    /** Pioneros: sin comisión en el programa. Invitaciones “orfebre” genéricas: mostrar la comisión del plan (p. ej. 9%). */
+    invitationKind?: "PIONEER" | "ORFEBRE";
   },
 ) {
   const base = appUrl();
-  const registerUrl = `${base}/postular?code=${encodeURIComponent(code)}`;
   const months = Math.round(durationDays / 30);
   const plan = PLAN_BENEFITS[planName.toLowerCase()] ?? PLAN_BENEFITS.maestro;
   const totalValue = `$${(plan.price * months).toLocaleString("es-CL")}`;
+
+  const commissionBlock =
+    invitationKind === "ORFEBRE"
+      ? `<p style="font-size:15px;color:#1a1a18;margin:0 0 20px;font-weight:600;">Comisión por venta: solo ${plan.commission}</p>`
+      : `<p style="font-size:15px;color:#1a1a18;margin:0 0 20px;font-weight:600;">Comisión por venta: <span style="color:#2d6a4f;">0%</span> — sin comisión durante el Programa Pioneros</p>`;
 
   const featuresHtml = plan.features
     .map(
@@ -1616,8 +1623,8 @@ export async function sendPioneerInvitationEmail(
        <p style="font-size:12px;color:#8B7355;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;">Tu beneficio exclusivo</p>
        <p style="font-family:Georgia,serif;font-size:28px;font-weight:600;color:#1a1a18;margin:0 0 4px;">${months} meses de Plan ${plan.displayName}</p>
        <p style="font-size:14px;color:#8B7355;margin:0 0 4px;">Completamente gratis</p>
-       <p style="font-size:14px;color:#999;margin:0 0 4px;text-decoration:line-through;">Valor: ${totalValue}</p>
-       <p style="font-size:14px;color:#999;margin:0 0 20px;text-decoration:line-through;">Comisión por venta: solo ${plan.commission}</p>
+       <p style="font-size:14px;color:#999;margin:0 0 12px;text-decoration:line-through;">Valor: ${totalValue}</p>
+       ${commissionBlock}
        <div style="text-align:left;max-width:320px;margin:0 auto;">${featuresHtml}</div>
      </div>
 

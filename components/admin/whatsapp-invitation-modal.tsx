@@ -66,18 +66,12 @@ export function WhatsAppInvitationModal({
 
   function handleSend() {
     setIsSending(true);
-    // IMPORTANTE: navegar de forma síncrona dentro del gesto del usuario.
-    // En móviles, abrir WhatsApp tras un `await` es bloqueado por el navegador.
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-    // Tracking en background — no esperar para no perder el gesto del usuario.
+    // Primero navegar en el mismo tick del click (Safari/iOS bloquea si hay trabajo async antes).
+    window.location.assign(url);
     trackWhatsAppSent(data.invitationId).catch(() => {
       // no bloquear el envío si tracking falla
     });
-    // window.open puede ser bloqueado en móvil; usar location.href como fallback confiable.
-    const opened = window.open(url, "_blank", "noopener,noreferrer");
-    if (!opened) {
-      window.location.href = url;
-    }
     setIsSending(false);
     onClose();
   }

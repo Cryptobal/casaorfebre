@@ -65,6 +65,8 @@ export async function createInvitation(data: {
   expiresAt: Date;
   sendEmail: boolean;
   phone?: string | null;
+  /** Pioneros: email sin comisión de plataforma. Orfebres: mostrar comisión del plan en el correo. */
+  invitationKind?: "PIONEER" | "ORFEBRE";
 }) {
   // Sanitize phone: must be 8 digits → store as +569XXXXXXXX
   let sanitizedPhone: string | null = null;
@@ -110,6 +112,7 @@ export async function createInvitation(data: {
       metadata: {
         name: data.recipientName,
         email: data.recipientEmail,
+        invitationKind: data.invitationKind ?? "PIONEER",
       },
     },
   });
@@ -121,6 +124,7 @@ export async function createInvitation(data: {
         code,
         planName: data.planName,
         durationDays: data.durationDays,
+        invitationKind: data.invitationKind ?? "PIONEER",
       });
       if (emailData?.id) {
         await prisma.promoCode.update({
@@ -157,11 +161,13 @@ export async function resendInvitation(promoCodeId: string) {
   if (promo.currentUses >= promo.maxUses)
     throw new Error("El código ya fue redimido");
 
+  const meta = promo.metadata as { invitationKind?: "PIONEER" | "ORFEBRE" } | null;
   const emailData = await sendPioneerInvitationEmail(promo.recipientEmail, {
     name: promo.recipientName ?? "Orfebre",
     code: promo.code,
     planName: promo.planName,
     durationDays: promo.durationDays,
+    invitationKind: meta?.invitationKind ?? "PIONEER",
   });
 
   await prisma.promoCode.update({
@@ -189,6 +195,7 @@ export async function bulkCreateInvitations(
     campaign: string;
     expiresAt: Date;
     sendEmails: boolean;
+    invitationKind?: "PIONEER" | "ORFEBRE";
   },
 ) {
   const results: Array<{
@@ -224,6 +231,7 @@ export async function bulkCreateInvitations(
         recipientEmail: orfebre.email,
         ...options,
         sendEmail: options.sendEmails,
+        invitationKind: options.invitationKind ?? "PIONEER",
       });
 
       results.push({
