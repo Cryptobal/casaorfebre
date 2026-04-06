@@ -26,6 +26,7 @@ type Invitation = {
   invitationStatus: string;
   isActive: boolean;
   campaign: string;
+  metadata: unknown;
   sentAt: Date | null;
   openedAt: Date | null;
   appliedAt: Date | null;
@@ -52,6 +53,11 @@ function formatDate(d: Date | string | null): string {
     day: "2-digit",
     month: "short",
   });
+}
+
+function whatsAppTypeFromMetadata(metadata: unknown): "PIONEER" | "ARTISAN" {
+  const meta = metadata as { invitationKind?: "PIONEER" | "ORFEBRE" } | null;
+  return meta?.invitationKind === "ORFEBRE" ? "ARTISAN" : "PIONEER";
 }
 
 export function InvitacionesClient({
@@ -277,7 +283,7 @@ export function InvitacionesClient({
                               invitationId: inv.id,
                               name: inv.recipientName ?? "",
                               phone: inv.phone!,
-                              type: "PIONEER",
+                              type: whatsAppTypeFromMetadata(inv.metadata),
                             })
                           }
                           className="inline-flex items-center gap-1 rounded border border-[#25D366]/40 px-2 py-0.5 text-xs font-medium text-[#25D366] hover:bg-[#25D366]/10"

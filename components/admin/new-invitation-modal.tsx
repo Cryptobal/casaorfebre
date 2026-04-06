@@ -42,6 +42,9 @@ export function NewInvitationModal({
   const [newCampaign, setNewCampaign] = useState("");
   const [useNewCampaign, setUseNewCampaign] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
+  const [invitationKind, setInvitationKind] = useState<"PIONEER" | "ORFEBRE">(
+    "PIONEER",
+  );
   const [error, setError] = useState("");
 
   const defaultExpiry = new Date();
@@ -91,13 +94,14 @@ export function NewInvitationModal({
           expiresAt: new Date(expiresAt),
           sendEmail,
           phone: phoneDigits || null,
+          invitationKind,
         });
         if (created.phone && onWhatsAppReady) {
           onWhatsAppReady({
             invitationId: created.id,
             name: created.recipientName ?? name.trim(),
             phone: created.phone,
-            type: "PIONEER", // este modal crea siempre invitaciones de pionero
+            type: invitationKind === "ORFEBRE" ? "ARTISAN" : "PIONEER",
           });
         }
         onClose();
@@ -262,6 +266,42 @@ export function NewInvitationModal({
             <p className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-accent">
               {previewCode}
             </p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm text-text-secondary">Tipo de invitación</p>
+            <div className="flex flex-col gap-2 text-sm">
+              <label className="flex cursor-pointer items-start gap-2">
+                <input
+                  type="radio"
+                  name="invitationKind"
+                  checked={invitationKind === "PIONEER"}
+                  onChange={() => setInvitationKind("PIONEER")}
+                  className="accent-accent mt-0.5"
+                />
+                <span>
+                  <span className="font-medium text-text">Programa Pioneros</span>
+                  <span className="block text-xs text-text-tertiary">
+                    Plan gratis, sin comisión de plataforma en el correo
+                  </span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-2">
+                <input
+                  type="radio"
+                  name="invitationKind"
+                  checked={invitationKind === "ORFEBRE"}
+                  onChange={() => setInvitationKind("ORFEBRE")}
+                  className="accent-accent mt-0.5"
+                />
+                <span>
+                  <span className="font-medium text-text">Orfebre (invitación general)</span>
+                  <span className="block text-xs text-text-tertiary">
+                    El correo muestra la comisión del plan (p. ej. 9% Plan Maestro)
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
 
           <label className="flex items-center gap-2 text-sm">

@@ -50,6 +50,9 @@ export function CsvImportModal({
     campaigns[0]?.name || "PIONEROS_2026",
   );
   const [sendEmails, setSendEmails] = useState(true);
+  const [invitationKind, setInvitationKind] = useState<"PIONEER" | "ORFEBRE">(
+    "PIONEER",
+  );
   const [error, setError] = useState("");
 
   const defaultExpiry = new Date();
@@ -96,6 +99,7 @@ export function CsvImportModal({
           campaign,
           expiresAt: new Date(expiresAt),
           sendEmails,
+          invitationKind,
         });
         setResults(res);
       } catch (err) {
@@ -310,6 +314,30 @@ export function CsvImportModal({
                       className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                     />
                   </div>
+                </div>
+
+                <div className="mb-4 space-y-2 text-sm">
+                  <p className="text-text-secondary">Tipo de invitación</p>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="radio"
+                      name="csvInvitationKind"
+                      checked={invitationKind === "PIONEER"}
+                      onChange={() => setInvitationKind("PIONEER")}
+                      className="accent-accent"
+                    />
+                    Pioneros (sin comisión en el correo)
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="radio"
+                      name="csvInvitationKind"
+                      checked={invitationKind === "ORFEBRE"}
+                      onChange={() => setInvitationKind("ORFEBRE")}
+                      className="accent-accent"
+                    />
+                    Orfebres (correo con comisión del plan)
+                  </label>
                 </div>
 
                 <label className="mb-4 flex items-center gap-2 text-sm">
