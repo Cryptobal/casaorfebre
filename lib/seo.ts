@@ -27,6 +27,7 @@ export function generateBreadcrumbJsonLd(items: BreadcrumbItem[]) {
 /* ─── Product ─── */
 
 interface ProductForJsonLd {
+  id?: string;
   name: string;
   description: string;
   slug: string;
@@ -51,6 +52,7 @@ export function generateProductJsonLd(product: ProductForJsonLd) {
     description: product.description,
     image: images,
     url: productUrl,
+    ...(product.id ? { sku: `CO-${product.id}`, mpn: `CO-${product.id}` } : {}),
     brand: {
       "@type": "Brand",
       name: "Casa Orfebre",
@@ -79,6 +81,8 @@ export function generateProductJsonLd(product: ProductForJsonLd) {
         "@type": "Organization",
         name: "Casa Orfebre",
       },
+      shippingDetails: buildShippingDetails(),
+      hasMerchantReturnPolicy: buildMerchantReturnPolicy(),
     },
   };
 }
@@ -108,10 +112,100 @@ export function generateFAQJsonLd(faqs: FAQ[]) {
 /* ─── ItemList ─── */
 
 interface ProductItem {
+  id?: string;
   name: string;
   slug: string;
+  description?: string | null;
   images?: { url: string }[];
   price?: number;
+  stock?: number | null;
+}
+
+function buildShippingDetails() {
+  return {
+    "@type": "OfferShippingDetails",
+    shippingRate: {
+      "@type": "MonetaryAmount",
+      value: 0,
+      currency: "CLP",
+    },
+    shippingDestination: {
+      "@type": "DefinedRegion",
+      addressCountry: "CL",
+    },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: {
+        "@type": "QuantitativeValue",
+        minValue: 1,
+        maxValue: 3,
+        unitCode: "DAY",
+      },
+      transitTime: {
+        "@type": "QuantitativeValue",
+        minValue: 2,
+        maxValue: 7,
+        unitCode: "DAY",
+      },
+    },
+  };
+}
+
+function buildMerchantReturnPolicy() {
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "CL",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 10,
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/FreeReturn",
+  };
+}
+
+function buildProductListItem(p: ProductItem) {
+  const productUrl = `${BASE_URL}/coleccion/${p.slug}`;
+  const image =
+    p.images && p.images.length > 0
+      ? p.images.map((img) => img.url)
+      : [`${BASE_URL}/casaorfebre-og-image.png`];
+  const description =
+    (p.description && p.description.trim().length > 0
+      ? p.description
+      : `${p.name} — joya artesanal hecha a mano por orfebres chilenos verificados en Casa Orfebre.`);
+  const sku = p.id ? `CO-${p.id}` : undefined;
+
+  return {
+    "@type": "Product",
+    name: p.name,
+    description,
+    image,
+    url: productUrl,
+    ...(sku ? { sku, mpn: sku } : {}),
+    brand: {
+      "@type": "Brand",
+      name: "Casa Orfebre",
+    },
+    ...(p.price
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: p.price,
+            priceCurrency: "CLP",
+            url: productUrl,
+            availability:
+              p.stock !== undefined && p.stock !== null && p.stock <= 0
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
+            seller: {
+              "@type": "Organization",
+              name: "Casa Orfebre",
+            },
+            shippingDetails: buildShippingDetails(),
+            hasMerchantReturnPolicy: buildMerchantReturnPolicy(),
+          },
+        }
+      : {}),
+  };
 }
 
 export function generateItemListJsonLd(products: ProductItem[]) {
@@ -122,22 +216,7 @@ export function generateItemListJsonLd(products: ProductItem[]) {
     itemListElement: products.slice(0, 30).map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      item: {
-        "@type": "Product",
-        name: p.name,
-        url: `${BASE_URL}/coleccion/${p.slug}`,
-        ...(p.images?.[0]?.url ? { image: p.images[0].url } : {}),
-        ...(p.price
-          ? {
-              offers: {
-                "@type": "Offer",
-                price: p.price,
-                priceCurrency: "CLP",
-                availability: "https://schema.org/InStock",
-              },
-            }
-          : {}),
-      },
+      item: buildProductListItem(p),
     })),
   };
 }
@@ -235,22 +314,7 @@ export function buildCollectionWithItemsJsonLd(opts: {
       itemListElement: opts.products.slice(0, 30).map((p, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        item: {
-          "@type": "Product",
-          name: p.name,
-          url: `${BASE_URL}/coleccion/${p.slug}`,
-          ...(p.images?.[0]?.url ? { image: p.images[0].url } : {}),
-          ...(p.price
-            ? {
-                offers: {
-                  "@type": "Offer",
-                  price: p.price,
-                  priceCurrency: "CLP",
-                  availability: "https://schema.org/InStock",
-                },
-              }
-            : {}),
-        },
+        item: buildProductListItem(p),
       })),
     },
   };
