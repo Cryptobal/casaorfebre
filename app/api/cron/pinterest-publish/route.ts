@@ -127,8 +127,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!process.env.PINTEREST_ACCESS_TOKEN) {
-    return NextResponse.json({ message: "Pinterest no configurado" });
+  // Token vive en SystemSetting (guardado por el OAuth callback), no en env.
+  const tokenSetting = await prisma.systemSetting.findUnique({
+    where: { key: "PINTEREST_ACCESS_TOKEN" },
+  });
+  if (!tokenSetting?.value) {
+    return NextResponse.json({ message: "Pinterest no configurado (sin token en BD)" });
   }
 
   let published = 0;

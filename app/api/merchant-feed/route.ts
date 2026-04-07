@@ -27,10 +27,11 @@ export async function GET() {
     include: {
       artisan: { select: { displayName: true } },
       categories: { select: { slug: true, name: true } },
+      materials: { select: { name: true } },
       images: {
         where: { status: "APPROVED" },
         orderBy: { position: "asc" },
-        take: 1,
+        take: 10,
       },
     },
   });
@@ -43,20 +44,39 @@ export async function GET() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
 
-  const validProducts = products.filter(
-    (p) => p.images.length > 0 && p.price > 0,
-  );
+  const absUrl = (u: string) => (u.startsWith("http") ? u : `${baseUrl}${u}`);
+
+  // Pinterest rechaza items sin descripción real o sin imagen.
+  // Excluimos out_of_stock del feed: Pinterest los quita automáticamente al no verlos.
+  const validProducts = products.filter((p) => {
+    if (p.images.length === 0 || p.price <= 0) return false;
+    const desc = (p.description || "").replace(/<[^>]*>/g, "").trim();
+    if (desc.length < 10) return false;
+    const isInStock =
+      p.productionType === "UNIQUE" ||
+      p.productionType === "MADE_TO_ORDER" ||
+      p.stock > 0;
+    return isInStock;
+  });
 
   const items = validProducts
     .map((product) => {
-      const imageUrl = product.images[0].url;
-      const image = imageUrl.startsWith("http")
-        ? imageUrl
-        : `${baseUrl}${imageUrl}`;
+      const image = absUrl(product.images[0].url);
+      const additionalImages = product.images
+        .slice(1, 10)
+        .map((img) => `      <g:additional_image_link>${escapeXml(absUrl(img.url))}</g:additional_image_link>`)
+        .join("\n");
 
       const categorySlug = product.categories[0]?.slug || "";
       const googleCategory =
         GOOGLE_CATEGORY[categorySlug] || DEFAULT_CATEGORY;
+
+      // Taxonomía propia de Casa Orfebre: "Joyería Artesanal > {Categoría} > {Material}"
+      const categoryName = product.categories[0]?.name || "Joyería";
+      const materialName = product.materials[0]?.name;
+      const productType = materialName
+        ? `Joyería Artesanal > ${categoryName} > ${materialName}`
+        : `Joyería Artesanal > ${categoryName}`;
 
       const description = (product.description || "")
         .replace(/<[^>]*>/g, "")
@@ -65,27 +85,18 @@ export async function GET() {
         .trim()
         .slice(0, 5000);
 
-      // UNIQUE/MADE_TO_ORDER pieces are in_stock while APPROVED
-      // (when sold, status changes to SOLD_OUT and they exit the feed)
-      const availability =
-        product.productionType === "UNIQUE" ||
-        product.productionType === "MADE_TO_ORDER"
-          ? "in_stock"
-          : product.stock > 0
-            ? "in_stock"
-            : "out_of_stock";
-
       return `    <item>
       <g:id>${escapeXml(product.id)}</g:id>
       <g:title>${escapeXml(product.name.trim())}</g:title>
       <g:description>${escapeXml(description)}</g:description>
       <g:link>${baseUrl}/coleccion/${escapeXml(product.slug)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
-      <g:price>${product.price} CLP</g:price>
-      <g:availability>${availability}</g:availability>
+${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price} CLP</g:price>
+      <g:availability>in_stock</g:availability>
       <g:condition>new</g:condition>
       <g:brand>${escapeXml(product.artisan?.displayName || "Casa Orfebre")}</g:brand>
       <g:google_product_category>${googleCategory}</g:google_product_category>
+      <g:product_type>${escapeXml(productType)}</g:product_type>
       <g:identifier_exists>false</g:identifier_exists>
       <g:shipping>
         <g:country>CL</g:country>
