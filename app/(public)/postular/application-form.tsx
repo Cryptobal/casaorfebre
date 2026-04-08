@@ -94,11 +94,7 @@ export function ApplicationForm({
   const [premios, setPremios] = useState<string[]>([]);
   const [premioInput, setPremioInput] = useState("");
   const [portfolioUrls, setPortfolioUrls] = useState<string[]>([]);
-  const [acceptedSellerAgreement, setAcceptedSellerAgreement] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
-  const allLegalAccepted = acceptedSellerAgreement && acceptedTerms && acceptedPrivacy;
 
   const regionOptions = CHILEAN_REGIONS.map((r) => ({ value: r, label: r }));
   const cityOptions = citiesForRegion(region).map((c) => ({ value: c, label: c }));
@@ -152,9 +148,6 @@ export function ApplicationForm({
       <input type="hidden" name="categories" value={categorias.join(",")} />
       {selectedPlan && <input type="hidden" name="selectedPlan" value={selectedPlan} />}
       {promoCode && <input type="hidden" name="promoCode" value={promoCode} />}
-      <input type="hidden" name="acceptedSellerAgreement" value={acceptedSellerAgreement ? "true" : "false"} />
-      <input type="hidden" name="acceptedTerms" value={acceptedTerms ? "true" : "false"} />
-      <input type="hidden" name="acceptedPrivacy" value={acceptedPrivacy ? "true" : "false"} />
 
       {/* ─── Section 1: Datos personales ─── */}
       <div>
@@ -430,70 +423,6 @@ export function ApplicationForm({
         </div>
       </div>
 
-      {/* ─── Aceptación legal ─── */}
-      <div className="border-t border-border pt-6 mt-6">
-        <h3 className="font-serif text-lg font-light text-text mb-4">Aceptación legal</h3>
-        <div className="space-y-3">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={acceptedSellerAgreement}
-              onChange={(e) => setAcceptedSellerAgreement(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-light text-text-secondary">
-              He leído y acepto el{" "}
-              <a
-                href="/acuerdo-orfebre"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-accent underline-offset-4 hover:underline"
-              >
-                Acuerdo de Orfebre
-              </a>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-light text-text-secondary">
-              He leído y acepto los{" "}
-              <a
-                href="/terminos"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-accent underline-offset-4 hover:underline"
-              >
-                Términos y Condiciones
-              </a>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={acceptedPrivacy}
-              onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-light text-text-secondary">
-              He leído y acepto la{" "}
-              <a
-                href="/privacidad"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-accent underline-offset-4 hover:underline"
-              >
-                Política de Privacidad
-              </a>
-            </span>
-          </label>
-        </div>
-      </div>
-
       {/* ─── Consentimientos (Ley 21.719) ─── */}
       <div className="space-y-4 rounded-lg border border-border bg-surface p-5">
         <h3 className="font-serif text-lg font-light text-text">
@@ -512,11 +441,21 @@ export function ApplicationForm({
             className="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent"
           />
           <span className="text-sm text-text-secondary">
-            <strong className="font-medium text-text">Acepto los términos y la política de privacidad</strong>{" "}
-            (requerido). He leído y acepto los{" "}
+            <strong className="font-medium text-text">Acepto los términos, la política de privacidad y el acuerdo de orfebre</strong>{" "}
+            (requerido). He leído y acepto el{" "}
+            <a
+              href="/acuerdo-orfebre"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline-offset-2 hover:underline"
+            >
+              Acuerdo de Orfebre
+            </a>
+            , los{" "}
             <a
               href="/terminos"
               target="_blank"
+              rel="noopener noreferrer"
               className="text-accent underline-offset-2 hover:underline"
             >
               Términos y Condiciones
@@ -525,6 +464,7 @@ export function ApplicationForm({
             <a
               href="/privacidad"
               target="_blank"
+              rel="noopener noreferrer"
               className="text-accent underline-offset-2 hover:underline"
             >
               Política de Privacidad
@@ -571,7 +511,7 @@ export function ApplicationForm({
         </label>
       </div>
 
-      <Button type="submit" className="w-full" size="lg" loading={pending} disabled={!allLegalAccepted}>
+      <Button type="submit" className="w-full" size="lg" loading={pending}>
         Enviar Postulación
       </Button>
     </form>

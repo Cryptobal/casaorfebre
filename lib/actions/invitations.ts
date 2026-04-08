@@ -3,6 +3,15 @@
 import { prisma } from "@/lib/prisma";
 import { sendPioneerInvitationEmail } from "@/lib/emails/templates";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+
+async function requireAdmin() {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    throw new Error("No autorizado");
+  }
+  return session;
+}
 
 // ============================================================
 // HELPERS
@@ -68,6 +77,7 @@ export async function createInvitation(data: {
   /** Pioneros: email sin comisión de plataforma. Orfebres: mostrar comisión del plan en el correo. */
   invitationKind?: "PIONEER" | "ORFEBRE";
 }) {
+  await requireAdmin();
   // Sanitize phone: must be 8 digits → store as +569XXXXXXXX
   let sanitizedPhone: string | null = null;
   if (data.phone) {
@@ -150,6 +160,7 @@ export async function createInvitation(data: {
 // ============================================================
 
 export async function resendInvitation(promoCodeId: string) {
+  await requireAdmin();
   const promo = await prisma.promoCode.findUnique({
     where: { id: promoCodeId },
   });
@@ -198,6 +209,7 @@ export async function bulkCreateInvitations(
     invitationKind?: "PIONEER" | "ORFEBRE";
   },
 ) {
+  await requireAdmin();
   const results: Array<{
     name: string;
     email: string;
@@ -265,6 +277,7 @@ export async function bulkCreateInvitations(
 // ============================================================
 
 export async function deactivateInvitation(promoCodeId: string) {
+  await requireAdmin();
   await prisma.promoCode.update({
     where: { id: promoCodeId },
     data: { isActive: false },
@@ -278,6 +291,7 @@ export async function deactivateInvitation(promoCodeId: string) {
 // ============================================================
 
 export async function deleteInvitation(promoCodeId: string) {
+  await requireAdmin();
   const promo = await prisma.promoCode.findUnique({
     where: { id: promoCodeId },
     include: { redemptions: true },
@@ -301,6 +315,7 @@ export async function getInvitations(filters?: {
   status?: string;
   search?: string;
 }) {
+  await requireAdmin();
   const where: Record<string, unknown> = {
     recipientEmail: { not: null },
   };
@@ -337,6 +352,7 @@ export async function getInvitations(filters?: {
 // ============================================================
 
 export async function getCampaignMetrics(campaign: string) {
+  await requireAdmin();
   const baseWhere = { campaign, recipientEmail: { not: null } };
 
   const [total, sent, opened, applied, redeemed, expired] = await Promise.all([
@@ -383,6 +399,7 @@ export async function getCampaignMetrics(campaign: string) {
 // ============================================================
 
 export async function trackWhatsAppSent(promoCodeId: string) {
+  await requireAdmin();
   await prisma.promoCode.update({
     where: { id: promoCodeId },
     data: { whatsappSentAt: new Date() },
@@ -396,6 +413,7 @@ export async function trackWhatsAppSent(promoCodeId: string) {
 // ============================================================
 
 export async function getCampaigns() {
+  await requireAdmin();
   const campaigns = await prisma.promoCode.groupBy({
     by: ["campaign"],
     _count: { id: true },

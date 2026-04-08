@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { pinterestClient } from "@/lib/pinterest";
+import { auth } from "@/lib/auth";
 
 const CATEGORY_BOARD_MAP: Record<string, string | undefined> = {
   anillo: process.env.PINTEREST_BOARD_ANILLOS,
@@ -60,6 +61,11 @@ function buildPinDescription(product: {
 export async function publishProductToPinterest(
   productId: string,
 ): Promise<{ success: boolean; error?: string; pinId?: string }> {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    return { success: false, error: "No autorizado" };
+  }
+
   if (!process.env.PINTEREST_ACCESS_TOKEN) {
     return { success: false, error: "Pinterest no configurado" };
   }
