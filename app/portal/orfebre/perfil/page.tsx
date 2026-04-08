@@ -84,6 +84,26 @@ export default async function PerfilPage() {
           />
         </div>
       </div>
+
+      {/* ── Zona de peligro ── */}
+      <section className="mt-16 border-t border-border pt-8">
+        <h2 className="font-serif text-lg font-light text-text">
+          Zona de peligro
+        </h2>
+        <p className="mt-2 text-sm font-light text-text-secondary">
+          La eliminación de tu cuenta es irreversible. Se eliminarán todos
+          tus datos personales, fotografías y contenido conforme a la Ley N°
+          21.719 de Protección de Datos Personales.
+        </p>
+        <div className="mt-4">
+          <a
+            href="/portal/orfebre/cuenta/eliminar"
+            className="inline-flex items-center rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+          >
+            Eliminar mi cuenta
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
