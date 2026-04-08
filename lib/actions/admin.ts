@@ -89,6 +89,12 @@ export async function approveApplication(
       awards: application.awards,
       status: "APPROVED",
       approvedAt: new Date(),
+      consentTerms: application.consentTerms ?? true,
+      consentTermsAt: application.consentTermsAt ?? new Date(),
+      consentMarketing: application.consentMarketing ?? false,
+      consentMarketingAt: application.consentMarketingAt ?? null,
+      consentSocialMedia: application.consentSocialMedia ?? false,
+      consentSocialMediaAt: application.consentSocialMediaAt ?? null,
     },
   });
 

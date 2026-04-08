@@ -55,6 +55,7 @@ const ARTISAN_LINKS = [
   { href: "/portal/orfebre/ia", label: "Asistente IA", ai: true },
   { href: "/portal/orfebre/blog", label: "Blog" },
   { href: "/portal/orfebre/perfil", label: "Mi Perfil" },
+  { href: "/portal/orfebre/privacidad", label: "Privacidad" },
 ];
 
 const BUYER_LINKS = [

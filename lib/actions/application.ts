@@ -24,6 +24,15 @@ export async function submitApplication(
   const phoneDigits = phoneRaw.replace(/\D/g, "");
   /** Chile: celular sin código de país = 9 dígitos (ej. 912345678) → E.164 +56912345678 */
   const phone = phoneDigits.length === 9 ? `+56${phoneDigits}` : null;
+
+  // Consentimientos (Ley 21.719)
+  const consentTerms = formData.get("consentTerms") === "on";
+  const consentSocialMedia = formData.get("consentSocialMedia") === "on";
+  const consentMarketing = formData.get("consentMarketing") === "on";
+
+  if (!consentTerms) {
+    return { error: "Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar." };
+  }
   const selectedPlan = (formData.get("selectedPlan") as string) || null;
   const promoCodeRaw = (formData.get("promoCode") as string)?.trim().toUpperCase() || null;
   const yearsExperienceRaw = formData.get("yearsExperience") as string;
@@ -130,6 +139,12 @@ export async function submitApplication(
       yearsExperience: yearsExperience !== null && !isNaN(yearsExperience) ? yearsExperience : null,
       awards,
       status: "PENDING",
+      consentTerms: true,
+      consentTermsAt: new Date(),
+      consentMarketing,
+      consentMarketingAt: consentMarketing ? new Date() : null,
+      consentSocialMedia,
+      consentSocialMediaAt: consentSocialMedia ? new Date() : null,
     },
   });
 

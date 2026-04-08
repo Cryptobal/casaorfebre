@@ -74,6 +74,10 @@ model User {
   // Return requests
   returnRequests ReturnRequest[] @relation("UserReturns")
 
+  // Consentimientos granulares (Ley 21.719)
+  consentMarketing     Boolean   @default(false)
+  consentMarketingAt   DateTime?
+
   @@map("users")
 }
 
@@ -178,6 +182,14 @@ model Artisan {
   conversations       Conversation[]
   artisanMaterials     ArtisanMaterial[]
   collections          Collection[]
+
+  // Consentimientos granulares (Ley 21.719)
+  consentTerms         Boolean   @default(false)
+  consentTermsAt       DateTime?
+  consentMarketing     Boolean   @default(false)
+  consentMarketingAt   DateTime?
+  consentSocialMedia   Boolean   @default(false)
+  consentSocialMediaAt DateTime?
 
   @@map("artisans")
 }
@@ -630,6 +642,14 @@ model ArtisanApplication {
 
   // AI review of application portfolio
   aiReview        Json?
+
+  // Consentimientos granulares (Ley 21.719)
+  consentTerms         Boolean   @default(false) // Acepta T&C y Política de Privacidad (requerido)
+  consentTermsAt       DateTime?
+  consentMarketing     Boolean   @default(false) // Acepta comunicaciones promocionales (opcional)
+  consentMarketingAt   DateTime?
+  consentSocialMedia   Boolean   @default(false) // Acepta uso de fotos en RRSS de Casa Orfebre (opcional)
+  consentSocialMediaAt DateTime?
 
   @@map("artisan_applications")
 }

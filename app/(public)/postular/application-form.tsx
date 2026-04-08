@@ -494,14 +494,86 @@ export function ApplicationForm({
         </div>
       </div>
 
+      {/* ─── Consentimientos (Ley 21.719) ─── */}
+      <div className="space-y-4 rounded-lg border border-border bg-surface p-5">
+        <h3 className="font-serif text-lg font-light text-text">
+          Consentimientos
+        </h3>
+        <p className="text-xs text-text-tertiary">
+          De conformidad con la Ley N° 21.719 de Protección de Datos Personales.
+        </p>
+
+        {/* Consentimiento 1: T&C + Privacidad (REQUERIDO) */}
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="consentTerms"
+            required
+            className="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+          />
+          <span className="text-sm text-text-secondary">
+            <strong className="font-medium text-text">Acepto los términos y la política de privacidad</strong>{" "}
+            (requerido). He leído y acepto los{" "}
+            <a
+              href="/terminos"
+              target="_blank"
+              className="text-accent underline-offset-2 hover:underline"
+            >
+              Términos y Condiciones
+            </a>{" "}
+            y la{" "}
+            <a
+              href="/privacidad"
+              target="_blank"
+              className="text-accent underline-offset-2 hover:underline"
+            >
+              Política de Privacidad
+            </a>{" "}
+            de Casa Orfebre, incluyendo el tratamiento de mis datos personales
+            para la operación del marketplace y la licencia de uso de mis
+            fotografías dentro de la Plataforma.
+          </span>
+        </label>
+
+        {/* Consentimiento 2: Redes sociales (OPCIONAL) */}
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="consentSocialMedia"
+            className="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+          />
+          <span className="text-sm text-text-secondary">
+            <strong className="font-medium text-text">
+              Autorizo el uso de mis fotografías en redes sociales
+            </strong>{" "}
+            (opcional). Acepto que Casa Orfebre exhiba mis fotografías de
+            productos en sus cuentas de Instagram, Pinterest, Google Shopping y
+            publicidad digital para promover mis piezas. Puedo revocar este
+            consentimiento en cualquier momento.
+          </span>
+        </label>
+
+        {/* Consentimiento 3: Marketing (OPCIONAL) */}
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="consentMarketing"
+            className="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+          />
+          <span className="text-sm text-text-secondary">
+            <strong className="font-medium text-text">
+              Acepto recibir comunicaciones promocionales
+            </strong>{" "}
+            (opcional). Acepto recibir newsletters, novedades y comunicaciones
+            de marketing de Casa Orfebre. Puedo darme de baja en cualquier
+            momento.
+          </span>
+        </label>
+      </div>
+
       <Button type="submit" className="w-full" size="lg" loading={pending} disabled={!allLegalAccepted}>
         Enviar Postulación
       </Button>
-
-      <p className="text-center text-xs text-text-tertiary">
-        Al postular, aceptas que revisemos tu trabajo para determinar si cumple
-        con los estándares de curaduría de Casa Orfebre.
-      </p>
     </form>
   );
 }
