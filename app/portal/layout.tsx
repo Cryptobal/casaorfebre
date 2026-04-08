@@ -66,6 +66,7 @@ const BUYER_LINKS = [
   { href: "/portal/comprador/listas", label: "Mis Listas" },
   { href: "/portal/comprador/referidos", label: "Invita Amigos" },
   { href: "/portal/comprador/perfil", label: "Mi Cuenta" },
+  { href: "/portal/comprador/privacidad", label: "Privacidad" },
 ];
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
