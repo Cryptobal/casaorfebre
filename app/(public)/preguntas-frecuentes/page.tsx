@@ -147,7 +147,32 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Puedo eliminar mi cuenta y datos?",
         answer:
-          "Sí, respetamos tu derecho a la privacidad y protección de datos personales. Puedes solicitar la eliminación completa de tu cuenta y todos los datos asociados contactándonos directamente. Procesaremos tu solicitud en un plazo máximo de 30 días, conforme a la legislación chilena de protección de datos.",
+          "Sí. Conforme a la Ley N° 21.719 de Protección de Datos Personales, tienes derecho a solicitar la eliminación de tu cuenta y todos los datos personales asociados. Puedes hacerlo contactándonos a contacto@casaorfebre.cl. Procesaremos tu solicitud en un plazo máximo de 30 días: tus datos personales, fotografías y contenido de perfil serán eliminados de todos nuestros sistemas. Los registros de transacciones comerciales completadas se anonimizarán y conservarán exclusivamente por obligación tributaria.",
+      },
+      {
+        question: "¿Qué derechos tengo sobre mis datos personales?",
+        answer:
+          "Tienes derecho a acceder a tus datos, rectificarlos, solicitar su eliminación, oponerte a ciertos tratamientos, solicitar su portabilidad a otra plataforma y pedir el bloqueo temporal de su uso. Puedes ejercer cualquiera de estos derechos enviando una solicitud a contacto@casaorfebre.cl. Si no recibes respuesta en 30 días o no estás conforme, puedes recurrir ante la Agencia de Protección de Datos Personales.",
+      },
+    ],
+  },
+  {
+    title: "Protección de datos",
+    items: [
+      {
+        question: "¿Quién es dueño de las fotos que subo como orfebre?",
+        answer:
+          "Las fotografías y todo el contenido que publicas en Casa Orfebre son y permanecen siendo de tu propiedad intelectual. Al publicarlas, nos otorgas una licencia limitada y revocable para exhibirlas exclusivamente en la Plataforma y nuestros canales oficiales (Instagram, Pinterest, Google Shopping y newsletters). Nunca usaremos tus imágenes para otros fines sin tu consentimiento expreso.",
+      },
+      {
+        question: "¿Qué pasa con mis fotos y datos si doy de baja mi cuenta de orfebre?",
+        answer:
+          "Si solicitas la eliminación de tu cuenta, todas tus fotografías, datos de perfil e información personal serán eliminados de Casa Orfebre y de todos nuestros sistemas de almacenamiento dentro de 30 días. La licencia de uso de tus imágenes se extingue automáticamente. Solo se conservarán, de forma anonimizada, los registros financieros de transacciones ya completadas, por obligación tributaria legal.",
+      },
+      {
+        question: "¿Casa Orfebre puede usar mis fotos para entrenar inteligencia artificial?",
+        answer:
+          "No. Casa Orfebre no utiliza ni utilizará las fotografías ni los datos de los orfebres para entrenar modelos de inteligencia artificial, ni los cederá a terceros para dicho fin.",
       },
     ],
   },

@@ -22,7 +22,7 @@ export default function TerminosPage() {
           Términos y Condiciones
         </h1>
         <p className="mt-4 text-sm text-text-tertiary">
-          Última actualización: 26 de marzo de 2026
+          Última actualización: 8 de abril de 2026
         </p>
 
         <div className="mt-12 space-y-10 break-words text-base leading-relaxed sm:text-lg">
@@ -298,33 +298,83 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 9. Propiedad intelectual ── */}
+          {/* ── 9. Propiedad intelectual y datos personales del orfebre ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              9. Propiedad intelectual
+              9. Propiedad intelectual y datos personales del orfebre
             </h2>
             <p className="mb-4 font-light text-text-secondary">
-              Las fotografías, descripciones, diseños y cualquier otro contenido
-              publicado por los orfebres en la Plataforma son propiedad
-              intelectual de sus respectivos autores. Al publicar contenido en
-              Casa Orfebre, el orfebre otorga a la Plataforma una licencia no
-              exclusiva, gratuita, mundial y por el tiempo que dure la relación
-              comercial, para exhibir, reproducir y distribuir dicho contenido
-              con fines de promoción y comercialización dentro de la Plataforma y
-              sus canales de difusión asociados (redes sociales, newsletters,
-              publicidad digital).
+              Las fotografías, descripciones, diseños y cualquier otro
+              contenido publicado por los orfebres en la Plataforma son y
+              permanecen siendo propiedad intelectual de sus respectivos
+              autores, conforme a la Ley N° 17.336 sobre Propiedad
+              Intelectual. Al publicar contenido en Casa Orfebre, el orfebre
+              otorga a la Plataforma una licencia no exclusiva, gratuita,
+              revocable y limitada en el tiempo a la duración de la relación
+              comercial, para exhibir, reproducir y distribuir dicho
+              contenido con los siguientes fines exclusivos:
+            </p>
+            <ul className="mb-4 list-disc space-y-2 pl-6 font-light text-text-secondary">
+              <li>
+                Exhibición y comercialización de las piezas dentro de la
+                Plataforma (casaorfebre.cl).
+              </li>
+              <li>
+                Promoción en los canales oficiales de Casa Orfebre: cuenta de
+                Instagram, cuenta de Pinterest, Google Shopping y publicidad
+                digital directamente gestionada por Casa Orfebre.
+              </li>
+              <li>
+                Inclusión en newsletters y comunicaciones enviadas a
+                suscriptores de Casa Orfebre.
+              </li>
+            </ul>
+            <p className="mb-4 font-light text-text-secondary">
+              Casa Orfebre se compromete expresamente a no utilizar las
+              fotografías, contenido ni datos personales de los orfebres para
+              fines distintos a los indicados; a no cederlos, venderlos ni
+              transferirlos a terceros ajenos a la operación de la
+              Plataforma; a no emplearlos para el entrenamiento de modelos de
+              inteligencia artificial; y a no utilizarlos en contextos que
+              puedan afectar la reputación o dignidad del orfebre. Si en el
+              futuro surgiere un nuevo uso no contemplado en esta sección,
+              Casa Orfebre solicitará al orfebre un consentimiento adicional
+              específico antes de proceder.
             </p>
             <p className="mb-4 font-light text-text-secondary">
-              La marca Casa Orfebre, su logotipo, identidad visual, estructura de
-              la Plataforma, código fuente y diseño son propiedad exclusiva de
-              Casa Orfebre y están protegidos por la legislación chilena e
-              internacional sobre propiedad intelectual e industrial.
+              La licencia de uso se extingue automáticamente cuando el
+              orfebre dé por terminada su relación con Casa Orfebre o
+              solicite la eliminación de su cuenta. En tal caso, Casa Orfebre
+              procederá a eliminar todo el contenido del orfebre de la
+              Plataforma y de todos sus sistemas de almacenamiento dentro de
+              los 30 días corridos siguientes a la solicitud, conforme al
+              procedimiento descrito en la Política de Privacidad.
+            </p>
+            <p className="mb-4 font-light text-text-secondary">
+              Los datos personales de los orfebres, incluyendo nombre, RUT,
+              datos bancarios, descripción del taller y cualquier otra
+              información proporcionada durante el registro o la operación en
+              la Plataforma, serán tratados conforme a la Ley N° 19.628,
+              modificada por la Ley N° 21.719, y a la Política de Privacidad
+              de Casa Orfebre. El orfebre podrá ejercer en todo momento sus
+              derechos de acceso, rectificación, supresión, oposición,
+              portabilidad y bloqueo temporal de sus datos personales,
+              conforme al procedimiento establecido en la Política de
+              Privacidad.
+            </p>
+            <p className="mb-4 font-light text-text-secondary">
+              La marca Casa Orfebre, su logotipo, identidad visual,
+              estructura de la Plataforma, código fuente y diseño son
+              propiedad exclusiva de Casa Orfebre y están protegidos por la
+              legislación chilena e internacional sobre propiedad intelectual
+              e industrial.
             </p>
             <p className="font-light text-text-secondary">
-              Queda prohibida la reproducción, distribución o uso no autorizado
-              de cualquier contenido de la Plataforma, ya sea propio de Casa
-              Orfebre o de los orfebres registrados, sin el consentimiento previo
-              y por escrito del titular de los derechos correspondientes.
+              Queda prohibida la reproducción, distribución o uso no
+              autorizado de cualquier contenido de la Plataforma, ya sea
+              propio de Casa Orfebre o de los orfebres registrados, sin el
+              consentimiento previo y por escrito del titular de los derechos
+              correspondientes.
             </p>
           </section>
 
@@ -436,7 +486,11 @@ export default function TerminosPage() {
               Comercio en lo que resulte aplicable. Para la resolución de
               cualquier controversia derivada de estos Términos, las partes se
               someten a la jurisdicción de los tribunales ordinarios de justicia
-              de la ciudad de Santiago de Chile.
+              de la ciudad de Santiago de Chile. En materia de protección de
+              datos personales, Casa Orfebre se rige por la Ley N° 19.628,
+              modificada por la Ley N° 21.719, que regula la protección y el
+              tratamiento de los datos personales y crea la Agencia de
+              Protección de Datos Personales.
             </p>
           </section>
 
