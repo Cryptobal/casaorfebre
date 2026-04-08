@@ -27,7 +27,7 @@ export function ArtisanCard({ artisan }: ArtisanCardProps) {
   return (
     <Link
       href={`/orfebres/${artisan.slug}`}
-      className="group block rounded-lg border border-border bg-surface p-6 transition-colors hover:border-accent/30"
+      className="group flex h-full flex-col rounded-lg border border-border bg-surface p-6 transition-colors hover:border-accent/30"
     >
       {/* Avatar */}
       <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-full border border-border bg-background">

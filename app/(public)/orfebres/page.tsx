@@ -105,7 +105,7 @@ export default async function OrfebresPage({
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {artisans.map((artisan, index) => (
-          <FadeIn key={artisan.id} delay={index * 100}>
+          <FadeIn key={artisan.id} delay={index * 100} className="h-full">
             <ArtisanCard artisan={artisan} />
           </FadeIn>
         ))}
