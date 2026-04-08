@@ -45,7 +45,7 @@ export default async function OrfebresPage() {
             return (
               <div
                 key={artisan.id}
-                className="overflow-hidden rounded-lg border border-border bg-surface"
+                className="relative rounded-lg border border-border bg-surface"
               >
                 {/* Línea 1: identidad + métricas */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pt-4 pb-2 sm:pb-3">
