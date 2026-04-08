@@ -222,41 +222,7 @@ export default async function GaleriaSantoDomingoPage() {
           </div>
         </div>
 
-        {artisans.length > 0 && (
-          <div className="mb-16">
-            <SectionHeading
-              title="Orfebres de Galería Santo Domingo"
-              subtitle="Maestros artesanos verificados de Santiago"
-              as="h2"
-            />
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {artisans.map((artisan: any, index: number) => (
-                <FadeIn key={artisan.id} delay={index * 100}>
-                  <Link
-                    href={`/orfebres/${artisan.slug}`}
-                    className="group block rounded-xl border border-border bg-surface p-4 transition-shadow hover:shadow-md"
-                  >
-                    <div className="font-serif text-lg font-light text-text group-hover:text-accent">
-                      {artisan.displayName}
-                    </div>
-                    {artisan.specialty && (
-                      <p className="mt-1 text-sm text-text-secondary">
-                        {artisan.specialty}
-                      </p>
-                    )}
-                    {artisan.location && (
-                      <p className="mt-1 text-xs text-text-tertiary">
-                        📍 {artisan.location}
-                      </p>
-                    )}
-                  </Link>
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {products.length > 0 && (
+{products.length > 0 && (
           <div className="mb-16">
             <SectionHeading
               title="Joyas Destacadas"
