@@ -16,6 +16,9 @@ export function FadeIn({ children, delay = 0, className }: FadeInProps) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // threshold 0: con elementos muy altos (p. ej. cuerpo de un blog largo), un umbral
+    // del 10 % puede nunca alcanzarse en móvil (viewport / altura del bloque < 0.1),
+    // dejando el contenido invisible de forma permanente.
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -23,7 +26,7 @@ export function FadeIn({ children, delay = 0, className }: FadeInProps) {
           observer.unobserve(el);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0, rootMargin: "0px 0px 32px 0px" }
     );
     observer.observe(el);
     return () => observer.disconnect();
