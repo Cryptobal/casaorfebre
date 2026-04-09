@@ -130,13 +130,61 @@ export function generateFAQJsonLd(faqs: FAQ[]) {
   };
 }
 
+/* ─── Shared merchant fields for Product offers ─── */
+
+const MERCHANT_SHIPPING: Record<string, unknown> = {
+  "@type": "OfferShippingDetails",
+  shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "CLP" },
+  shippingDestination: { "@type": "DefinedRegion", addressCountry: "CL" },
+  deliveryTime: {
+    "@type": "ShippingDeliveryTime",
+    handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+    transitTime: { "@type": "QuantitativeValue", minValue: 2, maxValue: 5, unitCode: "DAY" },
+  },
+};
+
+const MERCHANT_RETURN_POLICY: Record<string, unknown> = {
+  "@type": "MerchantReturnPolicy",
+  applicableCountry: "CL",
+  returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+  merchantReturnDays: 14,
+  returnMethod: "https://schema.org/ReturnByMail",
+  returnFees: "https://schema.org/FreeReturn",
+};
+
 /* ─── ItemList ─── */
 
 interface ProductItem {
   name: string;
   slug: string;
+  description?: string | null;
   images?: { url: string }[];
   price?: number;
+  artisan?: { displayName: string } | null;
+}
+
+function buildProductListItem(p: ProductItem) {
+  return {
+    "@type": "Product",
+    name: p.name,
+    description: p.description || `${p.name} — joyería artesanal disponible en Casa Orfebre.`,
+    url: `${BASE_URL}/coleccion/${p.slug}`,
+    sku: p.slug,
+    image: p.images?.[0]?.url || `${BASE_URL}/casaorfebre-og-image.png`,
+    brand: { "@type": "Brand", name: "Casa Orfebre" },
+    ...(p.price
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: p.price,
+            priceCurrency: "CLP",
+            availability: "https://schema.org/InStock",
+            shippingDetails: MERCHANT_SHIPPING,
+            hasMerchantReturnPolicy: MERCHANT_RETURN_POLICY,
+          },
+        }
+      : {}),
+  };
 }
 
 export function generateItemListJsonLd(products: ProductItem[]) {
@@ -147,22 +195,7 @@ export function generateItemListJsonLd(products: ProductItem[]) {
     itemListElement: products.slice(0, 30).map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      item: {
-        "@type": "Product",
-        name: p.name,
-        url: `${BASE_URL}/coleccion/${p.slug}`,
-        ...(p.images?.[0]?.url ? { image: p.images[0].url } : {}),
-        ...(p.price
-          ? {
-              offers: {
-                "@type": "Offer",
-                price: p.price,
-                priceCurrency: "CLP",
-                availability: "https://schema.org/InStock",
-              },
-            }
-          : {}),
-      },
+      item: buildProductListItem(p),
     })),
   };
 }
@@ -260,22 +293,7 @@ export function buildCollectionWithItemsJsonLd(opts: {
       itemListElement: opts.products.slice(0, 30).map((p, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        item: {
-          "@type": "Product",
-          name: p.name,
-          url: `${BASE_URL}/coleccion/${p.slug}`,
-          ...(p.images?.[0]?.url ? { image: p.images[0].url } : {}),
-          ...(p.price
-            ? {
-                offers: {
-                  "@type": "Offer",
-                  price: p.price,
-                  priceCurrency: "CLP",
-                  availability: "https://schema.org/InStock",
-                },
-              }
-            : {}),
-        },
+        item: buildProductListItem(p),
       })),
     },
   };
