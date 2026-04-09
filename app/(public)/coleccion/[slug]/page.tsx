@@ -180,8 +180,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
+    description: product.description || `${product.name} — joyería artesanal hecha a mano por ${artisan.displayName}. Disponible en Casa Orfebre.`,
     image: productImages.length > 0 ? productImages : [`${baseUrl}/casaorfebre-og-image.png`],
+    sku: product.slug,
+    mpn: product.id,
     category: product.categories.map((c: { name: string }) => c.name).join(", ") || "Otro",
     ...(product.materials.length > 0
       ? { material: product.materials.map((m: { name: string }) => m.name).join(", ") }

@@ -27,6 +27,7 @@ export function generateBreadcrumbJsonLd(items: BreadcrumbItem[]) {
 /* ─── Product ─── */
 
 interface ProductForJsonLd {
+  id?: string;
   name: string;
   description: string;
   slug: string;
@@ -48,9 +49,11 @@ export function generateProductJsonLd(product: ProductForJsonLd) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
+    description: product.description || `${product.name} — joyería artesanal disponible en Casa Orfebre.`,
     image: images,
     url: productUrl,
+    sku: product.slug,
+    ...(product.id ? { mpn: product.id } : {}),
     brand: {
       "@type": "Brand",
       name: "Casa Orfebre",
@@ -78,6 +81,28 @@ export function generateProductJsonLd(product: ProductForJsonLd) {
       seller: {
         "@type": "Organization",
         name: "Casa Orfebre",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "CLP" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "CL" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 2, maxValue: 5, unitCode: "DAY" },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "CL",
+        returnPolicyCategory: product.productionType === "MADE_TO_ORDER"
+          ? "https://schema.org/MerchantReturnNotPermitted"
+          : "https://schema.org/MerchantReturnFiniteReturnWindow",
+        ...(product.productionType !== "MADE_TO_ORDER" && {
+          merchantReturnDays: 14,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/FreeReturn",
+        }),
       },
     },
   };
