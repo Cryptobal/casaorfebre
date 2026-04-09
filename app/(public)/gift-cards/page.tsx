@@ -4,6 +4,7 @@ import { GiftCardForm } from "./gift-card-form";
 export const metadata: Metadata = {
   title: "Gift Cards — Casa Orfebre",
   description: "Regala joyería artesanal chilena. El destinatario elige la pieza que más le guste.",
+  alternates: { canonical: "/gift-cards" },
 };
 
 export default function GiftCardsPage() {

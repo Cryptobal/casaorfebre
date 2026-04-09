@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Política de Privacidad",
   description:
     "Política de privacidad de Casa Orfebre. Conoce cómo recopilamos, usamos y protegemos tus datos personales conforme a la Ley N° 21.719 de Protección de Datos Personales.",
+  alternates: { canonical: "/privacidad" },
 };
 
 export default function PrivacidadPage() {

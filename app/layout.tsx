@@ -113,9 +113,7 @@ export const metadata: Metadata = {
       "Piezas únicas de orfebres chilenos verificados. Certificado de autenticidad digital con cada compra.",
     images: ["/casaorfebre-og-image.png"],
   },
-  alternates: {
-    canonical: "/",
-  },
+  alternates: {},
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

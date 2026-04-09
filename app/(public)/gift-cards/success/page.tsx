@@ -8,6 +8,7 @@ import { formatGiftCardCode } from "@/lib/gift-cards";
 
 export const metadata: Metadata = {
   title: "Gift Card Enviada — Casa Orfebre",
+  robots: { index: false, follow: true },
 };
 
 export default async function GiftCardSuccessPage({

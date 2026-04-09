@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   turbopack: {
     root: __dirname,
   },
@@ -10,14 +11,46 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
+    const securityHeaders = [
+      {
+        key: "X-Frame-Options",
+        value: "SAMEORIGIN",
+      },
+      {
+        key: "X-Content-Type-Options",
+        value: "nosniff",
+      },
+      {
+        key: "Referrer-Policy",
+        value: "strict-origin-when-cross-origin",
+      },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+      },
+      {
+        key: "X-DNS-Prefetch-Control",
+        value: "on",
+      },
+    ];
+
+    const noIndexHeaders = [
+      ...securityHeaders,
+      { key: "X-Robots-Tag", value: "noindex, nofollow" },
+    ];
+
     return [
       {
-        source: "/_next/static/:path*",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+      {
+        source: "/_next/:path*",
+        headers: noIndexHeaders,
       },
       {
         source: "/manifest.json",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        headers: noIndexHeaders,
       },
     ];
   },
