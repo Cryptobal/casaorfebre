@@ -302,7 +302,27 @@ export async function getPhotosForReview(filter?: string) {
 export async function getAllArtisans() {
   return prisma.artisan.findMany({
     orderBy: { createdAt: "desc" },
-    include: {
+    select: {
+      id: true,
+      displayName: true,
+      slug: true,
+      location: true,
+      phone: true,
+      status: true,
+      rating: true,
+      commissionRate: true,
+      commissionOverride: true,
+      maxProductsOverride: true,
+      maxPhotosOverride: true,
+      isPioneer: true,
+      pioneerUntil: true,
+      homeHighlight: true,
+      bankAccountNumber: true,
+      approvedAt: true,
+      createdAt: true,
+      onboardingStep: true,
+      onboardingEmailsSent: true,
+      lastOnboardingEmailAt: true,
       user: { select: { email: true } },
       subscriptions: {
         where: { status: "ACTIVE" },
@@ -311,6 +331,20 @@ export async function getAllArtisans() {
         take: 1,
       },
       _count: { select: { products: true, orderItems: true, reviews: true } },
+    },
+  });
+}
+
+// Artisan onboarding details for admin
+export async function getArtisanOnboardingDetail(artisanId: string) {
+  return prisma.artisan.findUnique({
+    where: { id: artisanId },
+    select: {
+      id: true,
+      onboardingStep: true,
+      onboardingEmailsSent: true,
+      lastOnboardingEmailAt: true,
+      approvedAt: true,
     },
   });
 }

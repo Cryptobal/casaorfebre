@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { OnboardingActions } from "../onboarding-actions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -168,6 +169,71 @@ export default async function AdminArtisanDetailPage({ params }: PageProps) {
             </dd>
           </div>
         </dl>
+      </Card>
+
+      {/* Onboarding tracking */}
+      <Card className="mt-6">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+          Seguimiento de onboarding
+        </h2>
+        <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-4">
+          <div>
+            <dt className="text-text-tertiary">Paso actual</dt>
+            <dd>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                artisan.onboardingStep === "ACTIVE" ? "bg-green-100 text-green-700"
+                  : artisan.onboardingStep === "NEEDS_ATTENTION" ? "bg-red-100 text-red-700"
+                    : artisan.onboardingStep === "WELCOME" ? "bg-orange-100 text-orange-700"
+                      : "bg-blue-100 text-blue-700"
+              }`}>
+                {artisan.onboardingStep === "WELCOME" ? "Esperando 1ra pieza"
+                  : artisan.onboardingStep === "FIRST_PRODUCT" ? "Primera pieza subida"
+                    : artisan.onboardingStep === "ACTIVE" ? "Activo"
+                      : artisan.onboardingStep === "NEEDS_ATTENTION" ? "Requiere atención"
+                        : artisan.onboardingStep ?? "—"}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">Emails enviados</dt>
+            <dd className="font-medium">{artisan.onboardingEmailsSent} / 3</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">Último email</dt>
+            <dd>{artisan.lastOnboardingEmailAt ? new Date(artisan.lastOnboardingEmailAt).toLocaleDateString("es-CL") : "Ninguno"}</dd>
+          </div>
+          <div>
+            <dt className="text-text-tertiary">Emails enviados</dt>
+            <dd className="space-y-0.5">
+              {[
+                { n: 1, label: "Bienvenida (día 1)" },
+                { n: 2, label: "Ayuda (día 3)" },
+                { n: 3, label: "Personal (día 7)" },
+              ].map((e) => (
+                <div key={e.n} className="flex items-center gap-1.5 text-xs">
+                  <span className={artisan.onboardingEmailsSent >= e.n ? "text-green-600" : "text-text-tertiary"}>
+                    {artisan.onboardingEmailsSent >= e.n ? "✓" : "○"}
+                  </span>
+                  <span className={artisan.onboardingEmailsSent >= e.n ? "text-text" : "text-text-tertiary"}>
+                    {e.label}
+                  </span>
+                </div>
+              ))}
+            </dd>
+          </div>
+        </dl>
+
+        {/* Action buttons */}
+        {artisan.onboardingStep !== "ACTIVE" && (
+          <div className="mt-4 border-t border-border pt-4">
+            <OnboardingActions
+              artisanId={artisan.id}
+              artisanName={artisan.displayName}
+              phone={artisan.phone}
+              emailsSent={artisan.onboardingEmailsSent}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Recent conversations */}

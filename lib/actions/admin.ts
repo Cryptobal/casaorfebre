@@ -1498,3 +1498,76 @@ export async function markArtisanPaid(artisanId: string): Promise<{ error?: stri
   revalidatePath("/portal/admin/pagos");
   return { success: true };
 }
+
+// Send manual onboarding reminder email
+export async function sendOnboardingReminder(
+  artisanId: string
+): Promise<{ error?: string; success?: boolean; emailType?: string }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+
+  const artisan = await prisma.artisan.findUnique({
+    where: { id: artisanId },
+    include: { user: { select: { email: true } } },
+  });
+
+  if (!artisan) return { error: "Orfebre no encontrado" };
+  if (!artisan.user?.email) return { error: "Orfebre sin email" };
+
+  const emailsSent = artisan.onboardingEmailsSent;
+  let subject: string;
+  let html: string;
+  let emailType: string;
+
+  if (emailsSent === 0) {
+    emailType = "Bienvenida";
+    subject = `¡Bienvenido a Casa Orfebre, ${artisan.displayName}!`;
+    html = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:40px 24px;">
+        <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1a18;text-align:center;">¡Felicidades, ${artisan.displayName}!</h1>
+        <p style="font-size:15px;color:#4a4a48;text-align:center;line-height:1.7;">Tu cuenta de orfebre ha sido aprobada. Publica tu primera pieza y empieza a vender.</p>
+        <p style="text-align:center;margin:24px 0;"><a href="${appUrl}/portal/orfebre/productos/nuevo" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">Publicar mi primera pieza</a></p>
+      </div>`;
+  } else if (emailsSent === 1) {
+    emailType = "Ayuda";
+    subject = `${artisan.displayName}, ¿necesitas ayuda para publicar tu primera pieza?`;
+    html = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:40px 24px;">
+        <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1a18;text-align:center;">${artisan.displayName}, tu vitrina te espera</h1>
+        <p style="font-size:15px;color:#4a4a48;text-align:center;line-height:1.7;">Publicar una pieza toma menos de 5 minutos. Solo necesitas una foto y una breve descripción — nuestra IA se encarga del resto.</p>
+        <p style="text-align:center;margin:24px 0;"><a href="${appUrl}/portal/orfebre/productos/nuevo" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">Crear mi primera pieza</a></p>
+      </div>`;
+  } else {
+    emailType = "Personal";
+    subject = `${artisan.displayName}, un mensaje personal del equipo de Casa Orfebre`;
+    html = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:40px 24px;">
+        <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1a18;text-align:center;">${artisan.displayName}, queremos saber de ti</h1>
+        <p style="font-size:15px;color:#4a4a48;text-align:center;line-height:1.7;">Tu talento merece ser visto. Si algo te detiene, responde este correo y te ayudaremos personalmente.</p>
+        <p style="text-align:center;margin:24px 0;"><a href="${appUrl}/portal/orfebre/productos/nuevo" style="display:inline-block;background:#8B7355;color:#FAFAF8;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">Publicar mi primera pieza</a></p>
+      </div>`;
+  }
+
+  try {
+    await sendEmail(artisan.user.email, subject, html);
+    await prisma.artisan.update({
+      where: { id: artisanId },
+      data: {
+        onboardingEmailsSent: emailsSent + 1,
+        lastOnboardingEmailAt: new Date(),
+      },
+    });
+  } catch (e) {
+    console.error("[sendOnboardingReminder] Email failed:", e);
+    return { error: "Error al enviar email" };
+  }
+
+  revalidatePath(`/portal/admin/orfebres/${artisanId}`);
+  revalidatePath("/portal/admin/orfebres");
+  return { success: true, emailType };
+}

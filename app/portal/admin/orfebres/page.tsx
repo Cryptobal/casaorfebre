@@ -20,8 +20,42 @@ const statusLabels: Record<string, string> = {
   REJECTED: "Rechazado",
 };
 
-export default async function OrfebresPage() {
-  const artisans = await getAllArtisans();
+const onboardingStepLabels: Record<string, string> = {
+  WELCOME: "Esperando 1ra pieza",
+  FIRST_PRODUCT: "Primera pieza subida",
+  ACTIVE: "Activo",
+  NEEDS_ATTENTION: "Requiere atención",
+};
+
+const onboardingStepStyles: Record<string, string> = {
+  WELCOME: "bg-orange-100 text-orange-800",
+  FIRST_PRODUCT: "bg-blue-100 text-blue-800",
+  ACTIVE: "bg-green-100 text-green-800",
+  NEEDS_ATTENTION: "bg-red-100 text-red-800",
+};
+
+const emailLabels = ["—", "Bienvenida", "Ayuda", "Personal"];
+
+interface PageProps {
+  searchParams: Promise<{ filtro?: string }>;
+}
+
+export default async function OrfebresPage({ searchParams }: PageProps) {
+  const { filtro } = await searchParams;
+  const allArtisans = await getAllArtisans();
+
+  const artisans = filtro
+    ? allArtisans.filter((a) => {
+        if (filtro === "sin-productos") return a._count.products === 0 && a.status === "APPROVED";
+        if (filtro === "needs-attention") return a.onboardingStep === "NEEDS_ATTENTION";
+        if (filtro === "onboarding") return a.onboardingStep === "WELCOME" || a.onboardingStep === "FIRST_PRODUCT";
+        return true;
+      })
+    : allArtisans;
+
+  const sinProductos = allArtisans.filter((a) => a._count.products === 0 && a.status === "APPROVED").length;
+  const needsAttention = allArtisans.filter((a) => a.onboardingStep === "NEEDS_ATTENTION").length;
+  const enOnboarding = allArtisans.filter((a) => a.onboardingStep === "WELCOME" || a.onboardingStep === "FIRST_PRODUCT").length;
 
   return (
     <div className="max-w-full min-w-0">
@@ -29,9 +63,37 @@ export default async function OrfebresPage() {
         Gestión de Orfebres
       </h1>
 
+      {/* Filtros */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link
+          href="/portal/admin/orfebres"
+          className={`rounded-full px-3 py-1 text-xs font-medium transition ${!filtro ? "bg-accent text-white" : "bg-surface-secondary text-text-secondary hover:bg-surface-secondary/80"}`}
+        >
+          Todos ({allArtisans.length})
+        </Link>
+        <Link
+          href="/portal/admin/orfebres?filtro=sin-productos"
+          className={`rounded-full px-3 py-1 text-xs font-medium transition ${filtro === "sin-productos" ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
+        >
+          Sin productos ({sinProductos})
+        </Link>
+        <Link
+          href="/portal/admin/orfebres?filtro=onboarding"
+          className={`rounded-full px-3 py-1 text-xs font-medium transition ${filtro === "onboarding" ? "bg-orange-600 text-white" : "bg-orange-50 text-orange-700 hover:bg-orange-100"}`}
+        >
+          En onboarding ({enOnboarding})
+        </Link>
+        <Link
+          href="/portal/admin/orfebres?filtro=needs-attention"
+          className={`rounded-full px-3 py-1 text-xs font-medium transition ${filtro === "needs-attention" ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
+        >
+          Requieren atención ({needsAttention})
+        </Link>
+      </div>
+
       {artisans.length === 0 ? (
         <p className="mt-8 text-center text-sm text-text-tertiary">
-          No hay orfebres registrados
+          {filtro ? "No hay orfebres con este filtro" : "No hay orfebres registrados"}
         </p>
       ) : (
         <div className="mt-6 space-y-3">
@@ -80,6 +142,16 @@ export default async function OrfebresPage() {
                           Sin banco
                         </span>
                       )}
+                      {/* Onboarding step badge */}
+                      {artisan.onboardingStep && artisan.onboardingStep !== "ACTIVE" && (
+                        <span
+                          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                            onboardingStepStyles[artisan.onboardingStep] ?? "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {onboardingStepLabels[artisan.onboardingStep] ?? artisan.onboardingStep}
+                        </span>
+                      )}
                     </div>
                     <p
                       className="truncate font-mono text-[11px] text-text-secondary"
@@ -104,7 +176,18 @@ export default async function OrfebresPage() {
                       {artisan.rating > 0 ? `★ ${artisan.rating.toFixed(1)}` : "— rating"}
                     </span>
                     <span title="Ventas">{artisan._count.orderItems} ventas</span>
-                    <span title="Productos">{artisan._count.products} prod.</span>
+                    <span title="Productos">
+                      {artisan._count.products === 0 ? (
+                        <span className="font-medium text-red-600">0 prod.</span>
+                      ) : (
+                        <>{artisan._count.products} prod.</>
+                      )}
+                    </span>
+                    {artisan.onboardingEmailsSent > 0 && (
+                      <span title={`Último email: ${emailLabels[artisan.onboardingEmailsSent] ?? artisan.onboardingEmailsSent}`}>
+                        {artisan.onboardingEmailsSent}/3 emails
+                      </span>
+                    )}
                     <span title="Comisión">
                       {artisan.commissionOverride !== null
                         ? `${Math.round(artisan.commissionOverride * 100)}% com. *`
