@@ -5,6 +5,7 @@ import { HighlightToggle } from "./highlight-toggle";
 import { PioneerToggle } from "./pioneer-toggle";
 import { ArtisanAccountActions } from "./artisan-account-actions";
 import { PlanChanger } from "./plan-changer";
+import { OnboardingActions } from "./onboarding-actions";
 
 const statusStyles: Record<string, string> = {
   APPROVED: "bg-green-100 text-green-800",
@@ -215,6 +216,16 @@ export default async function OrfebresPage({ searchParams }: PageProps) {
                       pioneerUntil={artisan.pioneerUntil?.toISOString() ?? null}
                     />
                   </div>
+
+                  {/* Onboarding actions: email + WhatsApp */}
+                  {artisan.onboardingStep && artisan.onboardingStep !== "ACTIVE" && (
+                    <OnboardingActions
+                      artisanId={artisan.id}
+                      artisanName={artisan.displayName}
+                      phone={artisan.phone}
+                      emailsSent={artisan.onboardingEmailsSent}
+                    />
+                  )}
 
                   <div className="ml-auto flex items-center gap-1.5">
                     <OverrideEditor
