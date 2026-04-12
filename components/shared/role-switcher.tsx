@@ -26,7 +26,7 @@ export function RoleSwitcher({ currentRole }: { currentRole: string }) {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-14 left-4 z-50 md:left-60">
       {open && (
         <>
           {/* Backdrop */}

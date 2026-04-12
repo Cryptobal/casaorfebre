@@ -156,7 +156,9 @@ export default function RootLayout({
               <RefCatcher />
             </Suspense>
             {children}
-            <RoleSwitcherWrapper />
+            <Suspense fallback={null}>
+              <RoleSwitcherWrapper />
+            </Suspense>
           </FavoritesProvider>
         </AuthProvider>
         <GoogleAnalytics />
