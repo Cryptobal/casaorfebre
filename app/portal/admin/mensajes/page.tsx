@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
+import {
+  getOrderItemsWithMessages,
+  getOrderItemMessages,
+} from "@/lib/queries/admin-messages";
+import { OrderChat } from "@/components/order-chat/order-chat";
 
 function timeAgo(date: Date | string) {
   const d = new Date(date);
@@ -17,14 +23,16 @@ function timeAgo(date: Date | string) {
 }
 
 interface PageProps {
-  searchParams: Promise<{ bypass?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ bypass?: string; status?: string; q?: string; orderItem?: string }>;
 }
 
 export default async function AdminMessagesPage({ searchParams }: PageProps) {
+  const session = await auth();
   const sp = await searchParams;
   const bypassFilter = sp.bypass === "true";
   const statusFilter = sp.status || "";
   const searchQuery = sp.q || "";
+  const selectedOrderItemId = sp.orderItem || "";
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
@@ -229,6 +237,127 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
         {filtered.length === 0 && (
           <p className="py-8 text-center text-sm text-text-tertiary">No hay conversaciones.</p>
         )}
+      </div>
+
+      {/* ── Order Messages Section ────────────────────────────── */}
+      <OrderMessagesSection
+        selectedOrderItemId={selectedOrderItemId}
+        currentUserId={session?.user?.id || ""}
+      />
+    </div>
+  );
+}
+
+async function OrderMessagesSection({
+  selectedOrderItemId,
+  currentUserId,
+}: {
+  selectedOrderItemId: string;
+  currentUserId: string;
+}) {
+  const orderItems = await getOrderItemsWithMessages();
+
+  let selectedMessages: Awaited<ReturnType<typeof getOrderItemMessages>> = [];
+  let selectedItem: (typeof orderItems)[number] | null = null;
+  if (selectedOrderItemId) {
+    selectedItem = orderItems.find((oi) => oi.id === selectedOrderItemId) || null;
+    if (selectedItem) {
+      selectedMessages = await getOrderItemMessages(selectedOrderItemId);
+    }
+  }
+
+  return (
+    <div className="mt-12">
+      <h2 className="font-serif text-xl font-semibold text-text">
+        Mensajes de Pedidos
+      </h2>
+      <p className="mt-1 text-sm text-text-secondary">
+        Conversaciones entre orfebres y compradores por pedido
+      </p>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-5">
+        {/* Lista de conversaciones de pedidos */}
+        <div className="lg:col-span-2">
+          <div className="space-y-2">
+            {orderItems.length === 0 ? (
+              <p className="py-8 text-center text-sm text-text-tertiary">
+                No hay conversaciones de pedidos aún.
+              </p>
+            ) : (
+              orderItems.map((oi) => {
+                const lastMsg = oi.messages[0];
+                const isSelected = oi.id === selectedOrderItemId;
+                return (
+                  <Link
+                    key={oi.id}
+                    href={`/portal/admin/mensajes?orderItem=${oi.id}`}
+                  >
+                    <Card
+                      className={`cursor-pointer transition-colors hover:bg-background ${
+                        isSelected ? "border-accent bg-accent/5" : ""
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-text">
+                            Pedido #{oi.order.orderNumber}
+                          </span>
+                          <span className="text-[10px] text-text-tertiary">
+                            {oi._count.messages} msgs
+                          </span>
+                        </div>
+                        <p className="text-xs text-text-secondary">
+                          {oi.artisan.displayName} ↔ {oi.order.shippingName}
+                        </p>
+                        <p className="text-xs text-text-secondary">
+                          Producto: {oi.product.name}
+                        </p>
+                        {lastMsg && (
+                          <p className="truncate text-[11px] text-text-tertiary">
+                            {lastMsg.sender.name}: {lastMsg.content}
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Chat seleccionado */}
+        <div className="lg:col-span-3">
+          {selectedItem ? (
+            <div>
+              <div className="mb-3">
+                <p className="text-sm text-text-secondary">
+                  <span className="font-medium">{selectedItem.artisan.displayName}</span>
+                  {" ↔ "}
+                  <span className="font-medium">{selectedItem.order.shippingName}</span>
+                </p>
+                <p className="text-xs text-text-tertiary">
+                  Producto: {selectedItem.product.name} · Pedido #{selectedItem.order.orderNumber}
+                </p>
+              </div>
+              <OrderChat
+                orderItemId={selectedItem.id}
+                currentUserId={currentUserId}
+                currentUserRole="ADMIN"
+                messages={selectedMessages}
+                readOnly={false}
+                artisanName={selectedItem.artisan.displayName}
+                buyerName={selectedItem.order.shippingName}
+              />
+            </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-border">
+              <p className="text-sm text-text-tertiary">
+                Selecciona una conversación para ver los mensajes
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
