@@ -9,6 +9,8 @@ import { getArtisanOrderDetail } from "@/lib/queries/orders";
 import { confirmPreparation } from "@/lib/actions/orders";
 import { TrackingLink } from "@/components/tracking-link";
 import { ShippingForm } from "./shipping-form";
+import { getOrderMessages } from "@/lib/actions/order-messages";
+import { OrderChat } from "@/components/order-chat/order-chat";
 
 const RETURN_REASON_LABELS: Record<string, string> = {
   NOT_AS_DESCRIBED: "No coincide con la descripción",
@@ -73,6 +75,9 @@ export default async function OrderDetailPage({
 
   const item = await getArtisanOrderDetail(id, artisan.id);
   if (!item) notFound();
+
+  // Fetch messages for this order item
+  const messages = await getOrderMessages(item.id);
 
   // Find conversation with buyer for this order (if exists)
   let conversationId: string | null = null;
@@ -396,6 +401,17 @@ export default async function OrderDetailPage({
           </Card>
         );
       })()}
+
+      {/* Order Chat */}
+      <div className="mt-6">
+        <OrderChat
+          orderItemId={item.id}
+          currentUserId={session!.user!.id}
+          currentUserRole="ARTISAN"
+          messages={messages}
+          buyerName={item.order.shippingName}
+        />
+      </div>
     </div>
   );
 }
