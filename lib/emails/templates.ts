@@ -1834,3 +1834,30 @@ export async function sendPayoutReleasedDetailedEmail(
      </p>`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// New Order Message Notification
+// ---------------------------------------------------------------------------
+export async function sendNewOrderMessageEmail(
+  to: string,
+  { recipientName, senderName, senderRole, orderNumber, productName, messagePreview }: {
+    recipientName: string;
+    senderName: string;
+    senderRole: string;
+    orderNumber: string;
+    productName: string;
+    messagePreview: string;
+  },
+) {
+  const roleLabel = senderRole === "ARTISAN" ? "El orfebre" : senderRole === "BUYER" ? "El comprador" : "Casa Orfebre";
+  await sendEmail(
+    to,
+    `Nuevo mensaje - pedido #${orderNumber}`,
+    `<p style="margin:0 0 16px;">Hola ${recipientName},</p>
+     <p style="margin:0 0 16px;">${roleLabel} <strong>${senderName}</strong> te envió un mensaje sobre el pedido <strong>#${orderNumber}</strong> (${productName}):</p>
+     <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;font-style:italic;">"${messagePreview.substring(0, 200)}${messagePreview.length > 200 ? "..." : ""}"</p>
+     <p style="margin:0 0 0;">
+       <a href="${appUrl()}/portal" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mensaje</a>
+     </p>`,
+  );
+}

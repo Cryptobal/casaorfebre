@@ -14,6 +14,8 @@ import { ReviewForm } from "./review-form";
 import { ResumePaymentButton } from "./resume-payment-button";
 import { ConfirmReceiptButton } from "./confirm-receipt-button";
 import { TrackingLink } from "@/components/tracking-link";
+import { getOrderMessages } from "@/lib/actions/order-messages";
+import { OrderChat } from "@/components/order-chat/order-chat";
 import type { OrderStatus, FulfillmentStatus } from "@prisma/client";
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -109,6 +111,15 @@ export default async function BuyerOrderDetailPage({
       : [];
   const certByProduct = new Map(
     certificates.map((c: any) => [c.productId, c])
+  );
+
+  // Fetch messages for all order items
+  const messagesMap = new Map<string, Awaited<ReturnType<typeof getOrderMessages>>>();
+  await Promise.all(
+    order.items.map(async (item: any) => {
+      const msgs = await getOrderMessages(item.id);
+      messagesMap.set(item.id, msgs);
+    })
   );
 
   const hasOpenDispute = order.disputes.some(
@@ -623,6 +634,16 @@ export default async function BuyerOrderDetailPage({
                           </div>
                         )}
                       </div>
+                    </div>
+                    {/* Order Chat per item */}
+                    <div className="mt-4">
+                      <OrderChat
+                        orderItemId={item.id}
+                        currentUserId={session.user!.id}
+                        currentUserRole="BUYER"
+                        messages={messagesMap.get(item.id) || []}
+                        artisanName={item.product?.artisan?.displayName || item.productName}
+                      />
                     </div>
                   </div>
                 );
