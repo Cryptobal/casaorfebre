@@ -8,16 +8,21 @@ const ROLE_SWITCHER_EMAILS = [
 ];
 
 export async function RoleSwitcherWrapper() {
-  const session = await auth();
-  if (!session?.user?.email) return null;
-  if (!ROLE_SWITCHER_EMAILS.includes(session.user.email)) return null;
+  try {
+    const session = await auth();
+    if (!session?.user?.email) return null;
+    if (!ROLE_SWITCHER_EMAILS.includes(session.user.email)) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { activeRole: true, role: true },
-  });
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { activeRole: true, role: true },
+    });
 
-  const currentRole = user?.activeRole || user?.role || "ADMIN";
+    const currentRole = user?.activeRole || user?.role || "ADMIN";
 
-  return <RoleSwitcher currentRole={currentRole} />;
+    return <RoleSwitcher currentRole={currentRole} />;
+  } catch (e) {
+    console.error("[RoleSwitcherWrapper] Error rendering role switcher:", e);
+    return null;
+  }
 }

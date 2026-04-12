@@ -1,3 +1,9 @@
+-- CreateEnum (safe: only creates if not already present from db push)
+DO $$ BEGIN
+  CREATE TYPE "MessageSenderRole" AS ENUM ('BUYER', 'ARTISAN', 'ADMIN');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- CreateTable
 CREATE TABLE "order_messages" (
     "id" TEXT NOT NULL,

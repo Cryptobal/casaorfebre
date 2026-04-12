@@ -76,8 +76,14 @@ export default async function OrderDetailPage({
   const item = await getArtisanOrderDetail(id, artisan.id);
   if (!item) notFound();
 
-  // Fetch messages for this order item
-  const messages = await getOrderMessages(item.id);
+  // Fetch messages for this order item (wrapped in try-catch to prevent page crash
+  // if order_messages table doesn't exist yet or any DB error occurs)
+  let messages: Awaited<ReturnType<typeof getOrderMessages>> = [];
+  try {
+    messages = await getOrderMessages(item.id);
+  } catch (e) {
+    console.error("[OrfebreOrderDetail] Failed to load order messages:", e);
+  }
 
   // Find conversation with buyer for this order (if exists)
   let conversationId: string | null = null;

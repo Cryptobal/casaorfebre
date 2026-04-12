@@ -113,14 +113,19 @@ export default async function BuyerOrderDetailPage({
     certificates.map((c: any) => [c.productId, c])
   );
 
-  // Fetch messages for all order items
+  // Fetch messages for all order items (wrapped in try-catch to prevent page crash
+  // if order_messages table doesn't exist yet or any DB error occurs)
   const messagesMap = new Map<string, Awaited<ReturnType<typeof getOrderMessages>>>();
-  await Promise.all(
-    order.items.map(async (item: any) => {
-      const msgs = await getOrderMessages(item.id);
-      messagesMap.set(item.id, msgs);
-    })
-  );
+  try {
+    await Promise.all(
+      order.items.map(async (item: any) => {
+        const msgs = await getOrderMessages(item.id);
+        messagesMap.set(item.id, msgs);
+      })
+    );
+  } catch (e) {
+    console.error("[BuyerOrderDetail] Failed to load order messages:", e);
+  }
 
   const hasOpenDispute = order.disputes.some(
     (d: any) => d.status !== "CLOSED"
