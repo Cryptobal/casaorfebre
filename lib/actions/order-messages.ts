@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { checkContactInfo, CONTACT_FILTER_MESSAGE } from "@/lib/contact-filter";
+import { sendNewOrderMessageEmail } from "@/lib/emails/templates";
 
 // ─── Enviar mensaje ────────────────────────────────────────────
 export async function sendOrderMessage(formData: FormData) {
@@ -66,6 +67,64 @@ export async function sendOrderMessage(formData: FormData) {
       content: content.trim(),
     },
   });
+
+  // Notificar al destinatario por email
+  try {
+    const fullOrderItem = await prisma.orderItem.findUnique({
+      where: { id: orderItemId },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+            user: { select: { name: true, email: true } },
+          },
+        },
+        artisan: {
+          select: {
+            displayName: true,
+            user: { select: { email: true } },
+          },
+        },
+        product: { select: { name: true } },
+      },
+    });
+
+    if (fullOrderItem) {
+      const senderName = session.user.name || "Usuario";
+
+      if (senderRole === "ARTISAN" || senderRole === "ADMIN") {
+        // Notificar al comprador
+        const buyerEmail = fullOrderItem.order.user.email;
+        if (buyerEmail) {
+          await sendNewOrderMessageEmail(buyerEmail, {
+            recipientName: fullOrderItem.order.user.name || "Comprador",
+            senderName,
+            senderRole,
+            orderNumber: fullOrderItem.order.orderNumber,
+            productName: fullOrderItem.product.name,
+            messagePreview: content.trim(),
+          });
+        }
+      }
+
+      if (senderRole === "BUYER" || senderRole === "ADMIN") {
+        // Notificar al orfebre
+        const artisanEmail = fullOrderItem.artisan.user.email;
+        if (artisanEmail) {
+          await sendNewOrderMessageEmail(artisanEmail, {
+            recipientName: fullOrderItem.artisan.displayName,
+            senderName,
+            senderRole,
+            orderNumber: fullOrderItem.order.orderNumber,
+            productName: fullOrderItem.product.name,
+            messagePreview: content.trim(),
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Message notification email failed:", e);
+  }
 
   // Revalidar ambas vistas
   revalidatePath(`/portal/orfebre/pedidos`);
