@@ -6,7 +6,6 @@ import { FavoritesProvider } from "@/lib/favorites-context";
 import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
 import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
-import { RoleSwitcherWrapper } from "@/components/shared/role-switcher-wrapper";
 import { generateOrganizationJsonLd } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
@@ -156,9 +155,6 @@ export default function RootLayout({
               <RefCatcher />
             </Suspense>
             {children}
-            <Suspense fallback={null}>
-              <RoleSwitcherWrapper />
-            </Suspense>
           </FavoritesProvider>
         </AuthProvider>
         <GoogleAnalytics />

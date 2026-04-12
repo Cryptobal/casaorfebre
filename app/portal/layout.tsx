@@ -9,6 +9,7 @@ import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
 import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
 import { PortalChatbot } from "@/components/chat/portal-chatbot";
+import { RoleSwitcher } from "@/components/shared/role-switcher";
 
 const ROLE_SWITCHER_EMAILS = [
   "carlos.irigoyen@gmail.com",
@@ -301,6 +302,7 @@ export default async function PortalLayout({ children }: { children: React.React
         <PortalChatbot portalContext={role === "ADMIN" ? "admin" : role === "ARTISAN" ? "orfebre" : "comprador"} />
       )}
       <SupportBanner />
+      {isRoleSwitcher && <RoleSwitcher currentRole={role} />}
     </div>
   );
 }
