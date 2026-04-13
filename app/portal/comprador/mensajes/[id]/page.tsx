@@ -30,6 +30,7 @@ export default async function BuyerConversationPage({ params }: PageProps) {
           },
         },
       },
+      admin: { select: { id: true, name: true } },
       product: { select: { name: true, slug: true } },
     },
   });
@@ -37,11 +38,13 @@ export default async function BuyerConversationPage({ params }: PageProps) {
   if (!conversation || conversation.buyerId !== session.user.id) notFound();
 
   const { messages } = await getMessages(id);
-  const badge = conversation.artisan.subscriptions?.[0]?.plan?.badgeText;
+  const isAdminConv = !conversation.artisanId && !!conversation.adminId;
+  const badge = !isAdminConv ? conversation.artisan?.subscriptions?.[0]?.plan?.badgeText : null;
+  const displayName = isAdminConv ? "Casa Orfebre" : (conversation.artisan?.displayName || "Orfebre");
+  const initials = isAdminConv ? "CO" : displayName.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col sm:h-[calc(100vh-6rem)]">
-      {/* Header */}
       <div className="flex items-center gap-3 border-b border-border pb-3">
         <Link
           href="/portal/comprador/mensajes"
@@ -51,34 +54,34 @@ export default async function BuyerConversationPage({ params }: PageProps) {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </Link>
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 font-serif text-sm font-medium text-accent">
-          {conversation.artisan.displayName.slice(0, 2).toUpperCase()}
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-serif text-sm font-medium ${
+          isAdminConv ? "bg-amber-100 text-amber-700" : "bg-accent/10 text-accent"
+        }`}>
+          {initials}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate font-medium">{conversation.artisan.displayName}</p>
+            <p className="truncate font-medium">{displayName}</p>
+            {isAdminConv && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Soporte</span>
+            )}
             {badge && (
               <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">{badge}</span>
             )}
           </div>
           {conversation.product && (
-            <p className="truncate text-xs text-text-tertiary">
-              Re: {conversation.product.name}
-            </p>
+            <p className="truncate text-xs text-text-tertiary">Re: {conversation.product.name}</p>
           )}
         </div>
-        <Link
-          href={`/orfebres/${conversation.artisan.slug}`}
-          className="flex-shrink-0 text-xs text-accent hover:underline"
-        >
-          Ver perfil
-        </Link>
+        {!isAdminConv && conversation.artisan && (
+          <Link href={`/orfebres/${conversation.artisan.slug}`} className="flex-shrink-0 text-xs text-accent hover:underline">
+            Ver perfil
+          </Link>
+        )}
       </div>
 
-      {/* Messages */}
       <ChatMessages messages={messages} />
 
-      {/* Input */}
       {conversation.status === "BLOCKED" ? (
         <div className="border-t border-border bg-red-50 p-4 text-center text-sm text-red-700">
           Esta conversación ha sido bloqueada por el administrador.
