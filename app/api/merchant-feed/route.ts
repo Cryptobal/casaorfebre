@@ -47,9 +47,10 @@ export async function GET() {
   const absUrl = (u: string) => (u.startsWith("http") ? u : `${baseUrl}${u}`);
 
   // Pinterest rechaza items sin descripción real o sin imagen.
-  // Excluimos out_of_stock del feed: Pinterest los quita automáticamente al no verlos.
+  // Excluimos out_of_stock y slugs de borrador del feed.
   const validProducts = products.filter((p) => {
     if (p.images.length === 0 || p.price <= 0) return false;
+    if (p.slug.startsWith("borrador-")) return false;
     const desc = (p.description || "").replace(/<[^>]*>/g, "").trim();
     if (desc.length < 10) return false;
     const isInStock =
@@ -91,7 +92,7 @@ export async function GET() {
       <g:description>${escapeXml(description)}</g:description>
       <g:link>${baseUrl}/coleccion/${escapeXml(product.slug)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
-${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price} CLP</g:price>
+${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price.toFixed(2)} CLP</g:price>
       <g:availability>in_stock</g:availability>
       <g:condition>new</g:condition>
       <g:brand>${escapeXml(product.artisan?.displayName || "Casa Orfebre")}</g:brand>
@@ -101,7 +102,7 @@ ${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price
       <g:shipping>
         <g:country>CL</g:country>
         <g:service>Envío estándar</g:service>
-        <g:price>0 CLP</g:price>
+        <g:price>0.00 CLP</g:price>
       </g:shipping>
     </item>`;
     })

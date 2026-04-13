@@ -66,8 +66,12 @@ export async function publishProductToPinterest(
     return { success: false, error: "No autorizado" };
   }
 
-  if (!process.env.PINTEREST_ACCESS_TOKEN) {
-    return { success: false, error: "Pinterest no configurado" };
+  // Token lives in DB (set by OAuth callback), env is only a fallback
+  const tokenSetting = await prisma.systemSetting
+    .findUnique({ where: { key: "PINTEREST_ACCESS_TOKEN" } })
+    .catch(() => null);
+  if (!tokenSetting?.value && !process.env.PINTEREST_ACCESS_TOKEN) {
+    return { success: false, error: "Pinterest no configurado (sin token)" };
   }
 
   const product = await prisma.product.findUnique({
