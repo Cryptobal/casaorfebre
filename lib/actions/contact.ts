@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { emailLayout } from "@/lib/emails/base-layout";
+import { auth } from "@/lib/auth";
 
 const SUBJECTS = [
   "Consulta general",
@@ -35,7 +36,25 @@ export async function sendContactForm(formData: FormData) {
   }
 
   try {
-    // Send to ALL admin users
+    // Try to link to a registered user — prefer session, fall back to email lookup
+    let userId: string | null = null;
+    const session = await auth();
+    if (session?.user?.id) {
+      userId = session.user.id;
+    } else {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      if (existingUser) userId = existingUser.id;
+    }
+
+    // Persist in database
+    await prisma.contactSubmission.create({
+      data: { name, email, subject, message, userId },
+    });
+
+    // Send email to ALL admin users (existing behavior)
     const admins = await prisma.user.findMany({
       where: { role: "ADMIN" },
       select: { email: true },
