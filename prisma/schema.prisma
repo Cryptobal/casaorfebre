@@ -57,7 +57,9 @@ model User {
 
   // Chat relations
   buyerConversations Conversation[] @relation("BuyerConversations")
+  adminConversations Conversation[] @relation("AdminConversations")
   sentMessages       Message[]
+  contactSubmissions ContactSubmission[] @relation("ContactSubmissions")
 
   // Gift cards
   giftCardsPurchased GiftCard[] @relation("GiftCardsPurchased")
@@ -1134,12 +1136,41 @@ model GiftCardUsage {
 // Chat / Messaging
 // ---------------------------------------------------------------------------
 
+enum ContactStatus {
+  PENDING
+  REPLIED
+  CLOSED
+}
+
+model ContactSubmission {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    ContactStatus @default(PENDING)
+
+  userId         String?
+  user           User?         @relation("ContactSubmissions", fields: [userId], references: [id])
+
+  conversationId String?       @unique
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([userId])
+  @@map("contact_submissions")
+}
+
 model Conversation {
   id               String             @id @default(cuid())
   buyerId          String
   buyer            User               @relation("BuyerConversations", fields: [buyerId], references: [id])
-  artisanId        String
-  artisan          Artisan            @relation(fields: [artisanId], references: [id])
+  artisanId        String?
+  artisan          Artisan?           @relation(fields: [artisanId], references: [id])
+  adminId          String?
+  admin            User?              @relation("AdminConversations", fields: [adminId], references: [id])
   productId        String?
   product          Product?           @relation(fields: [productId], references: [id])
   status           ConversationStatus @default(ACTIVE)
@@ -1148,12 +1179,14 @@ model Conversation {
   lastNotifiedBuyerAt  DateTime?
   lastNotifiedArtisanAt DateTime?
   messages         Message[]
+  contactSubmission ContactSubmission?
   deletedAt        DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
   @@unique([buyerId, artisanId])
   @@index([artisanId])
+  @@index([adminId])
   @@map("conversations")
 }
 
