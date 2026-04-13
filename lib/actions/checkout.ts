@@ -78,8 +78,6 @@ export async function createCheckoutPreference(formData: FormData) {
           id: true,
           commissionRate: true,
           commissionOverride: true,
-          mpAccessToken: true,
-          mpOnboarded: true,
         },
       },
     },
