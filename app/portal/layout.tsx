@@ -40,6 +40,7 @@ const ADMIN_LINKS = [
   { href: "/portal/admin/finanzas", label: "Finanzas" },
   { href: "/portal/admin/mensajes", label: "Mensajes" },
   { href: "/portal/admin/preguntas", label: "Preguntas" },
+  { href: "/portal/admin/contacto", label: "Contacto" },
   { href: "/portal/admin/despacho", label: "Despacho" },
   { href: "/portal/admin/materiales-precio", label: "Materiales Ref." },
   { href: "/portal/admin/analytics", label: "Analytics", ai: true },
@@ -91,6 +92,7 @@ export default async function PortalLayout({ children }: { children: React.React
   let lateShipments = 0;
   let bypassConversations = 0;
   let unansweredQuestions = 0;
+  let pendingContactForms = 0;
   let artisanPendingOrders = 0;
   let artisanUnansweredQuestions = 0;
   let artisanUnreadMessages = 0;
@@ -110,6 +112,7 @@ export default async function PortalLayout({ children }: { children: React.React
       lateShipments,
       bypassConversations,
       unansweredQuestions,
+      pendingContactForms,
     ] = await Promise.all([
       prisma.artisanApplication.count({ where: { status: "PENDING" } }),
       prisma.product.count({ where: { status: "PENDING_REVIEW" } }),
@@ -121,6 +124,7 @@ export default async function PortalLayout({ children }: { children: React.React
       prisma.orderItem.count({ where: { fulfillmentStatus: { in: ["PENDING", "PREPARING"] }, createdAt: { lt: fiveDaysAgo }, order: { status: { not: "PENDING_PAYMENT" } } } }),
       prisma.conversation.count({ where: { hasBypassAttempt: true, status: "ACTIVE", deletedAt: null } }),
       prisma.productQuestion.count({ where: { answer: null, createdAt: { lte: fortyEightHoursAgo } } }),
+      prisma.contactSubmission.count({ where: { status: "PENDING" } }),
     ]);
   }
 
@@ -232,6 +236,7 @@ export default async function PortalLayout({ children }: { children: React.React
                   "/portal/admin/despacho": lateShipments,
                   "/portal/admin/mensajes": bypassConversations,
                   "/portal/admin/preguntas": unansweredQuestions,
+                  "/portal/admin/contacto": pendingContactForms,
                 };
                 const count = badgeCounts[link.href] ?? 0;
                 if (count > 0 || link.ai) {
