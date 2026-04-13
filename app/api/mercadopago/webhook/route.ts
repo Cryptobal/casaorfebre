@@ -483,43 +483,15 @@ async function handleGiftCardPayment(payment: any, paymentId: string | number) {
 }
 
 /**
- * Fetches a payment from MP, trying marketplace token first, then artisan fallback.
+ * Fetches a payment from MP using the marketplace token.
  */
 async function fetchPayment(paymentId: string | number): Promise<any> {
   try {
     return await paymentClient.get({ id: paymentId });
   } catch (err: any) {
-    console.warn('[MP Webhook] Marketplace token fetch failed, trying artisan fallback', {
+    console.error('[MP Webhook] Failed to fetch payment', {
       paymentId, error: err?.message,
     });
-
-    const recentOrders = await prisma.order.findMany({
-      where: { status: 'PENDING_PAYMENT' },
-      include: { items: { select: { artisanId: true }, take: 1 } },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    });
-
-    for (const order of recentOrders) {
-      const artisanId = order.items[0]?.artisanId;
-      if (!artisanId) continue;
-      const artisan = await prisma.artisan.findUnique({
-        where: { id: artisanId },
-        select: { mpAccessToken: true },
-      });
-      if (!artisan?.mpAccessToken) continue;
-      try {
-        const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          headers: { Authorization: `Bearer ${artisan.mpAccessToken}` },
-        });
-        if (res.ok) {
-          console.log('[MP Webhook] Payment fetched via artisan fallback', { paymentId, artisanId });
-          return res.json();
-        }
-      } catch {}
-    }
-
-    console.error('[MP Webhook] Could not fetch payment with any token', { paymentId });
     return null;
   }
 }
