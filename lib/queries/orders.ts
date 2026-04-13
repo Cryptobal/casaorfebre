@@ -39,12 +39,13 @@ export async function getArtisanOrderDetail(orderItemId: string, artisanId: stri
           shippingCity: true,
           shippingRegion: true,
           shippingPostalCode: true,
+          shippingPhone: true,
           shippingCountry: true,
           createdAt: true,
           isGift: true,
           giftMessage: true,
           giftWrapping: true,
-          // NEVER include user email or phone
+          // NEVER include user email from User relation — but shippingPhone is on Order for courier
         },
       },
       product: { select: { name: true, slug: true } },

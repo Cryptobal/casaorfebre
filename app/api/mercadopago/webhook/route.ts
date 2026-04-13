@@ -289,6 +289,7 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
             shippingAddress: order.shippingAddress,
             shippingCity: order.shippingCity,
             shippingRegion: order.shippingRegion,
+            shippingPhone: order.shippingPhone,
             isGift: order.isGift,
             giftMessage: order.giftMessage,
             giftWrapping: order.giftWrapping,

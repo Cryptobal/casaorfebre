@@ -446,6 +446,7 @@ model Order {
   shippingCity       String
   shippingRegion     String
   shippingPostalCode String?
+  shippingPhone      String?
   shippingCountry    String      @default("CL")
   subtotal           Int
   shippingCost       Int         @default(0)

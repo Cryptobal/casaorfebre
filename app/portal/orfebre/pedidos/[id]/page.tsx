@@ -174,6 +174,9 @@ export default async function OrderDetailPage({
             {item.order.shippingPostalCode && (
               <p>CP: {item.order.shippingPostalCode}</p>
             )}
+            {item.order.shippingPhone && (
+              <p>Tel: +56 {item.order.shippingPhone}</p>
+            )}
             <p>{item.order.shippingCountry === "CL" ? "Chile" : item.order.shippingCountry}</p>
           </div>
         </Card>

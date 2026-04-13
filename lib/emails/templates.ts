@@ -248,6 +248,7 @@ export async function sendNewOrderToArtisanEmail(
     shippingAddress,
     shippingCity,
     shippingRegion,
+    shippingPhone,
     isGift,
     giftMessage,
     giftWrapping,
@@ -260,6 +261,7 @@ export async function sendNewOrderToArtisanEmail(
     shippingAddress: string;
     shippingCity: string;
     shippingRegion: string;
+    shippingPhone?: string | null;
     isGift?: boolean;
     giftMessage?: string | null;
     giftWrapping?: boolean;
@@ -290,7 +292,7 @@ export async function sendNewOrderToArtisanEmail(
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;">
        ${shippingName}<br>
        ${shippingAddress}<br>
-       ${shippingCity}, ${shippingRegion}
+       ${shippingCity}, ${shippingRegion}${shippingPhone ? `<br>Tel: +56 ${shippingPhone}` : ""}
      </p>
      <p style="margin:0 0 0;">
        <a href="${base}/portal/orfebre/pedidos/${orderId}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver pedido</a>

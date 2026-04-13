@@ -164,6 +164,9 @@ export default async function AdminOrderDetailPage({
           <p className="text-text-secondary">
             {order.shippingCity}, {order.shippingRegion}
           </p>
+          {order.shippingPhone && (
+            <p className="text-text-secondary">Tel: +56 {order.shippingPhone}</p>
+          )}
         </div>
       </Card>
 
