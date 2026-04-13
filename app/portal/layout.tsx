@@ -195,6 +195,7 @@ export default async function PortalLayout({ children }: { children: React.React
           if (l.href === "/portal/admin/despacho") return { ...l, badge: lateShipments };
           if (l.href === "/portal/admin/mensajes") return { ...l, badge: bypassConversations };
           if (l.href === "/portal/admin/preguntas") return { ...l, badge: unansweredQuestions };
+          if (l.href === "/portal/admin/contacto") return { ...l, badge: pendingContactForms };
           return l;
         })
       : []),
