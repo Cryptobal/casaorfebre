@@ -23,13 +23,19 @@ export async function sendOrderMessage(formData: FormData) {
   }
 
   // Verificar que el usuario tiene acceso a este orderItem
-  const orderItem = await prisma.orderItem.findUnique({
-    where: { id: orderItemId },
-    include: {
-      order: { select: { userId: true } },
-      artisan: { select: { userId: true } },
-    },
-  });
+  let orderItem;
+  try {
+    orderItem = await prisma.orderItem.findUnique({
+      where: { id: orderItemId },
+      include: {
+        order: { select: { userId: true } },
+        artisan: { select: { userId: true } },
+      },
+    });
+  } catch (e) {
+    console.error("[sendOrderMessage] DB error fetching orderItem:", e);
+    return { error: "Error al procesar el mensaje. Intenta de nuevo." };
+  }
 
   if (!orderItem) return { error: "Pedido no encontrado" };
 
@@ -59,14 +65,19 @@ export async function sendOrderMessage(formData: FormData) {
     return { error: CONTACT_FILTER_MESSAGE };
   }
 
-  await prisma.orderMessage.create({
-    data: {
-      orderItemId,
-      senderId: userId,
-      senderRole,
-      content: content.trim(),
-    },
-  });
+  try {
+    await prisma.orderMessage.create({
+      data: {
+        orderItemId,
+        senderId: userId,
+        senderRole,
+        content: content.trim(),
+      },
+    });
+  } catch (e) {
+    console.error("[sendOrderMessage] DB error creating message:", e);
+    return { error: "No se pudo enviar el mensaje. Intenta de nuevo." };
+  }
 
   // Notificar al destinatario por email
   try {

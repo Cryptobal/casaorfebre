@@ -67,18 +67,27 @@ export async function startConversation(artisanId: string, productId?: string) {
 // ---------------------------------------------------------------------------
 
 export async function sendMessage(conversationId: string, content: string) {
-  const user = await requireUser();
+  const session = await auth();
+  if (!session?.user?.id) return { error: "No autenticado" };
+  const user = session.user;
+
   const trimmed = content.trim();
   if (!trimmed) return { error: "El mensaje no puede estar vacío" };
   if (trimmed.length > 2000) return { error: "Mensaje muy largo (máx. 2000 caracteres)" };
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: conversationId },
-    include: {
-      artisan: { select: { userId: true, displayName: true } },
-      buyer: { select: { id: true, name: true, email: true } },
-    },
-  });
+  let conversation;
+  try {
+    conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        artisan: { select: { userId: true, displayName: true } },
+        buyer: { select: { id: true, name: true, email: true } },
+      },
+    });
+  } catch (e) {
+    console.error("[sendMessage] DB error fetching conversation:", e);
+    return { error: "Error al procesar el mensaje. Intenta de nuevo." };
+  }
 
   if (!conversation) return { error: "Conversación no encontrada" };
   if (conversation.status === "BLOCKED") return { error: "Esta conversación ha sido bloqueada" };
@@ -101,22 +110,26 @@ export async function sendMessage(conversationId: string, content: string) {
   if (senderRole !== "ADMIN") {
     const filterResult = filterMessage(trimmed);
     if (filterResult.isBlocked) {
-      await prisma.$transaction([
-        prisma.message.create({
-          data: {
-            conversationId,
-            senderId: user.id,
-            senderRole,
-            content: trimmed,
-            isBlocked: true,
-            blockedReason: filterResult.reason,
-          },
-        }),
-        prisma.conversation.update({
-          where: { id: conversationId },
-          data: { hasBypassAttempt: true },
-        }),
-      ]);
+      try {
+        await prisma.$transaction([
+          prisma.message.create({
+            data: {
+              conversationId,
+              senderId: user.id,
+              senderRole,
+              content: trimmed,
+              isBlocked: true,
+              blockedReason: filterResult.reason,
+            },
+          }),
+          prisma.conversation.update({
+            where: { id: conversationId },
+            data: { hasBypassAttempt: true },
+          }),
+        ]);
+      } catch (e) {
+        console.error("[sendMessage] DB error saving blocked message:", e);
+      }
       return {
         error: "No está permitido compartir datos de contacto.",
         blocked: true,
@@ -125,20 +138,25 @@ export async function sendMessage(conversationId: string, content: string) {
   }
 
   // Save message and update conversation
-  await prisma.$transaction([
-    prisma.message.create({
-      data: {
-        conversationId,
-        senderId: user.id,
-        senderRole,
-        content: trimmed,
-      },
-    }),
-    prisma.conversation.update({
-      where: { id: conversationId },
-      data: { lastMessageAt: new Date() },
-    }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.message.create({
+        data: {
+          conversationId,
+          senderId: user.id,
+          senderRole,
+          content: trimmed,
+        },
+      }),
+      prisma.conversation.update({
+        where: { id: conversationId },
+        data: { lastMessageAt: new Date() },
+      }),
+    ]);
+  } catch (e) {
+    console.error("[sendMessage] DB error creating message:", e);
+    return { error: "No se pudo enviar el mensaje. Intenta de nuevo." };
+  }
 
   // Send email notification (non-blocking)
   try {
