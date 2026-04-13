@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { DeleteBuyerButton } from "../delete-buyer-button";
+import { StartAdminChatButton } from "./start-admin-chat-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -56,16 +57,45 @@ export default async function AdminBuyerDetailPage({ params }: PageProps) {
 
   if (!buyer) notFound();
 
-  // Get conversations
-  const conversations = await prisma.conversation.findMany({
-    where: { buyerId: id },
-    orderBy: { lastMessageAt: "desc" },
-    include: {
-      artisan: { select: { displayName: true } },
-      messages: { orderBy: { createdAt: "desc" }, take: 1, select: { content: true } },
-    },
-    take: 10,
-  });
+  const [conversations, questions, contactSubmissions, adminConversation] = await Promise.all([
+    prisma.conversation.findMany({
+      where: { buyerId: id, deletedAt: null },
+      orderBy: { lastMessageAt: "desc" },
+      include: {
+        artisan: { select: { displayName: true } },
+        admin: { select: { name: true } },
+        messages: { orderBy: { createdAt: "desc" }, take: 1, select: { content: true, createdAt: true } },
+      },
+      take: 50,
+    }),
+    prisma.productQuestion.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        product: { select: { name: true, slug: true } },
+      },
+      take: 50,
+    }),
+    prisma.contactSubmission.findMany({
+      where: {
+        OR: [{ userId: id }, { email: buyer.email }],
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        conversation: { select: { id: true } },
+      },
+      take: 50,
+    }),
+    prisma.conversation.findFirst({
+      where: {
+        buyerId: id,
+        adminId: { not: null },
+        artisanId: null,
+        deletedAt: null,
+      },
+      select: { id: true },
+    }),
+  ]);
 
   const totalSpent = buyer.orders
     .filter((o) => o.status !== "PENDING_PAYMENT" && o.status !== "CANCELLED")
@@ -82,9 +112,15 @@ export default async function AdminBuyerDetailPage({ params }: PageProps) {
         &larr; Compradores
       </Link>
 
-      <h1 className="mt-4 font-serif text-2xl font-light sm:text-3xl">
-        {buyer.name || "Sin nombre"}
-      </h1>
+      <div className="mt-4 flex items-center justify-between">
+        <h1 className="font-serif text-2xl font-light sm:text-3xl">
+          {buyer.name || "Sin nombre"}
+        </h1>
+        <StartAdminChatButton
+          buyerId={id}
+          existingConversationId={adminConversation?.id}
+        />
+      </div>
 
       {/* Personal data */}
       <Card className="mt-6">
@@ -108,6 +144,119 @@ export default async function AdminBuyerDetailPage({ params }: PageProps) {
           </div>
           <div><dt className="text-text-tertiary">Total gastado</dt><dd className="font-medium">{formatCLP(totalSpent)}</dd></div>
         </dl>
+      </Card>
+
+      {/* Product Questions */}
+      <Card className="mt-6">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+          Preguntas de productos ({questions.length})
+        </h2>
+        {questions.length === 0 ? (
+          <p className="text-sm text-text-tertiary">No ha hecho preguntas</p>
+        ) : (
+          <div className="space-y-2">
+            {questions.map((q) => (
+              <div key={q.id} className="rounded-md border border-border/50 p-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <Link href={`/coleccion/${q.product.slug}`} className="text-accent hover:underline">
+                    {q.product.name}
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${q.answer ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                      {q.answer ? "Respondida" : "Pendiente"}
+                    </span>
+                    <span className="text-xs text-text-tertiary">
+                      {new Date(q.createdAt).toLocaleDateString("es-CL")}
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-1 text-text-secondary">{q.question}</p>
+                {q.answer && (
+                  <p className="mt-1 text-text-tertiary italic">{q.answer}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Contact Form Submissions */}
+      <Card className="mt-6">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+          Formularios de contacto ({contactSubmissions.length})
+        </h2>
+        {contactSubmissions.length === 0 ? (
+          <p className="text-sm text-text-tertiary">No ha enviado formularios de contacto</p>
+        ) : (
+          <div className="space-y-2">
+            {contactSubmissions.map((s) => (
+              <div key={s.id} className="rounded-md border border-border/50 p-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{s.subject}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${
+                      s.status === "PENDING" ? "bg-amber-100 text-amber-700"
+                        : s.status === "REPLIED" ? "bg-blue-100 text-blue-700"
+                          : "bg-green-100 text-green-700"
+                    }`}>
+                      {s.status === "PENDING" ? "Pendiente" : s.status === "REPLIED" ? "Respondido" : "Cerrado"}
+                    </span>
+                    <span className="text-xs text-text-tertiary">
+                      {new Date(s.createdAt).toLocaleDateString("es-CL")}
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-1 text-text-secondary">{s.message.slice(0, 200)}{s.message.length > 200 ? "..." : ""}</p>
+                {s.conversation && (
+                  <Link href={`/portal/admin/mensajes/${s.conversation.id}`} className="mt-1 inline-block text-xs text-accent hover:underline">
+                    Ver conversación
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Conversations */}
+      <Card className="mt-6">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+          Conversaciones ({conversations.length})
+        </h2>
+        {conversations.length === 0 ? (
+          <p className="text-sm text-text-tertiary">Sin conversaciones</p>
+        ) : (
+          <div className="space-y-2">
+            {conversations.map((c) => {
+              const isAdminConv = !c.artisanId && !!c.adminId;
+              const counterpart = isAdminConv ? "Casa Orfebre" : c.artisan?.displayName || "Orfebre";
+              return (
+                <Link
+                  key={c.id}
+                  href={`/portal/admin/mensajes/${c.id}`}
+                  className="flex items-center justify-between rounded-md border border-border/50 p-3 text-sm hover:bg-background"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Con <span className="font-medium">{counterpart}</span></span>
+                    {isAdminConv && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Admin</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-text-secondary ml-2">
+                      {c.messages[0]?.content.slice(0, 40) || "Sin mensajes"}
+                    </span>
+                    {c.messages[0] && (
+                      <span className="text-xs text-text-tertiary">
+                        {new Date(c.messages[0].createdAt).toLocaleDateString("es-CL")}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       {/* Orders */}
@@ -226,31 +375,6 @@ export default async function AdminBuyerDetailPage({ params }: PageProps) {
                   r.status === "USED" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
                 }`}>{r.status}</span>
               </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* Conversations */}
-      <Card className="mt-6">
-        <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">
-          Conversaciones ({conversations.length})
-        </h2>
-        {conversations.length === 0 ? (
-          <p className="text-sm text-text-tertiary">Sin conversaciones</p>
-        ) : (
-          <div className="space-y-2">
-            {conversations.map((c) => (
-              <Link
-                key={c.id}
-                href={`/portal/admin/mensajes/${c.id}`}
-                className="flex items-center justify-between rounded-md border border-border/50 p-3 text-sm hover:bg-background"
-              >
-                <span>Con <span className="font-medium">{c.artisan.displayName}</span></span>
-                <span className="truncate text-text-secondary ml-2">
-                  {c.messages[0]?.content.slice(0, 40) || "Sin mensajes"}
-                </span>
-              </Link>
             ))}
           </div>
         )}
