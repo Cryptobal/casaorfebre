@@ -52,6 +52,18 @@ const nextConfig: NextConfig = {
         source: "/manifest.json",
         headers: noIndexHeaders,
       },
+      {
+        source: "/portal/:path*",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/api/:path*",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/checkout/:path*",
+        headers: noIndexHeaders,
+      },
     ];
   },
   async redirects() {
