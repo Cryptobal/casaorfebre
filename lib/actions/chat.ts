@@ -63,6 +63,38 @@ export async function startConversation(artisanId: string, productId?: string) {
 }
 
 // ---------------------------------------------------------------------------
+// a2) Start admin↔buyer conversation
+// ---------------------------------------------------------------------------
+
+export async function startAdminConversation(buyerId: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    return { error: "No autorizado" };
+  }
+
+  // Check if an admin↔buyer conversation already exists
+  const existing = await prisma.conversation.findFirst({
+    where: {
+      buyerId,
+      adminId: { not: null },
+      artisanId: null,
+      deletedAt: null,
+    },
+  });
+
+  if (existing) return { conversationId: existing.id };
+
+  const conversation = await prisma.conversation.create({
+    data: {
+      buyerId,
+      adminId: session.user.id,
+    },
+  });
+
+  return { conversationId: conversation.id };
+}
+
+// ---------------------------------------------------------------------------
 // b) Send message
 // ---------------------------------------------------------------------------
 
@@ -82,6 +114,7 @@ export async function sendMessage(conversationId: string, content: string) {
       include: {
         artisan: { select: { userId: true, displayName: true } },
         buyer: { select: { id: true, name: true, email: true } },
+        admin: { select: { id: true, name: true, email: true } },
       },
     });
   } catch (e) {
@@ -94,13 +127,14 @@ export async function sendMessage(conversationId: string, content: string) {
 
   // Verify user is a participant
   const isBuyer = conversation.buyerId === user.id;
-  const isArtisan = conversation.artisan.userId === user.id;
-  if (!isBuyer && !isArtisan && !isAdmin(user.role)) {
+  const isArtisan = conversation.artisan?.userId === user.id;
+  const isConvAdmin = conversation.adminId === user.id;
+  if (!isBuyer && !isArtisan && !isConvAdmin && !isAdmin(user.role)) {
     return { error: "No tienes acceso a esta conversación" };
   }
 
   // Determine sender role
-  const senderRole = isAdmin(user.role) && !isBuyer && !isArtisan
+  const senderRole = (isAdmin(user.role) && !isBuyer && !isArtisan)
     ? "ADMIN" as const
     : isBuyer
       ? "BUYER" as const
@@ -161,41 +195,74 @@ export async function sendMessage(conversationId: string, content: string) {
   // Send email notification (non-blocking)
   try {
     const { sendNewMessageEmail } = await import("@/lib/emails/templates");
-    const recipientIsBuyer = !isBuyer;
-    const notifField = recipientIsBuyer ? "lastNotifiedBuyerAt" : "lastNotifiedArtisanAt";
-    const lastNotified = recipientIsBuyer
-      ? conversation.lastNotifiedBuyerAt
-      : conversation.lastNotifiedArtisanAt;
 
-    // Throttle: no email if notified < 5 min ago
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (!lastNotified || lastNotified < fiveMinAgo) {
-      const recipientEmail = recipientIsBuyer ? conversation.buyer.email : "";
-      const recipientName = recipientIsBuyer
-        ? conversation.buyer.name || "Comprador"
-        : conversation.artisan.displayName;
-      const senderName = isBuyer
-        ? conversation.buyer.name || "Comprador"
-        : conversation.artisan.displayName;
-      const portal = recipientIsBuyer ? "comprador" : "orfebre";
-      const conversationUrl = `/portal/${portal}/mensajes/${conversationId}`;
+    const isAdminConversation = !conversation.artisanId && conversation.adminId;
 
-      // Get artisan email if needed
-      let finalEmail = recipientEmail;
-      if (!recipientIsBuyer) {
-        const artisanUser = await prisma.user.findUnique({
-          where: { id: conversation.artisan.userId },
-          select: { email: true },
-        });
-        finalEmail = artisanUser?.email || "";
+    if (isAdminConversation) {
+      // Admin↔Buyer conversation
+      const recipientIsBuyer = !isBuyer;
+      const notifField = recipientIsBuyer ? "lastNotifiedBuyerAt" : "lastNotifiedArtisanAt";
+      const lastNotified = recipientIsBuyer
+        ? conversation.lastNotifiedBuyerAt
+        : conversation.lastNotifiedArtisanAt;
+
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (!lastNotified || lastNotified < fiveMinAgo) {
+        const recipientEmail = recipientIsBuyer ? conversation.buyer.email : (conversation.admin?.email || "");
+        const recipientName = recipientIsBuyer
+          ? conversation.buyer.name || "Comprador"
+          : conversation.admin?.name || "Admin";
+        const senderName = isBuyer
+          ? conversation.buyer.name || "Comprador"
+          : "Casa Orfebre";
+        const conversationUrl = recipientIsBuyer
+          ? `/portal/comprador/mensajes/${conversationId}`
+          : `/portal/admin/mensajes/${conversationId}`;
+
+        if (recipientEmail) {
+          await sendNewMessageEmail(recipientEmail, recipientName, senderName, trimmed.slice(0, 100), conversationUrl);
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { [notifField]: new Date() },
+          });
+        }
       }
+    } else if (conversation.artisanId) {
+      // Buyer↔Artisan conversation (existing behavior)
+      const recipientIsBuyer = !isBuyer;
+      const notifField = recipientIsBuyer ? "lastNotifiedBuyerAt" : "lastNotifiedArtisanAt";
+      const lastNotified = recipientIsBuyer
+        ? conversation.lastNotifiedBuyerAt
+        : conversation.lastNotifiedArtisanAt;
 
-      if (finalEmail) {
-        await sendNewMessageEmail(finalEmail, recipientName, senderName, trimmed.slice(0, 100), conversationUrl);
-        await prisma.conversation.update({
-          where: { id: conversationId },
-          data: { [notifField]: new Date() },
-        });
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (!lastNotified || lastNotified < fiveMinAgo) {
+        const recipientEmail = recipientIsBuyer ? conversation.buyer.email : "";
+        const recipientName = recipientIsBuyer
+          ? conversation.buyer.name || "Comprador"
+          : conversation.artisan!.displayName;
+        const senderName = isBuyer
+          ? conversation.buyer.name || "Comprador"
+          : conversation.artisan!.displayName;
+        const portal = recipientIsBuyer ? "comprador" : "orfebre";
+        const conversationUrl = `/portal/${portal}/mensajes/${conversationId}`;
+
+        let finalEmail = recipientEmail;
+        if (!recipientIsBuyer) {
+          const artisanUser = await prisma.user.findUnique({
+            where: { id: conversation.artisan!.userId },
+            select: { email: true },
+          });
+          finalEmail = artisanUser?.email || "";
+        }
+
+        if (finalEmail) {
+          await sendNewMessageEmail(finalEmail, recipientName, senderName, trimmed.slice(0, 100), conversationUrl);
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { [notifField]: new Date() },
+          });
+        }
       }
     }
   } catch (e) {
@@ -204,6 +271,7 @@ export async function sendMessage(conversationId: string, content: string) {
 
   revalidatePath(`/portal/comprador/mensajes/${conversationId}`);
   revalidatePath(`/portal/orfebre/mensajes/${conversationId}`);
+  revalidatePath(`/portal/admin/mensajes/${conversationId}`);
 
   return { success: true };
 }
@@ -245,6 +313,7 @@ export async function getConversations() {
           },
         },
       },
+      admin: { select: { id: true, name: true } },
       product: { select: { id: true, name: true, slug: true, images: { take: 1, orderBy: { position: "asc" }, select: { url: true } } } },
       messages: {
         orderBy: { createdAt: "desc" },
@@ -272,6 +341,8 @@ export async function getConversations() {
     hasBypassAttempt: c.hasBypassAttempt,
     buyer: c.buyer,
     artisan: c.artisan,
+    admin: c.admin,
+    isAdminConversation: !c.artisanId && !!c.adminId,
     product: c.product,
     lastMessage: c.messages[0] || null,
     unreadCount: c._count.messages,
@@ -291,14 +362,16 @@ export async function getMessages(conversationId: string) {
     where: { id: conversationId },
     include: {
       artisan: { select: { userId: true } },
+      admin: { select: { id: true } },
     },
   });
 
   if (!conversation) return { error: "Conversación no encontrada", messages: [] };
 
   const isBuyer = conversation.buyerId === user.id;
-  const isArtisan = conversation.artisan.userId === user.id;
-  if (!isBuyer && !isArtisan && !isAdmin(user.role)) {
+  const isArtisan = conversation.artisan?.userId === user.id;
+  const isConvAdmin = conversation.admin?.id === user.id;
+  if (!isBuyer && !isArtisan && !isConvAdmin && !isAdmin(user.role)) {
     return { error: "No tienes acceso", messages: [] };
   }
 
@@ -464,6 +537,7 @@ export async function adminGetConversations(filters?: {
           },
         },
       },
+      admin: { select: { id: true, name: true } },
       product: { select: { name: true } },
       messages: {
         orderBy: { createdAt: "desc" },
@@ -482,7 +556,7 @@ export async function adminGetConversations(filters?: {
       (c) =>
         c.buyer.name?.toLowerCase().includes(q) ||
         c.buyer.email?.toLowerCase().includes(q) ||
-        c.artisan.displayName.toLowerCase().includes(q),
+        c.artisan?.displayName.toLowerCase().includes(q),
     );
   }
 
