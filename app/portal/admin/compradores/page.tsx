@@ -37,19 +37,22 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
         select: { referred: { select: { name: true } } },
       },
       _count: {
-        select: { giftCardsPurchased: true },
+        select: {
+          giftCardsPurchased: true,
+          questions: { where: { answer: null } },
+          contactSubmissions: { where: { status: "PENDING" } },
+        },
       },
     },
     orderBy:
       sort === "spent"
-        ? { createdAt: "desc" } // We'll sort client-side for computed fields
+        ? { createdAt: "desc" }
         : sort === "orders"
           ? { createdAt: "desc" }
           : { createdAt: "desc" },
     take: 200,
   });
 
-  // Compute totals
   let buyerList = buyers.map((b) => ({
     id: b.id,
     name: b.name,
@@ -61,20 +64,23 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
     referredBy: b.referredBy,
     giftCardPurchases: b._count.giftCardsPurchased,
     canDelete: b.orders.length === 0 && b._count.giftCardsPurchased === 0,
+    pendingQuestions: b._count.questions,
+    pendingContacts: b._count.contactSubmissions,
+    activityCount: b._count.questions + b._count.contactSubmissions,
   }));
 
-  // Filter by orders
   if (withOrdersFilter === "yes") {
     buyerList = buyerList.filter((b) => b.totalOrders > 0);
   } else if (withOrdersFilter === "no") {
     buyerList = buyerList.filter((b) => b.totalOrders === 0);
   }
 
-  // Sort
   if (sort === "spent") {
     buyerList.sort((a, b) => b.totalSpent - a.totalSpent);
   } else if (sort === "orders") {
     buyerList.sort((a, b) => b.totalOrders - a.totalOrders);
+  } else if (sort === "activity") {
+    buyerList.sort((a, b) => b.activityCount - a.activityCount);
   }
 
   return (
@@ -82,7 +88,6 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
       <h1 className="font-serif text-2xl font-light sm:text-3xl">Compradores</h1>
       <p className="mt-1 text-sm text-text-secondary">{buyerList.length} compradores registrados</p>
 
-      {/* Filters */}
       <form className="mt-6 flex flex-wrap items-center gap-3">
         <input
           name="q"
@@ -105,13 +110,13 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
           <option value="recent">Más recientes</option>
           <option value="spent">Mayor gasto</option>
           <option value="orders">Más pedidos</option>
+          <option value="activity">Mayor actividad</option>
         </select>
         <button type="submit" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark min-h-[44px]">
           Filtrar
         </button>
       </form>
 
-      {/* Desktop table */}
       <div className="mt-6 hidden overflow-x-auto sm:block">
         <table className="w-full text-sm">
           <thead>
@@ -121,8 +126,8 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
               <th className="pb-2 pr-4">Registro</th>
               <th className="pb-2 pr-4">Pedidos</th>
               <th className="pb-2 pr-4">Total gastado</th>
+              <th className="pb-2 pr-4">Actividad</th>
               <th className="pb-2 pr-4">Verificado</th>
-              <th className="pb-2 pr-4">Referido</th>
               <th className="pb-2 text-right">Acciones</th>
             </tr>
           </thead>
@@ -141,11 +146,22 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
                 <td className="py-3 pr-4">{b.totalOrders}</td>
                 <td className="py-3 pr-4">{formatCLP(b.totalSpent)}</td>
                 <td className="py-3 pr-4">
+                  {b.activityCount > 0 ? (
+                    <Link
+                      href={`/portal/admin/compradores/${b.id}`}
+                      className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
+                    >
+                      {b.activityCount}
+                    </Link>
+                  ) : (
+                    <span className="text-text-tertiary">—</span>
+                  )}
+                </td>
+                <td className="py-3 pr-4">
                   <span className={`rounded-full px-2 py-0.5 text-xs ${b.emailVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
                     {b.emailVerified ? "Sí" : "No"}
                   </span>
                 </td>
-                <td className="py-3 pr-4">{b.referredBy || "—"}</td>
                 <td className="py-3 text-right">
                   <BuyerRowDelete
                     buyerId={b.id}
@@ -166,14 +182,20 @@ export default async function AdminBuyersPage({ searchParams }: PageProps) {
         </table>
       </div>
 
-      {/* Mobile cards */}
       <div className="mt-6 space-y-2 sm:hidden">
         {buyerList.map((b) => (
           <div key={b.id} className="rounded-lg border border-border p-4">
             <Link href={`/portal/admin/compradores/${b.id}`} className="block">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-medium">{b.name || "Sin nombre"}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{b.name || "Sin nombre"}</p>
+                    {b.activityCount > 0 && (
+                      <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                        {b.activityCount}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-text-secondary">{b.email}</p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs ${b.emailVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
