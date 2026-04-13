@@ -13,6 +13,7 @@ import Image from "next/image";
 import { ReviewForm } from "./review-form";
 import { ResumePaymentButton } from "./resume-payment-button";
 import { ConfirmReceiptButton } from "./confirm-receipt-button";
+import { CancelReturnButton } from "./cancel-return-button";
 import { TrackingLink } from "@/components/tracking-link";
 import { getOrderMessages } from "@/lib/actions/order-messages";
 import { OrderChat } from "@/components/order-chat/order-chat";
@@ -408,7 +409,9 @@ export default async function BuyerOrderDetailPage({
                     (1000 * 60 * 60 * 24)
                   : 0;
                 const hasReview = reviewedProductIds.has(item.productId);
-                const hasReturn = returnRequests.has(item.id);
+                const returnInfo = returnRequests.get(item.id);
+                const hasReturn = !!returnInfo && returnInfo.status !== "CANCELLED";
+                const canCancelReturn = returnInfo?.status === "REQUESTED";
                 const img = item.product.images?.[0];
 
                 return (
@@ -565,6 +568,10 @@ export default async function BuyerOrderDetailPage({
                                   <span className="text-[11px] text-text-tertiary block mt-0.5">Reembolso tras devolución física</span>
                                 </Link>
                               )}
+                            {canCancelReturn && returnInfo && (
+                              <CancelReturnButton returnRequestId={returnInfo.id} />
+                            )}
+
                             {item.product.productionType === "MADE_TO_ORDER" && (
                               <span className="text-[11px] text-text-tertiary">
                                 Hecha por encargo · Sin devolución

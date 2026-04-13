@@ -21,6 +21,7 @@ const statusStyles: Record<string, string> = {
   SHIPPED_BACK: "bg-indigo-100 text-indigo-800",
   RECEIVED_BY_ARTISAN: "bg-green-100 text-green-800",
   REFUNDED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-gray-100 text-gray-800",
   CLOSED: "bg-gray-100 text-gray-800",
 };
 
@@ -28,6 +29,7 @@ const statusLabels: Record<string, string> = {
   REQUESTED: "Solicitada",
   APPROVED: "Aprobada",
   REJECTED: "Rechazada",
+  CANCELLED: "Cancelada",
   SHIPPED_BACK: "Enviada de vuelta",
   RECEIVED_BY_ARTISAN: "Recibida por orfebre",
   REFUNDED: "Reembolsada",

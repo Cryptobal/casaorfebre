@@ -43,6 +43,15 @@ export async function createReturnRequest(formData: FormData) {
     if (daysSince > 14) return { error: "El plazo para solicitar devolución ha expirado (14 días)" };
   }
 
+  // Check for existing active return request
+  const existingReturn = await prisma.returnRequest.findFirst({
+    where: {
+      orderItemId,
+      status: { notIn: ["CANCELLED", "REJECTED", "CLOSED"] },
+    },
+  });
+  if (existingReturn) return { error: "Ya existe una solicitud de devolución activa para este producto" };
+
   const shippingPaidBy = reason === "BUYER_REGRET" ? "BUYER" : "PLATFORM";
 
   await prisma.returnRequest.create({
@@ -131,5 +140,30 @@ export async function createReturnRequest(formData: FormData) {
 
   revalidatePath(`/portal/comprador/pedidos/${item.order.id}`);
   revalidatePath("/portal/orfebre/mensajes");
+  return { success: true };
+}
+
+export async function cancelReturnRequest(returnRequestId: string) {
+  const session = await auth();
+  if (!session?.user) return { error: "No autorizado" };
+
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+    include: { orderItem: { include: { order: true } } },
+  });
+
+  if (!returnRequest) return { error: "Solicitud no encontrada" };
+  if (returnRequest.userId !== session.user.id) return { error: "No autorizado" };
+  if (returnRequest.status !== "REQUESTED") {
+    return { error: "Solo puedes cancelar solicitudes pendientes" };
+  }
+
+  await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: { status: "CANCELLED", resolvedAt: new Date() },
+  });
+
+  revalidatePath(`/portal/comprador/pedidos/${returnRequest.orderItem.order.id}`);
+  revalidatePath("/portal/admin/devoluciones");
   return { success: true };
 }

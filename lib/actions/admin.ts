@@ -1155,6 +1155,30 @@ export async function curateProduct(
   return { success: true };
 }
 
+// 15b. Admin cancel return
+export async function adminCancelReturn(
+  returnRequestId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+  });
+  if (!returnRequest) return { error: "Solicitud no encontrada" };
+
+  await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: { status: "CANCELLED", resolvedAt: new Date(), adminNotes: "Cancelada por administrador" },
+  });
+
+  revalidatePath("/portal/admin/devoluciones");
+  return { success: true };
+}
+
 // 16. Mark return as received by artisan
 export async function markReturnReceived(
   returnRequestId: string

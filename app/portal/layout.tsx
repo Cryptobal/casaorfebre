@@ -86,18 +86,41 @@ export default async function PortalLayout({ children }: { children: React.React
   let pendingOrfebreApplications = 0;
   let pendingPhotos = 0;
   let newPaidOrders = 0;
+  let openDisputes = 0;
+  let pendingReturns = 0;
+  let lateShipments = 0;
+  let bypassConversations = 0;
+  let unansweredQuestions = 0;
   let artisanPendingOrders = 0;
   let artisanUnansweredQuestions = 0;
   let artisanUnreadMessages = 0;
   let buyerActiveOrders = 0;
 
   if (session.user.role === "ADMIN") {
-    [pendingPostulaciones, pendingProductModeration, pendingOrfebreApplications, pendingPhotos, newPaidOrders] = await Promise.all([
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    [
+      pendingPostulaciones,
+      pendingProductModeration,
+      pendingOrfebreApplications,
+      pendingPhotos,
+      newPaidOrders,
+      openDisputes,
+      pendingReturns,
+      lateShipments,
+      bypassConversations,
+      unansweredQuestions,
+    ] = await Promise.all([
       prisma.artisanApplication.count({ where: { status: "PENDING" } }),
       prisma.product.count({ where: { status: "PENDING_REVIEW" } }),
       prisma.artisan.count({ where: { status: "PENDING" } }),
       prisma.productImage.count({ where: { status: "PENDING_REVIEW" } }),
       prisma.orderItem.count({ where: { fulfillmentStatus: "PENDING", order: { status: "PAID" } } }),
+      prisma.dispute.count({ where: { status: { in: ["OPEN", "UNDER_REVIEW"] } } }),
+      prisma.returnRequest.count({ where: { status: { in: ["REQUESTED", "APPROVED"] } } }),
+      prisma.orderItem.count({ where: { fulfillmentStatus: { in: ["PENDING", "PREPARING"] }, createdAt: { lt: fiveDaysAgo }, order: { status: { not: "PENDING_PAYMENT" } } } }),
+      prisma.conversation.count({ where: { hasBypassAttempt: true, status: "ACTIVE", deletedAt: null } }),
+      prisma.productQuestion.count({ where: { answer: null, createdAt: { lte: fortyEightHoursAgo } } }),
     ]);
   }
 
@@ -163,6 +186,11 @@ export default async function PortalLayout({ children }: { children: React.React
           if (l.href === "/portal/admin/fotos") return { ...l, badge: pendingPhotos };
           if (l.href === "/portal/admin/orfebres") return { ...l, badge: pendingOrfebreApplications };
           if (l.href === "/portal/admin/pedidos") return { ...l, badge: newPaidOrders };
+          if (l.href === "/portal/admin/disputas") return { ...l, badge: openDisputes };
+          if (l.href === "/portal/admin/devoluciones") return { ...l, badge: pendingReturns };
+          if (l.href === "/portal/admin/despacho") return { ...l, badge: lateShipments };
+          if (l.href === "/portal/admin/mensajes") return { ...l, badge: bypassConversations };
+          if (l.href === "/portal/admin/preguntas") return { ...l, badge: unansweredQuestions };
           return l;
         })
       : []),
@@ -199,6 +227,11 @@ export default async function PortalLayout({ children }: { children: React.React
                   "/portal/admin/fotos": pendingPhotos,
                   "/portal/admin/orfebres": pendingOrfebreApplications,
                   "/portal/admin/pedidos": newPaidOrders,
+                  "/portal/admin/disputas": openDisputes,
+                  "/portal/admin/devoluciones": pendingReturns,
+                  "/portal/admin/despacho": lateShipments,
+                  "/portal/admin/mensajes": bypassConversations,
+                  "/portal/admin/preguntas": unansweredQuestions,
                 };
                 const count = badgeCounts[link.href] ?? 0;
                 if (count > 0 || link.ai) {

@@ -45,7 +45,7 @@ export async function getUserReviewsForOrder(userId: string, productIds: string[
 export async function getReturnRequestsForItems(orderItemIds: string[]) {
   const returns = await prisma.returnRequest.findMany({
     where: { orderItemId: { in: orderItemIds } },
-    select: { orderItemId: true, status: true },
+    select: { id: true, orderItemId: true, status: true },
   });
-  return new Map(returns.map(r => [r.orderItemId, r.status]));
+  return new Map(returns.map(r => [r.orderItemId, { id: r.id, status: r.status }]));
 }

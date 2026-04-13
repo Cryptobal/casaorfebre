@@ -7,6 +7,7 @@ import {
   rejectReturn,
   processRefund,
   markReturnReceived,
+  adminCancelReturn,
 } from "@/lib/actions/admin";
 
 interface ReturnActionsProps {
@@ -19,6 +20,7 @@ export function ReturnActions({
   currentStatus,
 }: ReturnActionsProps) {
   const [showReject, setShowReject] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
   const [feedback, setFeedback] = useState<{
@@ -169,6 +171,54 @@ export function ReturnActions({
           >
             Procesar Reembolso
           </Button>
+        </div>
+      )}
+
+      {/* Admin cancel — available for any active status */}
+      {["REQUESTED", "APPROVED", "SHIPPED_BACK", "RECEIVED_BY_ARTISAN"].includes(
+        currentStatus
+      ) && (
+        <div className="border-t border-border pt-3 mt-3">
+          {!showCancel ? (
+            <button
+              onClick={() => setShowCancel(true)}
+              className="text-xs text-red-600 hover:text-red-800 transition-colors"
+              disabled={isPending}
+            >
+              Cancelar devolución
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="border-red-300 text-red-700 hover:bg-red-50"
+                onClick={() => {
+                  startTransition(async () => {
+                    const result = await adminCancelReturn(returnRequestId);
+                    if (result.error) {
+                      setFeedback({ type: "error", message: result.error });
+                    } else {
+                      setFeedback({ type: "success", message: "Devolución cancelada" });
+                    }
+                    setShowCancel(false);
+                  });
+                }}
+                disabled={isPending}
+                loading={isPending}
+              >
+                Confirmar cancelación
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setShowCancel(false)}
+                disabled={isPending}
+              >
+                No, mantener
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
