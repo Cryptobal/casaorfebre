@@ -48,6 +48,7 @@ export default async function AdminConversationPage({ params }: PageProps) {
           user: { select: { email: true } },
         },
       },
+      admin: { select: { id: true, name: true } },
       product: { select: { name: true, slug: true } },
     },
   });
@@ -63,9 +64,10 @@ export default async function AdminConversationPage({ params }: PageProps) {
     include: { sender: { select: { name: true } } },
   });
 
-  const artisanPlan = conversation.artisan.subscriptions?.[0]?.plan?.name || "Esencial";
-  const hasMp = !!conversation.artisan.mpAccessToken;
-  const commission = conversation.artisan.commissionOverride ?? conversation.artisan.commissionRate;
+  const isAdminConv = !conversation.artisanId && !!conversation.adminId;
+  const artisanPlan = conversation.artisan?.subscriptions?.[0]?.plan?.name || "Esencial";
+  const hasMp = !!conversation.artisan?.mpAccessToken;
+  const commission = conversation.artisan?.commissionOverride ?? conversation.artisan?.commissionRate ?? 0;
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
@@ -89,9 +91,15 @@ export default async function AdminConversationPage({ params }: PageProps) {
           </div>
           <div className="text-text-tertiary">&harr;</div>
           <div className="flex-1">
-            <p className="text-xs uppercase tracking-widest text-text-tertiary">Orfebre</p>
-            <p className="font-medium">{conversation.artisan.displayName}</p>
-            <p className="text-sm text-text-secondary">{conversation.artisan.user.email}</p>
+            <p className="text-xs uppercase tracking-widest text-text-tertiary">
+              {isAdminConv ? "Admin" : "Orfebre"}
+            </p>
+            <p className="font-medium">
+              {isAdminConv ? "Casa Orfebre" : conversation.artisan?.displayName}
+            </p>
+            <p className="text-sm text-text-secondary">
+              {isAdminConv ? "Soporte" : conversation.artisan?.user.email}
+            </p>
           </div>
         </div>
 
@@ -104,7 +112,7 @@ export default async function AdminConversationPage({ params }: PageProps) {
         <AdminConversationActions
           conversationId={id}
           status={conversation.status}
-          artisanId={conversation.artisan.id}
+          artisanId={conversation.artisan?.id}
         />
       </div>
 
@@ -131,26 +139,28 @@ export default async function AdminConversationPage({ params }: PageProps) {
         </div>
 
         {/* Artisan info */}
-        <div className="rounded-lg border border-border p-4">
-          <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-text-tertiary">
-            Orfebre
-          </h3>
-          <dl className="space-y-2 text-sm">
-            <div><dt className="text-text-tertiary">Email</dt><dd>{conversation.artisan.user.email}</dd></div>
-            <div><dt className="text-text-tertiary">Plan</dt><dd>{artisanPlan}</dd></div>
-            <div><dt className="text-text-tertiary">Rating</dt><dd>{conversation.artisan.rating.toFixed(1)}</dd></div>
-            <div><dt className="text-text-tertiary">Ventas</dt><dd>{conversation.artisan.totalSales}</dd></div>
-            <div><dt className="text-text-tertiary">Comisión</dt><dd>{Math.round(commission * 100)}%</dd></div>
-            <div>
-              <dt className="text-text-tertiary">Mercado Pago</dt>
-              <dd>
-                <span className={`rounded-full px-2 py-0.5 text-xs ${hasMp ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                  {hasMp ? "Conectado" : "No conectado"}
-                </span>
-              </dd>
-            </div>
-          </dl>
-        </div>
+        {conversation.artisan && (
+          <div className="rounded-lg border border-border p-4">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+              Orfebre
+            </h3>
+            <dl className="space-y-2 text-sm">
+              <div><dt className="text-text-tertiary">Email</dt><dd>{conversation.artisan.user.email}</dd></div>
+              <div><dt className="text-text-tertiary">Plan</dt><dd>{artisanPlan}</dd></div>
+              <div><dt className="text-text-tertiary">Rating</dt><dd>{conversation.artisan.rating.toFixed(1)}</dd></div>
+              <div><dt className="text-text-tertiary">Ventas</dt><dd>{conversation.artisan.totalSales}</dd></div>
+              <div><dt className="text-text-tertiary">Comisión</dt><dd>{Math.round(commission * 100)}%</dd></div>
+              <div>
+                <dt className="text-text-tertiary">Mercado Pago</dt>
+                <dd>
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${hasMp ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                    {hasMp ? "Conectado" : "No conectado"}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
 
         {/* Bypass history */}
         {blockedMessages.length > 0 && (

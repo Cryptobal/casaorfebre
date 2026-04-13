@@ -79,7 +79,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
         (c) =>
           c.buyer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           c.buyer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.artisan.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
+          c.artisan?.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : conversations;
 
@@ -159,7 +159,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
                       {c.buyer.name || c.buyer.email}
                     </Link>
                   </td>
-                  <td className="py-3 pr-4">{c.artisan.displayName}</td>
+                  <td className="py-3 pr-4">{c.artisan?.displayName || "Casa Orfebre"}</td>
                   <td className="py-3 pr-4 text-text-secondary">{c.product?.name || "—"}</td>
                   <td className="max-w-[200px] truncate py-3 pr-4 text-text-secondary">
                     {c.messages[0]?.content.slice(0, 50) || "—"}
@@ -202,7 +202,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-medium">{c.buyer.name || c.buyer.email}</p>
-                  <p className="text-sm text-text-secondary">&harr; {c.artisan.displayName}</p>
+                  <p className="text-sm text-text-secondary">&harr; {c.artisan?.displayName || "Casa Orfebre"}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span

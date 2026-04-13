@@ -11,7 +11,7 @@ export function AdminConversationActions({
 }: {
   conversationId: string;
   status: string;
-  artisanId: string;
+  artisanId?: string | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -83,13 +83,15 @@ export function AdminConversationActions({
             Cancelar
           </button>
         )}
-        <button
-          onClick={() => setWarningTarget("ARTISAN")}
-          disabled={isPending}
-          className="rounded-md border border-amber-200 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50 min-h-[44px]"
-        >
-          Aviso al orfebre
-        </button>
+        {artisanId && (
+          <button
+            onClick={() => setWarningTarget("ARTISAN")}
+            disabled={isPending}
+            className="rounded-md border border-amber-200 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50 min-h-[44px]"
+          >
+            Aviso al orfebre
+          </button>
+        )}
         <button
           onClick={() => setWarningTarget("BUYER")}
           disabled={isPending}
@@ -97,13 +99,15 @@ export function AdminConversationActions({
         >
           Aviso al comprador
         </button>
-        <button
-          onClick={handleSuspendArtisan}
-          disabled={isPending}
-          className="rounded-md border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 min-h-[44px]"
-        >
-          Suspender orfebre
-        </button>
+        {artisanId && (
+          <button
+            onClick={handleSuspendArtisan}
+            disabled={isPending}
+            className="rounded-md border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 min-h-[44px]"
+          >
+            Suspender orfebre
+          </button>
+        )}
         <button
           onClick={() => {
             if (!confirmDelete) { setConfirmDelete(true); return; }
