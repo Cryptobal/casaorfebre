@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { TrackingLink } from "@/components/tracking-link";
 import { AdminStatusChanger, ReleasePayoutButton } from "./admin-order-actions";
+import { StartAdminChatButton } from "../../compradores/[id]/start-admin-chat-button";
 import type { OrderStatus, FulfillmentStatus, PayoutStatus } from "@prisma/client";
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -60,7 +61,7 @@ export default async function AdminOrderDetailPage({
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
-      user: { select: { name: true, email: true } },
+      user: { select: { id: true, name: true, email: true } },
       items: {
         include: {
           product: { select: { name: true } },
@@ -79,6 +80,16 @@ export default async function AdminOrderDetailPage({
   });
 
   if (!order) notFound();
+
+  const adminConversation = await prisma.conversation.findFirst({
+    where: {
+      buyerId: order.userId,
+      adminId: { not: null },
+      artisanId: null,
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
 
   // Group items by artisan for financial breakdown
   const artisanGroups = new Map<
@@ -153,9 +164,20 @@ export default async function AdminOrderDetailPage({
 
       {/* Buyer info */}
       <Card className="mt-6">
-        <h2 className="text-sm font-medium text-text-secondary">Comprador</h2>
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="text-sm font-medium text-text-secondary">Comprador</h2>
+          <StartAdminChatButton
+            buyerId={order.userId}
+            existingConversationId={adminConversation?.id}
+          />
+        </div>
         <div className="mt-2 text-sm">
-          <p className="font-medium text-text">{order.user.name || "Sin nombre"}</p>
+          <Link
+            href={`/portal/admin/compradores/${order.userId}`}
+            className="font-medium text-text hover:text-accent"
+          >
+            {order.user.name || "Sin nombre"}
+          </Link>
           <p className="text-text-secondary">{order.user.email}</p>
         </div>
         <div className="mt-3 border-t border-border pt-3 text-sm">
