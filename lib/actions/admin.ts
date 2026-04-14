@@ -230,12 +230,27 @@ export async function approveProduct(
   });
   if (!product) return { error: "Producto no encontrado" };
 
+  let finalSlug = product.slug;
+  if (product.slug.startsWith("borrador-")) {
+    let candidate = slugify(product.name);
+    if (!candidate) candidate = `producto-${productId.slice(0, 8)}`;
+    const clash = await prisma.product.findFirst({
+      where: { slug: candidate, NOT: { id: productId } },
+      select: { id: true },
+    });
+    if (clash) {
+      candidate = `${candidate}-${Math.random().toString(36).substring(2, 7)}`;
+    }
+    finalSlug = candidate;
+  }
+
   await prisma.$transaction([
     prisma.product.update({
       where: { id: productId },
       data: {
         status: "APPROVED",
         publishedAt: new Date(),
+        slug: finalSlug,
       },
     }),
     // Auto-approve all pending photos when product is approved
