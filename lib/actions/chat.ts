@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { filterMessage } from "@/lib/chat-filter";
+import { getAdminEmails } from "@/lib/config";
 import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------
@@ -208,23 +209,45 @@ export async function sendMessage(conversationId: string, content: string) {
 
       const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
       if (!lastNotified || lastNotified < fiveMinAgo) {
-        const recipientEmail = recipientIsBuyer ? conversation.buyer.email : (conversation.admin?.email || "");
-        const recipientName = recipientIsBuyer
-          ? conversation.buyer.name || "Comprador"
-          : conversation.admin?.name || "Admin";
         const senderName = isBuyer
           ? conversation.buyer.name || "Comprador"
           : "Casa Orfebre";
-        const conversationUrl = recipientIsBuyer
-          ? `/portal/comprador/mensajes/${conversationId}`
-          : `/portal/admin/mensajes/${conversationId}`;
+        const preview = trimmed.slice(0, 100);
 
-        if (recipientEmail) {
-          await sendNewMessageEmail(recipientEmail, recipientName, senderName, trimmed.slice(0, 100), conversationUrl);
-          await prisma.conversation.update({
-            where: { id: conversationId },
-            data: { [notifField]: new Date() },
-          });
+        if (recipientIsBuyer) {
+          // Buyer receives the email
+          const recipientEmail = conversation.buyer.email;
+          const recipientName = conversation.buyer.name || "Comprador";
+          const conversationUrl = `/portal/comprador/mensajes/${conversationId}`;
+          if (recipientEmail) {
+            await sendNewMessageEmail(recipientEmail, recipientName, senderName, preview, conversationUrl);
+            await prisma.conversation.update({
+              where: { id: conversationId },
+              data: { [notifField]: new Date() },
+            });
+          }
+        } else {
+          // All admins receive the email when buyer replies
+          const conversationUrl = `/portal/admin/mensajes/${conversationId}`;
+          const adminEmails = Array.from(
+            new Set(
+              [
+                ...getAdminEmails(),
+                ...(conversation.admin?.email ? [conversation.admin.email] : []),
+              ].filter(Boolean),
+            ),
+          );
+          if (adminEmails.length > 0) {
+            await Promise.all(
+              adminEmails.map((email) =>
+                sendNewMessageEmail(email, "Admin", senderName, preview, conversationUrl),
+              ),
+            );
+            await prisma.conversation.update({
+              where: { id: conversationId },
+              data: { [notifField]: new Date() },
+            });
+          }
         }
       }
     } else if (conversation.artisanId) {
