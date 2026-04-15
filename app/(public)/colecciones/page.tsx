@@ -68,7 +68,11 @@ async function getCuratedCollections() {
         select: { images: { take: 1, orderBy: { position: "asc" } } },
         take: 1,
       },
-      _count: { select: { products: true } },
+      _count: {
+        select: {
+          products: { where: { status: "APPROVED" } },
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -153,13 +157,13 @@ export default async function ColeccionesPage() {
       )}
 
       {/* Curated Collections */}
-      {curatedCollections.length > 0 && (
+      {curatedCollections.filter((c) => c._count.products > 0).length > 0 && (
         <div className="mt-16">
           <h2 className="mb-6 font-serif text-xl font-light text-text">
             Colecciones curadas
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {curatedCollections.map((col, i) => {
+            {curatedCollections.filter((c) => c._count.products > 0).map((col, i) => {
               const coverImage = col.coverImage || col.products[0]?.images[0]?.url;
               return (
                 <FadeIn key={col.id} delay={i * 80}>

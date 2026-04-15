@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { CollectionSuggestion } from "@/lib/ai/collections";
@@ -193,27 +194,40 @@ export function CuratedCollectionsManager({ initialCollections }: CuratedCollect
             {collections.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between gap-4 rounded-md border border-border bg-surface p-4"
+                className="rounded-md border border-border bg-surface p-4"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-text">{c.name}</h3>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        c.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {c.isActive ? "Visible" : "Oculta"}
-                    </span>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/portal/admin/colecciones/${c.id}`}
+                        className="font-medium text-text underline-offset-2 hover:text-accent hover:underline"
+                      >
+                        {c.name}
+                      </Link>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          c.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {c.isActive ? "Visible" : "Oculta"}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-text-tertiary break-words">
+                      {c._count.products} productos &middot; /{c.slug}
+                      {c.curatedAt && ` \u00b7 Curada ${new Date(c.curatedAt).toLocaleDateString("es-CL")}`}
+                    </p>
                   </div>
-                  <p className="mt-0.5 text-xs text-text-tertiary">
-                    {c._count.products} productos &middot; /{c.slug}
-                    {c.curatedAt && ` \u00b7 Curada ${new Date(c.curatedAt).toLocaleDateString("es-CL")}`}
-                  </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/portal/admin/colecciones/${c.id}`}
+                    className="rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:bg-background"
+                  >
+                    Gestionar piezas
+                  </Link>
                   <button
                     type="button"
                     disabled={togglingId === c.id}
@@ -228,7 +242,7 @@ export function CuratedCollectionsManager({ initialCollections }: CuratedCollect
                     onClick={() => handleRefresh(c.id)}
                     className="rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:bg-background disabled:opacity-50"
                   >
-                    {refreshingId === c.id ? "..." : "Actualizar productos"}
+                    {refreshingId === c.id ? "..." : "Actualizar IA"}
                   </button>
                 </div>
               </div>

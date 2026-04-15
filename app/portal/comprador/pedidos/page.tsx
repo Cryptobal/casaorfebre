@@ -60,9 +60,9 @@ export default async function BuyerOrdersPage() {
               key={order.id}
               href={`/portal/comprador/pedidos/${order.id}`}
             >
-              <Card className="flex cursor-pointer items-center justify-between transition-colors hover:bg-background hover:border-accent/40">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-text">
+              <Card className="flex cursor-pointer items-center justify-between gap-3 transition-colors hover:bg-background hover:border-accent/40">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium text-text break-words">
                     Pedido #{order.orderNumber}
                     {order.isGift && (
                       <span className="ml-1.5" role="img" aria-label="Regalo">🎁</span>
@@ -80,13 +80,13 @@ export default async function BuyerOrdersPage() {
                     {order.items.length === 1 ? "pieza" : "piezas"}
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex shrink-0 flex-col items-end gap-2">
                   <span
                     className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[order.status]}`}
                   >
                     {statusLabels[order.status]}
                   </span>
-                  <p className="text-sm font-semibold text-text">
+                  <p className="text-sm font-semibold text-text whitespace-nowrap">
                     {formatCLP(order.total)}
                   </p>
                 </div>
