@@ -1,8 +1,8 @@
 const TRACKING_URLS: Record<string, (tn: string) => string> = {
-  Chilexpress: (tn) => `https://www.chilexpress.cl/estado-de-tu-envio/?tracking-number=${tn}`,
-  Starken: (tn) => `https://www.starken.cl/seguimiento?codigo=${tn}`,
-  "Blue Express": (tn) => `https://www.bluex.cl/seguimiento/?n=${tn}`,
-  "Correos de Chile": (tn) => `https://www.correos.cl/web/guest/seguimiento-en-linea?codigos=${tn}`,
+  Chilexpress: (tn) => `https://centrodeayuda.chilexpress.cl/seguimiento/${encodeURIComponent(tn)}`,
+  Starken: (tn) => `https://www.starken.cl/seguimiento?codigo=${encodeURIComponent(tn)}`,
+  "Blue Express": (tn) => `https://tracking-unificado.blue.cl/?os=${encodeURIComponent(tn)}`,
+  "Correos de Chile": (tn) => `https://www.correos.cl/web/guest/seguimiento-en-linea?codigos=${encodeURIComponent(tn)}`,
 };
 
 export function getTrackingUrl(carrier: string, trackingNumber: string): string | null {

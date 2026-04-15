@@ -1,6 +1,7 @@
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { emailLayout } from "./base-layout";
 import { formatCLP } from "@/lib/utils";
+import { getTrackingUrl } from "@/lib/tracking";
 
 /** Base URL for links in transactional emails (no trailing slash). */
 function appUrl(): string {
@@ -303,18 +304,6 @@ export async function sendNewOrderToArtisanEmail(
 // ---------------------------------------------------------------------------
 // 6. Order Shipped
 // ---------------------------------------------------------------------------
-
-const CARRIER_TRACKING_URLS: Record<string, string> = {
-  "Chilexpress": "https://www.chilexpress.cl/estado-de-envio?tracking=",
-  "Starken": "https://www.starken.cl/seguimiento?codigo=",
-  "Correos de Chile": "https://www.correos.cl/web/guest/seguimiento-en-linea?tracking=",
-  "Blue Express": "https://www.blue.cl/seguimiento/?n=",
-};
-
-function getTrackingUrl(carrier: string, trackingNumber: string): string | null {
-  const base = CARRIER_TRACKING_URLS[carrier];
-  return base ? `${base}${encodeURIComponent(trackingNumber)}` : null;
-}
 
 // ─── Order Preparing Email (buyer) ─────────────────────────────────
 export async function sendOrderPreparingEmail(
