@@ -8,21 +8,28 @@ const ROLE_SWITCHER_EMAILS = [
 ];
 
 export async function RoleSwitcherWrapper() {
+  let session;
   try {
-    const session = await auth();
-    if (!session?.user?.email) return null;
-    if (!ROLE_SWITCHER_EMAILS.includes(session.user.email)) return null;
+    session = await auth();
+  } catch (e) {
+    console.error("[RoleSwitcherWrapper] auth() failed:", e);
+    return null;
+  }
+  if (!session?.user?.email) return null;
+  if (!ROLE_SWITCHER_EMAILS.includes(session.user.email)) return null;
 
+  // Fallback to session role so the switcher ALWAYS renders for authorized users,
+  // even if the prisma lookup fails or is slow.
+  let currentRole: string = session.user.role || "ADMIN";
+  try {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { activeRole: true, role: true },
     });
-
-    const currentRole = user?.activeRole || user?.role || "ADMIN";
-
-    return <RoleSwitcher currentRole={currentRole} />;
+    currentRole = user?.activeRole || user?.role || currentRole;
   } catch (e) {
-    console.error("[RoleSwitcherWrapper] Error rendering role switcher:", e);
-    return null;
+    console.error("[RoleSwitcherWrapper] prisma lookup failed, using session role:", e);
   }
+
+  return <RoleSwitcher currentRole={currentRole} />;
 }

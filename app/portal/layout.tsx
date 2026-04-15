@@ -10,6 +10,7 @@ import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
 import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
 import { PortalChatbot } from "@/components/chat/portal-chatbot";
+import { RoleSwitcherInline } from "@/components/shared/role-switcher-inline";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -221,6 +222,11 @@ export default async function PortalLayout({ children }: { children: React.React
         <Link href="/" className="mb-6 flex items-center gap-2 text-text-secondary transition-colors hover:text-text">
           <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={100} height={24} />
         </Link>
+        {isRoleSwitcher && (
+          <div className="mb-4">
+            <RoleSwitcherInline currentRole={role} />
+          </div>
+        )}
         <p className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">Portal</p>
         <nav className="space-y-2">
           {role === "ADMIN" && (
@@ -337,6 +343,11 @@ export default async function PortalLayout({ children }: { children: React.React
           </Link>
           {role === "ARTISAN" && <OrfebreTour />}
           {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
+          {isRoleSwitcher && (
+            <div className="ml-auto">
+              <RoleSwitcherInline currentRole={role} />
+            </div>
+          )}
         </div>
 
         <div className="max-w-full min-w-0 p-4 pb-32 sm:p-6 sm:pb-32 lg:p-8 lg:pb-32">{children}</div>
