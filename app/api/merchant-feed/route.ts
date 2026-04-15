@@ -42,7 +42,8 @@ export async function GET() {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&apos;");
+      .replace(/'/g, "&apos;")
+      .replace(/[\u0080-\uFFFF]/g, (c) => `&#${c.charCodeAt(0)};`);
 
   const absUrl = (u: string) => (u.startsWith("http") ? u : `${baseUrl}${u}`);
 
@@ -101,7 +102,7 @@ ${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price
       <g:identifier_exists>false</g:identifier_exists>
       <g:shipping>
         <g:country>CL</g:country>
-        <g:service>Envío estándar</g:service>
+        <g:service>${escapeXml("Envío estándar")}</g:service>
         <g:price>0.00 CLP</g:price>
       </g:shipping>
     </item>`;
@@ -111,14 +112,14 @@ ${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
-    <title>Casa Orfebre — Joyería de Autor</title>
+    <title>${escapeXml("Casa Orfebre — Joyería de Autor")}</title>
     <link>${baseUrl}</link>
-    <description>Marketplace curado de joyería artesanal de plata</description>
+    <description>${escapeXml("Marketplace curado de joyería artesanal de plata")}</description>
 ${items}
   </channel>
 </rss>`;
 
-  return new NextResponse(xml, {
+  return new NextResponse(Buffer.from(xml, "utf-8"), {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
     },
