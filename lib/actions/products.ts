@@ -870,3 +870,48 @@ export async function deleteProductImage(
   revalidatePath("/portal/orfebre/productos");
   return { success: true };
 }
+
+/**
+ * Persist image ordering for a product without changing its status.
+ * Reordering photos is considered a minor presentation change and does not
+ * require a new review cycle — even for APPROVED products.
+ */
+export async function reorderProductImages(
+  productId: string,
+  imageIds: string[]
+): Promise<{ error?: string; success?: boolean }> {
+  const artisan = await getArtisan();
+  if (!artisan) return { error: "No tienes permisos" };
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { images: { select: { id: true } } },
+  });
+
+  if (!product || product.artisanId !== artisan.id) {
+    return { error: "Producto no encontrado" };
+  }
+
+  if (product.status === "PENDING_REVIEW") {
+    return { error: "No puedes reordenar imágenes mientras la pieza está en revisión" };
+  }
+
+  const existingIds = new Set(product.images.map((i) => i.id));
+  const sanitized = imageIds.filter((id) => existingIds.has(id));
+  if (sanitized.length !== product.images.length) {
+    return { error: "Orden inválido: faltan imágenes" };
+  }
+
+  try {
+    await prisma.$transaction(
+      sanitized.map((id, position) =>
+        prisma.productImage.update({ where: { id }, data: { position } })
+      )
+    );
+    revalidatePath("/portal/orfebre/productos");
+    revalidatePath(`/portal/orfebre/productos/${productId}`);
+    return { success: true };
+  } catch {
+    return { error: "Error al guardar el orden de las imágenes" };
+  }
+}

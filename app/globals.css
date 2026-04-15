@@ -32,6 +32,18 @@ body {
   color: white;
 }
 
+/* Mobile tap responsiveness: remove 300ms delay and highlight flash on all interactive elements */
+button,
+a,
+[role="button"],
+label,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Blog article prose styles */
 .prose-blog h2 {
   font-family: var(--font-serif);

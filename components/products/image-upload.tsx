@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { PhotographyGuide } from "./photography-guide";
+import { reorderProductImages } from "@/lib/actions/products";
 
 const MAX_UPLOAD_SIZE = 4 * 1024 * 1024; // 4MB — Vercel serverless body limit is ~4.5MB
 
@@ -83,7 +83,26 @@ export function ImageUpload({
   const [uploadingCount, setUploadingCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<"idle" | "saving" | "saved">("idle");
   const inputRef = useRef<HTMLInputElement>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const persistOrder = useCallback(
+    async (orderedIds: string[]) => {
+      setOrderStatus("saving");
+      const result = await reorderProductImages(productId, orderedIds);
+      if (result.error) {
+        setError(result.error);
+        setOrderStatus("idle");
+        return;
+      }
+      setError(null);
+      setOrderStatus("saved");
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setOrderStatus("idle"), 2000);
+    },
+    [productId]
+  );
 
   const updateImages = useCallback(
     (next: ImageItem[]) => {
@@ -198,20 +217,32 @@ export function ImageUpload({
         [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
         const reordered = next.map((img, i) => ({ ...img, position: i }));
         onImagesChange?.(reordered);
+        persistOrder(reordered.map((img) => img.id));
         return reordered;
       });
     },
-    [onImagesChange]
+    [onImagesChange, persistOrder]
   );
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-serif text-lg font-semibold text-text">
-          Imagenes del Producto
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-serif text-lg font-semibold text-text">
+            Imagenes del Producto
+          </h3>
+          {orderStatus === "saving" && (
+            <span className="text-xs text-text-tertiary">Guardando orden…</span>
+          )}
+          {orderStatus === "saved" && (
+            <span className="text-xs text-green-700">Orden guardado</span>
+          )}
+        </div>
         <PhotographyGuide />
       </div>
+      <p className="text-xs text-text-tertiary">
+        Puedes reordenar las fotos en cualquier momento: el nuevo orden se guarda automáticamente y no requiere enviar a revisión.
+      </p>
 
       {error && (
         <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
