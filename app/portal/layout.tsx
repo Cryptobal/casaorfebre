@@ -339,7 +339,7 @@ export default async function PortalLayout({ children }: { children: React.React
           {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
         </div>
 
-        <div className="max-w-full min-w-0 p-4 pb-16 sm:p-6 sm:pb-16 lg:p-8 lg:pb-16">{children}</div>
+        <div className="max-w-full min-w-0 p-4 pb-32 sm:p-6 sm:pb-32 lg:p-8 lg:pb-32">{children}</div>
       </div>
       {(role === "ARTISAN" || role === "BUYER" || role === "ADMIN") && (
         <PortalChatbot portalContext={role === "ADMIN" ? "admin" : role === "ARTISAN" ? "orfebre" : "comprador"} />
