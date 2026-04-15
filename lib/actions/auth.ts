@@ -150,17 +150,40 @@ export async function loginWithCredentials(
   _prevState: { error: string } | null,
   formData: FormData
 ) {
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
+  const password = formData.get("password") as string;
+  const callbackUrlRaw = formData.get("callbackUrl") as string | undefined;
+
   try {
     await signIn("credentials", {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      email,
+      password,
       redirect: false,
     });
-  } catch {
+  } catch (err) {
+    // Re-throw Next.js redirect signals (they are not auth errors)
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("NEXT_REDIRECT")) throw err;
     return { error: "Email o contraseña incorrectos" };
   }
+
   revalidatePath("/", "layout");
-  redirect(safeInternalPath(formData.get("callbackUrl") as string | undefined));
+
+  // If there's an explicit callbackUrl use it; otherwise send admins to the
+  // admin portal and everyone else to their buyer dashboard.
+  const explicitCallback = safeInternalPath(callbackUrlRaw);
+  if (explicitCallback !== "/") {
+    redirect(explicitCallback);
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { email },
+    select: { role: true },
+  });
+  const role = dbUser?.role ?? "BUYER";
+  if (role === "ADMIN") redirect("/portal/admin");
+  if (role === "ARTISAN") redirect("/portal/orfebre/productos");
+  redirect("/portal/comprador/pedidos");
 }
 
 export async function register(
