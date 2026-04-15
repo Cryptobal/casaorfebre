@@ -178,7 +178,7 @@ export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "c
     <>
       {/* Floating button with subtle hint */}
       <div
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 transition-all duration-500"
+        className="fixed bottom-20 right-6 z-40 flex items-center gap-2 transition-all duration-500"
         style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
       >
         {!open && (
@@ -215,7 +215,7 @@ export function PortalChatbot({ portalContext }: { portalContext: "orfebre" | "c
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-[#e8e5df] bg-white shadow-2xl max-md:inset-0 max-md:rounded-none max-md:border-0 md:bottom-24 md:right-6 md:h-[500px] md:w-[400px]">
+        <div className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-[#e8e5df] bg-white shadow-2xl max-md:inset-0 max-md:rounded-none max-md:border-0 md:bottom-36 md:right-6 md:h-[500px] md:w-[400px]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#e8e5df] bg-[#FAFAF8] px-4 py-3">
             <div className="flex items-center gap-2">
