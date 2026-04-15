@@ -55,9 +55,9 @@ export default async function BuyerGiftCardsPage() {
               const status = STATUS_LABELS[gc.status] || { label: gc.status, color: "bg-gray-100 text-gray-600" };
               return (
                 <div key={gc.id} className="rounded-lg border border-border bg-surface p-4">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap sm:gap-4">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-text">
+                      <p className="text-sm font-medium text-text break-words">
                         {formatCLP(gc.amount)} → {gc.recipientEmail}
                       </p>
                       <p className="mt-0.5 text-xs text-text-tertiary">
@@ -65,7 +65,7 @@ export default async function BuyerGiftCardsPage() {
                         {gc.createdAt.toLocaleDateString("es-CL")}
                       </p>
                     </div>
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
+                    <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
                       {status.label}
                     </span>
                   </div>
@@ -92,20 +92,20 @@ export default async function BuyerGiftCardsPage() {
 
               return (
                 <div key={gc.id} className="rounded-lg border border-border bg-surface p-4">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium text-text">
                           Saldo: {formatCLP(gc.balance)}
                           {gc.balance < gc.amount && (
                             <span className="ml-1 text-text-tertiary">/ {formatCLP(gc.amount)}</span>
                           )}
                         </p>
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
+                        <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
                           {status.label}
                         </span>
                       </div>
-                      <p className="mt-1 font-mono text-xs tracking-wider text-text-secondary">
+                      <p className="mt-1 break-all font-mono text-xs tracking-wider text-text-secondary">
                         {formatGiftCardCode(gc.code)}
                       </p>
                       <p className="mt-0.5 text-xs text-text-tertiary">
@@ -115,7 +115,7 @@ export default async function BuyerGiftCardsPage() {
                     {hasBalance && (
                       <Link
                         href="/coleccion"
-                        className="flex-shrink-0 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-accent/90"
+                        className="inline-flex w-full shrink-0 items-center justify-center rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-accent/90 sm:w-auto"
                       >
                         Usar ahora →
                       </Link>

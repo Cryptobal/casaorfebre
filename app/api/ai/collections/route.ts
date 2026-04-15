@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { aiCollectionLimiter } from "@/lib/rate-limit";
+import { revalidatePath } from "next/cache";
 import {
   suggestCollections,
   refreshCollectionProducts,
@@ -97,6 +98,9 @@ export async function POST(req: Request) {
         include: { _count: { select: { products: true } } },
       });
 
+      revalidatePath("/colecciones");
+      revalidatePath("/portal/admin/colecciones");
+
       return Response.json({ collection });
     }
 
@@ -138,6 +142,11 @@ export async function POST(req: Request) {
           },
         },
       });
+
+      revalidatePath("/colecciones");
+      revalidatePath(`/colecciones/${collection.slug}`);
+      revalidatePath("/portal/admin/colecciones");
+      revalidatePath(`/portal/admin/colecciones/${body.collectionId}`);
 
       return Response.json({
         stats: { added: added.length, removed: removed.length, total: filteredIds.length },

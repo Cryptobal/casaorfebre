@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export async function PATCH(
   req: Request,
@@ -17,6 +18,11 @@ export async function PATCH(
     where: { id },
     data: { isActive: body.isActive },
   });
+
+  revalidatePath("/colecciones");
+  revalidatePath(`/colecciones/${collection.slug}`);
+  revalidatePath(`/portal/admin/colecciones`);
+  revalidatePath(`/portal/admin/colecciones/${id}`);
 
   return Response.json({ collection });
 }
