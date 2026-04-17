@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getApprovedProducts } from "@/lib/queries/products";
-import { generateFAQJsonLd } from "@/lib/seo";
+import { generateFAQJsonLd, generateHowToJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ProductCard } from "@/components/products/product-card";
@@ -112,6 +112,19 @@ export default async function OroGuiaPage() {
 
   return (
     <>
+      <JsonLd data={generateHowToJsonLd({
+        name: "Cómo diferenciar oro 18k de baño de oro",
+        description: "Aprende a distinguir entre joyería de oro 18k macizo y piezas con baño de oro.",
+        url: "https://casaorfebre.cl/guia/oro-18k-bano-oro",
+        totalTime: "PT5M",
+        steps: [
+          { name: "Revisar el sello", text: "El oro 18k lleva los sellos '750', '18k' o '18kt'. El baño de oro se marca como 'GP', 'GF' o 'gold plated'." },
+          { name: "Observar los bordes", text: "En piezas con baño de oro, el recubrimiento puede desgastarse revelando el metal base (normalmente plata o latón). El oro macizo es uniforme." },
+          { name: "Peso", text: "El oro 18k es considerablemente más pesado que una pieza bañada del mismo tamaño." },
+          { name: "Prueba del ácido o magnetismo", text: "El oro puro no reacciona a imanes. En laboratorio, ácido nítrico verifica el grado." },
+          { name: "Certificado de material", text: "En Casa Orfebre cada pieza de oro incluye certificado digital de autenticidad." },
+        ],
+      })} />
       <JsonLd data={faqJsonLd} />
 
       <article className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 lg:px-8">

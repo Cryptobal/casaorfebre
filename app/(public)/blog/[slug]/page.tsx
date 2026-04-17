@@ -9,7 +9,7 @@ import { ShareButtons } from "@/components/shared/share-buttons";
 import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { RelatedProducts } from "@/components/blog/related-products";
 import { slugify } from "@/lib/utils";
-import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, generateArticleJsonLd } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -120,27 +120,21 @@ export default async function BlogPostPage({
     new Set(allPublished.flatMap((p) => p.tags).concat(post.tags)),
   ).sort();
 
-  const jsonLdData = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: post.seoDescription || post.excerpt,
-    ...(post.coverImage ? { image: post.coverImage.startsWith("http") ? post.coverImage : `${appUrl}${post.coverImage}` } : {}),
-    datePublished: post.publishedAt?.toISOString(),
+  const wordCount = contentHtml
+    ? contentHtml.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length
+    : undefined;
+
+  const jsonLdData = generateArticleJsonLd({
+    title: post.title,
+    description: post.seoDescription || post.excerpt || "",
+    slug: post.slug,
+    image: post.coverImage || undefined,
+    datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
     dateModified: post.updatedAt.toISOString(),
-    author: {
-      "@type": "Organization",
-      name: "Casa Orfebre",
-      url: appUrl,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Casa Orfebre",
-      url: appUrl,
-      logo: { "@type": "ImageObject", url: `${appUrl}/casaorfebre-logo-compact.svg` },
-    },
-    mainEntityOfPage: { "@type": "WebPage", "@id": `${appUrl}/blog/${post.slug}` },
-  };
+    category: categoryLabels[post.category] || post.category,
+    tags: post.tags,
+    wordCount,
+  });
 
   // JSON-LD contains only controlled data — no user input
   const jsonLdHtml = JSON.stringify(jsonLdData);
