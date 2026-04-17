@@ -94,14 +94,11 @@ export default async function TesorosDeChilePage() {
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: allProducts.length,
-      itemListElement: allProducts.map((p, i) => ({
+      itemListElement: allProducts.map((p: any, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        item: {
-          "@type": "Product",
-          name: p.name,
-          url: `https://casaorfebre.cl/coleccion/${p.slug}`,
-        },
+        name: p.name,
+        url: `https://casaorfebre.cl/coleccion/${p.slug}`,
       })),
     },
   };

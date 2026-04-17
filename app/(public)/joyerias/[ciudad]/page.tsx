@@ -20,12 +20,12 @@ export const generateStaticParams = () => {
   }));
 };
 
-export const generateMetadata = ({
+export const generateMetadata = async ({
   params,
 }: {
   params: Promise<{ ciudad: string }>;
-}): Metadata => {
-  const ciudad = (params as any).ciudad;
+}): Promise<Metadata> => {
+  const { ciudad } = await params;
   const cityData = CITIES.find((c) => c.slug === ciudad);
 
   if (!cityData) {

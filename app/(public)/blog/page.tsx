@@ -79,6 +79,7 @@ export default async function BlogPage({
           <SectionHeading
             title="Blog"
             subtitle="Historias, guías y cultura del mundo de la orfebrería artesanal chilena"
+            as="h1"
           />
         </FadeIn>
       </section>

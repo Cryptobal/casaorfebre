@@ -31,7 +31,7 @@ export async function generateMetadata({
   const ogImageUrl = `${baseUrl}/api/og/artisan?name=${encodeURIComponent(artisan.displayName)}&region=${encodeURIComponent(artisan.region || "")}&products=${artisan.products.length}${artisan.profileImage ? `&image=${encodeURIComponent(artisan.profileImage)}` : ""}`;
 
   return {
-    title: artisan.displayName,
+    title: `${artisan.displayName} — Orfebre | Casa Orfebre`,
     description,
     alternates: { canonical: url },
     openGraph: {
@@ -115,10 +115,17 @@ export default async function ArtisanProfilePage({
       ? {
           makesOffer: artisan.products.slice(0, 10).map((p: any) => ({
             "@type": "Offer",
+            price: p.price,
+            priceCurrency: "CLP",
+            availability: "https://schema.org/InStock",
+            url: `${baseUrl}/coleccion/${p.slug}`,
             itemOffered: {
               "@type": "Product",
               name: p.name,
-              url: `${process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"}/coleccion/${p.slug}`,
+              image:
+                p.images?.[0]?.url ||
+                `${baseUrl}/casaorfebre-og-image.png`,
+              url: `${baseUrl}/coleccion/${p.slug}`,
             },
           })),
         }

@@ -57,6 +57,22 @@ function stripJsxArtifacts(md: string): string {
   return cleaned.trim();
 }
 
+// Shift all heading levels in rendered HTML down by one so article content
+// never emits <h1> (the page title already uses the only <h1>).
+function downshiftHeadings(html: string): string {
+  return html
+    .replace(/<h5(\s[^>]*)?>/gi, "<h6$1>")
+    .replace(/<\/h5>/gi, "</h6>")
+    .replace(/<h4(\s[^>]*)?>/gi, "<h5$1>")
+    .replace(/<\/h4>/gi, "</h5>")
+    .replace(/<h3(\s[^>]*)?>/gi, "<h4$1>")
+    .replace(/<\/h3>/gi, "</h4>")
+    .replace(/<h2(\s[^>]*)?>/gi, "<h3$1>")
+    .replace(/<\/h2>/gi, "</h3>")
+    .replace(/<h1(\s[^>]*)?>/gi, "<h2$1>")
+    .replace(/<\/h1>/gi, "</h2>");
+}
+
 /**
  * Render Markdown to sanitized HTML for blog content.
  * Strips JSX artifacts and XSS vectors.
@@ -65,10 +81,12 @@ export function renderMarkdown(content: string): string {
   const cleaned = stripJsxArtifacts(content);
   const html = marked.parse(cleaned) as string;
 
-  return html
+  const sanitized = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/\bon\w+\s*=\s*"[^"]*"/gi, "")
     .replace(/\bon\w+\s*=\s*'[^']*'/gi, "");
+
+  return downshiftHeadings(sanitized);
 }
 
 /**

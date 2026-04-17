@@ -60,12 +60,8 @@ export default function JoyeriasPage() {
       itemListElement: CITIES.map((city, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        item: {
-          "@type": "LocalBusiness",
-          name: city.name,
-          url: `${baseUrl}/joyerias/${city.slug}`,
-          areaServed: city.region,
-        },
+        name: `Joyería Artesanal en ${city.name}`,
+        url: `${baseUrl}/joyerias/${city.slug}`,
       })),
     },
   };

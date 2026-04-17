@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps) {
   const ogImageUrl = `${baseUrl}/api/og/product?name=${encodeURIComponent(product.name)}&artisan=${encodeURIComponent(product.artisan.displayName)}&price=${encodeURIComponent(priceFormatted)}${imageUrl ? `&image=${encodeURIComponent(imageUrl)}` : ""}`;
 
   return {
-    title: product.name,
+    title: `${product.name} | Casa Orfebre`,
     description,
     alternates: { canonical: url },
     openGraph: {
@@ -162,18 +162,29 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
   if (product.stones?.length > 0) {
     product.stones.forEach((stone: any) => {
-      additionalProps.push({
-        "@type": "PropertyValue",
-        name: "Piedra",
-        value: [stone.quantity > 1 ? `${stone.quantity}×` : "", stone.stoneType, stone.stoneCarat ? `${stone.stoneCarat} ct` : "", stone.stoneOrigin === "natural" ? "natural" : ""].filter(Boolean).join(" "),
-      });
+      const stoneValue = [
+        stone.quantity > 1 ? `${stone.quantity}×` : "",
+        stone.stoneType,
+        stone.stoneCarat ? `${stone.stoneCarat} ct` : "",
+        stone.stoneOrigin === "natural" ? "natural" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      if (stoneValue) {
+        additionalProps.push({
+          "@type": "PropertyValue",
+          name: "Piedra",
+          value: stoneValue,
+        });
+      }
     });
   }
   if (product.technique) {
     additionalProps.push({ "@type": "PropertyValue", name: "Técnica", value: product.technique });
   }
 
-  const genderMap: Record<string, string> = { MUJER: "female", HOMBRE: "male", UNISEX: "unisex" };
+  const genderMap: Record<string, string> = { MUJER: "female", HOMBRE: "male" };
   const gender = genderMap[product.audiencia] ?? undefined;
 
   const jsonLd = {
@@ -257,7 +268,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       ? {
           aggregateRating: {
             "@type": "AggregateRating",
-            ratingValue: reviewAgg._avg.rating,
+            ratingValue: Number(reviewAgg._avg.rating),
             reviewCount: reviewAgg._count,
             bestRating: 5,
             worstRating: 1,
@@ -266,25 +277,29 @@ export default async function ProductDetailPage({ params }: PageProps) {
       : {}),
     ...(reviewList.length > 0
       ? {
-          review: reviewList.map((r) => ({
-            "@type": "Review",
-            reviewRating: {
-              "@type": "Rating",
-              ratingValue: r.rating,
-              bestRating: 5,
-              worstRating: 1,
-            },
-            author: {
-              "@type": "Person",
-              name: r.user.name || "Cliente verificado",
-            },
-            datePublished: r.createdAt.toISOString().split("T")[0],
-            reviewBody: r.comment,
-          })),
+          review: reviewList
+            .filter((r) => r.comment)
+            .map((r) => ({
+              "@type": "Review",
+              reviewRating: {
+                "@type": "Rating",
+                ratingValue: r.rating,
+                bestRating: 5,
+                worstRating: 1,
+              },
+              author: {
+                "@type": "Person",
+                name: r.user.name || "Cliente verificado",
+              },
+              datePublished: r.createdAt.toISOString().split("T")[0],
+              reviewBody: r.comment,
+            })),
         }
       : {}),
-    isHandmade: true,
-    countryOfOrigin: "Chile",
+    countryOfOrigin: {
+      "@type": "Country",
+      name: "Chile",
+    },
   };
 
   return (
