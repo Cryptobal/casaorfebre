@@ -1,53 +1,47 @@
-Casa Orfebre — Joyería de Autor
+# Casa Orfebre
 
-Marketplace curado de joyería artesanal chilena. Conectamos compradores con orfebres independientes verificados.
+> Marketplace curado chileno de joyería artesanal de autor. Conecta orfebres y joyeros independientes de Chile con compradores que buscan piezas únicas en plata 925, plata 950, oro 18k, cobre y bronce, hechas a mano y con certificado digital de autenticidad.
 
-Qué es Casa Orfebre
-Casa Orfebre (casaorfebre.cl) es una plataforma de e-commerce especializada en joyería de autor hecha a mano por orfebres chilenos independientes. Cada artesano es verificado a través de un proceso de curaduría profesional. Operamos desde Chile con envíos a todo el país.
+Casa Orfebre es una galería editorial de joyería artesanal —no un marketplace masivo. Cada pieza publicada pasa por curación, cada orfebre es verificado, y cada venta incluye certificado de autenticidad digital vinculado a la pieza.
 
-Catálogo
-Categorías: Anillos, Collares, Aros, Pulseras, Broches, Colgantes
-Materiales: Plata 950, Plata 925, Oro 18k, Cobre, Bronce, Alpaca, Piedras naturales chilenas (lapislázuli, cuarzo, obsidiana)
-Tipos de producción: Pieza Única, Edición Limitada, Producción Artesanal
-Rango de precios: $15.000 - $500.000 CLP
-Técnicas: fundición, engaste, filigrana, repujado, esmaltado, forja, tejido en metal
+## Categorías principales
 
-Garantías para compradores
-Pago seguro con tarjeta (Visa, Mastercard, débito) vía Mercado Pago
-Garantía de satisfacción de 14 días
-Certificado de autenticidad con código QR verificable por cada pieza
-Tracking de envío en tiempo real vía Chilexpress
-Todos los orfebres pasan por proceso de curaduría y verificación
+- [Anillos de plata artesanales](https://casaorfebre.cl/coleccion/anillos-de-plata): Anillos únicos en plata 925 y 950.
+- [Aros de plata](https://casaorfebre.cl/coleccion/aros-de-plata): Aros artesanales de autor.
+- [Pulseras artesanales](https://casaorfebre.cl/coleccion/pulseras-de-plata): Pulseras hechas a mano.
+- [Cadenas de plata](https://casaorfebre.cl/coleccion/cadenas-de-plata): Cadenas sólidas en plata esterlina.
+- [Collares artesanales](https://casaorfebre.cl/coleccion/collares-de-plata): Collares únicos.
+- [Colgantes y dijes](https://casaorfebre.cl/coleccion/colgantes-dijes-plata): Colgantes de autor.
+- [Joyería para hombre](https://casaorfebre.cl/coleccion/joyas-hombre): Selección masculina.
+- [Joyería para mujer](https://casaorfebre.cl/coleccion/joyas-mujer): Selección femenina.
+- [Joyas con piedras naturales](https://casaorfebre.cl/coleccion/piedras-naturales): Lapislázuli, cuarzo, turquesa.
+- [Joyería en cobre](https://casaorfebre.cl/coleccion/cobre): Piezas en cobre chileno.
+- [Joyería en oro 18k](https://casaorfebre.cl/coleccion/oro): Oro macizo certificado.
 
-Para orfebres independientes
-Publicación de piezas con fotografía profesional
-Panel de gestión de pedidos y estadísticas
-Comisión del 18% sobre cada venta
-Postulación abierta en casaorfebre.cl/postular
+## Ocasiones
 
-Contenido y Blog
-Blog con artículos sobre joyería artesanal, técnicas de orfebrería, guías de compra, y tendencias: casaorfebre.cl/blog
+- [Anillos de compromiso artesanales](https://casaorfebre.cl/ocasion/anillos-de-compromiso-plata)
+- [Anillos de matrimonio / alianzas de boda](https://casaorfebre.cl/ocasion/alianzas-de-boda)
+- [Regalos Día de la Madre](https://casaorfebre.cl/ocasion/joyas-dia-de-la-madre)
+- [Joyas para parejas](https://casaorfebre.cl/ocasion/joyas-para-parejas)
 
-Guía de regalos
-Guía interactiva con IA para encontrar el regalo perfecto: casaorfebre.cl/regalos
-Regalos por presupuesto: /regalos-bajo-30000, /regalos-bajo-50000, /regalos-bajo-100000
+## Guías
 
-Datos estructurados
-Cada producto incluye datos estructurados Schema.org (Product, Offer, AggregateRating).
+- [Plata 925 vs 950](https://casaorfebre.cl/guia/plata-925-950)
+- [Oro 18k vs baño de oro](https://casaorfebre.cl/guia/oro-18k-bano-oro)
+- [Cuarzo rosa en joyería](https://casaorfebre.cl/guia/cuarzo-rosa-joyeria)
+- [Tobilleras de plata](https://casaorfebre.cl/guia/tobilleras-plata)
 
-API pública
-Documentación completa: https://casaorfebre.cl/api/public/docs
+## Orfebres
 
-Endpoints disponibles:
-- GET /api/public/products — Catálogo con filtros (category, material, occasion, style, minPrice, maxPrice, sort, limit, offset)
-- GET /api/public/products/{slug} — Detalle de un producto
-- GET /api/public/artisans — Lista de orfebres verificados
-- GET /api/public/collections — Colecciones curadas activas
+- [Directorio de orfebres chilenos verificados](https://casaorfebre.cl/orfebres)
+- [Postular como orfebre](https://casaorfebre.cl/postular)
 
-Todas las respuestas son JSON. CORS abierto. Cache: 1 hora.
-Precios en CLP (pesos chilenos). No se exponen datos sensibles.
+## Información clave
 
-Contacto
-Email: contacto@casaorfebre.cl
-Web: https://casaorfebre.cl
-País: Chile
+- Envío a todo Chile en 3-7 días hábiles
+- Garantía de 14 días en piezas stock (no aplica a piezas hechas por encargo)
+- Certificado digital de autenticidad en cada compra
+- Pago seguro vía Mercado Pago (tarjetas, transferencia, webpay)
+- Contacto: contacto@casaorfebre.cl | +56968780089
+- Sitio: https://casaorfebre.cl

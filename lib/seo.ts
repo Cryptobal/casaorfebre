@@ -132,6 +132,7 @@ export function generateFAQJsonLd(faqs: FAQ[]) {
 
 /* ─── Shared merchant fields for Product offers ─── */
 
+// TODO(Carlos): confirmar política de envío. Si NO es siempre gratis, actualizar este valor o dejar que Merchant Center sea fuente de verdad. Hardcodear shippingRate:0 cuando realmente se cobra envío causa "datos inconsistentes" en Google Merchant.
 const MERCHANT_SHIPPING: Record<string, unknown> = {
   "@type": "OfferShippingDetails",
   shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "CLP" },
@@ -205,14 +206,55 @@ export function generateItemListJsonLd(products: ProductItem[]) {
 export function generateOrganizationJsonLd() {
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "OnlineStore",
+    "@id": `${BASE_URL}/#organization`,
     name: "Casa Orfebre",
+    alternateName: "Casa Orfebre · Joyería de Autor",
     url: BASE_URL,
-    logo: `${BASE_URL}/casaorfebre-logo-compact.svg`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${BASE_URL}/casaorfebre-logo-compact.svg`,
+      width: 512,
+      height: 512,
+    },
     image: `${BASE_URL}/casaorfebre-og-image.png`,
     description:
-      "Marketplace curado de joyería artesanal de plata. Anillos, cadenas, aros, pulseras y collares hechos a mano por orfebres chilenos verificados.",
-    sameAs: ["https://www.instagram.com/casaorfebre.cl"],
+      "Marketplace curado de joyería artesanal chilena. Anillos, aros, cadenas, pulseras, colgantes y collares hechos a mano por orfebres verificados en plata 925, 950, oro 18k, cobre y bronce con certificado de autenticidad digital.",
+    slogan: "Joyería de Autor",
+    foundingDate: "2024",
+    areaServed: {
+      "@type": "Country",
+      name: "Chile",
+    },
+    knowsAbout: [
+      "joyería artesanal",
+      "orfebrería",
+      "plata 925",
+      "plata 950",
+      "oro 18k",
+      "joyería de autor",
+      "anillos artesanales",
+      "piedras naturales chilenas",
+      "lapislázuli",
+      "filigrana",
+    ],
+    sameAs: [
+      "https://www.instagram.com/casaorfebre.cl",
+      "https://www.pinterest.com/casaorfebrecl/",
+      "https://www.facebook.com/casaorfebre",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      email: "contacto@casaorfebre.cl",
+      telephone: "+56968780089",
+      availableLanguage: ["Spanish", "es-CL"],
+      areaServed: "CL",
+    },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "CL",
+    },
   };
 }
 
@@ -333,4 +375,162 @@ export function getCategorySlug(category: string): string {
 
 export function canonicalUrl(path: string): string {
   return `${BASE_URL}${path}`;
+}
+
+/* ─── WebSite ─── */
+
+export function generateWebSiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${BASE_URL}/#website`,
+    url: BASE_URL,
+    name: "Casa Orfebre",
+    alternateName: "Casa Orfebre · Joyería de Autor",
+    description:
+      "Marketplace curado de joyería artesanal chilena hecha a mano por orfebres verificados.",
+    inLanguage: "es-CL",
+    publisher: { "@id": `${BASE_URL}/#organization` },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${BASE_URL}/coleccion?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/* ─── Article (para blog) ─── */
+
+interface ArticleJsonLdOpts {
+  title: string;
+  description: string;
+  slug: string;
+  image?: string;
+  datePublished: string;
+  dateModified: string;
+  author?: string;
+  category?: string;
+  tags?: string[];
+  wordCount?: number;
+}
+
+export function generateArticleJsonLd(opts: ArticleJsonLdOpts) {
+  const url = `${BASE_URL}/blog/${opts.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${url}#article`,
+    headline: opts.title,
+    description: opts.description,
+    ...(opts.image ? { image: [opts.image.startsWith("http") ? opts.image : `${BASE_URL}${opts.image}`] } : {}),
+    datePublished: opts.datePublished,
+    dateModified: opts.dateModified,
+    author: {
+      "@type": "Organization",
+      "@id": `${BASE_URL}/#organization`,
+      name: opts.author || "Casa Orfebre",
+      url: BASE_URL,
+    },
+    publisher: { "@id": `${BASE_URL}/#organization` },
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    inLanguage: "es-CL",
+    isAccessibleForFree: true,
+    ...(opts.category ? { articleSection: opts.category } : {}),
+    ...(opts.tags && opts.tags.length > 0 ? { keywords: opts.tags.join(", ") } : {}),
+    ...(opts.wordCount ? { wordCount: opts.wordCount } : {}),
+  };
+}
+
+/* ─── HowTo (para guías) ─── */
+
+interface HowToStep {
+  name: string;
+  text: string;
+  image?: string;
+}
+
+export function generateHowToJsonLd(opts: {
+  name: string;
+  description: string;
+  url: string;
+  image?: string;
+  totalTime?: string;
+  steps: HowToStep[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: opts.name,
+    description: opts.description,
+    ...(opts.image ? { image: opts.image } : {}),
+    ...(opts.totalTime ? { totalTime: opts.totalTime } : {}),
+    inLanguage: "es-CL",
+    step: opts.steps.map((s, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+      ...(s.image ? { image: s.image } : {}),
+    })),
+  };
+}
+
+/* ─── Person (Jeweler) — para orfebres ─── */
+
+interface JewelerPersonOpts {
+  name: string;
+  slug: string;
+  bio?: string;
+  image?: string;
+  location?: string;
+  region?: string;
+  rating?: number;
+  reviewCount?: number;
+  specialties?: string[];
+  foundingYear?: number | null;
+}
+
+export function generateJewelerPersonJsonLd(opts: JewelerPersonOpts) {
+  const url = `${BASE_URL}/orfebres/${opts.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${url}#person`,
+    name: opts.name,
+    url,
+    ...(opts.image ? { image: opts.image } : {}),
+    ...(opts.bio ? { description: opts.bio } : {}),
+    jobTitle: "Orfebre",
+    worksFor: { "@id": `${BASE_URL}/#organization` },
+    ...(opts.specialties && opts.specialties.length > 0
+      ? { knowsAbout: opts.specialties }
+      : {}),
+    ...(opts.location
+      ? {
+          workLocation: {
+            "@type": "Place",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: opts.location,
+              ...(opts.region ? { addressRegion: opts.region } : {}),
+              addressCountry: "CL",
+            },
+          },
+        }
+      : {}),
+    ...(opts.rating && opts.reviewCount && opts.reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: opts.rating,
+            reviewCount: opts.reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+  };
 }

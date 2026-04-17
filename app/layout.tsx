@@ -7,7 +7,7 @@ import { GuestCartMerge } from "@/components/cart/guest-cart-merge";
 import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
 import { RoleSwitcherWrapper } from "@/components/shared/role-switcher-wrapper";
-import { generateOrganizationJsonLd } from "@/lib/seo";
+import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -39,64 +39,11 @@ export const metadata: Metadata = {
   },
   description:
     "Marketplace curado de joyería artesanal de plata. Anillos, cadenas, aros, pulseras y collares hechos a mano por orfebres chilenos verificados. Plata 925 y 950 con certificado de autenticidad.",
-  keywords: [
-    "joyería artesanal",
-    "joyería de autor",
-    "orfebres chilenos",
-    "joyería chilena",
-    "anillos artesanales",
-    "collares artesanales",
-    "plata 950",
-    "oro 18k",
-    "certificado de autenticidad",
-    "Casa Orfebre",
-    "joyas rusticas",
-    "joyas organicas",
-    "orfebres rusticos",
-    "joyas con piedras",
-    "joyas con significado",
-    "anillos de compromiso artesanales",
-    "anillos de matrimonio hechos a mano",
-    "regalo joyería mujer Chile",
-    "joyería para regalar",
-    "aros de plata chilenos",
-    "pulseras artesanales Chile",
-    "colgantes de autor",
-    "joyas personalizadas Chile",
-    "joyería hecha a mano Santiago",
-    "joyas únicas Chile",
-    "joyería en cobre",
-    "joyas de bronce artesanal",
-    "filigrana chilena",
-    "joyería con lapislázuli",
-    "anillos con cuarzo",
-    "joyas con piedras chilenas",
-    "plata 925 Chile",
-    "joyería con piedras naturales",
-    "joyas con turquesa",
-    "comprar joyas artesanales online Chile",
-    "tienda joyas artesanales",
-    "donde comprar joyería de autor Chile",
-    "marketplace joyería Chile",
-    "joyas artesanales envío a todo Chile",
-    "regalo de aniversario joyería artesanal",
-    "anillo de compromiso hecho a mano Chile",
-    "collar artesanal piedras naturales",
-    "joyería sustentable Chile",
-    "joyas con historia",
-    "apoyo artesanos chilenos",
-    "joyería slow fashion",
-    "pieza única joyería",
-    "directorio orfebres Chile",
-    "artesanos joyeros chilenos",
-    "taller orfebrería Chile",
-    "vender joyería artesanal Chile",
-    "plataforma para orfebres",
-    "donde vender joyas hechas a mano",
-  ],
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"
   ),
+  alternates: { canonical: "/" },
+  formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     title: "Casa Orfebre — Joyería de Autor",
     description:
@@ -104,7 +51,8 @@ export const metadata: Metadata = {
     siteName: "Casa Orfebre",
     locale: "es_CL",
     type: "website",
-    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+    url: "https://casaorfebre.cl",
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630, alt: "Casa Orfebre — Joyería de Autor" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -112,8 +60,9 @@ export const metadata: Metadata = {
     description:
       "Piezas únicas de orfebres chilenos verificados. Certificado de autenticidad digital con cada compra.",
     images: ["/casaorfebre-og-image.png"],
+    creator: "@casaorfebre",
+    site: "@casaorfebre",
   },
-  alternates: {},
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -142,10 +91,16 @@ export default function RootLayout({
       className={`${cormorantGaramond.variable} ${outfit.variable}`}
     >
       <head>
+        <link rel="preconnect" href="https://assets.casaorfebre.cl" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://assets.casaorfebre.cl" />
         <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationJsonLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateWebSiteJsonLd()) }}
         />
       </head>
       <body>

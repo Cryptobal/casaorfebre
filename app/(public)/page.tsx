@@ -14,16 +14,8 @@ import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
 import { HeroSection } from "@/components/home/hero-section";
 import { BuyerTour } from "@/components/guided-tour/BuyerTour";
 import { auth } from "@/lib/auth";
-import { generateOrganizationJsonLd, generateLocalBusinessJsonLd } from "@/lib/seo";
+import { generateItemListJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
-
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Casa Orfebre",
-  url: BASE_URL,
-};
 
 export default async function HomePage() {
   const session = await auth();
@@ -34,14 +26,14 @@ export default async function HomePage() {
     getCuratorPicks(4),
   ]);
 
+  const itemListJsonLd = generateItemListJsonLd(products);
+
   return (
     <>
-      <JsonLd data={websiteJsonLd} />
-      <JsonLd data={generateOrganizationJsonLd()} />
-      <JsonLd data={generateLocalBusinessJsonLd()} />
       {/* ─── 1. Hero Section ─── */}
-      <HeroSection />
       <BuyerTour isLoggedIn={!!session?.user?.id} />
+      <JsonLd data={itemListJsonLd} />
+      <HeroSection />
 
       {/* ─── 2. Trust Bar ─── */}
       <section className="border-y border-border bg-surface" data-tour="hero-garantias">

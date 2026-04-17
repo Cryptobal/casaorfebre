@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getApprovedProducts } from "@/lib/queries/products";
-import { generateFAQJsonLd } from "@/lib/seo";
+import { generateFAQJsonLd, generateHowToJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ProductCard } from "@/components/products/product-card";
@@ -78,6 +78,18 @@ export default async function CuarzoRosaPage() {
 
   return (
     <>
+      <JsonLd data={generateHowToJsonLd({
+        name: "Cómo elegir joyería con cuarzo rosa",
+        description: "Guía para elegir y cuidar joyas con cuarzo rosa natural en joyería artesanal.",
+        url: "https://casaorfebre.cl/guia/cuarzo-rosa-joyeria",
+        totalTime: "PT4M",
+        steps: [
+          { name: "Verifica que sea natural", text: "El cuarzo rosa natural tiene tonalidades suaves e irregulares. Versiones sintéticas son demasiado uniformes y saturadas." },
+          { name: "Observa la transparencia", text: "Piezas de mejor calidad son translúcidas y sin fisuras visibles bajo la luz." },
+          { name: "Elige el engaste", text: "En plata 925 el cuarzo rosa resalta naturalmente. Engastes de oro 18k o cobre dan un contraste cálido distinto." },
+          { name: "Cuida tu piedra", text: "El cuarzo rosa puede aclarar con exposición prolongada al sol. Guárdalo en un lugar oscuro y evita productos químicos." },
+        ],
+      })} />
       <JsonLd data={faqJsonLd} />
 
       <article className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 lg:px-8">

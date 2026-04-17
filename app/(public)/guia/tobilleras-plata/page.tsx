@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getApprovedProducts } from "@/lib/queries/products";
-import { generateFAQJsonLd } from "@/lib/seo";
+import { generateFAQJsonLd, generateHowToJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ProductCard } from "@/components/products/product-card";
@@ -123,6 +123,19 @@ export default async function TobillierasPage() {
 
   return (
     <>
+      <JsonLd data={generateHowToJsonLd({
+        name: "Cómo elegir y medir tu tobillera de plata",
+        description: "Guía para elegir la talla correcta y el estilo de tobillera de plata artesanal.",
+        url: "https://casaorfebre.cl/guia/tobilleras-plata",
+        totalTime: "PT3M",
+        steps: [
+          { name: "Mide tu tobillo", text: "Usa una cinta métrica suave alrededor del tobillo en el punto donde usarás la tobillera. Añade 1–2 cm para un ajuste cómodo." },
+          { name: "Elige el largo estándar", text: "Tallas comunes: 22 cm (ajustada), 24 cm (estándar), 26 cm (suelta). Considera el estilo que prefieres." },
+          { name: "Elige el grosor", text: "Cadenas finas son delicadas; cadenas más anchas hacen declaración visual." },
+          { name: "Material", text: "Plata 925 es ideal para uso diario por resistencia. Plata 950 brilla más pero es más suave." },
+          { name: "Cuidado", text: "Retira la tobillera al entrar al mar o piscina. El cloro y la sal aceleran el oscurecimiento." },
+        ],
+      })} />
       <JsonLd data={faqJsonLd} />
       <Breadcrumbs items={breadcrumbs} />
 

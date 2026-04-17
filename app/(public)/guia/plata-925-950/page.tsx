@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getApprovedProducts } from "@/lib/queries/products";
-import { generateFAQJsonLd } from "@/lib/seo";
+import { generateFAQJsonLd, generateHowToJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ProductCard } from "@/components/products/product-card";
@@ -142,6 +142,19 @@ export default async function PlataGuidePage() {
 
   return (
     <>
+      <JsonLd data={generateHowToJsonLd({
+        name: "Cómo identificar plata 925 y 950 auténtica",
+        description: "Guía práctica para reconocer plata esterlina 925 y plata 950 en joyería artesanal chilena.",
+        url: "https://casaorfebre.cl/guia/plata-925-950",
+        totalTime: "PT5M",
+        steps: [
+          { name: "Buscar el sello", text: "Revisa la pieza en busca de los sellos '925', '950', 'Ag', 'sterling' o 'pure silver'. Es el indicador más directo de pureza." },
+          { name: "Prueba del imán", text: "La plata no es magnética. Si tu pieza es atraída por un imán, no es plata pura." },
+          { name: "Color y brillo", text: "La plata 925 tiene un brillo blanco ligeramente cálido; la plata 950 es más blanca y brillante por su mayor pureza." },
+          { name: "Peso", text: "La plata es densa. Una pieza demasiado liviana para su tamaño probablemente no es plata maciza." },
+          { name: "Certificado de autenticidad", text: "En Casa Orfebre cada pieza incluye certificado digital que verifica el material exacto." },
+        ],
+      })} />
       <JsonLd data={faqJsonLd} />
 
       <article className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 lg:px-8">

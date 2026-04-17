@@ -4,7 +4,7 @@ export const dynamic = "force-static";
 import { notFound } from "next/navigation";
 import { getArtisanBySlug } from "@/lib/queries/artisans";
 
-import { buildBreadcrumbJsonLd } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, generateJewelerPersonJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
@@ -129,6 +129,17 @@ export default async function ArtisanProfilePage({
     <>
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={generateJewelerPersonJsonLd({
+        name: artisan.displayName,
+        slug,
+        bio: artisan.bio || undefined,
+        image: artisan.profileImage || undefined,
+        location: artisan.location || undefined,
+        region: artisan.region || undefined,
+        rating: artisan.rating,
+        reviewCount: artisan._count.reviews,
+        specialties: artisan.specialty ? [artisan.specialty] : undefined,
+      })} />
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
       {/* Hero Section */}
       <FadeIn>
