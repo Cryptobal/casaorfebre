@@ -332,6 +332,25 @@ export async function getNewProducts({
   return { products, total, totalPages: Math.ceil(total / perPage) };
 }
 
+/**
+ * Pieza del Mes — sólo una pieza está marcada featuredOfMonth a la vez.
+ * Retorna null si no hay ninguna (sección se omite con elegancia en el home).
+ */
+export async function getFeaturedOfMonth() {
+  return prisma.product.findFirst({
+    where: {
+      status: "APPROVED",
+      featuredOfMonth: true,
+      artisan: { user: { role: { not: "ADMIN" } } },
+    },
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
+    },
+  });
+}
+
 export async function getCuratorPicks(limit?: number) {
   return prisma.product.findMany({
     where: {

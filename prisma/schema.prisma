@@ -338,6 +338,8 @@ model Product {
   pinterestPinId String?
   /** Ranking editorial — menor = más arriba. null = no curado. */
   editorialRank  Int?
+  /** Pieza del mes: sólo una activa a la vez (enforzado por lógica de admin). */
+  featuredOfMonth Boolean         @default(false)
   status         ProductStatus     @default(DRAFT)
   pauseReason    ProductPauseReason?
   pausedAt       DateTime?
