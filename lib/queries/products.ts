@@ -72,7 +72,11 @@ interface ProductFilters {
 }
 
 export async function getApprovedProducts(filters: ProductFilters = {}) {
-  const where: Record<string, unknown> = { status: "APPROVED" as const };
+  const where: Record<string, unknown> = {
+    status: "APPROVED" as const,
+    // Excluye productos de cuentas administrativas (Admin Test vía role-switcher).
+    artisan: { user: { role: { not: "ADMIN" as const } } },
+  };
 
   if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
   if (filters.material) where.materials = { some: { name: filters.material } };
@@ -83,7 +87,10 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
     };
   }
   if (filters.artisanSlug) {
-    where.artisan = { slug: filters.artisanSlug };
+    where.artisan = {
+      ...(where.artisan as Record<string, unknown>),
+      slug: filters.artisanSlug,
+    };
   }
   if (filters.occasionSlug) {
     where.occasions = { some: { slug: filters.occasionSlug } };
@@ -170,8 +177,12 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
 }
 
 export async function getProductBySlug(slug: string) {
-  return prisma.product.findUnique({
-    where: { slug, status: "APPROVED" },
+  return prisma.product.findFirst({
+    where: {
+      slug,
+      status: "APPROVED",
+      artisan: { user: { role: { not: "ADMIN" } } },
+    },
     include: {
       artisan: {
         select: {
@@ -200,7 +211,10 @@ export async function getProductBySlug(slug: string) {
 
 export async function getLatestProducts(limit = 8) {
   return prisma.product.findMany({
-    where: { status: "APPROVED" },
+    where: {
+      status: "APPROVED",
+      artisan: { user: { role: { not: "ADMIN" } } },
+    },
     orderBy: { publishedAt: "desc" },
     take: limit,
     include: {
@@ -252,6 +266,7 @@ export async function getNewProducts({
   const where: Record<string, unknown> = {
     status: "APPROVED" as const,
     createdAt: { gte: cutoff },
+    artisan: { user: { role: { not: "ADMIN" as const } } },
   };
   if (categorySlug) where.categories = { some: { slug: categorySlug } };
   if (material) where.materials = { some: { name: material } };
@@ -287,7 +302,11 @@ export async function getNewProducts({
 
 export async function getCuratorPicks(limit?: number) {
   return prisma.product.findMany({
-    where: { status: "APPROVED", isCuratorPick: true },
+    where: {
+      status: "APPROVED",
+      isCuratorPick: true,
+      artisan: { user: { role: { not: "ADMIN" } } },
+    },
     orderBy: { curatorPickAt: "desc" },
     ...(limit ? { take: limit } : {}),
     include: {

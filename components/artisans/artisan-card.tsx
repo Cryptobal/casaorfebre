@@ -15,6 +15,22 @@ interface ArtisanCardProps {
   artisan: ArtisanWithCount;
 }
 
+/**
+ * Etiqueta editorial del tier. Sólo MAESTRO recibe título jerárquico;
+ * el resto se muestra como "Orfebre" (sin atenuantes).
+ */
+function tierLabel(tier: Artisan["tier"]): string {
+  switch (tier) {
+    case "MAESTRO":
+      return "Maestro Orfebre";
+    case "EMERGENTE":
+      return "Orfebre";
+    case "ORFEBRE":
+    default:
+      return "Orfebre";
+  }
+}
+
 export function ArtisanCard({ artisan }: ArtisanCardProps) {
   const initials = artisan.displayName
     .split(" ")
@@ -52,7 +68,11 @@ export function ArtisanCard({ artisan }: ArtisanCardProps) {
           {artisan.displayName}
         </h3>
 
-        {/* Badge */}
+        <p className="mt-1 text-xs font-light uppercase tracking-[0.15em] text-accent">
+          {tierLabel(artisan.tier)}
+        </p>
+
+        {/* Badge de plan — dimensión comercial, independiente del tier curatorial. */}
         {activePlan?.badgeType && (
           <div className="mt-1.5 flex justify-center">
             <ArtisanBadge

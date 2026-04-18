@@ -166,6 +166,8 @@ model Artisan {
   pioneerUntil        DateTime?
   pioneerGrantedBy    String?
   homeHighlight       Boolean                  @default(false)
+  // Jerarquía curatorial independiente del plan comercial.
+  tier                ArtisanTier              @default(ORFEBRE)
   status              ArtisanStatus            @default(PENDING)
   appliedAt           DateTime                 @default(now())
   approvedAt          DateTime?
@@ -855,6 +857,12 @@ enum ArtisanStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+enum ArtisanTier {
+  EMERGENTE
+  ORFEBRE
+  MAESTRO
 }
 
 enum ProductStatus {

@@ -4,6 +4,8 @@ interface ArtisanFilters {
   specialtySlug?: string;
   region?: string;
   material?: string;
+  /** Si true, incluye orfebres sin piezas aprobadas (uso admin). */
+  includeEmpty?: boolean;
 }
 
 const activePlanInclude = {
@@ -29,8 +31,24 @@ const approvedImageFilter = {
   take: 1,
 } as const;
 
+/**
+ * Filtro base para excluir orfebres administrativos de listados públicos.
+ * - Excluye usuarios con rol ADMIN (Admin Test se crea vía role-switcher).
+ * - Por default, exige al menos una pieza APPROVED para aparecer en el directorio.
+ */
+function publicArtisanWhere(requireApprovedProduct: boolean) {
+  const where: Record<string, unknown> = {
+    status: "APPROVED" as const,
+    user: { role: { not: "ADMIN" as const } },
+  };
+  if (requireApprovedProduct) {
+    where.products = { some: { status: "APPROVED" as const } };
+  }
+  return where;
+}
+
 export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
-  const where: Record<string, unknown> = { status: "APPROVED" as const };
+  const where = publicArtisanWhere(!filters.includeEmpty);
 
   if (filters.specialtySlug) {
     where.specialties = { some: { slug: filters.specialtySlug } };
@@ -55,7 +73,7 @@ export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
 
 export async function getFeaturedArtisans(limit = 3) {
   return prisma.artisan.findMany({
-    where: { status: "APPROVED" },
+    where: publicArtisanWhere(true),
     orderBy: { rating: "desc" },
     take: limit,
     include: {
@@ -69,14 +87,8 @@ export async function getFeaturedArtisans(limit = 3) {
 export async function getMaestroArtisans() {
   return prisma.artisan.findMany({
     where: {
-      status: "APPROVED",
-      homeHighlight: true,
-      subscriptions: {
-        some: {
-          status: "ACTIVE",
-          plan: { homeHighlight: true },
-        },
-      },
+      ...publicArtisanWhere(true),
+      tier: "MAESTRO",
     },
     orderBy: { rating: "desc" },
     include: {
@@ -95,8 +107,12 @@ export async function getMaestroArtisans() {
 }
 
 export async function getArtisanBySlug(slug: string) {
-  return prisma.artisan.findUnique({
-    where: { slug, status: "APPROVED" },
+  return prisma.artisan.findFirst({
+    where: {
+      slug,
+      status: "APPROVED",
+      user: { role: { not: "ADMIN" } },
+    },
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
       ...activePlanInclude,
@@ -119,6 +135,7 @@ export async function getArtisansByRegion(regionKeyword: string) {
   return prisma.artisan.findMany({
     where: {
       status: "APPROVED",
+      user: { role: { not: "ADMIN" } },
       OR: [
         { region: { contains: regionKeyword, mode: "insensitive" } },
         { location: { contains: regionKeyword, mode: "insensitive" } },

@@ -28,13 +28,14 @@ export function ProductCard({ product, listName }: ProductCardProps) {
   const { isFavorite, toggle } = useFavorites();
   const favorited = isFavorite(product.id);
 
+  // En grid editorial no mostramos stock ("Quedan X" es lenguaje de Ripley).
+  // Los badges de tipo de producción se mantienen; el indicador de escasez
+  // sólo aparece en la ficha del producto (stock === 1 → "Última disponible").
   const badge = product.productionType === "MADE_TO_ORDER"
     ? "Hecha por Encargo"
     : product.productionType === "UNIQUE"
       ? "Pieza Única"
-      : product.productionType === "LIMITED" && product.stock < 10
-        ? `Quedan ${product.stock}`
-        : null;
+      : null;
 
   const ga4Item = {
     item_id: product.id,

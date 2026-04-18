@@ -353,9 +353,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   Hecha por Encargo{product.elaborationDays ? ` · ${product.elaborationDays} días` : ""}
                 </span>
               )}
-              {product.productionType === "LIMITED" && product.stock > 0 && product.stock < 10 && (
+              {product.productionType === "LIMITED" && product.stock === 1 && (
                 <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
-                  Quedan {product.stock} unidades
+                  Última disponible
                 </span>
               )}
               {product.isCustomizable && (
