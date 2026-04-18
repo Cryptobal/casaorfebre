@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { Heart } from "lucide-react";
 import { MobileMenu } from "./mobile-menu";
 import { CartButton } from "./cart-button";
 import { UserMenu } from "./user-menu";
@@ -94,6 +95,13 @@ export function Navbar() {
               Mi Portal
             </Link>
           )}
+          <Link
+            href={isAuthenticated ? "/portal/comprador/favoritos" : "/login?callbackUrl=%2Fportal%2Fcomprador%2Ffavoritos"}
+            aria-label="Mis favoritos"
+            className="hidden text-text-secondary transition-colors hover:text-text lg:inline-flex"
+          >
+            <Heart size={18} strokeWidth={1} aria-hidden />
+          </Link>
           <CartButton />
           {isAuthenticated && user ? (
             <UserMenu user={user} />
