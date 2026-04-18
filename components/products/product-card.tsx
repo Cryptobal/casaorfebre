@@ -117,20 +117,24 @@ export function ProductCard({ product, listName, featured = false }: ProductCard
           />
         )}
 
-        {/* Corazón de wishlist: aparece en hover, no se monta sobre la obra por default. */}
+        {/* Corazón de wishlist.
+            - Mobile/tablet (< lg): siempre visible, porque hover no existe en touch.
+            - Desktop (lg+): oculto por default, aparece con fade en hover/focus.
+            - Si ya está favorito: siempre visible en ambos. */}
         <button
           type="button"
           onClick={handleToggleFavorite}
           aria-label={favorited ? "Quitar de favoritos" : "Guardar en favoritos"}
-          className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center text-text transition-opacity duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+          aria-pressed={favorited}
+          className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-surface/80 backdrop-blur-sm transition-opacity duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             favorited
               ? "opacity-100 text-accent"
-              : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+              : "text-text opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100"
           } ${isPending ? "opacity-50" : ""}`}
         >
           <Heart
             size={16}
-            strokeWidth={1}
+            strokeWidth={1.25}
             fill={favorited ? "currentColor" : "none"}
             aria-hidden
           />

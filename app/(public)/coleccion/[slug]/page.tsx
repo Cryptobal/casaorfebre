@@ -13,6 +13,7 @@ import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart } from "./add-to-cart";
+import { FavoriteButton } from "@/components/products/favorite-button";
 import { ReviewList } from "@/components/reviews/review-list";
 import { ReviewHighlights } from "@/components/products/review-highlights";
 import { ViewTracker } from "./view-tracker";
@@ -479,7 +480,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </p>
             )}
 
-            {/* Add to cart button */}
+            {/* Add to cart (primario, ancho completo). */}
             <AddToCart
               productId={product.id}
               price={product.price}
@@ -492,6 +493,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 item_brand: artisan.displayName,
                 price: product.price,
               }}
+            />
+
+            {/* Guardar (acción secundaria sobria, ancho completo). */}
+            <FavoriteButton
+              productId={product.id}
+              variant="full"
+              ga4Item={{
+                item_id: product.id,
+                item_name: product.name,
+                item_category: categoryLabel,
+                item_brand: artisan.displayName,
+                price: product.price,
+              }}
+              className="w-full"
             />
 
             {/* Trust icons */}
