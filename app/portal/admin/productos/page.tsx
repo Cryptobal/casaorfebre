@@ -1,7 +1,6 @@
 import { getPendingProducts, getAllProductsForAdmin } from "@/lib/queries/admin";
 import { ExpandableProductRow } from "./expandable-product-row";
 import { ProductListManager } from "./product-list-manager";
-import { BackfillCategoriesButton } from "./backfill-categories-button";
 import Link from "next/link";
 
 interface PageProps {
@@ -35,11 +34,6 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
   return (
     <div>
       <h1 className="font-serif text-3xl font-light">Productos</h1>
-
-      {/* Herramientas de mantenimiento editorial — al tope, siempre visibles. */}
-      <div className="mt-4">
-        <BackfillCategoriesButton />
-      </div>
 
       {/* Main tabs */}
       <div className="mt-4 flex gap-1 border-b border-border">
