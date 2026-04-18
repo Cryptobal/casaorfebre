@@ -1678,3 +1678,84 @@ export async function sendOnboardingReminder(
   revalidatePath("/portal/admin/orfebres");
   return { success: true, emailType };
 }
+
+// ---------------------------------------------------------------------------
+// Backfill de categorías por nombre.
+// Arregla productos antiguos sin Category vinculada; sin esto, las páginas
+// /coleccion?category=X no los muestran aunque existan.
+// Idempotente: sólo toca productos con categories.none.
+// ---------------------------------------------------------------------------
+
+const CATEGORY_INFERENCE: { pattern: RegExp; slug: string }[] = [
+  { pattern: /\btobillera/i, slug: "tobillera" },
+  { pattern: /\bdiadema|\btiara/i, slug: "diadema-tiara" },
+  { pattern: /\bgemelo/i, slug: "gemelos" },
+  { pattern: /\bbroch/i, slug: "broche" },
+  { pattern: /\bcadena/i, slug: "cadena" },
+  { pattern: /\bcolgante|\bdije/i, slug: "colgante" },
+  { pattern: /\bpulsera|\bbrazalete/i, slug: "pulsera" },
+  { pattern: /\bcollar|\bgargantill/i, slug: "collar" },
+  { pattern: /\baros?\b/i, slug: "aros" },
+  { pattern: /\baretes?\b/i, slug: "aros" },
+  { pattern: /\bpendiente/i, slug: "aros" },
+  { pattern: /\banillo|\bsortija|\balian[zs]a|\bargoll/i, slug: "anillo" },
+];
+
+function inferCategorySlugFromName(name: string): string | null {
+  for (const rule of CATEGORY_INFERENCE) {
+    if (rule.pattern.test(name)) return rule.slug;
+  }
+  return null;
+}
+
+export async function backfillProductCategories(): Promise<{
+  error?: string;
+  totalWithoutCategory?: number;
+  updated?: number;
+  byCategory?: Record<string, number>;
+  unmatched?: { slug: string; name: string }[];
+}> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const categories = await prisma.category.findMany({
+    select: { slug: true },
+  });
+  const knownSlugs = new Set(categories.map((c) => c.slug));
+
+  const productsWithoutCategory = await prisma.product.findMany({
+    where: { categories: { none: {} } },
+    select: { id: true, slug: true, name: true },
+  });
+
+  let updated = 0;
+  const byCategory: Record<string, number> = {};
+  const unmatched: { slug: string; name: string }[] = [];
+
+  for (const p of productsWithoutCategory) {
+    const inferred = inferCategorySlugFromName(p.name);
+    if (!inferred || !knownSlugs.has(inferred)) {
+      unmatched.push({ slug: p.slug, name: p.name });
+      continue;
+    }
+    await prisma.product.update({
+      where: { id: p.id },
+      data: { categories: { connect: [{ slug: inferred }] } },
+    });
+    updated++;
+    byCategory[inferred] = (byCategory[inferred] ?? 0) + 1;
+  }
+
+  revalidatePath("/portal/admin/productos");
+  revalidatePath("/coleccion");
+
+  return {
+    totalWithoutCategory: productsWithoutCategory.length,
+    updated,
+    byCategory,
+    unmatched,
+  };
+}
