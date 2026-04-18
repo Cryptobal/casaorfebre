@@ -8,6 +8,57 @@ const approvedImagesFirst = {
   take: 1,
 } as const;
 
+/**
+ * Reorders the first N products so no two consecutive items share the same
+ * artisan. Preserves internal score order within each artisan. Pieces beyond
+ * position N remain untouched.
+ *
+ * If only one artisan has remaining stock at some point, consecutive pieces
+ * from that artisan are allowed (graceful fallback).
+ */
+function diversifyByArtisan<T extends { artisanId: string }>(
+  products: T[],
+  headSize = 12,
+): T[] {
+  if (products.length <= 1) return products;
+
+  const head = products.slice(0, headSize);
+  const tail = products.slice(headSize);
+
+  // Group head by artisanId preserving original order (which is score desc).
+  const byArtisan = new Map<string, T[]>();
+  for (const p of head) {
+    const bucket = byArtisan.get(p.artisanId);
+    if (bucket) bucket.push(p);
+    else byArtisan.set(p.artisanId, [p]);
+  }
+
+  // Only one artisan in head? Nothing to diversify.
+  if (byArtisan.size === 1) return products;
+
+  const groups = Array.from(byArtisan.entries()).map(([artisanId, pieces]) => ({
+    artisanId,
+    pieces,
+  }));
+
+  const diversified: T[] = [];
+  while (diversified.length < head.length) {
+    const lastArtisanId = diversified[diversified.length - 1]?.artisanId;
+
+    // Prefer a group whose artisanId differs from the previous pick.
+    let pick = groups.find(
+      (g) => g.pieces.length > 0 && g.artisanId !== lastArtisanId,
+    );
+    // Fallback: if only the last artisan has stock left, allow repetition.
+    if (!pick) pick = groups.find((g) => g.pieces.length > 0);
+    if (!pick) break;
+
+    diversified.push(pick.pieces.shift()!);
+  }
+
+  return [...diversified, ...tail];
+}
+
 interface ProductFilters {
   categorySlug?: string;
   material?: string;
@@ -100,6 +151,13 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
 
       return bScore - aScore;
     });
+
+    // Diversify the first 12 positions so no two consecutive items
+    // are from the same artisan. Keeps internal score order within
+    // each artisan and leaves positions 13+ untouched.
+    const diversified = diversifyByArtisan(products, 12);
+    products.length = 0;
+    products.push(...diversified);
 
     // Strip subscription data from response to keep artisan shape clean
     for (const p of products) {

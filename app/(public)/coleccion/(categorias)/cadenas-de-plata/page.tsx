@@ -1,5 +1,4 @@
 export const revalidate = 60;
-export const dynamic = "force-static";
 
 import type { Metadata } from "next";
 import { CategoryLanding } from "../category-landing";
