@@ -38,6 +38,32 @@ interface PostularFlowProps {
   isPioneerApplication?: boolean;
 }
 
+/** CTA reutilizable que permite saltar a la postulación como Pionero
+ *  desde cualquier punto del selector de planes. */
+function PioneerCTA({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-[#8B7355]/40 bg-gradient-to-br from-[#FAFAF8] to-[#f0ebe3] p-6 text-center sm:p-8">
+      <p className="text-xs font-medium uppercase tracking-widest text-[#8B7355]">
+        Programa Pioneros · Cupos limitados
+      </p>
+      <h3 className="mt-2 font-serif text-xl font-light text-[#1a1a18] sm:text-2xl">
+        3 meses de Plan Maestro gratis + 0% comisión
+      </h3>
+      <p className="mx-auto mt-2 max-w-md text-sm text-[#1a1a18]/70">
+        Postula como Pionero: si te aprobamos, activamos los beneficios
+        automáticamente. Sin pagar plan, sin contratos.
+      </p>
+      <button
+        type="button"
+        onClick={onClick}
+        className="mt-5 inline-block bg-[#8B7355] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#7a6549]"
+      >
+        Quiero ser Pionero
+      </button>
+    </div>
+  );
+}
+
 export function PostularFlow({
   plans,
   preselectedPlan,
@@ -46,13 +72,21 @@ export function PostularFlow({
   materials,
   promoCode,
   promoData,
-  isPioneerApplication = false,
+  isPioneerApplication: isPioneerApplicationProp = false,
 }: PostularFlowProps) {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(
     preselectedPlan
   );
+  const [isPioneerApplication, setIsPioneerApplication] = useState(
+    isPioneerApplicationProp
+  );
 
   const hasValidPromo = promoData?.valid === true;
+
+  const enterPioneerFlow = () => {
+    setIsPioneerApplication(true);
+    setSelectedPlan("maestro");
+  };
 
   if (!selectedPlan) {
     return (
@@ -66,11 +100,17 @@ export function PostularFlow({
                 : "El código promocional ingresado no es válido."}
           </div>
         )}
+        <div className="mb-10">
+          <PioneerCTA onClick={enterPioneerFlow} />
+        </div>
         <PricingPlans
           plans={plans}
           onSelectPlan={(planName) => setSelectedPlan(planName)}
           promoData={hasValidPromo ? promoData : undefined}
         />
+        <div className="mt-12">
+          <PioneerCTA onClick={enterPioneerFlow} />
+        </div>
       </>
     );
   }
@@ -111,7 +151,10 @@ export function PostularFlow({
           {!hasValidPromo && (
             <button
               type="button"
-              onClick={() => setSelectedPlan(null)}
+              onClick={() => {
+                setIsPioneerApplication(false);
+                setSelectedPlan(null);
+              }}
               className="text-sm text-accent hover:text-accent-dark"
             >
               Cambiar plan
