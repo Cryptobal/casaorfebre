@@ -25,7 +25,7 @@ const COLECCION_GROUPS = [
       { href: "/coleccion/collares", label: "Collares" },
       { href: "/coleccion/pulseras", label: "Pulseras" },
       { href: "/coleccion/colgantes", label: "Colgantes" },
-      { href: "/coleccion/plata-925", label: "Cadenas" },
+      { href: "/coleccion/cadenas", label: "Cadenas" },
     ],
   },
   {

@@ -52,6 +52,26 @@ const INTROS: Record<string, CollectionIntro> = {
     paragraph:
       "Pequeñas esculturas que se llevan cerca. Iconografía chilena, naturaleza, geometría contemporánea. Cada pieza única, cada autoría reconocida.",
   },
+  cadenas: {
+    heading: "Cadenas",
+    subheading: "Eslabón por eslabón, trabajadas a mano.",
+    paragraph:
+      "Cadenas armadas punto por punto por orfebres chilenos. Plata 925 y 950, oro 18K, eslabón rolo, caja, espiga, veneciana. La base perfecta para tus dijes favoritos.",
+  },
+};
+
+/**
+ * Aliases: slugs de DB (singulares, como los tenemos en Category.slug) →
+ * claves de intros (plural editorial). Permite usar los mismos textos sin
+ * duplicarlos cuando la URL o la query usa la forma singular.
+ */
+const SLUG_ALIASES: Record<string, string> = {
+  anillo: "anillos",
+  collar: "collares",
+  pulsera: "pulseras",
+  colgante: "colgantes",
+  cadena: "cadenas",
+  // "aros" ya es plural en DB, coincide directo.
 };
 
 /**
@@ -60,5 +80,6 @@ const INTROS: Record<string, CollectionIntro> = {
  */
 export function getCollectionIntro(slug?: string): CollectionIntro {
   if (!slug) return INTROS.default;
-  return INTROS[slug] ?? INTROS.default;
+  const normalized = SLUG_ALIASES[slug] ?? slug;
+  return INTROS[normalized] ?? INTROS.default;
 }

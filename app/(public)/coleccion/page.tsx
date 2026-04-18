@@ -109,14 +109,13 @@ export default async function ColeccionPage({
   const materialNames = dbMaterials.length > 0 ? dbMaterials.map((m) => m.name) : materials;
   const artisanOptions = artisans.map((a) => ({ slug: a.slug, displayName: a.displayName }));
 
-  const activeCategory = categorySlug
-    ? dbCategories.find((c) => c.slug === categorySlug)
-    : undefined;
   const intro = getCollectionIntro(categorySlug);
   const breadcrumbItems = [
     { label: "Casa Orfebre", href: "/" },
     { label: "Colección", href: "/coleccion" },
-    ...(activeCategory ? [{ label: activeCategory.name }] : []),
+    // Usamos intro.heading para el label final para que coincida con el hero
+    // ("Anillos" en plural editorial, en vez de "Anillo" singular de DB).
+    ...(categorySlug ? [{ label: intro.heading }] : []),
   ];
 
   return (

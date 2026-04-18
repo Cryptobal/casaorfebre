@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+/** Atajo /coleccion/colgantes → /coleccion?category=colgante. */
 export default function Page() {
-  redirect("/coleccion/colgantes-dijes-plata");
+  redirect("/coleccion?category=colgante");
 }

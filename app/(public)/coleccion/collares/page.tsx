@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+/** Atajo /coleccion/collares → /coleccion?category=collar. */
 export default function Page() {
-  redirect("/coleccion/collares-de-plata");
+  redirect("/coleccion?category=collar");
 }
