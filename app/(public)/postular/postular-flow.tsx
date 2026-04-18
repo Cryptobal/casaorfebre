@@ -34,6 +34,8 @@ interface PostularFlowProps {
   materials: string[];
   promoCode?: string | null;
   promoData?: PromoData | null;
+  /** True cuando el usuario llega desde /para-pionero con ?pionero=1 (sin código). */
+  isPioneerApplication?: boolean;
 }
 
 export function PostularFlow({
@@ -44,6 +46,7 @@ export function PostularFlow({
   materials,
   promoCode,
   promoData,
+  isPioneerApplication = false,
 }: PostularFlowProps) {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(
     preselectedPlan
@@ -76,41 +79,46 @@ export function PostularFlow({
 
   return (
     <div className="mx-auto max-w-2xl">
-      {/* Pioneer banner */}
+      {/* Pioneer banner (code-based invitation) */}
       {hasValidPromo && promoData.benefits && (
         <PioneerBanner benefits={promoData.benefits} />
       )}
 
-      {/* Plan indicator */}
-      <div className="mb-8 flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-text-tertiary">Plan elegido:</span>
-          <span className="font-serif font-medium text-text">
-            {PLAN_LABELS[selectedPlan] || selectedPlan}
-          </span>
-          {hasValidPromo ? (
-            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-              GRATIS {promoData.benefits!.freeMonths} MESES
+      {/* Pioneer banner (self-apply via /para-pionero) */}
+      {!hasValidPromo && isPioneerApplication && <PioneerBanner />}
+
+      {/* Plan indicator — hidden for self-apply pioneer flow to keep focus on the form */}
+      {!isPioneerApplication && (
+        <div className="mb-8 flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-text-tertiary">Plan elegido:</span>
+            <span className="font-serif font-medium text-text">
+              {PLAN_LABELS[selectedPlan] || selectedPlan}
             </span>
-          ) : (
-            plan &&
-            plan.price > 0 && (
-              <span className="text-xs text-text-tertiary">
-                (el cobro se realiza después de la aprobación)
+            {hasValidPromo ? (
+              <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                GRATIS {promoData.benefits!.freeMonths} MESES
               </span>
-            )
+            ) : (
+              plan &&
+              plan.price > 0 && (
+                <span className="text-xs text-text-tertiary">
+                  (el cobro se realiza después de la aprobación)
+                </span>
+              )
+            )}
+          </div>
+          {!hasValidPromo && (
+            <button
+              type="button"
+              onClick={() => setSelectedPlan(null)}
+              className="text-sm text-accent hover:text-accent-dark"
+            >
+              Cambiar plan
+            </button>
           )}
         </div>
-        {!hasValidPromo && (
-          <button
-            type="button"
-            onClick={() => setSelectedPlan(null)}
-            className="text-sm text-accent hover:text-accent-dark"
-          >
-            Cambiar plan
-          </button>
-        )}
-      </div>
+      )}
 
       <ApplicationForm
         specialties={specialties}
@@ -118,6 +126,7 @@ export function PostularFlow({
         materials={materials}
         selectedPlan={selectedPlan}
         promoCode={hasValidPromo ? promoCode! : undefined}
+        isPioneerCandidate={isPioneerApplication}
       />
     </div>
   );

@@ -40,7 +40,14 @@ export default async function PostulacionesPage() {
               <Card key={app.id} className="space-y-4 p-4 sm:p-6">
                 <div className="flex flex-col gap-1 border-b border-border pb-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h2 className="font-serif text-lg font-medium">{app.name}</h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-serif text-lg font-medium">{app.name}</h2>
+                      {app.isPioneerCandidate && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#8B7355]/40 bg-[#8B7355]/10 px-2.5 py-0.5 text-xs font-medium uppercase tracking-widest text-[#8B7355]">
+                          Pionero
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-text-secondary">{app.email}</p>
                   </div>
                   <p className="text-xs text-text-tertiary">

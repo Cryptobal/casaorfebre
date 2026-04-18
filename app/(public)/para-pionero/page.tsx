@@ -261,7 +261,7 @@ export default function ParaPioneroPage() {
           <FadeIn delay={300}>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link
-                href="/postular"
+                href="/postular?pionero=1"
                 className="inline-block bg-accent px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-accent/90"
               >
                 Quiero ser Pionero
@@ -616,7 +616,7 @@ export default function ParaPioneroPage() {
             </p>
             <div className="mt-10">
               <Link
-                href="/postular"
+                href="/postular?pionero=1"
                 className="inline-block bg-accent px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-accent/90"
               >
                 Quiero ser Pionero

@@ -642,6 +642,8 @@ model ArtisanApplication {
   phone             String?
   selectedPlan    String?
   promoCode       String?
+  /** True cuando la postulación proviene del flujo /para-pionero (Programa Pioneros). */
+  isPioneerCandidate Boolean                @default(false)
   status          ArtisanApplicationStatus @default(PENDING)
   reviewedAt      DateTime?
   reviewNotes     String?

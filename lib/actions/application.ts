@@ -35,6 +35,7 @@ export async function submitApplication(
   }
   const selectedPlan = (formData.get("selectedPlan") as string) || null;
   const promoCodeRaw = (formData.get("promoCode") as string)?.trim().toUpperCase() || null;
+  const isPioneerCandidate = formData.get("isPioneerCandidate") === "1";
   const yearsExperienceRaw = formData.get("yearsExperience") as string;
   const yearsExperience = yearsExperienceRaw ? parseInt(yearsExperienceRaw, 10) : null;
   const awardsRaw = (formData.get("awards") as string) || "";
@@ -128,6 +129,7 @@ export async function submitApplication(
       portfolioImages,
       selectedPlan,
       promoCode: promoCodeRaw,
+      isPioneerCandidate,
       yearsExperience: yearsExperience !== null && !isNaN(yearsExperience) ? yearsExperience : null,
       awards,
       status: "PENDING",
@@ -180,9 +182,9 @@ export async function submitApplication(
       await resend.emails.send({
         from: FROM_EMAIL,
         to: admin.email,
-        subject: `Nueva postulación de orfebre: ${name}`,
+        subject: `Nueva postulación${isPioneerCandidate ? " (Pionero)" : ""} de orfebre: ${name}`,
         html: emailLayout(
-          `<p style="margin:0 0 16px;">Se recibió una nueva postulación de orfebre.</p>
+          `<p style="margin:0 0 16px;">Se recibió una nueva postulación de orfebre${isPioneerCandidate ? " <strong>al Programa Pioneros</strong>" : ""}.</p>
            <p style="margin:0 0 8px;"><strong>Nombre:</strong> ${name}</p>
            <p style="margin:0 0 8px;"><strong>Email:</strong> ${email}</p>
            <p style="margin:0 0 8px;"><strong>Ciudad:</strong> ${location}</p>

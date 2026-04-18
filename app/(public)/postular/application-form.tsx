@@ -48,6 +48,8 @@ interface ApplicationFormProps {
   selectedPlan?: string;
   /** Código promocional validado (viene del URL) */
   promoCode?: string;
+  /** True cuando la postulación viene del flujo /para-pionero (?pionero=1) */
+  isPioneerCandidate?: boolean;
 }
 
 function stripNonDigits(value: string, maxLen: number) {
@@ -65,6 +67,7 @@ export function ApplicationForm({
   materials: materialsProp,
   selectedPlan,
   promoCode,
+  isPioneerCandidate = false,
 }: ApplicationFormProps) {
   const opcionesEspecialidad = sortAlphabeticalEs(
     specialtiesProp && specialtiesProp.length > 0 ? specialtiesProp : DEFAULT_ESPECIALIDADES
@@ -148,6 +151,7 @@ export function ApplicationForm({
       <input type="hidden" name="categories" value={categorias.join(",")} />
       {selectedPlan && <input type="hidden" name="selectedPlan" value={selectedPlan} />}
       {promoCode && <input type="hidden" name="promoCode" value={promoCode} />}
+      {isPioneerCandidate && <input type="hidden" name="isPioneerCandidate" value="1" />}
 
       {/* ─── Section 1: Datos personales ─── */}
       <div>
