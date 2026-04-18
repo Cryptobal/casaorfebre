@@ -288,7 +288,7 @@ export function SearchModal() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Busca productos, orfebres, materiales..."
+                placeholder="Busca por autor, pieza, material…"
                 className="flex-1 bg-transparent text-text placeholder:text-text-tertiary outline-none text-sm"
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setOpen(false);
@@ -405,7 +405,7 @@ export function SearchModal() {
               {/* Empty state — no query yet */}
               {!hasQuery && !loading && !visualResults && !visualLoading && (
                 <div className="px-4 py-10 text-center text-sm text-text-tertiary font-light">
-                  Busca productos, orfebres, materiales...
+                  Busca por autor, pieza, material…
                 </div>
               )}
 
