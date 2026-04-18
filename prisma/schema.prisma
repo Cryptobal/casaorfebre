@@ -276,6 +276,8 @@ model Product {
   specialties    Specialty[]
   occasions      Occasion[]
   technique      String?
+  /** Año de creación de la pieza (metadata editorial). */
+  year           Int?
   dimensions     String?
   weight         Float?
   productionType  ProductionType    @default(UNIQUE)

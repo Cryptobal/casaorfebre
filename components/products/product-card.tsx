@@ -3,11 +3,12 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Heart } from "lucide-react";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
-import { PriceDisplay } from "@/components/shared/price-display";
-import { ReviewHighlights } from "@/components/products/review-highlights";
 import { useFavorites } from "@/lib/favorites-context";
 import { trackAddToWishlist, trackSelectItem } from "@/lib/analytics-events";
+import { formatCLP } from "@/lib/utils";
+import { getEditionLabel } from "@/lib/utils/edition";
 import type { Product, Artisan, ProductImage, Material } from "@prisma/client";
 
 type ProductWithRelations = Product & {
@@ -18,29 +19,40 @@ type ProductWithRelations = Product & {
 
 interface ProductCardProps {
   product: ProductWithRelations;
-  /** @deprecated favoritos se hidratan client-side via FavoritesProvider */
+  /** @deprecated favoritos se hidratan client-side via FavoritesProvider. */
   isFavorited?: boolean;
+  /** Lista GA4 para tracking. */
   listName?: string;
+  /**
+   * Cuando true, el card escala tipográficamente. El ancho real
+   * (2 columnas vs 1) lo controla el grid contenedor.
+   */
+  featured?: boolean;
 }
 
-export function ProductCard({ product, listName }: ProductCardProps) {
+export function ProductCard({ product, listName, featured = false }: ProductCardProps) {
   const [isPending, startTransition] = useTransition();
   const { isFavorite, toggle } = useFavorites();
   const favorited = isFavorite(product.id);
 
-  // En grid editorial no mostramos stock ("Quedan X" es lenguaje de Ripley).
-  // Los badges de tipo de producción se mantienen; el indicador de escasez
-  // sólo aparece en la ficha del producto (stock === 1 → "Última disponible").
-  const badge = product.productionType === "MADE_TO_ORDER"
-    ? "Hecha por Encargo"
-    : product.productionType === "UNIQUE"
-      ? "Pieza Única"
-      : null;
+  const primaryImage = product.images[0];
+  const secondaryImage = product.images[1];
+
+  const material = product.materials?.[0]?.name;
+  const technique = product.technique;
+  const year = product.year;
+  const metaParts = [material, technique, year ? String(year) : null].filter(
+    (v): v is string => Boolean(v),
+  );
+
+  const edition = getEditionLabel(product);
 
   const ga4Item = {
     item_id: product.id,
     item_name: product.name,
-    item_category: (product as unknown as { categories?: { name: string }[] }).categories?.[0]?.name ?? "",
+    item_category:
+      (product as unknown as { categories?: { name: string }[] }).categories?.[0]
+        ?.name ?? "",
     item_brand: product.artisan.displayName,
     price: product.price,
     quantity: 1,
@@ -59,79 +71,128 @@ export function ProductCard({ product, listName }: ProductCardProps) {
     if (listName) trackSelectItem(listName, ga4Item);
   }
 
+  const ariaLabel = `Ver pieza: ${product.name}, por ${product.artisan.displayName}`;
+
   return (
-    <Link href={`/coleccion/${product.slug}`} className="group block" onClick={handleSelectItem}>
-      {/* Image */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
-        {product.images[0]?.url ? (
+    <Link
+      href={`/coleccion/${product.slug}`}
+      className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+      onClick={handleSelectItem}
+      aria-label={ariaLabel}
+    >
+      {/* Imagen editorial 4:5 sin overlays sobre la obra. */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-background">
+        {primaryImage?.url ? (
           <Image
-            src={product.images[0].url}
-            alt={product.images[0].altText ?? product.name}
+            src={primaryImage.url}
+            alt={primaryImage.altText ?? product.name}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes={
+              featured
+                ? "(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 66vw"
+                : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            }
+            className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.03]"
           />
         ) : (
-          <ImagePlaceholder name={product.name} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
+          <ImagePlaceholder
+            name={product.name}
+            className="h-full w-full transition-transform duration-[600ms] ease-out group-hover:scale-[1.03]"
+          />
         )}
 
-        {/* Favorite heart */}
-        <div className="absolute right-3 top-3 flex items-center gap-1">
-          <button
-            className={`rounded-full bg-surface/80 p-2 backdrop-blur-sm transition-colors ${
-              favorited ? "text-accent" : "text-text-tertiary hover:text-accent"
-            } ${isPending ? "opacity-50" : ""}`}
-            onClick={handleToggleFavorite}
-            aria-label={favorited ? "Quitar de favoritos" : "Guardar en favoritos"}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill={favorited ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-            </svg>
-          </button>
-          {product.favoriteCount > 0 && (
-            <span className="rounded-full bg-surface/80 px-1.5 py-0.5 text-[10px] text-text-tertiary backdrop-blur-sm">
-              {product.favoriteCount >= 100 ? "99+" : product.favoriteCount}
-            </span>
-          )}
-        </div>
-
-        {/* Curator Pick Badge */}
-        {product.isCuratorPick && (
-          <span className="absolute left-3 top-3 z-10 rounded-full bg-[#8B7355]/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
-            Selección del Curador ✦
-          </span>
+        {/* Cross-fade a segunda imagen en hover (si existe). */}
+        {secondaryImage?.url && (
+          <Image
+            src={secondaryImage.url}
+            alt=""
+            fill
+            sizes={
+              featured
+                ? "(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 66vw"
+                : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            }
+            className="absolute inset-0 object-cover opacity-0 transition-opacity duration-[400ms] ease-out group-hover:opacity-100"
+            aria-hidden
+          />
         )}
 
-        {/* Badge */}
-        {badge && !product.isCuratorPick && (
-          <span className="absolute left-3 top-3 rounded-full bg-surface/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-text-secondary backdrop-blur-sm">
-            {badge}
-          </span>
-        )}
+        {/* Corazón de wishlist: aparece en hover, no se monta sobre la obra por default. */}
+        <button
+          type="button"
+          onClick={handleToggleFavorite}
+          aria-label={favorited ? "Quitar de favoritos" : "Guardar en favoritos"}
+          className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center text-text transition-opacity duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            favorited
+              ? "opacity-100 text-accent"
+              : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+          } ${isPending ? "opacity-50" : ""}`}
+        >
+          <Heart
+            size={16}
+            strokeWidth={1}
+            fill={favorited ? "currentColor" : "none"}
+            aria-hidden
+          />
+        </button>
       </div>
 
-      {/* Info */}
-      <div className="mt-3 space-y-1">
-        <p className="text-xs font-light text-text-tertiary">
+      {/* Bloque tipográfico editorial. */}
+      <div className="relative mt-5 space-y-1.5">
+        {/* Autor: uppercase letter-spaced, gold. */}
+        <p
+          className={`font-light uppercase tracking-[0.15em] text-accent ${
+            featured ? "text-sm" : "text-xs"
+          }`}
+        >
           {product.artisan.displayName}
         </p>
-        <h3 className="font-serif text-base font-medium text-text">
+
+        {/* Título: Cormorant italic, peso 400. */}
+        <h3
+          className={`font-serif italic font-normal leading-tight text-text ${
+            featured ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
+          }`}
+        >
           {product.name}
         </h3>
-        {product.materials?.[0] && (
-          <p className="text-xs text-text-tertiary">
-            {product.materials[0].name}
+
+        {/* Metadata: Material · Técnica · Año. */}
+        {metaParts.length > 0 && (
+          <p
+            className={`font-light text-text-secondary ${
+              featured ? "text-sm" : "text-xs"
+            }`}
+          >
+            {metaParts.join(" · ")}
           </p>
         )}
-        <PriceDisplay price={product.price} compareAtPrice={product.compareAtPrice} />
-        <ReviewHighlights highlights={product.reviewHighlights as string[] | null} max={2} />
+
+        {/* Edición / tipo de producción. */}
+        {edition && (
+          <p
+            className={`font-light uppercase tracking-[0.15em] text-text-tertiary ${
+              featured ? "text-xs" : "text-[11px]"
+            }`}
+          >
+            {edition}
+          </p>
+        )}
+
+        {/* Precio. */}
+        <p
+          className={`pt-1 font-normal text-text ${
+            featured ? "text-base" : "text-sm"
+          }`}
+        >
+          {formatCLP(product.price)}
+        </p>
+
+        {/* Línea dorada editorial que nace en hover. */}
+        <span
+          aria-hidden
+          className="absolute -bottom-2 left-0 block h-px w-0 bg-accent transition-[width] duration-300 ease-out group-hover:w-full"
+        />
       </div>
     </Link>
   );

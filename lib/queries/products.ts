@@ -9,6 +9,16 @@ const approvedImagesFirst = {
 } as const;
 
 /**
+ * Dos imágenes aprobadas para cards editoriales:
+ * la primera se muestra por defecto, la segunda se cross-fade en hover.
+ */
+const approvedImagesForCard = {
+  where: { status: "APPROVED" as const },
+  orderBy: { position: "asc" as const },
+  take: 2,
+} as const;
+
+/**
  * Reorders the first N products so no two consecutive items share the same
  * artisan. Preserves internal score order within each artisan. Pieces beyond
  * position N remain untouched.
@@ -135,7 +145,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
       },
       categories: { select: { id: true, name: true, slug: true } },
       materials: { select: { id: true, name: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
       specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
     },
@@ -219,7 +229,8 @@ export async function getLatestProducts(limit = 8) {
     take: limit,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
     },
   });
 }
@@ -293,7 +304,8 @@ export async function getNewProducts({
     take: perPage,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
     },
   });
 
@@ -311,7 +323,8 @@ export async function getCuratorPicks(limit?: number) {
     ...(limit ? { take: limit } : {}),
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
     },
   });
 }
