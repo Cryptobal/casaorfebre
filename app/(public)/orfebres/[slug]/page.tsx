@@ -2,18 +2,17 @@ export const revalidate = 300;
 export const dynamic = "force-static";
 
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { getArtisanBySlug } from "@/lib/queries/artisans";
-
 import { buildBreadcrumbJsonLd, generateJewelerPersonJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
-import { SectionHeading } from "@/components/shared/section-heading";
-import { FadeIn } from "@/components/shared/fade-in";
-import { MaterialBadge } from "@/components/shared/material-badge";
-import { ArtisanBadge } from "@/components/artisans/artisan-badge";
+import { EditorialBreadcrumb } from "@/components/shared/editorial-breadcrumb";
 import { ProductCard } from "@/components/products/product-card";
 import { ShareButtons } from "@/components/shared/share-buttons";
+import { FadeIn } from "@/components/shared/fade-in";
 import { prisma } from "@/lib/prisma";
-import Image from "next/image";
+import type { Artisan } from "@prisma/client";
 
 export async function generateMetadata({
   params,
@@ -26,12 +25,17 @@ export async function generateMetadata({
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const url = `${baseUrl}/orfebres/${slug}`;
-  const description = artisan.bio?.slice(0, 160) ?? `${artisan.displayName}, orfebre independiente en Casa Orfebre`;
-  const title = `${artisan.displayName} — Orfebre | Casa Orfebre`;
-  const ogImageUrl = `${baseUrl}/api/og/artisan?name=${encodeURIComponent(artisan.displayName)}&region=${encodeURIComponent(artisan.region || "")}&products=${artisan.products.length}${artisan.profileImage ? `&image=${encodeURIComponent(artisan.profileImage)}` : ""}`;
+  const description =
+    artisan.bio?.slice(0, 160) ??
+    `${artisan.displayName}, ${tierLabel(artisan.tier).toLowerCase()} en Casa Orfebre.`;
+  const title = `${artisan.displayName} — ${tierLabel(artisan.tier)} | Casa Orfebre`;
+
+  const ogImage =
+    artisan.portraitUrl ||
+    `${baseUrl}/api/og/artisan?name=${encodeURIComponent(artisan.displayName)}&region=${encodeURIComponent(artisan.region || "")}&products=${artisan.products.length}${artisan.profileImage ? `&image=${encodeURIComponent(artisan.profileImage)}` : ""}`;
 
   return {
-    title: `${artisan.displayName} — Orfebre | Casa Orfebre`,
+    title,
     description,
     alternates: { canonical: url },
     openGraph: {
@@ -42,7 +46,7 @@ export async function generateMetadata({
       siteName: "Casa Orfebre",
       locale: "es_CL",
       images: [
-        { url: ogImageUrl, width: 1200, height: 630, alt: artisan.displayName },
+        { url: ogImage, width: 1200, height: 1500, alt: artisan.displayName },
         ...(artisan.profileImage
           ? [{ url: artisan.profileImage, width: 800, height: 800, alt: artisan.displayName }]
           : []),
@@ -52,11 +56,29 @@ export async function generateMetadata({
       card: "summary" as const,
       title,
       description,
-      images: artisan.profileImage ? [artisan.profileImage] : undefined,
+      images: ogImage ? [ogImage] : undefined,
       creator: "@casaorfebre",
       site: "@casaorfebre",
     },
   };
+}
+
+function tierLabel(tier: Artisan["tier"]): string {
+  switch (tier) {
+    case "MAESTRO":
+      return "Maestro Orfebre";
+    case "EMERGENTE":
+      return "Orfebre emergente";
+    case "ORFEBRE":
+    default:
+      return "Orfebre";
+  }
+}
+
+function monogram(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
 export default async function ArtisanProfilePage({
@@ -66,14 +88,7 @@ export default async function ArtisanProfilePage({
 }) {
   const { slug } = await params;
   const artisan = await getArtisanBySlug(slug);
-
   if (!artisan) notFound();
-
-  const initials = artisan.displayName
-    .split(" ")
-    .map((w: string) => w[0])
-    .join("")
-    .slice(0, 2);
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Inicio", url: "/" },
@@ -84,229 +99,328 @@ export default async function ArtisanProfilePage({
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": "Person",
     name: artisan.displayName,
+    jobTitle: tierLabel(artisan.tier),
     description: artisan.bio,
-    image: artisan.profileImage || `${baseUrl}/casaorfebre-og-image.png`,
+    image: artisan.portraitUrl || artisan.profileImage || `${baseUrl}/casaorfebre-og-image.png`,
     url: `${baseUrl}/orfebres/${slug}`,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: artisan.location,
-      ...(artisan.region ? { addressRegion: artisan.region } : {}),
-      addressCountry: "CL",
-    },
-    parentOrganization: {
+    ...(artisan.location
+      ? {
+          homeLocation: {
+            "@type": "Place",
+            name: artisan.location,
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: artisan.location,
+              ...(artisan.region ? { addressRegion: artisan.region } : {}),
+              addressCountry: "CL",
+            },
+          },
+        }
+      : {}),
+    memberOf: {
       "@type": "Organization",
       name: "Casa Orfebre",
       url: "https://casaorfebre.cl",
     },
-    ...(artisan.rating > 0 && artisan._count.reviews > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: artisan.rating,
-            reviewCount: artisan._count.reviews,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
-    ...(artisan.products.length > 0
-      ? {
-          makesOffer: artisan.products.slice(0, 10).map((p: any) => ({
-            "@type": "Offer",
-            price: p.price,
-            priceCurrency: "CLP",
-            availability: "https://schema.org/InStock",
-            url: `${baseUrl}/coleccion/${p.slug}`,
-            itemOffered: {
-              "@type": "Product",
-              name: p.name,
-              image:
-                p.images?.[0]?.url ||
-                `${baseUrl}/casaorfebre-og-image.png`,
-              url: `${baseUrl}/coleccion/${p.slug}`,
-            },
-          })),
-        }
-      : {}),
   };
+
+  const portrait = artisan.portraitUrl || artisan.profileImage;
+  const displayedProducts = artisan.products.slice(0, 9);
+  const hasMoreProducts = artisan.products.length > 9;
+
+  // Lista de técnicas combinando signatureTechniques (nuevo) + specialties + specialty (legacy).
+  const techniquesList = Array.from(
+    new Set(
+      [
+        ...(artisan.signatureTechniques ?? []),
+        ...(artisan.specialties ?? []).map((s) => s.name),
+        ...(artisan.specialty ? [artisan.specialty] : []),
+      ].filter(Boolean),
+    ),
+  );
 
   return (
     <>
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
-      <JsonLd data={generateJewelerPersonJsonLd({
-        name: artisan.displayName,
-        slug,
-        bio: artisan.bio || undefined,
-        image: artisan.profileImage || undefined,
-        location: artisan.location || undefined,
-        region: artisan.region || undefined,
-        rating: artisan.rating,
-        reviewCount: artisan._count.reviews,
-        specialties: artisan.specialty ? [artisan.specialty] : undefined,
-      })} />
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
-      {/* Hero Section */}
-      <FadeIn>
-        <div className="flex flex-col items-center text-center">
-          {/* Avatar */}
-          <div className="relative h-32 w-32 overflow-hidden rounded-full border border-border bg-surface">
-            {artisan.profileImage ? (
-              <Image
-                src={artisan.profileImage}
-                alt={artisan.displayName}
-                fill
-                className="object-cover"
-                priority
-                sizes="128px"
-              />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center font-serif text-4xl font-light text-text-secondary">
-                {initials}
-              </span>
-            )}
-          </div>
+      <JsonLd
+        data={generateJewelerPersonJsonLd({
+          name: artisan.displayName,
+          slug,
+          bio: artisan.bio || undefined,
+          image: artisan.portraitUrl || artisan.profileImage || undefined,
+          location: artisan.location || undefined,
+          region: artisan.region || undefined,
+          rating: artisan.rating,
+          reviewCount: artisan._count.reviews,
+          specialties: techniquesList.length > 0 ? techniquesList : undefined,
+        })}
+      />
 
-          {/* Name + Badge */}
-          <h1 className="mt-6 font-serif text-3xl sm:text-4xl font-light text-text">
-            {artisan.displayName}
-          </h1>
-          {artisan.subscriptions?.[0]?.plan && (
-            <div className="mt-2">
-              <ArtisanBadge
-                badgeType={artisan.subscriptions[0].plan.badgeType}
-                badgeText={artisan.subscriptions[0].plan.badgeText}
-                size="md"
-              />
+      <section className="mx-auto max-w-7xl px-4 pt-10 pb-24 sm:px-6 lg:px-8">
+        <EditorialBreadcrumb
+          items={[
+            { label: "Casa Orfebre", href: "/" },
+            { label: "Orfebres", href: "/orfebres" },
+            { label: artisan.displayName },
+          ]}
+        />
+
+        {/* ─── Hero diptych ─── */}
+        <FadeIn>
+          <div className="mt-10 grid grid-cols-1 gap-10 lg:mt-16 lg:grid-cols-2 lg:gap-16">
+            {/* Retrato */}
+            <div className="relative aspect-[4/5] overflow-hidden bg-background">
+              {portrait ? (
+                <Image
+                  src={portrait}
+                  alt={`Retrato de ${artisan.displayName}`}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <span
+                    aria-hidden
+                    className="font-serif text-[16rem] font-light italic leading-none text-text-tertiary"
+                  >
+                    {monogram(artisan.displayName)}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Location + Region + Experience */}
-          <p className="mt-2 text-text-secondary">
-            {artisan.region ? `${artisan.location}, ${artisan.region}` : artisan.location}
-            {artisan.yearsExperience != null && (
-              <span> · {artisan.yearsExperience} {artisan.yearsExperience === 1 ? "año" : "años"} de experiencia</span>
-            )}
-          </p>
+            {/* Texto */}
+            <div className="flex flex-col justify-center">
+              <p className="text-sm font-light uppercase tracking-[0.2em] text-accent">
+                {artisan.displayName}
+              </p>
+              <p className="mt-2 font-serif text-lg font-light italic text-text-secondary">
+                {tierLabel(artisan.tier)}
+              </p>
 
-          {/* Specialties */}
-          {artisan.specialties.length > 0 ? (
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              {artisan.specialties.map((s: { id: string; name: string; slug: string }) => (
-                <span
-                  key={s.id}
-                  className="inline-block rounded-full bg-accent/5 border border-accent/20 px-3 py-1 text-xs font-medium text-accent"
-                >
-                  {s.name}
-                </span>
-              ))}
+              <span aria-hidden className="my-8 block h-px w-[48px] bg-accent" />
+
+              {artisan.quote ? (
+                <blockquote className="font-serif text-4xl font-light leading-[1.1] text-text sm:text-5xl">
+                  <span className="italic">{artisan.quote}</span>
+                </blockquote>
+              ) : (
+                <h1 className="font-serif text-4xl font-light leading-[1.1] text-text sm:text-5xl">
+                  Obra de <span className="italic">{artisan.displayName}</span>
+                </h1>
+              )}
+
+              <div className="mt-8 space-y-1 text-sm font-light text-text-tertiary">
+                <p>
+                  {artisan.location}
+                  {artisan.region ? `, ${artisan.region}` : ""}.
+                </p>
+                {artisan.yearsExperience != null && (
+                  <p>
+                    {artisan.yearsExperience}{" "}
+                    {artisan.yearsExperience === 1 ? "año" : "años"} de práctica.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-8">
+                <ShareButtons
+                  url={`${baseUrl}/orfebres/${slug}`}
+                  title={artisan.displayName}
+                  description={
+                    artisan.quote ??
+                    artisan.bio?.slice(0, 120) ??
+                    "Orfebre en Casa Orfebre"
+                  }
+                  imageUrl={artisan.portraitUrl ?? artisan.profileImage ?? undefined}
+                  type="artisan"
+                />
+              </div>
             </div>
-          ) : artisan.specialty ? (
-            <p className="mt-2 text-sm text-text-tertiary">{artisan.specialty}</p>
-          ) : null}
-
-          {/* Materials */}
-          {artisan.materials.length > 0 && (
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {artisan.materials.map((material: string) => (
-                <MaterialBadge key={material} material={material} />
-              ))}
-            </div>
-          )}
-
-          {/* Stats */}
-          <div className="mt-5 flex items-center justify-center gap-6 text-sm text-text-tertiary">
-            {artisan.rating > 0 && (
-              <span>★ {artisan.rating.toFixed(1)}</span>
-            )}
-            {artisan._count.reviews > 0 && (
-              <span>{artisan._count.reviews} opiniones</span>
-            )}
-            <span>{artisan.products.length} {artisan.products.length === 1 ? "pieza" : "piezas"}</span>
-            {(() => {
-              const totalLikes = artisan.products.reduce((sum: number, p: { favoriteCount: number }) => sum + p.favoriteCount, 0);
-              return totalLikes > 0 ? <span>❤️ {totalLikes} guardados</span> : null;
-            })()}
-          </div>
-
-          {/* Share buttons */}
-          <div className="mt-5 flex flex-col items-center">
-            <p className="text-xs text-text-tertiary mb-2">Compartir este orfebre</p>
-            <ShareButtons
-              url={`https://casaorfebre.cl/orfebres/${artisan.slug}`}
-              title={artisan.displayName}
-              description={artisan.bio?.slice(0, 120) || "Orfebre en Casa Orfebre"}
-              imageUrl={artisan.profileImage ?? undefined}
-              type="artisan"
-            />
-          </div>
-        </div>
-      </FadeIn>
-
-      {/* Bio Section */}
-      {artisan.bio && (
-        <FadeIn delay={100} className="mt-12">
-          <p className="text-text-secondary font-light leading-relaxed max-w-3xl mx-auto text-center">
-            {artisan.bio}
-          </p>
-        </FadeIn>
-      )}
-
-      {/* Story Section */}
-      {artisan.story && (
-        <FadeIn delay={150} className="mt-10">
-          <blockquote className="max-w-2xl mx-auto border-l-2 border-accent/30 pl-6">
-            <p className="font-serif italic text-text-secondary leading-relaxed">
-              {artisan.story}
-            </p>
-          </blockquote>
-        </FadeIn>
-      )}
-
-      {/* Awards Section */}
-      {artisan.awards && artisan.awards.length > 0 && (
-        <FadeIn delay={200} className="mt-10">
-          <h2 className="text-center font-serif text-lg font-light text-text">
-            Premios y reconocimientos
-          </h2>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {artisan.awards.map((award: string) => (
-              <span
-                key={award}
-                className="inline-block rounded-full bg-accent/10 border border-accent/20 px-4 py-1.5 text-xs font-medium text-accent"
-              >
-                {award}
-              </span>
-            ))}
           </div>
         </FadeIn>
-      )}
 
-      {/* Products Grid */}
-      <div className="mt-16">
-        <SectionHeading title={`Piezas de ${artisan.displayName}`} />
-
-        {artisan.products.length > 0 ? (
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {artisan.products.map((product, index) => (
-              <FadeIn key={product.id} delay={index * 100}>
-                <ProductCard product={product} />
-              </FadeIn>
-            ))}
-          </div>
+        {/* ─── Sobre ─── */}
+        {artisan.bio ? (
+          <FadeIn delay={80} className="mt-24 lg:mt-32">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+              <h2 className="col-span-12 text-[11px] font-light uppercase tracking-[0.25em] text-text-tertiary lg:col-span-3">
+                Sobre
+              </h2>
+              <div className="col-span-12 lg:col-span-9">
+                <p className="max-w-prose font-serif text-lg font-light leading-relaxed text-text">
+                  {artisan.bio}
+                </p>
+                {artisan.story && (
+                  <p className="mt-6 max-w-prose font-serif text-lg font-light leading-relaxed text-text">
+                    {artisan.story}
+                  </p>
+                )}
+              </div>
+            </div>
+          </FadeIn>
         ) : (
-          <p className="mt-8 text-center text-sm font-light text-text-tertiary">
-            Este orfebre aún no tiene piezas publicadas
-          </p>
+          <FadeIn delay={80} className="mt-24 lg:mt-32">
+            {/* TODO CONTENIDO: bio editorial pendiente de Camila. */}
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+              <h2 className="col-span-12 text-[11px] font-light uppercase tracking-[0.25em] text-text-tertiary lg:col-span-3">
+                Sobre
+              </h2>
+              <p className="col-span-12 max-w-prose font-serif text-lg italic font-light text-text-tertiary lg:col-span-9">
+                Bio editorial pendiente. Si eres el orfebre y quieres completar
+                tu perfil, escríbenos a editorial@casaorfebre.cl.
+              </p>
+            </div>
+          </FadeIn>
         )}
-      </div>
 
-      {/* Reviews */}
-      <ArtisanReviews artisanId={artisan.id} displayName={artisan.displayName} />
-    </div>
+        {/* ─── Técnicas / Materiales / Años ─── */}
+        {(techniquesList.length > 0 ||
+          (artisan.materials?.length ?? 0) > 0 ||
+          artisan.yearsExperience != null) && (
+          <FadeIn delay={120} className="mt-16 border-t border-[color:var(--color-border-soft)] pt-10">
+            <dl className="grid grid-cols-1 gap-4 text-sm font-light text-text">
+              {techniquesList.length > 0 && (
+                <SpecRow label="Técnicas" values={techniquesList} />
+              )}
+              {(artisan.materials?.length ?? 0) > 0 && (
+                <SpecRow label="Materiales" values={artisan.materials} />
+              )}
+              {artisan.yearsExperience != null && (
+                <SpecRow
+                  label="Año de inicio"
+                  values={[
+                    String(new Date().getFullYear() - artisan.yearsExperience),
+                  ]}
+                />
+              )}
+              {artisan.awards?.length > 0 && (
+                <SpecRow label="Reconocimientos" values={artisan.awards} />
+              )}
+            </dl>
+          </FadeIn>
+        )}
+
+        {/* ─── Obra disponible ─── */}
+        <div className="mt-24 lg:mt-32">
+          <div className="flex items-baseline justify-between gap-6 border-b border-[color:var(--color-border-soft)] pb-6">
+            <h2 className="font-serif text-3xl font-light text-text sm:text-4xl">
+              Obra disponible
+            </h2>
+            <p className="font-serif text-sm font-light italic text-text-secondary">
+              {artisan.products.length === 0
+                ? "Sin piezas publicadas"
+                : artisan.products.length === 1
+                  ? "1 pieza"
+                  : `${artisan.products.length} piezas`}
+            </p>
+          </div>
+
+          {displayedProducts.length > 0 ? (
+            <>
+              <div className="mt-10 grid grid-cols-1 gap-y-16 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-20 lg:grid-cols-3 lg:gap-x-12 lg:gap-y-24">
+                {displayedProducts.map((product, i) => (
+                  <FadeIn key={product.id} delay={Math.min(i, 8) * 60}>
+                    <ProductCard product={product} listName={`Orfebre: ${artisan.displayName}`} />
+                  </FadeIn>
+                ))}
+              </div>
+              {hasMoreProducts && (
+                <div className="mt-16 text-center">
+                  <Link
+                    href={`/coleccion?artisan=${artisan.slug}`}
+                    className="inline-block border-b border-accent pb-1 font-serif text-lg font-light italic text-accent transition-colors hover:text-accent-dark"
+                  >
+                    Ver toda la obra →
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="mt-10 font-serif text-lg font-light italic text-text-tertiary">
+              Este orfebre aún no tiene piezas publicadas.
+            </p>
+          )}
+        </div>
+
+        {/* ─── Taller (imágenes del workshop) ─── */}
+        {artisan.workshopImages && artisan.workshopImages.length > 0 && (
+          <FadeIn delay={80} className="mt-24 lg:mt-32">
+            <h2 className="text-[11px] font-light uppercase tracking-[0.25em] text-text-tertiary">
+              Taller
+            </h2>
+            <div className="mt-6 -mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 sm:-mx-6 lg:mx-0 lg:gap-8">
+              {artisan.workshopImages.map((url, i) => (
+                <div
+                  key={url}
+                  className="relative aspect-[3/4] w-[70vw] flex-shrink-0 snap-center overflow-hidden bg-background first:ml-4 last:mr-4 sm:first:ml-6 sm:last:mr-6 lg:w-[30vw] lg:first:ml-0 lg:last:mr-0"
+                >
+                  <Image
+                    src={url}
+                    alt={`Taller de ${artisan.displayName}, foto ${i + 1}`}
+                    fill
+                    sizes="(max-width: 1024px) 70vw, 30vw"
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+        )}
+
+        {/* ─── Encargo ─── */}
+        {artisan.acceptsCommissions && (
+          <FadeIn delay={80} className="mt-24 border-t border-[color:var(--color-border-soft)] pt-16 lg:mt-32">
+            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+              <div className="col-span-12 lg:col-span-8">
+                <h2 className="font-serif text-3xl font-light text-text sm:text-4xl">
+                  ¿Una pieza <span className="italic">hecha para ti</span>?
+                </h2>
+                <p className="mt-4 max-w-prose font-serif text-lg font-light leading-relaxed text-text">
+                  {artisan.displayName.split(" ")[0]} acepta encargos
+                  personalizados. Cuéntanos qué pieza imaginas y coordinamos
+                  una conversación.
+                </p>
+              </div>
+              <div className="col-span-12 lg:col-span-4 lg:text-right">
+                <Link
+                  href={`/contacto?orfebre=${artisan.slug}&motivo=encargo`}
+                  className="inline-block border border-text px-8 py-3 text-sm font-light tracking-wide text-text transition-colors hover:bg-text hover:text-background"
+                >
+                  Consultar un encargo →
+                </Link>
+              </div>
+            </div>
+          </FadeIn>
+        )}
+
+        {/* ─── Reviews ─── */}
+        <ArtisanReviews artisanId={artisan.id} displayName={artisan.displayName} />
+      </section>
     </>
+  );
+}
+
+function SpecRow({ label, values }: { label: string; values: readonly string[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-1 sm:grid-cols-12 sm:gap-4">
+      <dt className="col-span-3 text-[11px] font-light uppercase tracking-[0.25em] text-text-tertiary">
+        {label}
+      </dt>
+      <dd className="col-span-9 text-sm font-light text-text">
+        {values.map((v, i) => (
+          <span key={`${v}-${i}`}>
+            {i > 0 && <span className="mx-2 text-text-tertiary">·</span>}
+            {v}
+          </span>
+        ))}
+      </dd>
+    </div>
   );
 }
 
@@ -327,128 +441,87 @@ async function ArtisanReviews({
     },
   });
 
+  if (reviews.length === 0) return null;
+
   return (
-    <div className="mt-16">
-      <SectionHeading title={`Opiniones sobre ${displayName}`} />
+    <div className="mt-24 border-t border-[color:var(--color-border-soft)] pt-16 lg:mt-32">
+      <h2 className="font-serif text-3xl font-light text-text sm:text-4xl">
+        Opiniones sobre <span className="italic">{displayName}</span>
+      </h2>
 
-      {reviews.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-border bg-surface px-6 py-8 text-center">
-          <p className="text-sm font-light text-text-tertiary">
-            Este orfebre a&uacute;n no tiene opiniones.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-6 divide-y divide-border rounded-lg border border-border">
-          {reviews.map((review) => {
-            const userName = review.user.name
-              ? formatReviewerName(review.user.name)
-              : "Cliente";
-
-            return (
-              <div key={review.id} className="px-6 py-6">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg
-                          key={star}
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill={star <= review.rating ? "currentColor" : "none"}
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          className={
-                            star <= review.rating
-                              ? "text-[#f59e0b]"
-                              : "text-[#d1d5db]"
-                          }
-                        >
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-sm font-medium text-text">
-                      {userName}
-                    </span>
-                    {review.isVerified && (
-                      <span className="flex items-center gap-1 text-xs text-green-600">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                          <polyline points="22 4 12 14.01 9 11.01" />
-                        </svg>
-                        Compra verificada
-                      </span>
-                    )}
-                  </div>
-                  <time className="text-xs text-text-tertiary">
-                    {review.createdAt.toLocaleDateString("es-CL", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </time>
-                </div>
-
-                <p className="mt-2 text-xs text-text-tertiary">
-                  sobre{" "}
-                  <a
-                    href={`/coleccion/${review.product.slug}`}
-                    className="text-accent hover:underline"
-                  >
-                    {review.product.name}
-                  </a>
-                </p>
-
-                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-                  {review.comment}
-                </p>
-
-                {review.images.length > 0 && (
-                  <div className="mt-3 flex gap-2">
-                    {review.images.map((url, index) => (
-                      <div
-                        key={url}
-                        className="relative h-[60px] w-[60px] overflow-hidden rounded-lg border border-border"
+      <div className="mt-10 space-y-10">
+        {reviews.map((review) => {
+          const userName = review.user.name
+            ? formatReviewerName(review.user.name)
+            : "Cliente";
+          return (
+            <article
+              key={review.id}
+              className="border-b border-[color:var(--color-border-soft)] pb-10 last:border-0"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-0.5 text-accent" aria-label={`${review.rating} de 5 estrellas`}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <svg
+                        key={s}
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill={s <= review.rating ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="1"
                       >
-                        <Image
-                          src={url}
-                          alt={`Foto de opinion ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="60px"
-                        />
-                      </div>
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
                     ))}
                   </div>
-                )}
-
-                {review.response && (
-                  <div className="ml-4 mt-4 border-l-2 border-accent/20 pl-4 sm:ml-8">
-                    <p className="text-xs font-medium text-text-tertiary">
-                      Respuesta del orfebre:
-                    </p>
-                    <p className="mt-1 text-sm text-text-secondary">
-                      {review.response}
-                    </p>
-                  </div>
-                )}
+                  <span className="text-sm font-light uppercase tracking-[0.1em] text-text">
+                    {userName}
+                  </span>
+                  {review.isVerified && (
+                    <span className="text-[11px] font-light uppercase tracking-[0.15em] text-text-tertiary">
+                      · Compra verificada
+                    </span>
+                  )}
+                </div>
+                <time className="text-[11px] font-light uppercase tracking-[0.15em] text-text-tertiary">
+                  {review.createdAt.toLocaleDateString("es-CL", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </time>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <p className="mt-2 text-[11px] font-light uppercase tracking-[0.15em] text-text-tertiary">
+                Sobre{" "}
+                <Link
+                  href={`/coleccion/${review.product.slug}`}
+                  className="text-accent transition-colors hover:text-accent-dark"
+                >
+                  {review.product.name}
+                </Link>
+              </p>
+
+              <p className="mt-4 max-w-prose font-serif text-lg font-light leading-relaxed text-text">
+                {review.comment}
+              </p>
+
+              {review.response && (
+                <div className="mt-6 border-l border-accent/30 pl-6">
+                  <p className="text-[11px] font-light uppercase tracking-[0.2em] text-text-tertiary">
+                    Respuesta del orfebre
+                  </p>
+                  <p className="mt-2 max-w-prose font-serif text-base font-light italic leading-relaxed text-text-secondary">
+                    {review.response}
+                  </p>
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }
