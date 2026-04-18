@@ -209,34 +209,40 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   });
 
   // Log temporal para diagnosticar por qué /coleccion?category=X no muestra
-  // productos. Remover después de confirmar el bug.
+  // productos. Usa console.error para asegurar propagación a Vercel runtime
+  // logs. Remover después de confirmar la causa raíz.
   if (filters.categorySlug) {
-    console.log(
-      `[getApprovedProducts DEBUG] categorySlug=${filters.categorySlug} results=${products.length}`,
+    const totalApproved = await prisma.product.count({
+      where: {
+        status: "APPROVED",
+        artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
+      },
+    });
+    const categoryExists = await prisma.category.findUnique({
+      where: { slug: filters.categorySlug },
+      select: { id: true, slug: true, name: true },
+    });
+    const productsWithThisCategory = await prisma.product.count({
+      where: { categories: { some: { slug: filters.categorySlug } } },
+    });
+    const allCats = await prisma.category.findMany({
+      select: { slug: true, name: true },
+    });
+    // Muestra de hasta 3 productos con esa categoría, cualquiera su status.
+    const sampleWithCat = await prisma.product.findMany({
+      where: { categories: { some: { slug: filters.categorySlug } } },
+      select: {
+        slug: true,
+        name: true,
+        status: true,
+        artisan: { select: { slug: true } },
+        categories: { select: { slug: true, name: true } },
+      },
+      take: 3,
+    });
+    console.error(
+      `[CO-DIAG] categorySlug=${filters.categorySlug} filteredResults=${products.length} totalApprovedNonAdmin=${totalApproved} categoryExistsInDB=${JSON.stringify(categoryExists)} productsWithThisCategoryAnyStatus=${productsWithThisCategory} allCategoriesInDB=${JSON.stringify(allCats)} sampleProducts=${JSON.stringify(sampleWithCat)}`,
     );
-    if (products.length === 0) {
-      // Re-ejecuta sin el filtro de categoría para confirmar si el problema
-      // es la categoría específica o algo más.
-      const totalWithoutCategoryFilter = await prisma.product.count({
-        where: {
-          status: "APPROVED",
-          artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
-        },
-      });
-      const categoryExists = await prisma.category.findUnique({
-        where: { slug: filters.categorySlug },
-        select: { id: true, slug: true, name: true },
-      });
-      const productsWithThisCategoryAll = await prisma.product.count({
-        where: { categories: { some: { slug: filters.categorySlug } } },
-      });
-      const allCategorySlugs = await prisma.category.findMany({
-        select: { slug: true },
-      });
-      console.log(
-        `[getApprovedProducts DEBUG] totalApprovedNoAdmin=${totalWithoutCategoryFilter} categoryExists=${JSON.stringify(categoryExists)} productsWithThisCategoryIncludingAll=${productsWithThisCategoryAll} allSlugs=${allCategorySlugs.map((c) => c.slug).join(",")}`,
-      );
-    }
   }
 
   // Re-ordenamos en memoria para "recommended" con score compuesto.
