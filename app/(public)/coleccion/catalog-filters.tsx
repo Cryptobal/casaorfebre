@@ -20,8 +20,12 @@ const EDITION_OPTIONS = [
 ] as const;
 
 export const SORT_OPTIONS = [
-  { label: "Selección del Curador", value: "curated" },
+  { label: "Recomendadas", value: "recommended" },
   { label: "Nuevas", value: "newest" },
+  { label: "Más valoradas", value: "rating" },
+  { label: "Más visitadas", value: "most_viewed" },
+  { label: "Más guardadas", value: "popular" },
+  { label: "A – Z", value: "az" },
   { label: "Precio ascendente", value: "price_asc" },
   { label: "Precio descendente", value: "price_desc" },
 ] as const;

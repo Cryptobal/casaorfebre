@@ -16,11 +16,11 @@ interface CatalogSortProps {
 export function CatalogSort({ resultsCount }: CatalogSortProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const current = searchParams.get("sort") ?? "curated";
+  const current = searchParams.get("sort") ?? "recommended";
 
   const handleChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== "curated") {
+    if (value && value !== "recommended") {
       params.set("sort", value);
     } else {
       params.delete("sort");

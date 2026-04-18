@@ -54,7 +54,16 @@ function parseEdition(value: string | undefined): "UNIQUE" | "MADE_TO_ORDER" | "
 }
 
 function parseSort(value: string | undefined): ProductSort | undefined {
-  const allowed: ProductSort[] = ["curated", "newest", "price_asc", "price_desc", "rating", "popular"];
+  const allowed: ProductSort[] = [
+    "recommended",
+    "newest",
+    "rating",
+    "most_viewed",
+    "popular",
+    "price_asc",
+    "price_desc",
+    "az",
+  ];
   return allowed.includes(value as ProductSort) ? (value as ProductSort) : undefined;
 }
 
