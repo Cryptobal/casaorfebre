@@ -69,6 +69,14 @@ function diversifyByArtisan<T extends { artisanId: string }>(
   return [...diversified, ...tail];
 }
 
+export type ProductSort =
+  | "curated"
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "rating"
+  | "popular";
+
 interface ProductFilters {
   categorySlug?: string;
   material?: string;
@@ -78,7 +86,8 @@ interface ProductFilters {
   occasionSlug?: string;
   specialtySlug?: string;
   audiencia?: string;
-  sort?: "newest" | "price_asc" | "price_desc" | "rating" | "popular";
+  productionType?: "UNIQUE" | "MADE_TO_ORDER" | "LIMITED";
+  sort?: ProductSort;
 }
 
 export async function getApprovedProducts(filters: ProductFilters = {}) {
@@ -111,17 +120,28 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   if (filters.audiencia) {
     where.audiencia = filters.audiencia;
   }
+  if (filters.productionType) {
+    where.productionType = filters.productionType;
+  }
 
-  const isRelevanceSort = !filters.sort || filters.sort === "newest";
+  // "curated" es el orden editorial por defecto: editorialRank asc (NULLs al final),
+  // luego fecha desc. "newest" activa el scoring por searchWeight del plan.
+  const sort: ProductSort = filters.sort ?? "curated";
+  const isRelevanceSort = sort === "newest";
 
   const orderBy =
-    filters.sort === "price_asc"
+    sort === "price_asc"
       ? { price: "asc" as const }
-      : filters.sort === "price_desc"
+      : sort === "price_desc"
         ? { price: "desc" as const }
-        : filters.sort === "popular"
+        : sort === "popular"
           ? { favoriteCount: "desc" as const }
-          : { publishedAt: "desc" as const };
+          : sort === "curated"
+            ? [
+                { editorialRank: { sort: "asc" as const, nulls: "last" as const } },
+                { publishedAt: "desc" as const },
+              ]
+            : { publishedAt: "desc" as const };
 
   const products = await prisma.product.findMany({
     where,

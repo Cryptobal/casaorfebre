@@ -326,6 +326,8 @@ model Product {
   viewCount      Int               @default(0)
   favoriteCount  Int               @default(0)
   pinterestPinId String?
+  /** Ranking editorial — menor = más arriba. null = no curado. */
+  editorialRank  Int?
   status         ProductStatus     @default(DRAFT)
   pauseReason    ProductPauseReason?
   pausedAt       DateTime?
