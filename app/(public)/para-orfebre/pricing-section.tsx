@@ -93,7 +93,7 @@ function formatCLP(n: number) {
   }).format(n);
 }
 
-export function PricingSection() {
+export function PricingSection({ pioneerMode = false }: { pioneerMode?: boolean } = {}) {
   const [annual, setAnnual] = useState(false);
 
   return (
@@ -220,7 +220,11 @@ export function PricingSection() {
 
               <div className="mt-auto pt-8">
                 <Link
-                  href={`/postular?plan=${plan.name.toLowerCase()}`}
+                  href={
+                    pioneerMode
+                      ? '/postular?pionero=1'
+                      : `/postular?plan=${plan.name.toLowerCase()}`
+                  }
                   className={`block w-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
                     plan.style === 'gold'
                       ? 'bg-accent text-white hover:bg-accent-dark'
@@ -229,7 +233,7 @@ export function PricingSection() {
                         : 'border border-border bg-surface text-text hover:bg-background'
                   }`}
                 >
-                  {plan.cta}
+                  {pioneerMode ? 'Quiero ser Pionero' : plan.cta}
                 </Link>
               </div>
             </div>

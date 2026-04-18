@@ -439,7 +439,7 @@ export default function ParaPioneroPage() {
             </div>
           </FadeIn>
           <div className="mt-12">
-            <PricingSection />
+            <PricingSection pioneerMode />
           </div>
           <FadeIn delay={100}>
             <p className="mx-auto mt-10 max-w-2xl text-center text-sm font-light leading-relaxed text-text-secondary">
