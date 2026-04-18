@@ -4,6 +4,8 @@ interface ArtisanFilters {
   specialtySlug?: string;
   region?: string;
   material?: string;
+  /** Filtra por tier curatorial (MAESTRO, ORFEBRE, EMERGENTE). */
+  tier?: "EMERGENTE" | "ORFEBRE" | "MAESTRO";
   /** Si true, incluye orfebres sin piezas aprobadas (uso admin). */
   includeEmpty?: boolean;
 }
@@ -59,10 +61,23 @@ export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
   if (filters.material) {
     where.materials = { has: filters.material };
   }
+  if (filters.tier) {
+    where.tier = filters.tier;
+  }
 
   return prisma.artisan.findMany({
     where,
-    orderBy: { totalSales: "desc" },
+    // Orden editorial del directorio:
+    //   editorialRank ASC NULLS LAST → tier DESC → totalSales DESC.
+    // El enum ArtisanTier está declarado { EMERGENTE, ORFEBRE, MAESTRO },
+    // por lo que DESC lo ordena MAESTRO → ORFEBRE → EMERGENTE (Postgres
+    // usa posición de declaración, no alfabético). Camila y Pamela
+    // (MAESTRO) suben por este criterio cuando no hay editorialRank.
+    orderBy: [
+      { editorialRank: { sort: "asc", nulls: "last" } },
+      { tier: "desc" },
+      { totalSales: "desc" },
+    ],
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
       ...activePlanInclude,

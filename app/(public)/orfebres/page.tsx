@@ -6,22 +6,23 @@ import { getApprovedArtisans } from "@/lib/queries/artisans";
 import { getActiveSpecialties, getActiveMaterials } from "@/lib/queries/catalog";
 import { CHILEAN_REGIONS } from "@/lib/chile-cities";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
-import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
+import { EditorialBreadcrumb } from "@/components/shared/editorial-breadcrumb";
+import { EditorialHero } from "@/components/shared/editorial-hero";
 import { buildBreadcrumbJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { OrfebresFilters } from "./orfebres-filters";
 
 export const metadata = {
-  title: "Nuestros Orfebres",
+  title: "Orfebres — Las manos detrás de cada pieza",
   description:
-    "Conoce a los orfebres independientes de Chile que crean joyas artesanales únicas. Cada pieza tiene una historia.",
+    "Conoce a los orfebres chilenos que integran Casa Orfebre. Maestros verificados, piezas firmadas, técnicas tradicionales y contemporáneas.",
   alternates: { canonical: "https://casaorfebre.cl/orfebres" },
   openGraph: {
     type: "website" as const,
-    title: "Orfebres Artesanales de Chile | Casa Orfebre",
+    title: "Orfebres — Las manos detrás de cada pieza",
     description:
-      "Conoce a los orfebres independientes de Chile que crean joyas artesanales únicas.",
+      "Conoce a los orfebres chilenos que integran Casa Orfebre. Maestros verificados, piezas firmadas.",
     url: "https://casaorfebre.cl/orfebres",
     siteName: "Casa Orfebre",
     locale: "es_CL",
@@ -29,14 +30,18 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Orfebres Artesanales de Chile | Casa Orfebre",
-    description:
-      "Conoce a los orfebres independientes de Chile.",
+    title: "Orfebres — Casa Orfebre",
+    description: "Conoce a los orfebres chilenos que integran Casa Orfebre.",
     creator: "@casaorfebre",
     site: "@casaorfebre",
     images: ["/casaorfebre-og-image.png"],
   },
 };
+
+function parseTier(value: string | undefined): "EMERGENTE" | "ORFEBRE" | "MAESTRO" | undefined {
+  if (value === "EMERGENTE" || value === "ORFEBRE" || value === "MAESTRO") return value;
+  return undefined;
+}
 
 export default async function OrfebresPage({
   searchParams,
@@ -47,9 +52,10 @@ export default async function OrfebresPage({
   const specialtySlug = typeof params.specialty === "string" ? params.specialty : undefined;
   const region = typeof params.region === "string" ? params.region : undefined;
   const material = typeof params.material === "string" ? params.material : undefined;
+  const tier = parseTier(typeof params.tier === "string" ? params.tier : undefined);
 
   const [artisans, specialties, materials] = await Promise.all([
-    getApprovedArtisans({ specialtySlug, region, material }),
+    getApprovedArtisans({ specialtySlug, region, material, tier }),
     getActiveSpecialties(),
     getActiveMaterials(),
   ]);
@@ -63,20 +69,34 @@ export default async function OrfebresPage({
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Orfebres Chilenos Verificados",
-    description: "Directorio de orfebres chilenos verificados que crean piezas únicas de joyería artesanal.",
+    description:
+      "Directorio editorial de orfebres chilenos verificados que crean piezas únicas de joyería artesanal.",
     url: `${baseUrl}/orfebres`,
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: artisans.length,
-      itemListElement: artisans.slice(0, 30).map((a: any, i: number) => ({
+      itemListElement: artisans.slice(0, 30).map((a, i) => ({
         "@type": "ListItem",
         position: i + 1,
         item: {
-          "@type": "LocalBusiness",
+          "@type": "Person",
           name: a.displayName,
+          jobTitle: a.tier === "MAESTRO" ? "Maestro Orfebre" : "Orfebre",
           url: `${baseUrl}/orfebres/${a.slug}`,
-          ...(a.profileImage ? { image: a.profileImage } : {}),
-          ...(a.location ? { address: { "@type": "PostalAddress", addressLocality: a.location, addressCountry: "CL" } } : {}),
+          ...(a.portraitUrl ? { image: a.portraitUrl } : a.profileImage ? { image: a.profileImage } : {}),
+          ...(a.location
+            ? {
+                homeLocation: {
+                  "@type": "Place",
+                  name: a.location,
+                  address: {
+                    "@type": "PostalAddress",
+                    addressLocality: a.location,
+                    addressCountry: "CL",
+                  },
+                },
+              }
+            : {}),
         },
       })),
     },
@@ -86,37 +106,66 @@ export default async function OrfebresPage({
     <>
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
-      <SectionHeading
-        title="Nuestros Orfebres"
-        subtitle="Artesanos verificados que dan vida a piezas únicas"
-        as="h1"
-      />
 
-      <div className="mt-8">
-        <Suspense>
-          <OrfebresFilters
-            specialties={specialties}
-            materials={materials}
-            regions={CHILEAN_REGIONS}
+      <section className="mx-auto max-w-7xl px-4 pt-10 pb-24 sm:px-6 lg:px-8">
+        <EditorialBreadcrumb
+          items={[
+            { label: "Casa Orfebre", href: "/" },
+            { label: "Orfebres" },
+          ]}
+        />
+
+        <div className="mt-10 lg:mt-16 lg:max-w-4xl">
+          <EditorialHero
+            heading="Nuestros Orfebres"
+            subheading="Las <em>manos</em> detrás de cada pieza."
+            paragraph="Cada orfebre en Casa Orfebre pasa por una curaduría pieza por pieza. Buscamos autoría, dominio técnico, lenguaje propio y honestidad de materiales. Lo que reúne este directorio no es el catálogo más grande — es el que firmamos."
           />
-        </Suspense>
-      </div>
+        </div>
 
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {artisans.map((artisan, index) => (
-          <FadeIn key={artisan.id} delay={index * 100} className="h-full">
-            <ArtisanCard artisan={artisan} />
-          </FadeIn>
-        ))}
-      </div>
+        <div className="mt-12 flex items-baseline justify-between gap-6 border-b border-[color:var(--color-border-soft)] pb-4">
+          <p className="font-serif text-sm font-light italic text-text-secondary">
+            {artisans.length === 0
+              ? "Sin orfebres"
+              : artisans.length === 1
+                ? "1 orfebre"
+                : `${artisans.length} orfebres`}
+          </p>
+          <Suspense fallback={null}>
+            <OrfebresFilters
+              specialties={specialties}
+              materials={materials}
+              regions={CHILEAN_REGIONS}
+            />
+          </Suspense>
+        </div>
 
-      {artisans.length === 0 && (
-        <p className="mt-8 text-center text-sm font-light text-text-tertiary">
-          No se encontraron orfebres con los filtros seleccionados.
-        </p>
-      )}
-    </div>
+        {artisans.length > 0 ? (
+          <div className="mt-16 grid grid-cols-1 gap-y-20 sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-3 lg:gap-x-10 lg:gap-y-24">
+            {artisans.map((artisan, i) => {
+              const isFeatured = i > 0 && (i + 1) % 7 === 0;
+              return (
+                <FadeIn
+                  key={artisan.id}
+                  delay={Math.min(i, 8) * 80}
+                  className={isFeatured ? "lg:col-span-2" : undefined}
+                >
+                  <ArtisanCard artisan={artisan} featured={isFeatured} />
+                </FadeIn>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-20 border-t border-[color:var(--color-border-soft)] pt-20 text-center">
+            <p className="font-serif text-xl font-light italic text-text-secondary">
+              No encontramos orfebres con esos filtros.
+            </p>
+            <p className="mt-3 text-xs font-light uppercase tracking-[0.2em] text-text-tertiary">
+              Prueba con otra región, otro material o limpia los filtros.
+            </p>
+          </div>
+        )}
+      </section>
     </>
   );
 }

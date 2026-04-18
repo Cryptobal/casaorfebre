@@ -140,6 +140,16 @@ model Artisan {
   specialties    Specialty[]
   materials      String[]
   profileImage   String?
+  /** Retrato editorial 4:5 (distinto al avatar profileImage). */
+  portraitUrl    String?
+  /** Frase firma de 1-2 líneas en Cormorant italic (perfil + card editorial). */
+  quote          String?
+  /** Técnicas signature del orfebre, ej. ["Cera perdida", "Martillado"]. */
+  signatureTechniques String[]
+  /** Ranking editorial del directorio — menor = más arriba. null = sin curar. */
+  editorialRank  Int?
+  /** Indica si el orfebre acepta encargos personalizados (perfil). */
+  acceptsCommissions Boolean @default(false)
   workshopImages String[]
   videoUrl         String?
   yearsExperience  Int?
