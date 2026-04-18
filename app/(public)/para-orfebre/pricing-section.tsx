@@ -140,17 +140,30 @@ export function PricingSection({ pioneerMode = false }: { pioneerMode?: boolean 
                 ? plan.annualMonthlyPrice
                 : plan.monthlyPrice;
 
+          const isPioneerPlan = pioneerMode && plan.name === 'Maestro';
+
           return (
             <div
               key={plan.name}
               className={`relative flex flex-col border p-6 transition-shadow hover:shadow-md ${
-                plan.popular ? 'border-accent shadow-sm' : 'border-border'
+                isPioneerPlan
+                  ? 'border-[#8B7355] shadow-md ring-1 ring-[#8B7355]/20'
+                  : plan.popular
+                    ? 'border-accent shadow-sm'
+                    : 'border-border'
               }`}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-medium text-white">
-                  Más popular
+              {isPioneerPlan ? (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#8B7355] px-3 py-0.5 text-xs font-medium text-white">
+                  GRATIS 3 MESES COMO PIONERO
                 </div>
+              ) : (
+                plan.popular &&
+                !pioneerMode && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-medium text-white">
+                    Más popular
+                  </div>
+                )
               )}
 
               <div className="text-center">
@@ -162,7 +175,16 @@ export function PricingSection({ pioneerMode = false }: { pioneerMode?: boolean 
                 </p>
 
                 <div className="mt-4">
-                  {price === 0 ? (
+                  {isPioneerPlan ? (
+                    <>
+                      <p className="font-serif text-3xl font-light text-green-700">
+                        Gratis
+                      </p>
+                      <p className="mt-1 text-sm text-text-tertiary line-through">
+                        {formatCLP(plan.monthlyPrice)}/mes
+                      </p>
+                    </>
+                  ) : price === 0 ? (
                     <p className="font-serif text-3xl font-light text-text">
                       Gratis
                     </p>
@@ -184,7 +206,9 @@ export function PricingSection({ pioneerMode = false }: { pioneerMode?: boolean 
                 </div>
 
                 <div className="mt-1 text-sm text-text-secondary">
-                  Comisión: {plan.commission}%
+                  {isPioneerPlan
+                    ? '0% de comisión durante 3 meses'
+                    : `Comisión: ${plan.commission}%`}
                 </div>
               </div>
 
@@ -226,11 +250,13 @@ export function PricingSection({ pioneerMode = false }: { pioneerMode?: boolean 
                       : `/postular?plan=${plan.name.toLowerCase()}`
                   }
                   className={`block w-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
-                    plan.style === 'gold'
-                      ? 'bg-accent text-white hover:bg-accent-dark'
-                      : plan.style === 'dark'
-                        ? 'bg-text text-background hover:bg-text/90'
-                        : 'border border-border bg-surface text-text hover:bg-background'
+                    isPioneerPlan
+                      ? 'bg-[#8B7355] text-white hover:bg-[#7a6549]'
+                      : plan.style === 'gold'
+                        ? 'bg-accent text-white hover:bg-accent-dark'
+                        : plan.style === 'dark'
+                          ? 'bg-text text-background hover:bg-text/90'
+                          : 'border border-border bg-surface text-text hover:bg-background'
                   }`}
                 >
                   {pioneerMode ? 'Quiero ser Pionero' : plan.cta}
