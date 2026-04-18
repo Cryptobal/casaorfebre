@@ -1,5 +1,6 @@
 export const revalidate = 300;
-export const dynamic = "force-static";
+// No usamos force-static: leemos searchParams (?include=all, ?tier=…, etc.)
+// y queremos que el renderizado los respete.
 
 import { Suspense } from "react";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
@@ -53,9 +54,11 @@ export default async function OrfebresPage({
   const region = typeof params.region === "string" ? params.region : undefined;
   const material = typeof params.material === "string" ? params.material : undefined;
   const tier = parseTier(typeof params.tier === "string" ? params.tier : undefined);
+  // ?include=all muestra también orfebres sin piezas APPROVED (uso editorial / debug).
+  const includeEmpty = params.include === "all";
 
   const [artisans, specialties, materials] = await Promise.all([
-    getApprovedArtisans({ specialtySlug, region, material, tier }),
+    getApprovedArtisans({ specialtySlug, region, material, tier, includeEmpty }),
     getActiveSpecialties(),
     getActiveMaterials(),
   ]);

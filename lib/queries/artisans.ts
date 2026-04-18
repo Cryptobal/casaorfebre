@@ -35,13 +35,15 @@ const approvedImageFilter = {
 
 /**
  * Filtro base para excluir orfebres administrativos de listados públicos.
- * - Excluye usuarios con rol ADMIN (Admin Test se crea vía role-switcher).
+ * - Excluye los artisans creados por el role-switcher (slug `admin-test-*`).
+ *   Así no quedan fuera Camila ni Carlos, que son ADMIN pero también orfebres
+ *   reales de la plataforma.
  * - Por default, exige al menos una pieza APPROVED para aparecer en el directorio.
  */
 function publicArtisanWhere(requireApprovedProduct: boolean) {
   const where: Record<string, unknown> = {
     status: "APPROVED" as const,
-    user: { role: { not: "ADMIN" as const } },
+    NOT: { slug: { startsWith: "admin-test-" } },
   };
   if (requireApprovedProduct) {
     where.products = { some: { status: "APPROVED" as const } };
@@ -126,7 +128,7 @@ export async function getArtisanBySlug(slug: string) {
     where: {
       slug,
       status: "APPROVED",
-      user: { role: { not: "ADMIN" } },
+      NOT: { slug: { startsWith: "admin-test-" } },
     },
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
@@ -150,7 +152,7 @@ export async function getArtisansByRegion(regionKeyword: string) {
   return prisma.artisan.findMany({
     where: {
       status: "APPROVED",
-      user: { role: { not: "ADMIN" } },
+      NOT: { slug: { startsWith: "admin-test-" } },
       OR: [
         { region: { contains: regionKeyword, mode: "insensitive" } },
         { location: { contains: regionKeyword, mode: "insensitive" } },

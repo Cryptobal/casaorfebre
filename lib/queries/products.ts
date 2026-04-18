@@ -94,7 +94,7 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   const where: Record<string, unknown> = {
     status: "APPROVED" as const,
     // Excluye productos de cuentas administrativas (Admin Test vía role-switcher).
-    artisan: { user: { role: { not: "ADMIN" as const } } },
+    artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
   };
 
   if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
@@ -211,7 +211,7 @@ export async function getProductBySlug(slug: string) {
     where: {
       slug,
       status: "APPROVED",
-      artisan: { user: { role: { not: "ADMIN" } } },
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
     },
     include: {
       artisan: {
@@ -243,7 +243,7 @@ export async function getLatestProducts(limit = 8) {
   return prisma.product.findMany({
     where: {
       status: "APPROVED",
-      artisan: { user: { role: { not: "ADMIN" } } },
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
     },
     orderBy: { publishedAt: "desc" },
     take: limit,
@@ -297,7 +297,7 @@ export async function getNewProducts({
   const where: Record<string, unknown> = {
     status: "APPROVED" as const,
     createdAt: { gte: cutoff },
-    artisan: { user: { role: { not: "ADMIN" as const } } },
+    artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
   };
   if (categorySlug) where.categories = { some: { slug: categorySlug } };
   if (material) where.materials = { some: { name: material } };
@@ -341,7 +341,7 @@ export async function getFeaturedOfMonth() {
     where: {
       status: "APPROVED",
       featuredOfMonth: true,
-      artisan: { user: { role: { not: "ADMIN" } } },
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
     },
     include: {
       artisan: { select: { displayName: true, slug: true } },
@@ -356,7 +356,7 @@ export async function getCuratorPicks(limit?: number) {
     where: {
       status: "APPROVED",
       isCuratorPick: true,
-      artisan: { user: { role: { not: "ADMIN" } } },
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
     },
     orderBy: { curatorPickAt: "desc" },
     ...(limit ? { take: limit } : {}),
