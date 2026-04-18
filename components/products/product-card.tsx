@@ -3,6 +3,8 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Heart } from "lucide-react";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
 import { useFavorites } from "@/lib/favorites-context";
@@ -33,6 +35,8 @@ interface ProductCardProps {
 export function ProductCard({ product, listName, featured = false }: ProductCardProps) {
   const [isPending, startTransition] = useTransition();
   const { isFavorite, toggle } = useFavorites();
+  const { status } = useSession();
+  const router = useRouter();
   const favorited = isFavorite(product.id);
 
   const primaryImage = product.images[0];
@@ -61,6 +65,17 @@ export function ProductCard({ product, listName, featured = false }: ProductCard
   function handleToggleFavorite(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    // Si no está logueado, mandamos a login preservando la página actual.
+    // Sin esto el toggle fallaba silencioso y el ♡ parecía roto.
+    if (status === "unauthenticated") {
+      const next = encodeURIComponent(
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : `/coleccion/${product.slug}`,
+      );
+      router.push(`/login?callbackUrl=${next}`);
+      return;
+    }
     if (!favorited) trackAddToWishlist(ga4Item);
     startTransition(async () => {
       await toggle(product.id);
