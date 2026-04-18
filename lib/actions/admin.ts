@@ -72,6 +72,13 @@ export async function approveApplication(
     });
   }
 
+  // Auto-activate Pionero benefits (3 months) when the application was flagged
+  // via the /para-pionero self-apply flow.
+  const PIONEER_MONTHS = 3;
+  const pioneerUntil = application.isPioneerCandidate
+    ? new Date(Date.now() + PIONEER_MONTHS * 30 * 24 * 60 * 60 * 1000)
+    : null;
+
   const artisan = await prisma.artisan.create({
     data: {
       userId: user.id,
@@ -89,6 +96,9 @@ export async function approveApplication(
       awards: application.awards,
       status: "APPROVED",
       approvedAt: new Date(),
+      isPioneer: application.isPioneerCandidate,
+      pioneerUntil,
+      pioneerGrantedBy: application.isPioneerCandidate ? "auto-approved-pionero-flow" : null,
       consentTerms: application.consentTerms ?? true,
       consentTermsAt: application.consentTermsAt ?? new Date(),
       consentMarketing: application.consentMarketing ?? false,

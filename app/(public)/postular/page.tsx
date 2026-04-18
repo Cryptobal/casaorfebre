@@ -30,9 +30,10 @@ export const metadata: Metadata = {
 export default async function PostularPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string; code?: string }>;
+  searchParams: Promise<{ plan?: string; code?: string; pionero?: string }>;
 }) {
-  const { plan: preselectedPlan, code: promoCodeParam } = await searchParams;
+  const { plan: preselectedPlan, code: promoCodeParam, pionero } = await searchParams;
+  const isPioneerApplication = pionero === "1" || pionero === "true";
 
   // Validate promo code server-side if present
   let promoData: {
@@ -97,32 +98,43 @@ export default async function PostularPage({
     getActivePlans(),
   ]);
 
+  const headerTitle = promoData?.valid
+    ? "Bienvenido al Programa Pioneros"
+    : isPioneerApplication
+      ? "Postula al Programa Pioneros"
+      : "Postula como Orfebre";
+
+  const headerSubtitle = promoData?.valid
+    ? "Has sido seleccionado como uno de los primeros orfebres de Casa Orfebre."
+    : isPioneerApplication
+      ? "Si te aprobamos, activamos 3 meses de Plan Maestro gratis y 0% de comisión en tu cuenta."
+      : "Únete a nuestra comunidad de artesanos verificados y muestra tu trabajo al mundo.";
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="text-center">
         <h1 className="font-serif text-3xl font-light sm:text-4xl">
-          {promoData?.valid
-            ? "Bienvenido al Programa Pioneros"
-            : "Postula como Orfebre"}
+          {headerTitle}
         </h1>
-        <p className="mt-3 text-text-secondary">
-          {promoData?.valid
-            ? "Has sido seleccionado como uno de los primeros orfebres de Casa Orfebre."
-            : "Únete a nuestra comunidad de artesanos verificados y muestra tu trabajo al mundo."}
-        </p>
+        <p className="mt-3 text-text-secondary">{headerSubtitle}</p>
       </div>
 
       <div className="mt-12">
         <PostularFlow
           plans={plans}
           preselectedPlan={
-            promoData?.valid ? promoData.planName! : preselectedPlan || null
+            promoData?.valid
+              ? promoData.planName!
+              : isPioneerApplication
+                ? "maestro"
+                : preselectedPlan || null
           }
           specialties={specialties.map((s) => s.name)}
           categories={categories.map((c) => c.name)}
           materials={materials.map((m) => m.name)}
           promoCode={promoData?.valid ? promoCodeParam!.trim().toUpperCase() : null}
           promoData={promoData}
+          isPioneerApplication={isPioneerApplication && !promoData?.valid}
         />
       </div>
     </div>

@@ -1,5 +1,10 @@
 interface PioneerBannerProps {
-  benefits: {
+  /**
+   * Cuando se pasan `benefits`, el banner corresponde a una invitación con
+   * código PIONERO-... ya validado. Sin `benefits`, se renderiza el banner
+   * genérico de postulación al Programa Pioneros (flujo /para-pionero).
+   */
+  benefits?: {
     planDisplayName: string;
     price: string;
     freeMonths: number;
@@ -32,20 +37,36 @@ export function PioneerBanner({ benefits }: PioneerBannerProps) {
           Programa Pioneros
         </p>
 
-        <h2 className="mt-2 font-serif text-xl font-light text-[#1a1a18] sm:text-2xl">
-          {benefits.freeMonths} meses de Plan {benefits.planDisplayName} gratis
-        </h2>
+        {benefits ? (
+          <>
+            <h2 className="mt-2 font-serif text-xl font-light text-[#1a1a18] sm:text-2xl">
+              {benefits.freeMonths} meses de Plan {benefits.planDisplayName} gratis
+            </h2>
 
-        <p className="mt-2 text-sm text-[#1a1a18]/60">
-          Valor total:{" "}
-          <span className="line-through">{benefits.totalValue}</span>{" "}
-          <span className="font-medium text-green-700">$0</span>
-        </p>
+            <p className="mt-2 text-sm text-[#1a1a18]/60">
+              Valor total:{" "}
+              <span className="line-through">{benefits.totalValue}</span>{" "}
+              <span className="font-medium text-green-700">$0</span>
+            </p>
 
-        <p className="mt-3 text-sm text-[#1a1a18]/70">
-          Completa tu postulación y al ser aprobado tu plan se activará
-          automáticamente.
-        </p>
+            <p className="mt-3 text-sm text-[#1a1a18]/70">
+              Completa tu postulación y al ser aprobado tu plan se activará
+              automáticamente.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="mt-2 font-serif text-xl font-light text-[#1a1a18] sm:text-2xl">
+              Estás postulando como Pionero
+            </h2>
+
+            <p className="mt-3 mx-auto max-w-md text-sm text-[#1a1a18]/70">
+              Si tu portafolio es aprobado, activamos automáticamente{" "}
+              <span className="font-medium text-[#1a1a18]">3 meses de Plan Maestro gratis</span>{" "}
+              y 0% de comisión. Sin contratos, sin permanencia.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
