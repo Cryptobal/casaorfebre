@@ -11,6 +11,7 @@
   --color-text-secondary: #6b6860;
   --color-text-tertiary: #9e9a90;
   --color-border: #e8e5df;
+  --color-border-soft: #f0ede8;
   --color-error: #dc2626;
   --color-success: #16a34a;
 
@@ -19,12 +20,43 @@
   --font-sans: var(--font-outfit);
 }
 
+html {
+  /* Smooth scroll para anchors internos (#section). */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shimmer editorial para skeletons — 1.5s loop, sin brillo agresivo. */
+@keyframes editorial-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-editorial-shimmer {
+  animation: editorial-shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-editorial-shimmer {
+    animation: none;
+  }
 }
 
 ::selection {

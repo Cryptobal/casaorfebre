@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getApprovedProducts } from "@/lib/queries/products";
+import { getApprovedProducts, type ProductSort } from "@/lib/queries/products";
 import { buildCollectionWithItemsJsonLd, generateFAQJsonLd, canonicalUrl } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -47,10 +47,23 @@ export async function CategoryLanding({
     typeof searchParams.material === "string" ? searchParams.material : undefined;
   const sortParam =
     typeof searchParams.orden === "string" ? searchParams.orden : undefined;
-  const sort =
-    sortParam === "price_asc" || sortParam === "price_desc"
-      ? sortParam
-      : undefined;
+  // Alineado con /coleccion: 8 valores válidos. "recommended" es el default
+  // (no se pone en la URL; vacío = default).
+  const ALLOWED_SORTS: ProductSort[] = [
+    "recommended",
+    "newest",
+    "rating",
+    "most_viewed",
+    "popular",
+    "price_asc",
+    "price_desc",
+    "az",
+  ];
+  const sort: ProductSort | undefined = ALLOWED_SORTS.includes(
+    sortParam as ProductSort,
+  )
+    ? (sortParam as ProductSort)
+    : undefined;
 
   const priceParam =
     typeof searchParams.precio === "string" ? searchParams.precio : undefined;

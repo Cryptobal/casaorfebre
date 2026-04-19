@@ -9,6 +9,7 @@ import { validateGuestAddToCart } from "@/lib/actions/guest-cart";
 import { addGuestCartLine, readGuestCartLines } from "@/lib/guest-cart-storage";
 import { formatCLP } from "@/lib/utils";
 import { trackAddToCart, type GA4Item } from "@/lib/analytics-events";
+import { UI_COPY, getAddToBagLabel } from "@/lib/content/ui-copy";
 
 interface AddToCartProps {
   productId: string;
@@ -47,7 +48,7 @@ export function AddToCart({ productId, price, productionType, stock, ga4Item }: 
           setErrorMsg(result.error);
         } else {
           if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
-          setSuccessMsg("¡Agregado al carrito!");
+          setSuccessMsg(UI_COPY.bag.itemAdded);
           window.dispatchEvent(new Event("casaorfebre:cart-updated"));
           router.refresh();
           setTimeout(() => setSuccessMsg(null), 2000);
@@ -66,7 +67,7 @@ export function AddToCart({ productId, price, productionType, stock, ga4Item }: 
       }
       addGuestCartLine(productId, quantity);
       if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
-      setSuccessMsg("¡Agregado al carrito!");
+      setSuccessMsg(UI_COPY.bag.itemAdded);
       setTimeout(() => setSuccessMsg(null), 2000);
     });
   }
@@ -103,7 +104,7 @@ export function AddToCart({ productId, price, productionType, stock, ga4Item }: 
         </div>
       )}
 
-      {/* Add to cart button */}
+      {/* Add to cart button — copy editorial según productionType. */}
       <Button
         size="lg"
         className="w-full"
@@ -111,7 +112,8 @@ export function AddToCart({ productId, price, productionType, stock, ga4Item }: 
         disabled={sessionLoading}
         onClick={handleAddToCart}
       >
-        A&ntilde;adir al Carrito &mdash; {formatCLP(price * quantity)}
+        {getAddToBagLabel(productionType as "UNIQUE" | "MADE_TO_ORDER" | "LIMITED")}{" "}
+        — {formatCLP(price * quantity)}
       </Button>
 
       {/* Success message */}

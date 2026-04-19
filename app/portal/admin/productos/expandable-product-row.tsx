@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions/admin";
 import { publishProductToPinterest } from "@/lib/actions/pinterest-publish";
 import { ConfirmDestructiveModal } from "@/components/shared/confirm-destructive-modal";
+import { EditorialControls } from "./editorial-controls";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-800",
@@ -91,6 +92,11 @@ interface Product {
   earringDrop: number | null;
   broochWidth: number | null;
   broochHeight: number | null;
+  // Campos editoriales (Panel Editorial en la fila expandida).
+  isCuratorPick: boolean;
+  curatorNote: string | null;
+  editorialRank: number | null;
+  featuredOfMonth: boolean;
   artisan: { displayName: string; slug: string };
   categories: { name: string }[];
   materials: { id: string; name: string }[];
@@ -429,6 +435,18 @@ export function ExpandableProductRow({ product }: ExpandableProductRowProps) {
               </div>
             </div>
           )}
+
+          {/* ── Panel Editorial ── */}
+          <div className="mb-4">
+            <EditorialControls
+              productId={product.id}
+              isCuratorPick={product.isCuratorPick}
+              curatorNote={product.curatorNote}
+              editorialRank={product.editorialRank}
+              featuredOfMonth={product.featuredOfMonth}
+              isApproved={product.status === "APPROVED"}
+            />
+          </div>
 
           {/* ── Product actions ── */}
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">

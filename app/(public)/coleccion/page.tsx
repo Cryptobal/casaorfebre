@@ -1,25 +1,26 @@
 export const revalidate = 60;
 
 import { Suspense } from "react";
-import { getApprovedProducts, getAllMaterials } from "@/lib/queries/products";
+import { getApprovedProducts, getAllMaterials, type ProductSort } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
 import { getActiveCategories, getActiveMaterials, getActiveOccasions, getActiveSpecialties } from "@/lib/queries/catalog";
-import { SectionHeading } from "@/components/shared/section-heading";
-import { ProductCard } from "@/components/products/product-card";
-import { FadeIn } from "@/components/shared/fade-in";
-import { CatalogFilters } from "./catalog-filters";
+import { EditorialBreadcrumb } from "@/components/shared/editorial-breadcrumb";
+import { EditorialHero } from "@/components/shared/editorial-hero";
+import { CollectionGrid } from "@/components/products/collection-grid";
+import { CatalogFilters, CatalogFiltersSidebar } from "./catalog-filters";
+import { CatalogSort } from "./catalog-sort";
 import { ListTracker } from "./list-tracker";
+import { getCollectionIntro } from "@/lib/content/category-intros";
 
 export const metadata = {
-  title: "Colección",
+  title: "Colección — Casa Orfebre",
   description:
-    "Explora joyas artesanales únicas de orfebres independientes de Chile. Anillos, collares, aros y pulseras hechos a mano con plata, oro y piedras preciosas.",
+    "Piezas de autor hechas a mano en Chile. Anillos, aros, collares, pulseras y colgantes de orfebres verificados. Certificado digital de autenticidad incluido.",
   alternates: { canonical: "https://casaorfebre.cl/coleccion" },
   openGraph: {
     type: "website" as const,
-    title: "Colección de Joyería Artesanal | Casa Orfebre",
-    description:
-      "Explora joyas artesanales únicas de orfebres independientes de Chile.",
+    title: "Colección — Casa Orfebre",
+    description: "Piezas de autor hechas a mano en Chile.",
     url: "https://casaorfebre.cl/coleccion",
     siteName: "Casa Orfebre",
     locale: "es_CL",
@@ -27,31 +28,43 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Colección de Joyería Artesanal | Casa Orfebre",
-    description:
-      "Explora joyas artesanales únicas de orfebres independientes de Chile.",
+    title: "Colección — Casa Orfebre",
+    description: "Piezas de autor hechas a mano en Chile.",
     creator: "@casaorfebre",
     site: "@casaorfebre",
     images: ["/casaorfebre-og-image.png"],
   },
 };
 
-// Category slugs are validated against the DB below
-
 function parsePriceRange(price: string | undefined) {
   if (!price) return {};
-  // "50000" → max only
-  // "50000-100000" → min and max
-  // "200000" alone with no dash → min only (Más de $200.000)
   if (price.includes("-")) {
     const [min, max] = price.split("-").map(Number);
     return { minPrice: min, maxPrice: max };
   }
   const num = Number(price);
   if (Number.isNaN(num)) return {};
-  // Disambiguate: 50000 means "up to 50k", 200000 means "over 200k"
   if (num <= 50000) return { maxPrice: num };
   return { minPrice: num };
+}
+
+function parseEdition(value: string | undefined): "UNIQUE" | "MADE_TO_ORDER" | "LIMITED" | undefined {
+  if (value === "UNIQUE" || value === "MADE_TO_ORDER" || value === "LIMITED") return value;
+  return undefined;
+}
+
+function parseSort(value: string | undefined): ProductSort | undefined {
+  const allowed: ProductSort[] = [
+    "recommended",
+    "newest",
+    "rating",
+    "most_viewed",
+    "popular",
+    "price_asc",
+    "price_desc",
+    "az",
+  ];
+  return allowed.includes(value as ProductSort) ? (value as ProductSort) : undefined;
 }
 
 export default async function ColeccionPage({
@@ -67,14 +80,24 @@ export default async function ColeccionPage({
   const occasionSlug = typeof params.occasion === "string" ? params.occasion : undefined;
   const specialtySlug = typeof params.specialty === "string" ? params.specialty : undefined;
   const audiencia = typeof params.audiencia === "string" ? params.audiencia.toUpperCase() : undefined;
-  const sortParam = typeof params.sort === "string" ? params.sort : undefined;
-  const sort = (sortParam === "price_asc" || sortParam === "price_desc" || sortParam === "newest" || sortParam === "rating" || sortParam === "popular")
-    ? sortParam as "price_asc" | "price_desc" | "newest" | "rating" | "popular"
-    : undefined;
+  const sort = parseSort(typeof params.sort === "string" ? params.sort : undefined);
+  const edition = parseEdition(typeof params.edition === "string" ? params.edition : undefined);
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
+
   const [products, materials, artisans, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
-    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, audiencia, sort }),
+    getApprovedProducts({
+      categorySlug,
+      material,
+      minPrice,
+      maxPrice,
+      artisanSlug,
+      occasionSlug,
+      specialtySlug,
+      audiencia,
+      productionType: edition,
+      sort,
+    }),
     getAllMaterials(),
     getApprovedArtisans(),
     getActiveCategories(),
@@ -83,56 +106,84 @@ export default async function ColeccionPage({
     getActiveSpecialties(),
   ]);
 
-  // Use DB materials if available, fallback to product-derived materials
   const materialNames = dbMaterials.length > 0 ? dbMaterials.map((m) => m.name) : materials;
+  const artisanOptions = artisans.map((a) => ({ slug: a.slug, displayName: a.displayName }));
 
-  const artisanOptions = artisans.map((a) => ({
-    slug: a.slug,
-    displayName: a.displayName,
-  }));
+  const intro = getCollectionIntro(categorySlug);
+  const breadcrumbItems = [
+    { label: "Casa Orfebre", href: "/" },
+    { label: "Colección", href: "/coleccion" },
+    // Usamos intro.heading para el label final para que coincida con el hero
+    // ("Anillos" en plural editorial, en vez de "Anillo" singular de DB).
+    ...(categorySlug ? [{ label: intro.heading }] : []),
+  ];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
-      <SectionHeading
-        title="Colección"
-        subtitle="Piezas de orfebres chilenos verificados"
-        as="h1"
-      />
+    <section className="mx-auto max-w-7xl px-4 pt-10 pb-24 sm:px-6 lg:px-8">
+      <EditorialBreadcrumb items={breadcrumbItems} />
 
-      <div className="mt-8">
-        <Suspense fallback={null}>
-          <CatalogFilters categories={dbCategories} materials={materialNames} artisans={artisanOptions} occasions={dbOccasions} specialties={dbSpecialties} />
-        </Suspense>
+      <div className="mt-10 lg:mt-16">
+        <EditorialHero
+          heading={intro.heading}
+          subheading={intro.subheading}
+          paragraph={intro.paragraph}
+        />
       </div>
 
-      {products.length > 0 ? (
-        <>
-        <ListTracker
-          listName={categorySlug ?? "Colección"}
-          items={products.slice(0, 20).map((p) => ({
-            item_id: p.id,
-            item_name: p.name,
-            item_category: p.categories?.[0]?.name ?? "",
-            item_brand: p.artisan.displayName,
-            price: p.price,
-            quantity: 1,
-          }))}
+      <div className="mt-16 flex flex-col gap-10 lg:flex-row lg:gap-16">
+        <CatalogFiltersSidebar
+          categories={dbCategories}
+          materials={materialNames}
+          artisans={artisanOptions}
+          occasions={dbOccasions}
+          specialties={dbSpecialties}
         />
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-          {products.map((product, i) => (
-            <FadeIn key={product.id} delay={i * 60}>
-              <ProductCard product={product} listName={categorySlug ?? "Colección"} />
-            </FadeIn>
-          ))}
+
+        <div className="flex-1 min-w-0">
+          {/* Barra mobile: filtros + contador/orden. */}
+          <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
+            <Suspense fallback={null}>
+              <CatalogFilters
+                categories={dbCategories}
+                materials={materialNames}
+                artisans={artisanOptions}
+                occasions={dbOccasions}
+                specialties={dbSpecialties}
+              />
+            </Suspense>
+          </div>
+
+          <Suspense fallback={null}>
+            <CatalogSort resultsCount={products.length} />
+          </Suspense>
+
+          {products.length > 0 ? (
+            <div className="mt-12">
+              <ListTracker
+                listName={categorySlug ?? "Colección"}
+                items={products.slice(0, 20).map((p) => ({
+                  item_id: p.id,
+                  item_name: p.name,
+                  item_category: p.categories?.[0]?.name ?? "",
+                  item_brand: p.artisan.displayName,
+                  price: p.price,
+                  quantity: 1,
+                }))}
+              />
+              <CollectionGrid products={products} listName={categorySlug ?? "Colección"} />
+            </div>
+          ) : (
+            <div className="mt-20 border-t border-[color:var(--color-border-soft)] pt-20 text-center">
+              <p className="font-serif text-xl font-light italic text-text-secondary">
+                No encontramos piezas con esos filtros.
+              </p>
+              <p className="mt-3 text-xs font-light uppercase tracking-[0.2em] text-text-tertiary">
+                Prueba con otro material, otra técnica o limpia los filtros.
+              </p>
+            </div>
+          )}
         </div>
-        </>
-      ) : (
-        <div className="mt-16 text-center">
-          <p className="text-sm text-text-secondary">
-            No encontramos piezas con esos filtros.
-          </p>
-        </div>
-      )}
+      </div>
     </section>
   );
 }

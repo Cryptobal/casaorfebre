@@ -24,8 +24,14 @@ const PRICE_RANGES = [
   { label: "Más de $200.000", value: "200000-999999" },
 ] as const;
 
+// Alineado con /coleccion (8 opciones). "" = default "Recomendadas".
 const SORT_OPTIONS = [
-  { label: "Más recientes", value: "" },
+  { label: "Recomendadas", value: "" },
+  { label: "Nuevas", value: "newest" },
+  { label: "Más valoradas", value: "rating" },
+  { label: "Más visitadas", value: "most_viewed" },
+  { label: "Más guardadas", value: "popular" },
+  { label: "A – Z", value: "az" },
   { label: "Precio ↑", value: "price_asc" },
   { label: "Precio ↓", value: "price_desc" },
 ] as const;

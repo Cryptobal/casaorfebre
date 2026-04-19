@@ -4,6 +4,10 @@ interface ArtisanFilters {
   specialtySlug?: string;
   region?: string;
   material?: string;
+  /** Filtra por tier curatorial (MAESTRO, ORFEBRE, EMERGENTE). */
+  tier?: "EMERGENTE" | "ORFEBRE" | "MAESTRO";
+  /** Si true, incluye orfebres sin piezas aprobadas (uso admin). */
+  includeEmpty?: boolean;
 }
 
 const activePlanInclude = {
@@ -29,8 +33,26 @@ const approvedImageFilter = {
   take: 1,
 } as const;
 
+/**
+ * Filtro base para excluir orfebres administrativos de listados públicos.
+ * - Excluye los artisans creados por el role-switcher (slug `admin-test-*`).
+ *   Así no quedan fuera Camila ni Carlos, que son ADMIN pero también orfebres
+ *   reales de la plataforma.
+ * - Por default, exige al menos una pieza APPROVED para aparecer en el directorio.
+ */
+function publicArtisanWhere(requireApprovedProduct: boolean) {
+  const where: Record<string, unknown> = {
+    status: "APPROVED" as const,
+    NOT: { slug: { startsWith: "admin-test-" } },
+  };
+  if (requireApprovedProduct) {
+    where.products = { some: { status: "APPROVED" as const } };
+  }
+  return where;
+}
+
 export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
-  const where: Record<string, unknown> = { status: "APPROVED" as const };
+  const where = publicArtisanWhere(!filters.includeEmpty);
 
   if (filters.specialtySlug) {
     where.specialties = { some: { slug: filters.specialtySlug } };
@@ -41,10 +63,23 @@ export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
   if (filters.material) {
     where.materials = { has: filters.material };
   }
+  if (filters.tier) {
+    where.tier = filters.tier;
+  }
 
   return prisma.artisan.findMany({
     where,
-    orderBy: { totalSales: "desc" },
+    // Orden editorial del directorio:
+    //   editorialRank ASC NULLS LAST → tier DESC → totalSales DESC.
+    // El enum ArtisanTier está declarado { EMERGENTE, ORFEBRE, MAESTRO },
+    // por lo que DESC lo ordena MAESTRO → ORFEBRE → EMERGENTE (Postgres
+    // usa posición de declaración, no alfabético). Camila y Pamela
+    // (MAESTRO) suben por este criterio cuando no hay editorialRank.
+    orderBy: [
+      { editorialRank: { sort: "asc", nulls: "last" } },
+      { tier: "desc" },
+      { totalSales: "desc" },
+    ],
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
       ...activePlanInclude,
@@ -55,7 +90,7 @@ export async function getApprovedArtisans(filters: ArtisanFilters = {}) {
 
 export async function getFeaturedArtisans(limit = 3) {
   return prisma.artisan.findMany({
-    where: { status: "APPROVED" },
+    where: publicArtisanWhere(true),
     orderBy: { rating: "desc" },
     take: limit,
     include: {
@@ -69,14 +104,8 @@ export async function getFeaturedArtisans(limit = 3) {
 export async function getMaestroArtisans() {
   return prisma.artisan.findMany({
     where: {
-      status: "APPROVED",
-      homeHighlight: true,
-      subscriptions: {
-        some: {
-          status: "ACTIVE",
-          plan: { homeHighlight: true },
-        },
-      },
+      ...publicArtisanWhere(true),
+      tier: "MAESTRO",
     },
     orderBy: { rating: "desc" },
     include: {
@@ -95,8 +124,12 @@ export async function getMaestroArtisans() {
 }
 
 export async function getArtisanBySlug(slug: string) {
-  return prisma.artisan.findUnique({
-    where: { slug, status: "APPROVED" },
+  return prisma.artisan.findFirst({
+    where: {
+      slug,
+      status: "APPROVED",
+      NOT: { slug: { startsWith: "admin-test-" } },
+    },
     include: {
       specialties: { select: { id: true, name: true, slug: true } },
       ...activePlanInclude,
@@ -119,6 +152,7 @@ export async function getArtisansByRegion(regionKeyword: string) {
   return prisma.artisan.findMany({
     where: {
       status: "APPROVED",
+      NOT: { slug: { startsWith: "admin-test-" } },
       OR: [
         { region: { contains: regionKeyword, mode: "insensitive" } },
         { location: { contains: regionKeyword, mode: "insensitive" } },

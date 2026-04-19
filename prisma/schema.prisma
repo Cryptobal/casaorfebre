@@ -140,6 +140,16 @@ model Artisan {
   specialties    Specialty[]
   materials      String[]
   profileImage   String?
+  /** Retrato editorial 4:5 (distinto al avatar profileImage). */
+  portraitUrl    String?
+  /** Frase firma de 1-2 líneas en Cormorant italic (perfil + card editorial). */
+  quote          String?
+  /** Técnicas signature del orfebre, ej. ["Cera perdida", "Martillado"]. */
+  signatureTechniques String[]
+  /** Ranking editorial del directorio — menor = más arriba. null = sin curar. */
+  editorialRank  Int?
+  /** Indica si el orfebre acepta encargos personalizados (perfil). */
+  acceptsCommissions Boolean @default(false)
   workshopImages String[]
   videoUrl         String?
   yearsExperience  Int?
@@ -166,6 +176,8 @@ model Artisan {
   pioneerUntil        DateTime?
   pioneerGrantedBy    String?
   homeHighlight       Boolean                  @default(false)
+  // Jerarquía curatorial independiente del plan comercial.
+  tier                ArtisanTier              @default(ORFEBRE)
   status              ArtisanStatus            @default(PENDING)
   appliedAt           DateTime                 @default(now())
   approvedAt          DateTime?
@@ -274,6 +286,8 @@ model Product {
   specialties    Specialty[]
   occasions      Occasion[]
   technique      String?
+  /** Año de creación de la pieza (metadata editorial). */
+  year           Int?
   dimensions     String?
   weight         Float?
   productionType  ProductionType    @default(UNIQUE)
@@ -322,6 +336,10 @@ model Product {
   viewCount      Int               @default(0)
   favoriteCount  Int               @default(0)
   pinterestPinId String?
+  /** Ranking editorial — menor = más arriba. null = no curado. */
+  editorialRank  Int?
+  /** Pieza del mes: sólo una activa a la vez (enforzado por lógica de admin). */
+  featuredOfMonth Boolean         @default(false)
   status         ProductStatus     @default(DRAFT)
   pauseReason    ProductPauseReason?
   pausedAt       DateTime?
@@ -857,6 +875,12 @@ enum ArtisanStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+enum ArtisanTier {
+  EMERGENTE
+  ORFEBRE
+  MAESTRO
 }
 
 enum ProductStatus {

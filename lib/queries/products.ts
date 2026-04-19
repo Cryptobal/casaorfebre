@@ -9,6 +9,16 @@ const approvedImagesFirst = {
 } as const;
 
 /**
+ * Dos imágenes aprobadas para cards editoriales:
+ * la primera se muestra por defecto, la segunda se cross-fade en hover.
+ */
+const approvedImagesForCard = {
+  where: { status: "APPROVED" as const },
+  orderBy: { position: "asc" as const },
+  take: 2,
+} as const;
+
+/**
  * Reorders the first N products so no two consecutive items share the same
  * artisan. Preserves internal score order within each artisan. Pieces beyond
  * position N remain untouched.
@@ -59,6 +69,16 @@ function diversifyByArtisan<T extends { artisanId: string }>(
   return [...diversified, ...tail];
 }
 
+export type ProductSort =
+  | "recommended"   // default: score compuesto + diversificación por orfebre
+  | "newest"        // publishedAt desc + diversificación
+  | "rating"        // rating del orfebre desc + diversificación
+  | "most_viewed"   // viewCount desc + diversificación
+  | "popular"       // favoriteCount desc + diversificación
+  | "price_asc"     // orden estricto, sin diversificación
+  | "price_desc"    // orden estricto, sin diversificación
+  | "az";           // alfabético por nombre, sin diversificación
+
 interface ProductFilters {
   categorySlug?: string;
   material?: string;
@@ -68,11 +88,16 @@ interface ProductFilters {
   occasionSlug?: string;
   specialtySlug?: string;
   audiencia?: string;
-  sort?: "newest" | "price_asc" | "price_desc" | "rating" | "popular";
+  productionType?: "UNIQUE" | "MADE_TO_ORDER" | "LIMITED";
+  sort?: ProductSort;
 }
 
 export async function getApprovedProducts(filters: ProductFilters = {}) {
-  const where: Record<string, unknown> = { status: "APPROVED" as const };
+  const where: Record<string, unknown> = {
+    status: "APPROVED" as const,
+    // Excluye productos de cuentas administrativas (Admin Test vía role-switcher).
+    artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
+  };
 
   if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
   if (filters.material) where.materials = { some: { name: filters.material } };
@@ -83,7 +108,10 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
     };
   }
   if (filters.artisanSlug) {
-    where.artisan = { slug: filters.artisanSlug };
+    where.artisan = {
+      ...(where.artisan as Record<string, unknown>),
+      slug: filters.artisanSlug,
+    };
   }
   if (filters.occasionSlug) {
     where.occasions = { some: { slug: filters.occasionSlug } };
@@ -94,17 +122,59 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
   if (filters.audiencia) {
     where.audiencia = filters.audiencia;
   }
+  if (filters.productionType) {
+    where.productionType = filters.productionType;
+  }
 
-  const isRelevanceSort = !filters.sort || filters.sort === "newest";
+  const sort: ProductSort = filters.sort ?? "recommended";
 
+  // "recommended" rehidrata en memoria con un score compuesto que pondera
+  // editorialRank + favoriteCount + viewCount + rating del orfebre + searchWeight
+  // del plan + recency. Además diversifica por orfebre en las primeras 12
+  // posiciones para que nadie tape a los demás.
+  const useCompositeScore = sort === "recommended";
+  // Sorts "equilibrados" — diversificamos para evitar dominancia de un orfebre.
+  const applyDiversify =
+    sort === "recommended" ||
+    sort === "newest" ||
+    sort === "rating" ||
+    sort === "most_viewed" ||
+    sort === "popular";
+
+  // Orden base pedido a Postgres. Para "recommended" igual hacemos un pre-orden
+  // razonable; el score compuesto lo re-ordena en memoria.
   const orderBy =
-    filters.sort === "price_asc"
+    sort === "price_asc"
       ? { price: "asc" as const }
-      : filters.sort === "price_desc"
+      : sort === "price_desc"
         ? { price: "desc" as const }
-        : filters.sort === "popular"
-          ? { favoriteCount: "desc" as const }
-          : { publishedAt: "desc" as const };
+        : sort === "az"
+          ? { name: "asc" as const }
+          : sort === "popular"
+            ? [
+                { favoriteCount: "desc" as const },
+                { publishedAt: "desc" as const },
+              ]
+            : sort === "most_viewed"
+              ? [
+                  { viewCount: "desc" as const },
+                  { publishedAt: "desc" as const },
+                ]
+              : sort === "rating"
+                ? [
+                    { artisan: { rating: "desc" as const } },
+                    { publishedAt: "desc" as const },
+                  ]
+                : sort === "newest"
+                  ? { publishedAt: "desc" as const }
+                  : [
+                      // "recommended": editorialRank manda si está puesto,
+                      // luego favoriteCount, luego fecha. Este pre-orden se
+                      // refina con el score compuesto abajo.
+                      { editorialRank: { sort: "asc" as const, nulls: "last" as const } },
+                      { favoriteCount: "desc" as const },
+                      { publishedAt: "desc" as const },
+                    ];
 
   const products = await prisma.product.findMany({
     where,
@@ -114,8 +184,12 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
         select: {
           displayName: true,
           slug: true,
-          ...(isRelevanceSort
+          // Para "recommended" y "rating" necesitamos rating + subscriptions
+          // para el score compuesto y el peso del plan.
+          ...(useCompositeScore || sort === "rating"
             ? {
+                rating: true,
+                reviewCount: true,
                 subscriptions: {
                   where: { status: "ACTIVE" },
                   take: 1,
@@ -128,50 +202,103 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
       },
       categories: { select: { id: true, name: true, slug: true } },
       materials: { select: { id: true, name: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
       specialties: { select: { id: true, name: true, slug: true } },
       occasions: { select: { id: true, name: true, slug: true } },
     },
   });
 
-  // Apply search weight priority when sorting by relevance (default)
-  if (isRelevanceSort) {
+
+  // Re-ordenamos en memoria para "recommended" con score compuesto.
+  if (useCompositeScore) {
     const now = Date.now();
+    const dayMs = 86_400_000;
+
     products.sort((a, b) => {
-      const aWeight = (a.artisan as unknown as { subscriptions?: { plan: { searchWeight: number } }[] })
-        .subscriptions?.[0]?.plan?.searchWeight ?? 1.0;
-      const bWeight = (b.artisan as unknown as { subscriptions?: { plan: { searchWeight: number } }[] })
-        .subscriptions?.[0]?.plan?.searchWeight ?? 1.0;
-
-      // Score = recency (0-1 normalized) * searchWeight
-      const aAge = now - (a.publishedAt?.getTime() ?? 0);
-      const bAge = now - (b.publishedAt?.getTime() ?? 0);
-      const aScore = (1 / (1 + aAge / 86400000)) * aWeight;
-      const bScore = (1 / (1 + bAge / 86400000)) * bWeight;
-
+      const aScore = compositeScore(a, now, dayMs);
+      const bScore = compositeScore(b, now, dayMs);
       return bScore - aScore;
     });
+  }
 
-    // Diversify the first 12 positions so no two consecutive items
-    // are from the same artisan. Keeps internal score order within
-    // each artisan and leaves positions 13+ untouched.
+  // Diversificar: ningún orfebre ocupa dos posiciones consecutivas en las
+  // primeras 12. Preserva orden interno por score dentro de cada orfebre.
+  //
+  // IMPORTANTE: diversifyByArtisan puede retornar la MISMA referencia de
+  // `products` (caso single-artisan). Si ese es el caso, truncar `products`
+  // y luego push(...diversified) resulta en un array vacío (aliasing bug).
+  // Por eso verificamos identidad antes de mutar.
+  if (applyDiversify) {
     const diversified = diversifyByArtisan(products, 12);
-    products.length = 0;
-    products.push(...diversified);
+    if (diversified !== products) {
+      products.length = 0;
+      products.push(...diversified);
+    }
+  }
 
-    // Strip subscription data from response to keep artisan shape clean
+  // Limpiar datos internos del shape del artisan antes de devolver.
+  if (useCompositeScore || sort === "rating") {
     for (const p of products) {
       const art = p.artisan as Record<string, unknown>;
       delete art.subscriptions;
+      delete art.rating;
+      delete art.reviewCount;
     }
   }
 
   return products;
 }
 
+/**
+ * Score compuesto para el orden "Recomendadas". Combina señales editoriales
+ * (editorialRank), de compradores (favoriteCount), de tráfico (viewCount),
+ * de calidad (rating del orfebre × reviews), peso del plan del orfebre
+ * (searchWeight) y frescura (días desde publicación).
+ */
+function compositeScore(
+  product: {
+    editorialRank?: number | null;
+    favoriteCount: number;
+    viewCount: number;
+    publishedAt: Date | null;
+    artisan: unknown;
+  },
+  now: number,
+  dayMs: number,
+): number {
+  const art = product.artisan as {
+    rating?: number;
+    reviewCount?: number;
+    subscriptions?: { plan: { searchWeight: number } }[];
+  };
+
+  const rank = product.editorialRank;
+  const editorialBonus = rank != null ? 10_000 / (rank + 1) : 0;
+
+  const artisanRating = art.rating ?? 0;
+  const artisanReviews = art.reviewCount ?? 0;
+  const qualityScore = artisanRating * Math.log(1 + artisanReviews) * 6;
+
+  const buyerSignal = product.favoriteCount * 3;
+  const trafficSignal = Math.log(1 + product.viewCount) * 4;
+
+  const searchWeight = art.subscriptions?.[0]?.plan?.searchWeight ?? 1.0;
+  const ageDays = Math.max(
+    0,
+    (now - (product.publishedAt?.getTime() ?? now)) / dayMs,
+  );
+  const recency = (1 / (1 + ageDays / 14)) * searchWeight * 10;
+
+  return editorialBonus + qualityScore + buyerSignal + trafficSignal + recency;
+}
+
 export async function getProductBySlug(slug: string) {
-  return prisma.product.findUnique({
-    where: { slug, status: "APPROVED" },
+  return prisma.product.findFirst({
+    where: {
+      slug,
+      status: "APPROVED",
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
+    },
     include: {
       artisan: {
         select: {
@@ -200,12 +327,16 @@ export async function getProductBySlug(slug: string) {
 
 export async function getLatestProducts(limit = 8) {
   return prisma.product.findMany({
-    where: { status: "APPROVED" },
+    where: {
+      status: "APPROVED",
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
+    },
     orderBy: { publishedAt: "desc" },
     take: limit,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
     },
   });
 }
@@ -252,6 +383,7 @@ export async function getNewProducts({
   const where: Record<string, unknown> = {
     status: "APPROVED" as const,
     createdAt: { gte: cutoff },
+    artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
   };
   if (categorySlug) where.categories = { some: { slug: categorySlug } };
   if (material) where.materials = { some: { name: material } };
@@ -278,21 +410,46 @@ export async function getNewProducts({
     take: perPage,
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
     },
   });
 
   return { products, total, totalPages: Math.ceil(total / perPage) };
 }
 
+/**
+ * Pieza del Mes — sólo una pieza está marcada featuredOfMonth a la vez.
+ * Retorna null si no hay ninguna (sección se omite con elegancia en el home).
+ */
+export async function getFeaturedOfMonth() {
+  return prisma.product.findFirst({
+    where: {
+      status: "APPROVED",
+      featuredOfMonth: true,
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
+    },
+    include: {
+      artisan: { select: { displayName: true, slug: true } },
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
+    },
+  });
+}
+
 export async function getCuratorPicks(limit?: number) {
   return prisma.product.findMany({
-    where: { status: "APPROVED", isCuratorPick: true },
+    where: {
+      status: "APPROVED",
+      isCuratorPick: true,
+      artisan: { NOT: { slug: { startsWith: "admin-test-" } } },
+    },
     orderBy: { curatorPickAt: "desc" },
     ...(limit ? { take: limit } : {}),
     include: {
       artisan: { select: { displayName: true, slug: true } },
-      images: approvedImagesFirst,
+      images: approvedImagesForCard,
+      materials: { select: { id: true, name: true } },
     },
   });
 }

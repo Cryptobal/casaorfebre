@@ -1180,6 +1180,74 @@ export async function curateProduct(
   return { success: true };
 }
 
+// 15a. Editorial fields — editorialRank + featuredOfMonth.
+// Separado de curateProduct porque son dimensiones independientes:
+// el curador destaca con nota; rank ordena el grid; featuredOfMonth
+// es exclusivo (sólo una pieza a la vez en el home).
+export async function setProductEditorial(
+  productId: string,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "No autorizado" };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { status: true },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+  if (product.status !== "APPROVED")
+    return { error: "Solo se pueden marcar productos aprobados" };
+
+  // editorialRank: vacío → null (pierde ranking); numérico → int.
+  const rawRank = (formData.get("editorialRank") as string | null)?.trim();
+  let editorialRank: number | null | undefined = undefined;
+  if (rawRank === "") {
+    editorialRank = null;
+  } else if (rawRank != null) {
+    const parsed = Number(rawRank);
+    if (Number.isFinite(parsed) && parsed >= 0 && parsed < 100_000) {
+      editorialRank = Math.floor(parsed);
+    } else {
+      return { error: "editorialRank debe ser un entero entre 0 y 99.999" };
+    }
+  }
+
+  const rawFeatured = formData.get("featuredOfMonth");
+  const featuredOfMonth =
+    rawFeatured === "true" ? true : rawFeatured === "false" ? false : undefined;
+
+  const data: { editorialRank?: number | null; featuredOfMonth?: boolean } = {};
+  if (editorialRank !== undefined) data.editorialRank = editorialRank;
+  if (featuredOfMonth !== undefined) data.featuredOfMonth = featuredOfMonth;
+
+  if (Object.keys(data).length === 0) {
+    return { error: "Sin cambios" };
+  }
+
+  // Si activamos featuredOfMonth, desactivamos el resto (exclusividad).
+  if (featuredOfMonth === true) {
+    await prisma.$transaction([
+      prisma.product.updateMany({
+        where: { featuredOfMonth: true, NOT: { id: productId } },
+        data: { featuredOfMonth: false },
+      }),
+      prisma.product.update({ where: { id: productId }, data }),
+    ]);
+  } else {
+    await prisma.product.update({ where: { id: productId }, data });
+  }
+
+  revalidatePath("/portal/admin/productos");
+  revalidatePath("/portal/admin/curaduria");
+  revalidatePath("/coleccion");
+  revalidatePath("/");
+  return { success: true };
+}
+
 // 15b. Admin cancel return
 export async function adminCancelReturn(
   returnRequestId: string
