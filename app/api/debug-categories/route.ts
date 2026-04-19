@@ -10,6 +10,7 @@
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getApprovedProducts } from "@/lib/queries/products";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,22 @@ export async function GET(req: Request) {
     take: 10,
   });
 
+  // Llama la MISMA función que usa /coleccion/page.tsx para comparar.
+  let viaGetApprovedProducts:
+    | { count: number; names: string[] }
+    | { error: string } = { count: 0, names: [] };
+  try {
+    const products = await getApprovedProducts({ categorySlug: slug });
+    viaGetApprovedProducts = {
+      count: products.length,
+      names: products.slice(0, 10).map((p) => p.name),
+    };
+  } catch (e) {
+    viaGetApprovedProducts = {
+      error: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
+    };
+  }
+
   return NextResponse.json({
     slugRequested: slug,
     categoryExistsInDB: categoryBySlug,
@@ -92,5 +109,6 @@ export async function GET(req: Request) {
     totalApprovedNonAdmin: allApprovedCount,
     sampleProductsWithThisCategory: sampleWithCat,
     productsApprovedByName: productsByName,
+    viaGetApprovedProducts,
   });
 }
