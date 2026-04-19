@@ -83,21 +83,19 @@ export async function GET(req: Request) {
     take: 10,
   });
 
-  // Llama la MISMA función que usa /coleccion/page.tsx para comparar.
-  let viaGetApprovedProducts:
-    | { count: number; names: string[] }
-    | { error: string } = { count: 0, names: [] };
-  try {
-    const products = await getApprovedProducts({ categorySlug: slug });
-    viaGetApprovedProducts = {
-      count: products.length,
-      names: products.slice(0, 10).map((p) => p.name),
-    };
-  } catch (e) {
-    viaGetApprovedProducts = {
-      error: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
-    };
+  // Llama la MISMA función con diferentes sorts para aislar cuál está roto.
+  async function tryGAP(sort?: "recommended" | "newest" | "price_asc" | "az") {
+    try {
+      const products = await getApprovedProducts({ categorySlug: slug, sort });
+      return { count: products.length, firstNames: products.slice(0, 3).map((p) => p.name) };
+    } catch (e) {
+      return { error: e instanceof Error ? `${e.name}: ${e.message}` : String(e) };
+    }
   }
+  const viaGAP_default = await tryGAP();
+  const viaGAP_newest = await tryGAP("newest");
+  const viaGAP_price_asc = await tryGAP("price_asc");
+  const viaGAP_az = await tryGAP("az");
 
   return NextResponse.json({
     slugRequested: slug,
@@ -109,6 +107,9 @@ export async function GET(req: Request) {
     totalApprovedNonAdmin: allApprovedCount,
     sampleProductsWithThisCategory: sampleWithCat,
     productsApprovedByName: productsByName,
-    viaGetApprovedProducts,
+    viaGAP_default,
+    viaGAP_newest,
+    viaGAP_price_asc,
+    viaGAP_az,
   });
 }
