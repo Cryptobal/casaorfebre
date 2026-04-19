@@ -223,10 +223,17 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
 
   // Diversificar: ningún orfebre ocupa dos posiciones consecutivas en las
   // primeras 12. Preserva orden interno por score dentro de cada orfebre.
+  //
+  // IMPORTANTE: diversifyByArtisan puede retornar la MISMA referencia de
+  // `products` (caso single-artisan). Si ese es el caso, truncar `products`
+  // y luego push(...diversified) resulta en un array vacío (aliasing bug).
+  // Por eso verificamos identidad antes de mutar.
   if (applyDiversify) {
     const diversified = diversifyByArtisan(products, 12);
-    products.length = 0;
-    products.push(...diversified);
+    if (diversified !== products) {
+      products.length = 0;
+      products.push(...diversified);
+    }
   }
 
   // Limpiar datos internos del shape del artisan antes de devolver.
