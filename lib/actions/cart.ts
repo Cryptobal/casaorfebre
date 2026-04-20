@@ -8,37 +8,47 @@ import type { GuestCartLine } from "@/lib/guest-cart";
 async function mergeGuestLinesIntoUserCart(userId: string, lines: GuestCartLine[]) {
   if (lines.length === 0) return;
 
-  const merged = new Map<string, number>();
+  const merged = new Map<string, { productId: string; size?: string; quantity: number }>();
   for (const l of lines) {
-    merged.set(l.productId, (merged.get(l.productId) ?? 0) + l.quantity);
+    const key = `${l.productId}__${l.size ?? ""}`;
+    const prev = merged.get(key);
+    merged.set(key, {
+      productId: l.productId,
+      size: l.size,
+      quantity: (prev?.quantity ?? 0) + l.quantity,
+    });
   }
 
-  for (const [productId, rawQty] of merged) {
+  for (const { productId, size, quantity: rawQty } of merged.values()) {
     const product = await prisma.product.findUnique({
       where: { id: productId, status: "APPROVED" },
+      include: { variants: true },
     });
     if (!product) continue;
 
-    let qtyToAdd = Math.min(rawQty, product.stock);
+    const variantStock = size ? product.variants.find((v) => v.size === size)?.stock : undefined;
+    const maxStock = variantStock ?? product.stock;
+
+    let qtyToAdd = Math.min(rawQty, maxStock);
     if (product.productionType === "UNIQUE") qtyToAdd = Math.min(qtyToAdd, 1);
     if (product.productionType === "MADE_TO_ORDER") qtyToAdd = 1;
     if (qtyToAdd < 1 && product.productionType !== "MADE_TO_ORDER") continue;
     if (product.productionType === "MADE_TO_ORDER") qtyToAdd = 1;
 
     const existing = await prisma.cartItem.findUnique({
-      where: { userId_productId_size: { userId, productId, size: "" } },
+      where: { userId_productId_size: { userId, productId, size: size ?? "" } },
     });
 
     if (existing) {
       if (product.productionType === "UNIQUE") continue;
-      const newQty = product.productionType === "MADE_TO_ORDER" ? 1 : Math.min(existing.quantity + qtyToAdd, product.stock);
+      const newQty = product.productionType === "MADE_TO_ORDER" ? 1 : Math.min(existing.quantity + qtyToAdd, maxStock);
       await prisma.cartItem.update({
         where: { id: existing.id },
         data: { quantity: newQty },
       });
     } else {
       await prisma.cartItem.create({
-        data: { userId, productId, quantity: qtyToAdd },
+        data: { userId, productId, quantity: qtyToAdd, ...(size ? { size } : {}) },
       });
     }
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { RING_SIZES as RING_SIZES_CL } from "@/lib/ring-sizes";
 
 type SizeCategory = "anillo" | "aros" | "collar" | "pulsera" | "colgante";
 
@@ -17,19 +18,8 @@ interface SizeGuideProps {
   diametroMm?: number | null;
 }
 
-/* ─── Ring size conversion data ─── */
-const RING_SIZES = [
-  { us: "4",  eu: "46.8", uk: "H",   diameter: 14.9, circ: 46.8 },
-  { us: "5",  eu: "49.3", uk: "J½",  diameter: 15.7, circ: 49.3 },
-  { us: "6",  eu: "51.8", uk: "L½",  diameter: 16.5, circ: 51.8 },
-  { us: "7",  eu: "54.4", uk: "N½",  diameter: 17.3, circ: 54.4 },
-  { us: "8",  eu: "56.9", uk: "P½",  diameter: 18.1, circ: 56.9 },
-  { us: "9",  eu: "59.5", uk: "R½",  diameter: 18.9, circ: 59.5 },
-  { us: "10", eu: "62.1", uk: "T½",  diameter: 19.8, circ: 62.1 },
-  { us: "11", eu: "64.6", uk: "V½",  diameter: 20.6, circ: 64.6 },
-  { us: "12", eu: "67.2", uk: "X½",  diameter: 21.4, circ: 67.2 },
-  { us: "13", eu: "69.7", uk: "Z",   diameter: 22.2, circ: 69.7 },
-];
+/* ─── Ring size table (Chilean sizing, 4–27) ─── */
+const RING_SIZES = RING_SIZES_CL;
 
 const NECKLACE_LENGTHS = [
   { range: "35–38 cm", name: "Gargantilla / Choker", y: 28 },
@@ -83,7 +73,7 @@ export function SizeGuide({ categorySlugs, tallas, tallaUnica, tallaAjusteArriba
       const base = parseFloat(tallaUnica);
       const down = tallaAjusteAbajo ?? 0;
       const up = tallaAjusteArriba ?? 0;
-      const allSizes = RING_SIZES.map((r) => parseFloat(r.us));
+      const allSizes = RING_SIZES.map((r) => parseFloat(r.size));
       return allSizes
         .filter((s) => s >= base - down && s <= base + up)
         .map(String);
@@ -342,7 +332,7 @@ function renderCategoryContent(
    ═══════════════════════════════════════ */
 
 function RingSizeTable({ tallas }: { tallas: string[] }) {
-  const tallasNorm = tallas.map((t) => t.trim().toLowerCase());
+  const tallasNorm = tallas.map((t) => t.trim());
 
   return (
     <div>
@@ -350,31 +340,23 @@ function RingSizeTable({ tallas }: { tallas: string[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">US</th>
-              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Europea (EU)</th>
-              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">UK</th>
-              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Diametro</th>
-              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Circ.</th>
+              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Talla del anillo</th>
+              <th className="py-2 px-2 font-medium text-text-tertiary text-xs uppercase tracking-wider">Diámetro (mm)</th>
             </tr>
           </thead>
           <tbody>
             {RING_SIZES.map((row) => {
-              const isHighlighted = tallasNorm.some(
-                (t) => t === row.us || t === `us ${row.us}` || t === `${row.us} us` || t === row.eu || t === row.uk.toLowerCase()
-              );
+              const isHighlighted = tallasNorm.includes(row.size);
               return (
                 <tr
-                  key={row.us}
+                  key={row.size}
                   className={cn(
                     "border-b border-border/50 last:border-0",
                     isHighlighted && "bg-accent/8"
                   )}
                 >
-                  <td className={cn("py-2 px-2", isHighlighted && "font-medium text-accent")}>{row.us}</td>
-                  <td className="py-2 px-2 text-text-secondary">{row.eu}</td>
-                  <td className="py-2 px-2 text-text-secondary">{row.uk}</td>
-                  <td className="py-2 px-2 text-text-secondary">{row.diameter} mm</td>
-                  <td className="py-2 px-2 text-text-secondary">{row.circ} mm</td>
+                  <td className={cn("py-2 px-2", isHighlighted && "font-medium text-accent")}>{row.size}</td>
+                  <td className="py-2 px-2 text-text-secondary">{row.diameterMm.toFixed(1)} mm</td>
                 </tr>
               );
             })}
@@ -423,16 +405,21 @@ function RingMeasureMethods() {
         </p>
         <div className="bg-background rounded-lg p-4">
           <svg viewBox="0 0 320 80" className="w-full" aria-label="Circulos de referencia para medir anillos">
-            {[14.9, 16.5, 18.1, 19.8, 21.4].map((d, i) => {
+            {[
+              { size: "6",  d: 14.6 },
+              { size: "10", d: 15.9 },
+              { size: "14", d: 17.1 },
+              { size: "18", d: 18.4 },
+              { size: "22", d: 19.7 },
+            ].map((row, i) => {
               const scale = 1.8;
-              const r = (d / 2) * scale;
+              const r = (row.d / 2) * scale;
               const cx = 30 + i * 70;
-              const sizes = ["4", "6", "8", "10", "12"];
               return (
-                <g key={d}>
+                <g key={row.size}>
                   <circle cx={cx} cy={40} r={r} fill="none" stroke="#1a1a18" strokeWidth="1" />
                   <text x={cx} y={40 + r + 14} textAnchor="middle" fontSize="9" fill="#8B7355">
-                    US {sizes[i]}
+                    Talla {row.size}
                   </text>
                 </g>
               );
@@ -448,7 +435,7 @@ function RingMeasureMethods() {
       <div>
         <h3 className="text-sm font-medium text-text mb-2">Metodo 3 &mdash; Comparar con moneda</h3>
         <p className="text-sm text-text-secondary mb-4">
-          Una moneda de $100 CLP tiene ~23 mm de diametro (aprox. talla 13 US).
+          Una moneda de $100 CLP tiene ~23 mm de diámetro (mayor que la talla 27).
           Una moneda de $500 CLP tiene ~26 mm.
         </p>
         <svg viewBox="0 0 200 90" className="w-full max-w-[260px] mx-auto" aria-label="Referencia con monedas chilenas">

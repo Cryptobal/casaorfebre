@@ -38,12 +38,14 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
   const { product } = item;
   const image = product.images[0];
 
+  const guestSize = item.size ?? undefined;
+
   function handleUpdateQty(newQty: number) {
     if (isGuest) {
       startTransition(async () => {
-        const check = await validateGuestLineQuantity(product.id, newQty);
+        const check = await validateGuestLineQuantity(product.id, newQty, guestSize);
         if (check && "error" in check) return;
-        setGuestLineQuantity(product.id, newQty);
+        setGuestLineQuantity(product.id, newQty, guestSize);
       });
       return;
     }
@@ -64,7 +66,7 @@ export function CartItem({ item, isGuest = false }: CartItemProps) {
     });
     if (isGuest) {
       startTransition(async () => {
-        removeGuestCartLine(product.id);
+        removeGuestCartLine(product.id, guestSize);
       });
       return;
     }

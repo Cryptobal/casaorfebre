@@ -194,6 +194,7 @@ export async function getProductBySlug(slug: string) {
       occasions: { select: { id: true, name: true, slug: true } },
       collection: { select: { name: true } },
       stones: { orderBy: { position: "asc" } },
+      variants: { select: { size: true, stock: true } },
     },
   });
 }

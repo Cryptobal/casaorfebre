@@ -21,30 +21,36 @@ export function writeGuestCartLines(lines: GuestCartLine[]) {
   localStorage.setItem(GUEST_CART_STORAGE_KEY, JSON.stringify(lines));
 }
 
-export function addGuestCartLine(productId: string, quantity: number) {
+function sameLine(a: { productId: string; size?: string }, b: { productId: string; size?: string }) {
+  return a.productId === b.productId && (a.size ?? "") === (b.size ?? "");
+}
+
+export function addGuestCartLine(productId: string, quantity: number, size?: string) {
   const lines = readGuestCartLines();
-  const idx = lines.findIndex((l) => l.productId === productId);
+  const idx = lines.findIndex((l) => sameLine(l, { productId, size }));
   if (idx >= 0) {
     lines[idx] = {
+      ...lines[idx],
       productId,
       quantity: lines[idx].quantity + quantity,
+      ...(size ? { size } : {}),
     };
   } else {
-    lines.push({ productId, quantity });
+    lines.push({ productId, quantity, ...(size ? { size } : {}) });
   }
   writeGuestCartLines(lines);
   dispatchGuestCartUpdated();
 }
 
-export function setGuestLineQuantity(productId: string, quantity: number) {
-  const lines = readGuestCartLines().filter((l) => l.productId !== productId);
-  if (quantity > 0) lines.push({ productId, quantity });
+export function setGuestLineQuantity(productId: string, quantity: number, size?: string) {
+  const lines = readGuestCartLines().filter((l) => !sameLine(l, { productId, size }));
+  if (quantity > 0) lines.push({ productId, quantity, ...(size ? { size } : {}) });
   writeGuestCartLines(lines);
   dispatchGuestCartUpdated();
 }
 
-export function removeGuestCartLine(productId: string) {
-  const lines = readGuestCartLines().filter((l) => l.productId !== productId);
+export function removeGuestCartLine(productId: string, size?: string) {
+  const lines = readGuestCartLines().filter((l) => !sameLine(l, { productId, size }));
   writeGuestCartLines(lines);
   dispatchGuestCartUpdated();
 }

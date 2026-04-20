@@ -12,7 +12,8 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ImageGallery } from "./image-gallery";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
-import { AddToCart } from "./add-to-cart";
+import { AddToCart, type RingSizeOption } from "./add-to-cart";
+import { RING_SIZE_VALUES } from "@/lib/ring-sizes";
 import { ReviewList } from "@/components/reviews/review-list";
 import { ReviewHighlights } from "@/components/products/review-highlights";
 import { ViewTracker } from "./view-tracker";
@@ -140,16 +141,45 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const categoryLabel = primaryCategory?.name ?? "Otro";
   const categorySlug = primaryCategory?.slug ?? "coleccion";
 
+  const isRing = product.categories.some((c: { slug: string }) => c.slug === "anillo");
+  const ringSizeOptions: RingSizeOption[] | undefined = (() => {
+    if (!isRing) return undefined;
+    const variants = (product as { variants?: { size: string; stock: number }[] }).variants ?? [];
+    if (variants.length > 0) {
+      return variants.map((v) => ({ size: v.size, stock: v.stock }));
+    }
+    if (product.tallaUnica) {
+      const base = parseFloat(product.tallaUnica);
+      const down = product.tallaAjusteAbajo ?? 0;
+      const up = product.tallaAjusteArriba ?? 0;
+      const isAdjustable = down > 0 || up > 0;
+      const isMadeToOrder = product.productionType === "MADE_TO_ORDER";
+      if (isAdjustable && (isMadeToOrder || product.productionType === "UNIQUE")) {
+        const perSizeStock = isMadeToOrder ? 99 : product.stock;
+        return RING_SIZE_VALUES
+          .map((s) => parseFloat(s))
+          .filter((n) => !Number.isNaN(n) && n >= base - down && n <= base + up)
+          .map((n) => ({ size: String(n), stock: perSizeStock }));
+      }
+      return [{ size: product.tallaUnica, stock: product.productionType === "MADE_TO_ORDER" ? 99 : Math.max(product.stock, 1) }];
+    }
+    if (product.tallas && product.tallas.length > 0) {
+      const perSizeStock = product.productionType === "MADE_TO_ORDER" ? 99 : product.stock;
+      return product.tallas.map((size: string) => ({ size, stock: perSizeStock }));
+    }
+    return undefined;
+  })();
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const productImages = product.images.map((img: any) => img.url);
 
   // ── Build additionalProperty for JSON-LD ──
   const additionalProps: Record<string, unknown>[] = [];
   if (product.tallas?.length > 0) {
-    additionalProps.push({ "@type": "PropertyValue", propertyID: "size", name: "Talla Europea (EU)", value: product.tallas.join(", ") });
+    additionalProps.push({ "@type": "PropertyValue", propertyID: "size", name: "Talla", value: product.tallas.join(", ") });
   }
   if (product.tallaUnica) {
-    additionalProps.push({ "@type": "PropertyValue", propertyID: "size", name: "Talla Europea (EU)", value: product.tallaUnica });
+    additionalProps.push({ "@type": "PropertyValue", propertyID: "size", name: "Talla", value: product.tallaUnica });
   }
   if (product.largoCadenaCm) {
     additionalProps.push({ "@type": "PropertyValue", name: "Largo de cadena", value: `${product.largoCadenaCm} cm`, unitCode: "CMT" });
@@ -485,6 +515,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               price={product.price}
               productionType={product.productionType}
               stock={product.stock}
+              ringSizeOptions={ringSizeOptions}
               ga4Item={{
                 item_id: product.id,
                 item_name: product.name,
@@ -719,13 +750,13 @@ function ProductDetails({ product }: { product: Record<string, unknown> & { mate
     rows.push({ label: "Dimensiones", value: `${product.broochWidth} × ${product.broochHeight} mm` });
 
   if (product.tallaUnica) {
-    let tallaValue = `Europea (EU) ${product.tallaUnica}`;
+    let tallaValue = `${product.tallaUnica}`;
     if (product.tallaAjusteAbajo || product.tallaAjusteArriba) {
       tallaValue += ` (ajustable: ${product.tallaAjusteAbajo ?? 0} abajo, ${product.tallaAjusteArriba ?? 0} arriba)`;
     }
     rows.push({ label: "Talla", value: tallaValue });
   } else if (product.tallas.length > 0) {
-    rows.push({ label: "Tallas disponibles", value: `Europeas (EU): ${product.tallas.join(", ")}` });
+    rows.push({ label: "Tallas disponibles", value: product.tallas.join(", ") });
   }
   if (product.guiaTallas)
     rows.push({ label: "Guía de tallas", value: product.guiaTallas as string });

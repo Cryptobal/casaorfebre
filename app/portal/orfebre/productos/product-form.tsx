@@ -12,6 +12,7 @@ import { createProduct, updateProduct, saveAndSubmitForReview, reactivateProduct
 import { PresetSelector } from "@/components/forms/preset-selector";
 import { TagInput } from "@/components/forms/tag-input";
 import { CARE_PRESETS, PACKAGING_PRESETS, WARRANTY_PRESETS } from "@/lib/constants";
+import { RING_SIZE_VALUES as RING_SIZES } from "@/lib/ring-sizes";
 import type { ProductListing } from "@/lib/ai/product-generator";
 import dynamic from "next/dynamic";
 
@@ -28,12 +29,6 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   PAUSED: { label: "Pausado", className: "border-blue-300 bg-blue-50 text-blue-700" },
   SOLD_OUT: { label: "Agotado", className: "border-zinc-300 bg-zinc-50 text-zinc-600" },
 };
-
-const RING_SIZES = [
-  "4", "4.5", "5", "5.5", "6", "6.5", "7", "7.5",
-  "8", "8.5", "9", "9.5", "10", "10.5", "11", "11.5",
-  "12", "12.5", "13",
-];
 
 interface ProductFormProps {
   product?: {
