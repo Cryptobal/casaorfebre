@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
 import { PortalSidebarLink } from "@/components/portal/portal-sidebar-link";
+import { PortalSidebarGroup } from "@/components/portal/portal-sidebar-group";
 import { SupportBanner } from "@/components/portal/support-banner";
 import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
@@ -22,32 +23,76 @@ const ROLE_SWITCHER_EMAILS = [
   "camilatorrespuga@gmail.com",
 ];
 
-const ADMIN_LINKS = [
-  { href: "/portal/admin", label: "Dashboard", exact: true },
-  { href: "/portal/admin/invitaciones", label: "Invitaciones" },
-  { href: "/portal/admin/postulaciones", label: "Postulaciones" },
-  { href: "/portal/admin/productos", label: "Productos", ai: true },
-  { href: "/portal/admin/fotos", label: "Fotos", ai: true },
-  { href: "/portal/admin/orfebres", label: "Orfebres", ai: true },
-  { href: "/portal/admin/compradores", label: "Compradores" },
-  { href: "/portal/admin/planes", label: "Planes" },
-  { href: "/portal/admin/suscripciones", label: "Suscripciones" },
-  { href: "/portal/admin/pedidos", label: "Pedidos" },
-  { href: "/portal/admin/disputas", label: "Disputas" },
-  { href: "/portal/admin/devoluciones", label: "Devoluciones" },
-  { href: "/portal/admin/pagos", label: "Pagos" },
-  { href: "/portal/admin/catalogo", label: "Catálogo" },
-  { href: "/portal/admin/colecciones", label: "Colecciones", ai: true },
-  { href: "/portal/admin/gift-cards", label: "Gift Cards" },
-  { href: "/portal/admin/finanzas", label: "Finanzas" },
-  { href: "/portal/admin/mensajes", label: "Mensajes" },
-  { href: "/portal/admin/preguntas", label: "Preguntas" },
-  { href: "/portal/admin/contacto", label: "Contacto" },
-  { href: "/portal/admin/despacho", label: "Despacho" },
-  { href: "/portal/admin/materiales-precio", label: "Materiales Ref." },
-  { href: "/portal/admin/analytics", label: "Analytics", ai: true },
-  { href: "/portal/admin/blog", label: "Blog", ai: true },
-  { href: "/portal/admin/pipeline", label: "Pipeline", ai: true },
+type AdminLink = { href: string; label: string; ai?: boolean; exact?: boolean };
+type AdminGroup = { label: string; storageKey: string; links: AdminLink[] };
+
+const ADMIN_DASHBOARD: AdminLink = {
+  href: "/portal/admin",
+  label: "Dashboard",
+  exact: true,
+};
+
+const ADMIN_GROUPS: AdminGroup[] = [
+  {
+    label: "Ventas",
+    storageKey: "ventas",
+    links: [
+      { href: "/portal/admin/pedidos", label: "Pedidos" },
+      { href: "/portal/admin/despacho", label: "Despacho" },
+      { href: "/portal/admin/pagos", label: "Pagos" },
+      { href: "/portal/admin/devoluciones", label: "Devoluciones" },
+      { href: "/portal/admin/disputas", label: "Disputas" },
+      { href: "/portal/admin/gift-cards", label: "Gift Cards" },
+    ],
+  },
+  {
+    label: "Catálogo",
+    storageKey: "catalogo",
+    links: [
+      { href: "/portal/admin/productos", label: "Productos", ai: true },
+      { href: "/portal/admin/fotos", label: "Fotos", ai: true },
+      { href: "/portal/admin/colecciones", label: "Colecciones", ai: true },
+      { href: "/portal/admin/catalogo", label: "Categorías" },
+      { href: "/portal/admin/materiales-precio", label: "Precios Materiales" },
+    ],
+  },
+  {
+    label: "Comunidad",
+    storageKey: "comunidad",
+    links: [
+      { href: "/portal/admin/orfebres", label: "Orfebres", ai: true },
+      { href: "/portal/admin/postulaciones", label: "Postulaciones" },
+      { href: "/portal/admin/invitaciones", label: "Invitaciones" },
+      { href: "/portal/admin/compradores", label: "Compradores" },
+    ],
+  },
+  {
+    label: "Mensajería",
+    storageKey: "mensajeria",
+    links: [
+      { href: "/portal/admin/mensajes", label: "Mensajes" },
+      { href: "/portal/admin/preguntas", label: "Preguntas" },
+      { href: "/portal/admin/contacto", label: "Contacto" },
+    ],
+  },
+  {
+    label: "Monetización",
+    storageKey: "monetizacion",
+    links: [
+      { href: "/portal/admin/planes", label: "Planes" },
+      { href: "/portal/admin/suscripciones", label: "Suscripciones" },
+      { href: "/portal/admin/finanzas", label: "Finanzas" },
+    ],
+  },
+  {
+    label: "Crecimiento",
+    storageKey: "crecimiento",
+    links: [
+      { href: "/portal/admin/analytics", label: "Analytics", ai: true },
+      { href: "/portal/admin/pipeline", label: "Pipeline", ai: true },
+      { href: "/portal/admin/blog", label: "Blog", ai: true },
+    ],
+  },
 ];
 
 const ARTISAN_LINKS = [
@@ -184,36 +229,77 @@ export default async function PortalLayout({ children }: { children: React.React
   const mobileTitle =
     role === "ADMIN" ? "Admin" : role === "ARTISAN" ? "Mi Taller" : "Mi Cuenta";
 
-  const mobileLinks = [
+  const adminBadgeCounts: Record<string, number> = {
+    "/portal/admin/postulaciones": pendingPostulaciones,
+    "/portal/admin/productos": pendingProductModeration,
+    "/portal/admin/fotos": pendingPhotos,
+    "/portal/admin/orfebres": pendingOrfebreApplications,
+    "/portal/admin/pedidos": newPaidOrders,
+    "/portal/admin/disputas": openDisputes,
+    "/portal/admin/devoluciones": pendingReturns,
+    "/portal/admin/despacho": lateShipments,
+    "/portal/admin/mensajes": bypassConversations,
+    "/portal/admin/preguntas": unansweredQuestions,
+    "/portal/admin/contacto": pendingContactForms,
+  };
+
+  const groupCount = (group: AdminGroup) =>
+    group.links.reduce((sum, l) => sum + (adminBadgeCounts[l.href] ?? 0), 0);
+
+  type MobileItem =
+    | {
+        kind: "link";
+        href: string;
+        label: string;
+        badge?: number;
+        ai?: boolean;
+        exact?: boolean;
+      }
+    | { kind: "heading"; label: string };
+
+  const mobileItems: MobileItem[] = [
     ...(role === "ADMIN"
-      ? ADMIN_LINKS.map((l) => {
-          if (l.href === "/portal/admin/postulaciones") return { ...l, badge: pendingPostulaciones };
-          if (l.href === "/portal/admin/productos") return { ...l, badge: pendingProductModeration };
-          if (l.href === "/portal/admin/fotos") return { ...l, badge: pendingPhotos };
-          if (l.href === "/portal/admin/orfebres") return { ...l, badge: pendingOrfebreApplications };
-          if (l.href === "/portal/admin/pedidos") return { ...l, badge: newPaidOrders };
-          if (l.href === "/portal/admin/disputas") return { ...l, badge: openDisputes };
-          if (l.href === "/portal/admin/devoluciones") return { ...l, badge: pendingReturns };
-          if (l.href === "/portal/admin/despacho") return { ...l, badge: lateShipments };
-          if (l.href === "/portal/admin/mensajes") return { ...l, badge: bypassConversations };
-          if (l.href === "/portal/admin/preguntas") return { ...l, badge: unansweredQuestions };
-          if (l.href === "/portal/admin/contacto") return { ...l, badge: pendingContactForms };
-          return l;
-        })
+      ? [
+          {
+            kind: "link" as const,
+            href: ADMIN_DASHBOARD.href,
+            label: ADMIN_DASHBOARD.label,
+            exact: ADMIN_DASHBOARD.exact,
+          },
+          ...ADMIN_GROUPS.flatMap<MobileItem>((group) => [
+            { kind: "heading", label: group.label },
+            ...group.links.map<MobileItem>((l) => ({
+              kind: "link",
+              href: l.href,
+              label: l.label,
+              ai: l.ai,
+              exact: l.exact,
+              badge: adminBadgeCounts[l.href],
+            })),
+          ]),
+        ]
       : []),
     ...(role === "ARTISAN"
-      ? ARTISAN_LINKS.map((l) => {
-          if (l.href === "/portal/orfebre/pedidos") return { ...l, badge: artisanPendingOrders };
-          if (l.href === "/portal/orfebre/preguntas") return { ...l, badge: artisanUnansweredQuestions };
-          if (l.href === "/portal/orfebre/mensajes") return { ...l, badge: artisanUnreadMessages };
-          return l;
+      ? ARTISAN_LINKS.map<MobileItem>((l) => {
+          let badge: number | undefined;
+          if (l.href === "/portal/orfebre/pedidos") badge = artisanPendingOrders;
+          else if (l.href === "/portal/orfebre/preguntas") badge = artisanUnansweredQuestions;
+          else if (l.href === "/portal/orfebre/mensajes") badge = artisanUnreadMessages;
+          return { kind: "link", ...l, badge };
         })
       : []),
     ...(showBuyerSection
-      ? BUYER_LINKS.map((l) => {
-          if (l.href === "/portal/comprador/pedidos") return { ...l, badge: buyerActiveOrders };
-          return l;
-        })
+      ? [
+          ...((role === "ADMIN" || role === "ARTISAN")
+            ? [{ kind: "heading" as const, label: "Comprador" }]
+            : []),
+          ...BUYER_LINKS.map<MobileItem>((l) => ({
+            kind: "link",
+            ...l,
+            badge:
+              l.href === "/portal/comprador/pedidos" ? buyerActiveOrders : undefined,
+          })),
+        ]
       : []),
   ];
 
@@ -232,31 +318,31 @@ export default async function PortalLayout({ children }: { children: React.React
         <nav className="space-y-2">
           {role === "ADMIN" && (
             <>
-              {ADMIN_LINKS.map((link) => {
-                const badgeCounts: Record<string, number> = {
-                  "/portal/admin/postulaciones": pendingPostulaciones,
-                  "/portal/admin/productos": pendingProductModeration,
-                  "/portal/admin/fotos": pendingPhotos,
-                  "/portal/admin/orfebres": pendingOrfebreApplications,
-                  "/portal/admin/pedidos": newPaidOrders,
-                  "/portal/admin/disputas": openDisputes,
-                  "/portal/admin/devoluciones": pendingReturns,
-                  "/portal/admin/despacho": lateShipments,
-                  "/portal/admin/mensajes": bypassConversations,
-                  "/portal/admin/preguntas": unansweredQuestions,
-                  "/portal/admin/contacto": pendingContactForms,
-                };
-                return (
-                  <PortalSidebarLink
-                    key={link.href}
-                    href={link.href}
-                    label={link.label}
-                    count={badgeCounts[link.href] ?? 0}
-                    ai={link.ai}
-                    exact={link.exact}
-                  />
-                );
-              })}
+              <PortalSidebarLink
+                href={ADMIN_DASHBOARD.href}
+                label={ADMIN_DASHBOARD.label}
+                exact={ADMIN_DASHBOARD.exact}
+              />
+              {ADMIN_GROUPS.map((group) => (
+                <PortalSidebarGroup
+                  key={group.storageKey}
+                  label={group.label}
+                  count={groupCount(group)}
+                  hrefs={group.links.map((l) => l.href)}
+                  storageKey={group.storageKey}
+                >
+                  {group.links.map((link) => (
+                    <PortalSidebarLink
+                      key={link.href}
+                      href={link.href}
+                      label={link.label}
+                      count={adminBadgeCounts[link.href] ?? 0}
+                      ai={link.ai}
+                      exact={link.exact}
+                    />
+                  ))}
+                </PortalSidebarGroup>
+              ))}
             </>
           )}
           {role === "ARTISAN" && (
@@ -340,7 +426,7 @@ export default async function PortalLayout({ children }: { children: React.React
       <div className="min-w-0 flex-1">
         {/* Mobile header */}
         <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
-          <PortalMobileNav title={mobileTitle} links={mobileLinks} />
+          <PortalMobileNav title={mobileTitle} items={mobileItems} />
           <Link href="/" className="flex items-center">
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={90} height={20} />
           </Link>

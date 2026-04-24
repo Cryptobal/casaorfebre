@@ -5,12 +5,23 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+type MobileNavItem =
+  | {
+      kind: "link";
+      href: string;
+      label: string;
+      badge?: number;
+      ai?: boolean;
+      exact?: boolean;
+    }
+  | { kind: "heading"; label: string };
+
 interface PortalMobileNavProps {
   title: string;
-  links: { href: string; label: string; badge?: number; ai?: boolean; exact?: boolean }[];
+  items: MobileNavItem[];
 }
 
-export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
+export function PortalMobileNav({ title, items }: PortalMobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -59,18 +70,28 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
           {/* Links */}
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
-              {links.map((link) => {
-                const isActive = link.exact
-                  ? pathname === link.href
-                  : pathname === link.href || pathname.startsWith(link.href + "/");
+              {items.map((item, idx) => {
+                if (item.kind === "heading") {
+                  return (
+                    <p
+                      key={`h-${idx}-${item.label}`}
+                      className="mb-1 mt-4 px-3 text-xs font-medium uppercase tracking-widest text-text-tertiary first:mt-0"
+                    >
+                      {item.label}
+                    </p>
+                  );
+                }
+                const isActive = item.exact
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(item.href + "/");
                 const badgeBg =
-                  link.href.startsWith("/portal/orfebre") && link.badge != null && link.badge > 0
+                  item.href.startsWith("/portal/orfebre") && item.badge != null && item.badge > 0
                     ? "bg-amber-500"
                     : "bg-accent";
                 return (
                   <Link
-                    key={link.href}
-                    href={link.href}
+                    key={item.href}
+                    href={item.href}
                     className={`flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
                       isActive
                         ? "bg-accent/10 font-medium text-accent"
@@ -78,18 +99,18 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
                     }`}
                   >
                     <span className="flex items-center">
-                      {link.label}
-                      {link.ai && (
+                      {item.label}
+                      {item.ai && (
                         <span className="ml-1 inline-flex items-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-[#8B7355]">
                           AI
                         </span>
                       )}
                     </span>
-                    {link.badge != null && link.badge > 0 && (
+                    {item.badge != null && item.badge > 0 && (
                       <span
                         className={`min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ${badgeBg}`}
                       >
-                        {link.badge > 99 ? "99+" : link.badge}
+                        {item.badge > 99 ? "99+" : item.badge}
                       </span>
                     )}
                   </Link>
