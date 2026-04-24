@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { TrackingLink } from "@/components/tracking-link";
 import { AdminStatusChanger, ReleasePayoutButton } from "./admin-order-actions";
-import { StartAdminChatButton } from "../../compradores/[id]/start-admin-chat-button";
 import type { OrderStatus, FulfillmentStatus, PayoutStatus } from "@prisma/client";
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -81,16 +80,6 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
-  const adminConversation = await prisma.conversation.findFirst({
-    where: {
-      buyerId: order.userId,
-      adminId: { not: null },
-      artisanId: null,
-      deletedAt: null,
-    },
-    select: { id: true },
-  });
-
   // Group items by artisan for financial breakdown
   const artisanGroups = new Map<
     string,
@@ -164,13 +153,7 @@ export default async function AdminOrderDetailPage({
 
       {/* Buyer info */}
       <Card className="mt-6">
-        <div className="flex items-start justify-between gap-4">
-          <h2 className="text-sm font-medium text-text-secondary">Comprador</h2>
-          <StartAdminChatButton
-            buyerId={order.userId}
-            existingConversationId={adminConversation?.id}
-          />
-        </div>
+        <h2 className="text-sm font-medium text-text-secondary">Comprador</h2>
         <div className="mt-2 text-sm">
           <Link
             href={`/portal/admin/compradores/${order.userId}`}
@@ -285,6 +268,12 @@ export default async function AdminOrderDetailPage({
                       >
                         {payoutLabels[item.payoutStatus as PayoutStatus]}
                       </span>
+                      <Link
+                        href={`/portal/admin/mensajes?orderItem=${item.id}`}
+                        className="text-xs text-accent hover:underline"
+                      >
+                        Ver mensajes
+                      </Link>
                       {item.payoutStatus === "HELD" && (
                         <ReleasePayoutButton
                           orderItemId={item.id}

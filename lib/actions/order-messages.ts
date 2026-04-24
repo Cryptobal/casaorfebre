@@ -86,6 +86,7 @@ export async function sendOrderMessage(formData: FormData) {
       include: {
         order: {
           select: {
+            id: true,
             orderNumber: true,
             user: { select: { name: true, email: true } },
           },
@@ -109,8 +110,10 @@ export async function sendOrderMessage(formData: FormData) {
         if (buyerEmail) {
           await sendNewOrderMessageEmail(buyerEmail, {
             recipientName: fullOrderItem.order.user.name || "Comprador",
+            recipientRole: "BUYER",
             senderName,
             senderRole,
+            orderId: fullOrderItem.order.id,
             orderNumber: fullOrderItem.order.orderNumber,
             productName: fullOrderItem.product.name,
             messagePreview: content.trim(),
@@ -124,8 +127,10 @@ export async function sendOrderMessage(formData: FormData) {
         if (artisanEmail) {
           await sendNewOrderMessageEmail(artisanEmail, {
             recipientName: fullOrderItem.artisan.displayName,
+            recipientRole: "ARTISAN",
             senderName,
             senderRole,
+            orderId: fullOrderItem.order.id,
             orderNumber: fullOrderItem.order.orderNumber,
             productName: fullOrderItem.product.name,
             messagePreview: content.trim(),

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PortalMobileNav } from "@/components/portal/portal-mobile-nav";
+import { PortalSidebarLink } from "@/components/portal/portal-sidebar-link";
 import { SupportBanner } from "@/components/portal/support-banner";
 import { getArtisanPendingFulfillmentCount } from "@/lib/queries/orders";
 import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
@@ -22,7 +23,7 @@ const ROLE_SWITCHER_EMAILS = [
 ];
 
 const ADMIN_LINKS = [
-  { href: "/portal/admin", label: "Dashboard" },
+  { href: "/portal/admin", label: "Dashboard", exact: true },
   { href: "/portal/admin/invitaciones", label: "Invitaciones" },
   { href: "/portal/admin/postulaciones", label: "Postulaciones" },
   { href: "/portal/admin/productos", label: "Productos", ai: true },
@@ -50,7 +51,7 @@ const ADMIN_LINKS = [
 ];
 
 const ARTISAN_LINKS = [
-  { href: "/portal/orfebre", label: "Mi Taller" },
+  { href: "/portal/orfebre", label: "Mi Taller", exact: true },
   { href: "/portal/orfebre/productos", label: "Mis Piezas", ai: true },
   { href: "/portal/orfebre/colecciones", label: "Colecciones", ai: true },
   { href: "/portal/orfebre/pedidos", label: "Pedidos" },
@@ -245,14 +246,15 @@ export default async function PortalLayout({ children }: { children: React.React
                   "/portal/admin/preguntas": unansweredQuestions,
                   "/portal/admin/contacto": pendingContactForms,
                 };
-                const count = badgeCounts[link.href] ?? 0;
-                if (count > 0 || link.ai) {
-                  return <SidebarLink key={link.href} href={link.href} label={link.label} count={count} ai={link.ai} />;
-                }
                 return (
-                  <Link key={link.href} href={link.href} className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">
-                    {link.label}
-                  </Link>
+                  <PortalSidebarLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    count={badgeCounts[link.href] ?? 0}
+                    ai={link.ai}
+                    exact={link.exact}
+                  />
                 );
               })}
             </>
@@ -276,15 +278,16 @@ export default async function PortalLayout({ children }: { children: React.React
                   "/portal/orfebre/herramientas/calculadora": "orfebre-calculadora",
                   "/portal/orfebre/perfil": "orfebre-perfil",
                 };
-                const count = badgeCounts[link.href] ?? 0;
-                const tour = dataTours[link.href];
-                if (count > 0 || link.ai) {
-                  return <SidebarLink key={link.href} href={link.href} label={link.label} count={count} dataTour={tour} ai={link.ai} />;
-                }
                 return (
-                  <Link key={link.href} href={link.href} data-tour={tour} className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">
-                    {link.label}
-                  </Link>
+                  <PortalSidebarLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    count={badgeCounts[link.href] ?? 0}
+                    dataTour={dataTours[link.href]}
+                    ai={link.ai}
+                    exact={link.exact}
+                  />
                 );
               })}
             </>
@@ -307,15 +310,15 @@ export default async function PortalLayout({ children }: { children: React.React
                   "/portal/comprador/referidos": "buyer-referidos",
                   "/portal/comprador/perfil": "buyer-perfil",
                 };
-                const count = badgeCounts[link.href] ?? 0;
-                const tour = dataTours[link.href];
-                if (count > 0 || link.ai) {
-                  return <SidebarLink key={link.href} href={link.href} label={link.label} count={count} dataTour={tour} ai={link.ai} />;
-                }
                 return (
-                  <Link key={link.href} href={link.href} data-tour={tour} className="block rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text">
-                    {link.label}
-                  </Link>
+                  <PortalSidebarLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    count={badgeCounts[link.href] ?? 0}
+                    dataTour={dataTours[link.href]}
+                    ai={link.ai}
+                  />
                 );
               })}
             </>
@@ -360,30 +363,3 @@ export default async function PortalLayout({ children }: { children: React.React
   );
 }
 
-function AiBadge() {
-  return (
-    <span className="ml-1 inline-flex items-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-[#8B7355]">
-      AI
-    </span>
-  );
-}
-
-function SidebarLink({ href, label, count, dataTour, ai }: { href: string; label: string; count: number; dataTour?: string; ai?: boolean }) {
-  return (
-    <Link
-      href={href}
-      data-tour={dataTour}
-      className="flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
-    >
-      <span className="flex items-center">
-        {label}
-        {ai && <AiBadge />}
-      </span>
-      {count > 0 && (
-        <span className="min-w-[1.25rem] rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
-    </Link>
-  );
-}

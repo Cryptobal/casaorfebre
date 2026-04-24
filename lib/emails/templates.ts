@@ -11,12 +11,18 @@ function appUrl(): string {
   );
 }
 
-export async function sendEmail(to: string, subject: string, html: string) {
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  options?: { replyTo?: string },
+) {
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to,
     subject,
     html: emailLayout(html),
+    ...(options?.replyTo ? { replyTo: options.replyTo } : {}),
   });
   if (error) {
     console.error(`Email failed [${subject}]:`, error);
@@ -1831,24 +1837,46 @@ export async function sendPayoutReleasedDetailedEmail(
 // ---------------------------------------------------------------------------
 export async function sendNewOrderMessageEmail(
   to: string,
-  { recipientName, senderName, senderRole, orderNumber, productName, messagePreview }: {
+  {
+    recipientName,
+    recipientRole,
+    senderName,
+    senderRole,
+    orderId,
+    orderNumber,
+    productName,
+    messagePreview,
+  }: {
     recipientName: string;
+    recipientRole: "BUYER" | "ARTISAN";
     senderName: string;
     senderRole: string;
+    orderId: string;
     orderNumber: string;
     productName: string;
     messagePreview: string;
   },
 ) {
-  const roleLabel = senderRole === "ARTISAN" ? "El orfebre" : senderRole === "BUYER" ? "El comprador" : "Casa Orfebre";
+  const roleLabel =
+    senderRole === "ARTISAN"
+      ? "El orfebre"
+      : senderRole === "BUYER"
+        ? "El comprador"
+        : "Casa Orfebre";
+  const rolePath = recipientRole === "ARTISAN" ? "orfebre" : "comprador";
+  const messageUrl = `${appUrl()}/portal/${rolePath}/pedidos/${orderId}`;
   await sendEmail(
     to,
     `Nuevo mensaje - pedido #${orderNumber}`,
     `<p style="margin:0 0 16px;">Hola ${recipientName},</p>
      <p style="margin:0 0 16px;">${roleLabel} <strong>${senderName}</strong> te envió un mensaje sobre el pedido <strong>#${orderNumber}</strong> (${productName}):</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;font-style:italic;">"${messagePreview.substring(0, 200)}${messagePreview.length > 200 ? "..." : ""}"</p>
-     <p style="margin:0 0 0;">
-       <a href="${appUrl()}/portal" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver mensaje</a>
+     <p style="margin:0 0 16px;">
+       <a href="${messageUrl}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Responder en la plataforma</a>
+     </p>
+     <p style="margin:0;padding:10px 12px;background-color:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px;font-size:12px;color:#78350f;">
+       <strong>No respondas a este correo.</strong> Las respuestas por email no llegan a tu interlocutor ni quedan registradas en el pedido. Responde siempre desde el botón de arriba para que la conversación quede en Casa Orfebre.
      </p>`,
+    { replyTo: "no-reply@casaorfebre.cl" },
   );
 }

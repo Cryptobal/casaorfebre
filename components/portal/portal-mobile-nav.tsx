@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 
 interface PortalMobileNavProps {
   title: string;
-  links: { href: string; label: string; badge?: number; ai?: boolean }[];
+  links: { href: string; label: string; badge?: number; ai?: boolean; exact?: boolean }[];
 }
 
 export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
@@ -60,7 +60,9 @@ export function PortalMobileNav({ title, links }: PortalMobileNavProps) {
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
               {links.map((link) => {
-                const isActive = pathname === link.href;
+                const isActive = link.exact
+                  ? pathname === link.href
+                  : pathname === link.href || pathname.startsWith(link.href + "/");
                 const badgeBg =
                   link.href.startsWith("/portal/orfebre") && link.badge != null && link.badge > 0
                     ? "bg-amber-500"
