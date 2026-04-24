@@ -2,27 +2,28 @@ import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+  const sharedDisallow = [
+    "/portal/",
+    "/api/",
+    "/checkout/",
+    "/login",
+    "/registro",
+    "/recuperar-contrasena",
+    "/verificar",
+    "/social/",
+    "/carrito",
+    "/wishlist",
+    "/*?*utm_",
+    "/*?*ref=",
+    "/*?*fbclid=",
+    "/*?*gclid=",
+  ];
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/_next/static/", "/_next/image"],
-        disallow: [
-          "/portal/",
-          "/api/",
-          "/checkout/",
-          "/login",
-          "/registro",
-          "/recuperar-contrasena",
-          "/verificar",
-          "/social/",
-          "/carrito",
-          "/wishlist",
-          "/*?*utm_",
-          "/*?*ref=",
-          "/*?*fbclid=",
-          "/*?*gclid=",
-        ],
+        allow: "/",
+        disallow: sharedDisallow,
       },
       {
         userAgent: "GPTBot",

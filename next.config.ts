@@ -64,6 +64,34 @@ const nextConfig: NextConfig = {
         source: "/checkout/:path*",
         headers: noIndexHeaders,
       },
+      {
+        source: "/login",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/registro",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/recuperar-contrasena",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/verificar/:path*",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/carrito",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/wishlist",
+        headers: noIndexHeaders,
+      },
+      {
+        source: "/social/:path*",
+        headers: noIndexHeaders,
+      },
     ];
   },
   async redirects() {
