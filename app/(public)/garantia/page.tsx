@@ -77,6 +77,38 @@ export default function GarantiaPage() {
           />
 
           <PolicyCard
+            icon={<PackageSearchIcon />}
+            title="Si tu pedido no llega a destino"
+          >
+            <div className="space-y-5 text-text-secondary">
+              <p>
+                Cada pieza que se vende en Casa Orfebre fue creada a mano por un orfebre chileno. Cuando un envío se demora o se extravía en tránsito, lo tratamos con la misma seriedad con la que tratamos la pieza misma.
+              </p>
+              <p>
+                Casa Orfebre garantiza el reembolso íntegro de cualquier pedido que no llegue a destino. Para proteger tanto al comprador como al artesano que creó la pieza, el reembolso se procesa una vez confirmada una de estas tres situaciones:
+              </p>
+              <p>
+                <strong className="font-medium text-text">Devolución del paquete al artesano.</strong>{" "}
+                Cuando el courier devuelve el envío a su origen y el orfebre confirma la recepción de la pieza, procesamos el reembolso íntegro al medio de pago original.
+              </p>
+              <p>
+                <strong className="font-medium text-text">Extravío formal declarado por el courier.</strong>{" "}
+                Cuando la empresa de transporte emite un acta de extravío y activa la cobertura del seguro del envío, procesamos el reembolso íntegro.
+              </p>
+              <p>
+                <strong className="font-medium text-text">Recepción tardía con devolución dentro de plazo.</strong>{" "}
+                Si el paquete finalmente llega, cuentas con 14 días para devolverlo sin costo. Una vez que el orfebre recibe la devolución, procesamos el reembolso íntegro.
+              </p>
+              <p>
+                Mientras se confirma alguna de estas tres situaciones, Casa Orfebre gestiona directamente el caso con el courier y mantiene comunicación constante con el comprador. El plazo estimado entre la confirmación y el reembolso es de <strong className="font-medium text-text">5 a 7 días hábiles</strong>. La trazabilidad completa de la gestión queda registrada en el panel de pedidos del comprador.
+              </p>
+              <p>
+                Esta política existe por una razón simple: cada orfebre de nuestra comunidad necesita saber que su trabajo está protegido, y cada comprador necesita saber que su dinero está respaldado por una garantía concreta y verificable.
+              </p>
+            </div>
+          </PolicyCard>
+
+          <PolicyCard
             icon={<BadgeIcon />}
             title="Orfebres, publicaciones y materiales"
             children={
@@ -334,6 +366,19 @@ function TruckIcon() {
       <path d="M16 8h4l3 3v5h-7V8z" />
       <circle cx="5.5" cy="18.5" r="2.5" />
       <circle cx="18.5" cy="18.5" r="2.5" />
+    </svg>
+  );
+}
+
+function PackageSearchIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M16.5 9.4 7.55 4.24" />
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0" />
+      <path d="m3.3 7 8.7 5 8.7-5" />
+      <path d="M12 22V12" />
+      <circle cx="18.5" cy="17.5" r="2.5" />
+      <path d="M22 22 20.3 20.3" strokeLinecap="round" />
     </svg>
   );
 }

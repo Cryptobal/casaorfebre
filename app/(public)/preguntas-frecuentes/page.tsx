@@ -120,6 +120,11 @@ const faqSections: FaqSection[] = [
     title: "Garantía",
     items: [
       {
+        question: "¿Qué pasa si mi pedido no llega?",
+        answer:
+          "Casa Orfebre garantiza el reembolso íntegro. El reembolso se procesa una vez que el courier confirma la devolución del paquete al orfebre, declara formalmente el extravío con activación del seguro, o el comprador recibe el paquete y lo devuelve dentro de los 14 días de garantía. Mientras tanto, gestionamos directamente el caso con el courier y te mantenemos informado en cada etapa.",
+      },
+      {
         question: "¿Qué es el certificado de autenticidad?",
         answer:
           "Cada pieza vendida en Casa Orfebre incluye un certificado digital de autenticidad que acredita al orfebre creador, los materiales utilizados, la técnica de elaboración y un código único de verificación. Este certificado garantiza que estás adquiriendo una pieza original de joyería artesanal chilena.",

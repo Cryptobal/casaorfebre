@@ -22,7 +22,7 @@ export default function TerminosPage() {
           Términos y Condiciones
         </h1>
         <p className="mt-4 text-sm text-text-tertiary">
-          Última actualización: 8 de abril de 2026
+          Última actualización: 27 de abril de 2026
         </p>
 
         <div className="mt-12 space-y-10 break-words text-base leading-relaxed sm:text-lg">
@@ -266,10 +266,42 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 8. Garantía de autenticidad y certificados ── */}
+          {/* ── 8. Reembolso por envíos no recibidos ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              8. Garantía de autenticidad y certificados
+              8. Reembolso por envíos no recibidos
+            </h2>
+            <p className="mb-4 font-light text-text-secondary">
+              Casa Orfebre procesa el reembolso íntegro de pedidos no recibidos
+              una vez confirmada una de las siguientes situaciones objetivas:
+            </p>
+            <ol className="mb-4 list-decimal space-y-2 pl-6 font-light text-text-secondary">
+              <li>
+                Devolución a remitente (RTS) confirmada por el courier y
+                recepción de la pieza por el orfebre.
+              </li>
+              <li>
+                Acta formal de extravío emitida por la empresa de transporte y
+                activación del seguro del envío.
+              </li>
+              <li>
+                Recepción del paquete por el comprador y devolución dentro del
+                plazo de 14 días establecido en la presente garantía.
+              </li>
+            </ol>
+            <p className="font-light text-text-secondary">
+              El plazo estimado entre la confirmación de cualquiera de estas
+              situaciones y el procesamiento del reembolso al medio de pago
+              original es de 5 a 7 días hábiles. Casa Orfebre gestiona la
+              totalidad del proceso con el courier sin intervención adicional
+              del comprador.
+            </p>
+          </section>
+
+          {/* ── 9. Garantía de autenticidad y certificados ── */}
+          <section>
+            <h2 className="mb-4 font-serif text-xl font-light text-text">
+              9. Garantía de autenticidad y certificados
             </h2>
             <p className="mb-4 font-light text-text-secondary">
               Cada pieza comercializada a través de Casa Orfebre puede contar con
@@ -298,10 +330,10 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 9. Propiedad intelectual y datos personales del orfebre ── */}
+          {/* ── 10. Propiedad intelectual y datos personales del orfebre ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              9. Propiedad intelectual y datos personales del orfebre
+              10. Propiedad intelectual y datos personales del orfebre
             </h2>
             <p className="mb-4 font-light text-text-secondary">
               Las fotografías, descripciones, diseños y cualquier otro
@@ -378,10 +410,10 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 10. Limitación de responsabilidad ── */}
+          {/* ── 11. Limitación de responsabilidad ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              10. Limitación de responsabilidad
+              11. Limitación de responsabilidad
             </h2>
             <p className="mb-4 font-light text-text-secondary">
               Casa Orfebre actúa exclusivamente como intermediario tecnológico
@@ -406,10 +438,10 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 11. Resolución de disputas ── */}
+          {/* ── 12. Resolución de disputas ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              11. Resolución de disputas
+              12. Resolución de disputas
             </h2>
             <p className="mb-4 font-light text-text-secondary">
               En caso de controversia entre un comprador y un orfebre, las partes
@@ -452,10 +484,10 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 12. Modificaciones a los términos ── */}
+          {/* ── 13. Modificaciones a los términos ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              12. Modificaciones a los términos
+              13. Modificaciones a los términos
             </h2>
             <p className="mb-4 font-light text-text-secondary">
               Casa Orfebre se reserva el derecho de modificar estos Términos y
@@ -473,10 +505,10 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 13. Ley aplicable ── */}
+          {/* ── 14. Ley aplicable ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              13. Ley aplicable
+              14. Ley aplicable
             </h2>
             <p className="font-light text-text-secondary">
               Estos Términos y Condiciones se rigen por la legislación de la
@@ -494,10 +526,10 @@ export default function TerminosPage() {
             </p>
           </section>
 
-          {/* ── 14. Contacto ── */}
+          {/* ── 15. Contacto ── */}
           <section>
             <h2 className="mb-4 font-serif text-xl font-light text-text">
-              14. Contacto
+              15. Contacto
             </h2>
             <p className="mb-4 font-light text-text-secondary">
               Para cualquier consulta, sugerencia o reclamo relacionado con estos
