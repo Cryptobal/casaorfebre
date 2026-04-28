@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getShippingZones, getShippingSettings } from "@/lib/queries/shipping";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -16,25 +17,64 @@ const GOOGLE_CATEGORY: Record<string, string> = {
 
 const DEFAULT_CATEGORY = "Apparel &amp; Accessories &gt; Jewelry";
 
+// Spanish region name → ISO 3166-2 code (Chile)
+const REGION_CODE: Record<string, string> = {
+  "Arica y Parinacota": "CL-AP",
+  "Tarapacá": "CL-TA",
+  "Antofagasta": "CL-AN",
+  "Atacama": "CL-AT",
+  "Coquimbo": "CL-CO",
+  "Valparaíso": "CL-VS",
+  "Metropolitana de Santiago": "CL-RM",
+  "O'Higgins": "CL-LI",
+  "Maule": "CL-ML",
+  "Ñuble": "CL-NB",
+  "Biobío": "CL-BI",
+  "Araucanía": "CL-AR",
+  "Los Ríos": "CL-LR",
+  "Los Lagos": "CL-LL",
+  "Aysén": "CL-AI",
+  "Magallanes": "CL-MA",
+};
+
+const AUDIENCE_GENDER: Record<string, string> = {
+  MUJER: "female",
+  HOMBRE: "male",
+  UNISEX: "unisex",
+  NINOS: "unisex",
+};
+
+// Parses "2 a 5 días hábiles" / "3-5 días" / "5 días" → {min, max}
+function parseTransitDays(estimated: string): { min: number; max: number } {
+  const numbers = (estimated.match(/\d+/g) || []).map(Number);
+  if (numbers.length === 0) return { min: 2, max: 7 };
+  if (numbers.length === 1) return { min: numbers[0], max: numbers[0] };
+  return { min: Math.min(...numbers), max: Math.max(...numbers) };
+}
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
 
-  const products = await prisma.product.findMany({
-    where: {
-      status: "APPROVED",
-      images: { some: { status: "APPROVED" } },
-    },
-    include: {
-      artisan: { select: { displayName: true } },
-      categories: { select: { slug: true, name: true } },
-      materials: { select: { name: true } },
-      images: {
-        where: { status: "APPROVED" },
-        orderBy: { position: "asc" },
-        take: 10,
+  const [products, shippingZones, shippingSettings] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        status: "APPROVED",
+        images: { some: { status: "APPROVED" } },
       },
-    },
-  });
+      include: {
+        artisan: { select: { displayName: true } },
+        categories: { select: { slug: true, name: true } },
+        materials: { select: { name: true } },
+        images: {
+          where: { status: "APPROVED" },
+          orderBy: { position: "asc" },
+          take: 10,
+        },
+      },
+    }),
+    getShippingZones(),
+    getShippingSettings(),
+  ]);
 
   const escapeXml = (str: string) =>
     str
@@ -46,6 +86,52 @@ export async function GET() {
       .replace(/[\u0080-\uFFFF]/g, (c) => `&#${c.charCodeAt(0)};`);
 
   const absUrl = (u: string) => (u.startsWith("http") ? u : `${baseUrl}${u}`);
+
+  // Pre-compute shipping XML pieces once (per region × zone) — reused for products that
+  // do NOT meet the free-shipping threshold. Free-shipping items get a single 0-CLP block.
+  type ShippingEntry = { regionCode: string; service: string; price: number; transit: { min: number; max: number } };
+  const zoneEntries: ShippingEntry[] = [];
+  for (const zone of shippingZones) {
+    const transit = parseTransitDays(zone.estimatedDays);
+    for (const region of zone.regions) {
+      const code = REGION_CODE[region];
+      if (!code) continue;
+      zoneEntries.push({ regionCode: code, service: zone.name, price: zone.price, transit });
+    }
+  }
+
+  const buildShippingBlocks = (productPrice: number) => {
+    const qualifiesForFree =
+      shippingSettings.freeShippingEnabled &&
+      productPrice >= shippingSettings.freeShippingThreshold;
+
+    if (qualifiesForFree || zoneEntries.length === 0) {
+      return `      <g:shipping>
+        <g:country>CL</g:country>
+        <g:service>${escapeXml("Envío estándar")}</g:service>
+        <g:price>0 CLP</g:price>
+        <g:min_handling_time>1</g:min_handling_time>
+        <g:max_handling_time>3</g:max_handling_time>
+        <g:min_transit_time>2</g:min_transit_time>
+        <g:max_transit_time>7</g:max_transit_time>
+      </g:shipping>`;
+    }
+
+    return zoneEntries
+      .map(
+        (e) => `      <g:shipping>
+        <g:country>CL</g:country>
+        <g:region>${e.regionCode}</g:region>
+        <g:service>${escapeXml(e.service)}</g:service>
+        <g:price>${e.price} CLP</g:price>
+        <g:min_handling_time>1</g:min_handling_time>
+        <g:max_handling_time>3</g:max_handling_time>
+        <g:min_transit_time>${e.transit.min}</g:min_transit_time>
+        <g:max_transit_time>${e.transit.max}</g:max_transit_time>
+      </g:shipping>`,
+      )
+      .join("\n");
+  };
 
   // Pinterest rechaza items sin descripción real o sin imagen.
   // Excluimos out_of_stock y slugs de borrador del feed.
@@ -87,24 +173,69 @@ export async function GET() {
         .trim()
         .slice(0, 5000);
 
+      // Sale price logic: when compareAtPrice exists and is higher than price,
+      // use compareAtPrice as the regular price and `price` as the sale price.
+      const hasSale =
+        typeof product.compareAtPrice === "number" &&
+        product.compareAtPrice > product.price;
+      const regularPrice = hasSale ? product.compareAtPrice! : product.price;
+      const salePriceXml = hasSale
+        ? `\n      <g:sale_price>${product.price} CLP</g:sale_price>`
+        : "";
+
+      // Materials joined for <g:material> (max 3 to keep within ~200 chars)
+      const materialsXml = product.materials.length
+        ? `\n      <g:material>${escapeXml(product.materials.slice(0, 3).map((m) => m.name).join(" / "))}</g:material>`
+        : "";
+
+      // Gender + age group from audiencia
+      const gender = AUDIENCE_GENDER[product.audiencia];
+      const genderXml = gender ? `\n      <g:gender>${gender}</g:gender>` : "";
+      const ageGroup = product.audiencia === "NINOS" ? "kids" : "adult";
+      const ageGroupXml = `\n      <g:age_group>${ageGroup}</g:age_group>`;
+
+      // Sizes: emit one <g:size> per talla (Google reads multiple)
+      const tallasList = product.tallas?.length
+        ? product.tallas
+        : product.tallaUnica
+          ? [product.tallaUnica]
+          : [];
+      const sizesXml = tallasList.length
+        ? "\n" +
+          tallasList
+            .slice(0, 10)
+            .map((t) => `      <g:size>${escapeXml(t)}</g:size>`)
+            .join("\n")
+        : "";
+
+      // Return policy (item-level): 14-day free returns by mail when allowed.
+      // MADE_TO_ORDER + non-returnable items declare 0 days = no returns.
+      const allowsReturns =
+        product.isReturnable && product.productionType !== "MADE_TO_ORDER";
+      const returnPolicyXml = allowsReturns
+        ? `\n      <g:return_policy_days>14</g:return_policy_days>`
+        : `\n      <g:return_policy_days>0</g:return_policy_days>`;
+
+      // MPN/SKU based on stable slug — lets us drop identifier_exists=false
+      const mpn = product.slug.toUpperCase().slice(0, 70);
+
+      const shippingBlocks = buildShippingBlocks(product.price);
+
       return `    <item>
       <g:id>${escapeXml(product.id)}</g:id>
       <g:title>${escapeXml(product.name.trim())}</g:title>
       <g:description>${escapeXml(description)}</g:description>
       <g:link>${baseUrl}/coleccion/${escapeXml(product.slug)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
-${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${product.price.toFixed(2)} CLP</g:price>
+${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${regularPrice} CLP</g:price>${salePriceXml}
       <g:availability>in_stock</g:availability>
       <g:condition>new</g:condition>
       <g:brand>${escapeXml(product.artisan?.displayName || "Casa Orfebre")}</g:brand>
-      <g:google_product_category>${googleCategory}</g:google_product_category>
-      <g:product_type>${escapeXml(productType)}</g:product_type>
+      <g:mpn>${escapeXml(mpn)}</g:mpn>
       <g:identifier_exists>false</g:identifier_exists>
-      <g:shipping>
-        <g:country>CL</g:country>
-        <g:service>${escapeXml("Envío estándar")}</g:service>
-        <g:price>0.00 CLP</g:price>
-      </g:shipping>
+      <g:google_product_category>${googleCategory}</g:google_product_category>
+      <g:product_type>${escapeXml(productType)}</g:product_type>${materialsXml}${genderXml}${ageGroupXml}${sizesXml}${returnPolicyXml}
+${shippingBlocks}
     </item>`;
     })
     .join("\n");
