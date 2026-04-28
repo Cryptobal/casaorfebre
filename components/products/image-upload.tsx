@@ -13,8 +13,10 @@ async function compressImage(file: File): Promise<File> {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      // Scale down proportionally — max 2400px on longest side
-      const maxDim = 2400;
+      // Scale down proportionally — max 2800px on longest side. GMC's "high-resolution"
+      // bucket needs ≥ 1500px; we keep extra headroom so JPEG re-encode at 0.9 still
+      // looks crisp on retina product galleries.
+      const maxDim = 2800;
       let { width, height } = img;
       if (width > maxDim || height > maxDim) {
         const ratio = Math.min(maxDim / width, maxDim / height);
@@ -25,26 +27,26 @@ async function compressImage(file: File): Promise<File> {
       canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) { resolve(file); return; }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob || blob.size > MAX_UPLOAD_SIZE) {
-            // Try lower quality
-            canvas.toBlob(
-              (blob2) => {
-                if (!blob2) { resolve(file); return; }
-                resolve(new File([blob2], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
-              },
-              "image/jpeg",
-              0.6
-            );
-          } else {
+
+      const tryEncode = (quality: number, fallback?: () => void) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size > MAX_UPLOAD_SIZE) {
+              if (fallback) fallback();
+              else resolve(file);
+              return;
+            }
             resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
-          }
-        },
-        "image/jpeg",
-        0.82
-      );
+          },
+          "image/jpeg",
+          quality,
+        );
+      };
+
+      tryEncode(0.92, () => tryEncode(0.82, () => tryEncode(0.7)));
     };
     img.onerror = () => reject(new Error("No se pudo procesar la imagen"));
     img.src = URL.createObjectURL(file);
