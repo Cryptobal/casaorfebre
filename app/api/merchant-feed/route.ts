@@ -17,26 +17,6 @@ const GOOGLE_CATEGORY: Record<string, string> = {
 
 const DEFAULT_CATEGORY = "Apparel &amp; Accessories &gt; Jewelry";
 
-// Spanish region name → ISO 3166-2 code (Chile)
-const REGION_CODE: Record<string, string> = {
-  "Arica y Parinacota": "CL-AP",
-  "Tarapacá": "CL-TA",
-  "Antofagasta": "CL-AN",
-  "Atacama": "CL-AT",
-  "Coquimbo": "CL-CO",
-  "Valparaíso": "CL-VS",
-  "Metropolitana de Santiago": "CL-RM",
-  "O'Higgins": "CL-LI",
-  "Maule": "CL-ML",
-  "Ñuble": "CL-NB",
-  "Biobío": "CL-BI",
-  "Araucanía": "CL-AR",
-  "Los Ríos": "CL-LR",
-  "Los Lagos": "CL-LL",
-  "Aysén": "CL-AI",
-  "Magallanes": "CL-MA",
-};
-
 const AUDIENCE_GENDER: Record<string, string> = {
   MUJER: "female",
   HOMBRE: "male",
@@ -87,18 +67,15 @@ export async function GET() {
 
   const absUrl = (u: string) => (u.startsWith("http") ? u : `${baseUrl}${u}`);
 
-  // Pre-compute shipping XML pieces once (per region × zone) — reused for products that
-  // do NOT meet the free-shipping threshold. Free-shipping items get a single 0-CLP block.
-  type ShippingEntry = { regionCode: string; service: string; price: number; transit: { min: number; max: number } };
-  const zoneEntries: ShippingEntry[] = [];
-  for (const zone of shippingZones) {
-    const transit = parseTransitDays(zone.estimatedDays);
-    for (const region of zone.regions) {
-      const code = REGION_CODE[region];
-      if (!code) continue;
-      zoneEntries.push({ regionCode: code, service: zone.name, price: zone.price, transit });
-    }
-  }
+  // Google sólo acepta <g:region> para AU, US y JP. Para Chile usamos un único
+  // bloque a nivel país con la tarifa más alta de las zonas (conservador) para
+  // evitar penalizaciones por subestimar el costo real de envío en checkout.
+  type ZoneEntry = { service: string; price: number; transit: { min: number; max: number } };
+  const zoneEntries: ZoneEntry[] = shippingZones.map((zone) => ({
+    service: zone.name,
+    price: zone.price,
+    transit: parseTransitDays(zone.estimatedDays),
+  }));
 
   const buildShippingBlocks = (productPrice: number) => {
     const qualifiesForFree =
@@ -117,20 +94,19 @@ export async function GET() {
       </g:shipping>`;
     }
 
-    return zoneEntries
-      .map(
-        (e) => `      <g:shipping>
+    const worstCase = zoneEntries.reduce((acc, e) => (e.price > acc.price ? e : acc), zoneEntries[0]);
+    const minTransit = Math.min(...zoneEntries.map((e) => e.transit.min));
+    const maxTransit = Math.max(...zoneEntries.map((e) => e.transit.max));
+
+    return `      <g:shipping>
         <g:country>CL</g:country>
-        <g:region>${e.regionCode}</g:region>
-        <g:service>${escapeXml(e.service)}</g:service>
-        <g:price>${e.price} CLP</g:price>
+        <g:service>${escapeXml(worstCase.service)}</g:service>
+        <g:price>${worstCase.price} CLP</g:price>
         <g:min_handling_time>1</g:min_handling_time>
         <g:max_handling_time>3</g:max_handling_time>
-        <g:min_transit_time>${e.transit.min}</g:min_transit_time>
-        <g:max_transit_time>${e.transit.max}</g:max_transit_time>
-      </g:shipping>`,
-      )
-      .join("\n");
+        <g:min_transit_time>${minTransit}</g:min_transit_time>
+        <g:max_transit_time>${maxTransit}</g:max_transit_time>
+      </g:shipping>`;
   };
 
   // Pinterest rechaza items sin descripción real o sin imagen.

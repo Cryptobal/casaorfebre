@@ -78,6 +78,7 @@ export function GET() {
     { url: `${baseUrl}/postular`, priority: 0.5 },
     { url: `${baseUrl}/terminos`, priority: 0.3 },
     { url: `${baseUrl}/privacidad`, priority: 0.3 },
+    { url: `${baseUrl}/politica-devoluciones`, priority: 0.3 },
   ].map((p) => ({
     ...p,
     lastModified: now,
