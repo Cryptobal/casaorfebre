@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { uploadToR2 } from "@/lib/r2";
 import { revalidatePath } from "next/cache";
 import { slugify, formatCLP } from "@/lib/utils";
+import bcrypt from "bcryptjs";
 import {
   sendArtisanWelcomeEmail,
   sendApplicationRejectedEmail,
@@ -18,6 +19,7 @@ import {
   sendEmail,
 } from "@/lib/emails/templates";
 import { CURRENT_LEGAL_VERSIONS } from "@/lib/legal/constants";
+import { DEFAULT_ARTISAN_PASSWORD } from "@/lib/auth/constants";
 
 async function requireAdmin() {
   const session = await auth();
@@ -50,24 +52,33 @@ export async function approveApplication(
     slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
   }
 
+  // Default initial password for every approved artisan. They can change it
+  // via "¿Olvidaste tu contraseña?" or sign in with Google.
+  const hashedPassword = await bcrypt.hash(DEFAULT_ARTISAN_PASSWORD, 12);
+
   // Check if user with this email already exists
   let user = await prisma.user.findUnique({
     where: { email: application.email },
   });
 
   if (user) {
-    // Promote existing user to ARTISAN
+    // Promote existing user to ARTISAN and reset password to the default
     await prisma.user.update({
       where: { id: user.id },
-      data: { role: "ARTISAN", name: user.name || application.name },
+      data: {
+        role: "ARTISAN",
+        name: user.name || application.name,
+        hashedPassword,
+      },
     });
   } else {
-    // Create new user with ARTISAN role
+    // Create new user with ARTISAN role and default password
     user = await prisma.user.create({
       data: {
         email: application.email,
         name: application.name,
         role: "ARTISAN",
+        hashedPassword,
       },
     });
   }

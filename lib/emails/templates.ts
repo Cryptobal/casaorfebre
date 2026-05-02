@@ -2,6 +2,7 @@ import { resend, FROM_EMAIL } from "@/lib/resend";
 import { emailLayout } from "./base-layout";
 import { formatCLP } from "@/lib/utils";
 import { getTrackingUrl } from "@/lib/tracking";
+import { DEFAULT_ARTISAN_PASSWORD } from "@/lib/auth/constants";
 
 /** Base URL for links in transactional emails (no trailing slash). */
 function appUrl(): string {
@@ -119,9 +120,9 @@ export async function sendArtisanWelcomeEmail(
      ${promoSection}
      <p style="margin:0 0 8px;font-weight:bold;">¿Cómo ingresar al portal?</p>
      <p style="margin:0 0 16px;padding:12px 16px;background-color:#f5f3ef;border-radius:4px;font-size:14px;line-height:1.5;">
-       Tu cuenta quedó asociada a <strong>este mismo correo</strong>. No recibiste una contraseña automática.<br><br>
+       Tu cuenta quedó asociada a <strong>este mismo correo</strong>. Tu contraseña inicial es <strong>${DEFAULT_ARTISAN_PASSWORD}</strong>.<br><br>
        <strong>Si usas Google</strong> (p. ej. Gmail) con este email: entra en <a href="${base}/login" style="color:#8B7355;">Iniciar sesión</a> y elige <strong>«Continuar con Google»</strong>.<br><br>
-       <strong>Si prefieres correo y contraseña:</strong> en la misma página de inicio de sesión abre <strong>«¿Olvidaste tu contraseña?»</strong>, ingresa este correo y te enviaremos un enlace para <strong>definir tu contraseña</strong> la primera vez (o cambiarla si ya tenías una).
+       <strong>Si prefieres correo y contraseña:</strong> en <a href="${base}/login" style="color:#8B7355;">Iniciar sesión</a> ingresa este correo y la contraseña <strong>${DEFAULT_ARTISAN_PASSWORD}</strong>. Te recomendamos cambiarla cuanto antes desde <strong>«¿Olvidaste tu contraseña?»</strong>.
      </p>
      <p style="margin:0 0 16px;">Luego, en el portal:</p>
      <ol style="margin:0 0 16px;padding-left:20px;">
