@@ -45,7 +45,16 @@ export default async function ProductosPage() {
         take: 1,
       },
       video: { select: { id: true } },
-      _count: { select: { images: true, orderItems: true } },
+      _count: {
+        select: {
+          images: true,
+          orderItems: {
+            where: {
+              order: { status: { notIn: ["PENDING_PAYMENT", "CANCELLED"] } },
+            },
+          },
+        },
+      },
     },
     orderBy: { updatedAt: "desc" },
   });

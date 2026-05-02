@@ -788,7 +788,15 @@ export async function deleteProduct(
     where: { id: productId },
     include: {
       images: true,
-      _count: { select: { orderItems: true } },
+      _count: {
+        select: {
+          orderItems: {
+            where: {
+              order: { status: { notIn: ["PENDING_PAYMENT", "CANCELLED"] } },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -822,6 +830,14 @@ export async function deleteProduct(
       await tx.conversation.updateMany({
         where: { productId },
         data: { productId: null },
+      });
+      // OrderItems de órdenes abandonadas/canceladas no representan ventas
+      // reales, pero la FK no tiene CASCADE; las limpiamos explícitamente.
+      await tx.orderItem.deleteMany({
+        where: {
+          productId,
+          order: { status: { in: ["PENDING_PAYMENT", "CANCELLED"] } },
+        },
       });
       await tx.productImage.deleteMany({ where: { productId } });
       await tx.product.delete({ where: { id: productId } });
