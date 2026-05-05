@@ -41,6 +41,14 @@ env.local
 # vercel
 .vercel
 
+# local agent / IDE configs
+.claude/
+.cursor/
+
+# playwright / test artifacts
+test-results/
+playwright-report/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

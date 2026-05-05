@@ -524,7 +524,7 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
             <div className="mt-4">
               <ImageUpload
                 productId={product.id}
-                existingImages={product.images}
+                existingImages={currentImages}
                 onImagesChange={(imgs) => setCurrentImages(imgs.map((img) => ({ ...img, altText: null })))}
               />
             </div>
@@ -1734,7 +1734,10 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
           {product?.id ? (
             <ImageUpload
               productId={product.id}
-              existingImages={product.images}
+              existingImages={currentImages}
+              onImagesChange={(imgs) =>
+                setCurrentImages(imgs.map((img) => ({ ...img, altText: null })))
+              }
             />
           ) : (
             <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-sm text-text-secondary">
