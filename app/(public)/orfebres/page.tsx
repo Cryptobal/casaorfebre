@@ -1,5 +1,4 @@
 export const revalidate = 300;
-export const dynamic = "force-static";
 
 import { Suspense } from "react";
 import { getApprovedArtisans } from "@/lib/queries/artisans";

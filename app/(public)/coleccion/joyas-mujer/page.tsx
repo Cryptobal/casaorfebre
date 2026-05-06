@@ -83,11 +83,11 @@ const SECTIONS: ProductSection[] = [
   },
   {
     title: "Collares de Plata para Mujer",
-    categorySlug: "cadena",
+    categorySlug: "collar",
     description:
       "Collares de cadena fina, medianos con colgantes discretos, y piezas statement de plata. Diseños para layering, uso diario o momentos especiales. Combina múltiples collares para crear tu propio look.",
     ctaLabel: "Ver todos los collares",
-    ctaHref: "/coleccion/cadenas-de-plata",
+    ctaHref: "/coleccion/collares-de-plata",
   },
   {
     title: "Pulseras de Plata para Mujer",
@@ -279,12 +279,12 @@ export default async function JoyasMujerPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/coleccion/collares" className="font-sans text-sm text-text-secondary transition-colors hover:text-accent">
+                  <Link href="/coleccion/collares-de-plata" className="font-sans text-sm text-text-secondary transition-colors hover:text-accent">
                     Collares de Plata
                   </Link>
                 </li>
                 <li>
-                  <Link href="/coleccion/pulseras" className="font-sans text-sm text-text-secondary transition-colors hover:text-accent">
+                  <Link href="/coleccion/pulseras-de-plata" className="font-sans text-sm text-text-secondary transition-colors hover:text-accent">
                     Pulseras de Plata
                   </Link>
                 </li>
