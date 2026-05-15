@@ -6,16 +6,16 @@ export const dynamic = "force-dynamic";
 
 // Google Product Taxonomy (full text for Google + Pinterest compatibility)
 const GOOGLE_CATEGORY: Record<string, string> = {
-  anillo: "Apparel &amp; Accessories &gt; Jewelry &gt; Rings",
-  aros: "Apparel &amp; Accessories &gt; Jewelry &gt; Earrings",
-  collar: "Apparel &amp; Accessories &gt; Jewelry &gt; Necklaces",
-  pulsera: "Apparel &amp; Accessories &gt; Jewelry &gt; Bracelets",
-  colgante: "Apparel &amp; Accessories &gt; Jewelry &gt; Charms &amp; Pendants",
-  cadena: "Apparel &amp; Accessories &gt; Jewelry &gt; Necklaces",
-  broche: "Apparel &amp; Accessories &gt; Jewelry &gt; Brooches &amp; Lapel Pins",
+  anillo: "Apparel & Accessories > Jewelry > Rings",
+  aros: "Apparel & Accessories > Jewelry > Earrings",
+  collar: "Apparel & Accessories > Jewelry > Necklaces",
+  pulsera: "Apparel & Accessories > Jewelry > Bracelets",
+  colgante: "Apparel & Accessories > Jewelry > Charms & Pendants",
+  cadena: "Apparel & Accessories > Jewelry > Necklaces",
+  broche: "Apparel & Accessories > Jewelry > Brooches & Lapel Pins",
 };
 
-const DEFAULT_CATEGORY = "Apparel &amp; Accessories &gt; Jewelry";
+const DEFAULT_CATEGORY = "Apparel & Accessories > Jewelry";
 
 const AUDIENCE_GENDER: Record<string, string> = {
   MUJER: "female",
@@ -56,14 +56,22 @@ export async function GET() {
     getShippingSettings(),
   ]);
 
-  const escapeXml = (str: string) =>
+  // Keep UTF-8 characters as-is (including accents and emoji) and only
+  // remove characters forbidden by XML 1.0.
+  const XML_INVALID_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+  const sanitizeFeedText = (str: string) =>
     str
+      .replace(XML_INVALID_CHARS, "")
+      .replace(/\r?\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const escapeXml = (str: string) =>
+    sanitizeFeedText(str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&apos;")
-      .replace(/[\u0080-\uFFFF]/g, (c) => `&#${c.charCodeAt(0)};`);
+      .replace(/'/g, "&apos;");
 
   const absUrl = (u: string) => (u.startsWith("http") ? u : `${baseUrl}${u}`);
 
@@ -142,12 +150,7 @@ export async function GET() {
         ? `Joyería Artesanal > ${categoryName} > ${materialName}`
         : `Joyería Artesanal > ${categoryName}`;
 
-      const description = (product.description || "")
-        .replace(/<[^>]*>/g, "")
-        .replace(/\n/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 5000);
+      const description = sanitizeFeedText((product.description || "").replace(/<[^>]*>/g, "")).slice(0, 5000);
 
       // Sale price logic: when compareAtPrice exists and is higher than price,
       // use compareAtPrice as the regular price and `price` as the sale price.
@@ -193,7 +196,8 @@ export async function GET() {
         : `\n      <g:return_policy_days>0</g:return_policy_days>`;
 
       // MPN/SKU based on stable slug — lets us drop identifier_exists=false
-      const mpn = product.slug.toUpperCase().slice(0, 70);
+      const mpn = sanitizeFeedText(product.slug.toUpperCase()).slice(0, 70);
+      const productLink = `${baseUrl}/coleccion/${encodeURIComponent(product.slug)}`;
 
       const shippingBlocks = buildShippingBlocks(product.price);
 
@@ -201,7 +205,7 @@ export async function GET() {
       <g:id>${escapeXml(product.id)}</g:id>
       <g:title>${escapeXml(product.name.trim())}</g:title>
       <g:description>${escapeXml(description)}</g:description>
-      <g:link>${baseUrl}/coleccion/${escapeXml(product.slug)}</g:link>
+      <g:link>${escapeXml(productLink)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
 ${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${regularPrice} CLP</g:price>${salePriceXml}
       <g:availability>in_stock</g:availability>
@@ -209,7 +213,7 @@ ${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${regularPrice}
       <g:brand>${escapeXml(product.artisan?.displayName || "Casa Orfebre")}</g:brand>
       <g:mpn>${escapeXml(mpn)}</g:mpn>
       <g:identifier_exists>false</g:identifier_exists>
-      <g:google_product_category>${googleCategory}</g:google_product_category>
+      <g:google_product_category>${escapeXml(googleCategory)}</g:google_product_category>
       <g:product_type>${escapeXml(productType)}</g:product_type>${materialsXml}${genderXml}${ageGroupXml}${sizesXml}${returnPolicyXml}
 ${shippingBlocks}
     </item>`;
