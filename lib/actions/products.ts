@@ -855,6 +855,43 @@ export async function deleteProduct(
   return { success: true };
 }
 
+/**
+ * Archiva un producto: cambia su estado a ARCHIVED en lugar de borrarlo
+ * físicamente. Esto preserva el historial de órdenes y certificados (cuya FK
+ * a Product no tiene onDelete: Cascade) y lo retira del catálogo público y del
+ * listado activo del orfebre. Es la vía correcta para "eliminar" un producto
+ * que ya tuvo ventas.
+ */
+export async function archiveProduct(
+  productId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const artisan = await getArtisan();
+  if (!artisan) return { error: "No tienes permisos" };
+
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product || product.artisanId !== artisan.id) {
+    return { error: "Producto no encontrado" };
+  }
+
+  if (product.status === "ARCHIVED") {
+    return { success: true };
+  }
+
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { status: "ARCHIVED" },
+    });
+
+    revalidatePath("/portal/orfebre/productos");
+    revalidatePath("/coleccion");
+    return { success: true };
+  } catch (e) {
+    console.error("[archiveProduct]", productId, e);
+    return { error: "No se pudo archivar el producto. Intenta de nuevo." };
+  }
+}
+
 export async function deleteProductImage(
   imageId: string
 ): Promise<{ error?: string; success?: boolean }> {

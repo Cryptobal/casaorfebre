@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteProduct } from "@/lib/actions/products";
+import { archiveProduct, deleteProduct } from "@/lib/actions/products";
 import { useRouter } from "next/navigation";
 
 interface DeleteProductButtonProps {
@@ -22,21 +22,21 @@ export function DeleteProductButton({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  if (hasSales) {
-    return (
-      <span
-        className={`cursor-not-allowed text-xs text-text-tertiary ${className ?? ""}`}
-        title="No se puede eliminar un producto con ventas. Puedes pausarlo en su lugar."
-      >
-        Eliminar
-      </span>
-    );
-  }
+  // Productos con ventas no se pueden borrar físicamente (rompería el historial
+  // de órdenes y certificados). En su lugar se archivan: dejan de mostrarse en
+  // el catálogo y en el listado activo, pero conservan su historial.
+  const action = hasSales ? "archive" : "delete";
+  const label = hasSales ? "Archivar" : "Eliminar";
+  const shortName =
+    productName.length > 20 ? productName.slice(0, 20) + "…" : productName;
 
-  function handleDelete() {
+  function handleConfirm() {
     setError(null);
     startTransition(async () => {
-      const result = await deleteProduct(productId);
+      const result =
+        action === "archive"
+          ? await archiveProduct(productId)
+          : await deleteProduct(productId);
       if (result.error) {
         setError(result.error);
         setConfirming(false);
@@ -50,11 +50,13 @@ export function DeleteProductButton({
     return (
       <span className={`inline-flex items-center gap-1.5 ${className ?? ""}`}>
         <span className="text-xs text-red-600">
-          ¿Eliminar &ldquo;{productName.length > 20 ? productName.slice(0, 20) + "…" : productName}&rdquo;?
+          {action === "archive"
+            ? `¿Archivar “${shortName}”?`
+            : `¿Eliminar “${shortName}”?`}
         </span>
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={handleConfirm}
           disabled={isPending}
           className="rounded bg-red-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
         >
@@ -77,9 +79,14 @@ export function DeleteProductButton({
       <button
         type="button"
         onClick={() => setConfirming(true)}
+        title={
+          hasSales
+            ? "Este producto tiene ventas: se archivará para conservar su historial."
+            : undefined
+        }
         className={`text-xs text-red-500 hover:text-red-700 ${className ?? ""}`}
       >
-        Eliminar
+        {label}
       </button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </>

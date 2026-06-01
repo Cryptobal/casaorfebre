@@ -219,8 +219,8 @@ export function generateOrganizationJsonLd() {
     },
     image: `${BASE_URL}/casaorfebre-og-image.png`,
     description:
-      "Marketplace curado de joyería artesanal chilena. Anillos, aros, cadenas, pulseras, colgantes y collares hechos a mano por orfebres verificados en plata 925, 950, oro 18k, cobre y bronce con certificado de autenticidad digital.",
-    slogan: "Joyería de Autor",
+      "Marketplace de joyería artesanal chilena. Anillos, aros, cadenas, pulseras, colgantes y collares hechos a mano por orfebres verificados en plata 925, 950, oro 18k, cobre y bronce con certificado de autenticidad digital.",
+    slogan: "Joyería auténtica hecha por orfebres",
     foundingDate: "2024",
     areaServed: {
       "@type": "Country",
@@ -233,6 +233,11 @@ export function generateOrganizationJsonLd() {
       "plata 950",
       "oro 18k",
       "joyería de autor",
+      "joyería contemporánea",
+      "joyería tradicional",
+      "joyería simbólica",
+      "joyería patrimonial",
+      "joyería experimental",
       "anillos artesanales",
       "piedras naturales chilenas",
       "lapislázuli",
@@ -388,7 +393,7 @@ export function generateWebSiteJsonLd() {
     name: "Casa Orfebre",
     alternateName: "Casa Orfebre · Joyería de Autor",
     description:
-      "Marketplace curado de joyería artesanal chilena hecha a mano por orfebres verificados.",
+      "Marketplace de joyería artesanal chilena hecha a mano por orfebres verificados.",
     inLanguage: "es-CL",
     publisher: { "@id": `${BASE_URL}/#organization` },
     potentialAction: {

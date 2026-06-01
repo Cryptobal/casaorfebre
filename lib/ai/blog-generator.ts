@@ -260,6 +260,21 @@ export async function generateDynamicKeywordPool(): Promise<string[]> {
     "piedras chilenas lapislázuli",
     "joyas con piedras chilenas",
     "lapislázuli joyería chile",
+    // ── Líneas de orfebrería ampliadas (más allá de "autor/artesanal") ──
+    "joyería contemporánea chile",
+    "joyería comercial chile",
+    "joyería tradicional chilena",
+    "joyería simbólica chile",
+    "joyería patrimonial chilena",
+    "joyería experimental chile",
+    "orfebrería contemporánea chile",
+    "orfebrería experimental chile",
+    // ── Intención de venta orientada al orfebre (amplio) ──
+    "vender joyas hechas por mí",
+    "plataforma para orfebres chile",
+    "dónde vender mi orfebrería",
+    "vender joyería artesanal chile",
+    "cómo vender mis joyas en chile",
   ];
   brandKeywords.forEach((kw) => keywords.add(kw));
 

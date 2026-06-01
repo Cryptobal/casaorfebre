@@ -132,7 +132,7 @@ export async function sendArtisanInvitationEmail(
       html: emailLayout(`
         ${BADGE("Para Orfebres")}
         ${HEADING("Tu taller merece una vitrina a la altura de tu oficio")}
-        ${SUBTEXT("Casa Orfebre es la plataforma curada para orfebres chilenos independientes. Fuiste invitado porque creemos que tu trabajo merece más visibilidad que la que dan las ferias y las redes sociales.")}
+        ${SUBTEXT("Casa Orfebre es la plataforma para orfebres chilenos independientes que diseñan o producen sus propias piezas. Fuiste invitado porque creemos que tu trabajo merece más visibilidad que la que dan las ferias y las redes sociales.")}
 
         ${STAT_BLOCK([
           { value: "24/7", label: "Vitrina" },
@@ -234,7 +234,7 @@ export async function sendFollowUp1Email(
       subject: "Tu invitación a Casa Orfebre sigue activa",
       badge: "Recordatorio",
       heading: "Tu vitrina te espera",
-      body: "Te invitamos a exhibir tu trabajo en Casa Orfebre, la plataforma curada de joyería artesanal chilena. Tu invitación sigue vigente.",
+      body: "Te invitamos a exhibir tu trabajo en Casa Orfebre, la plataforma de joyería artesanal chilena. Tu invitación sigue vigente.",
       highlight: "Mientras lees esto, otros orfebres ya están publicando sus piezas, apareciendo en Google Shopping y recibiendo pedidos de todo Chile.",
       cta: "Conocer la plataforma",
     },

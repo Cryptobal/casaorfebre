@@ -960,7 +960,7 @@ export async function sendCertificateEmail(
           <p style="font-size:9px;letter-spacing:6px;color:#c9a96e;margin:0 0 16px;">&#9670;&nbsp;&nbsp;&#9670;&nbsp;&nbsp;&#9670;</p>
           <p style="font-family:Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:4px;color:#b5ad9e;margin:0 0 8px;">Casa Orfebre</p>
           <p style="font-family:Georgia,serif;font-size:24px;color:#2c2a26;margin:0 0 4px;font-weight:normal;letter-spacing:0.5px;">Certificado de Autenticidad</p>
-          <p style="font-size:11px;color:#b5ad9e;letter-spacing:1px;margin:0;">Joyería de Autor &middot; Hecho a Mano en Chile</p>
+          <p style="font-size:11px;color:#b5ad9e;letter-spacing:1px;margin:0;">Joyería auténtica hecha por orfebres &middot; Hecho a Mano en Chile</p>
         </td></tr>
 
         <!-- Divider -->
@@ -1057,7 +1057,7 @@ export async function sendCertificateEmail(
             <a href="${baseUrl}" style="color:#8a8478;text-decoration:none;letter-spacing:1px;">casaorfebre.cl</a>
           </p>
           <p style="font-size:10px;color:#4a4740;margin:0;">
-            Joyería de Autor &middot; Hecho a Mano en Chile
+            Joyería auténtica hecha por orfebres &middot; Hecho a Mano en Chile
           </p>
         </td></tr>
       </table>

@@ -866,6 +866,7 @@ enum ProductStatus {
   REJECTED
   PAUSED
   SOLD_OUT
+  ARCHIVED
 }
 
 enum ImageStatus {

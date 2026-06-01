@@ -10,19 +10,19 @@ import {
 export const metadata: Metadata = {
   title: "Postular como Orfebre",
   description:
-    "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
+    "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestra plataforma de joyería artesanal chilena. Verificamos autoría, no estilos.",
   alternates: { canonical: "/postular" },
   openGraph: {
     title: "Postular como Orfebre | Casa Orfebre",
     description:
-      "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
+      "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestra plataforma de joyería artesanal chilena. Verificamos autoría, no estilos.",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Postular como Orfebre | Casa Orfebre",
     description:
-      "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestro marketplace curado de joyería artesanal chilena.",
+      "Únete a Casa Orfebre. Postula como orfebre y vende tus piezas en nuestra plataforma de joyería artesanal chilena. Verificamos autoría, no estilos.",
     images: ["/casaorfebre-og-image.png"],
   },
 };
@@ -108,7 +108,7 @@ export default async function PostularPage({
     ? "Has sido seleccionado como uno de los primeros orfebres de Casa Orfebre."
     : isPioneerApplication
       ? "Si te aprobamos, activamos 3 meses de Plan Maestro gratis y 0% de comisión en tu cuenta."
-      : "Únete a nuestra comunidad de artesanos verificados y muestra tu trabajo al mundo.";
+      : "Una plataforma para orfebres que diseñan o producen sus propias piezas. Verificamos autoría, no estilos.";
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">

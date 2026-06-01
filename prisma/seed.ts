@@ -726,6 +726,11 @@ async function main() {
     { name: "Orfebrería tradicional", slug: "orfebreria-tradicional" },
     { name: "Alta joyería", slug: "alta-joyeria" },
     { name: "Joyería contemporánea", slug: "joyeria-contemporanea" },
+    // Líneas ampliadas (reposicionamiento: verificamos autoría, no estilos)
+    { name: "Joyería comercial", slug: "joyeria-comercial" },
+    { name: "Joyería simbólica", slug: "joyeria-simbolica" },
+    { name: "Joyería patrimonial", slug: "joyeria-patrimonial" },
+    { name: "Joyería experimental", slug: "joyeria-experimental" },
   ];
 
   for (let i = 0; i < specialtyData.length; i++) {

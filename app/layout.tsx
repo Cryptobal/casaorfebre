@@ -38,14 +38,14 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Marketplace curado de joyería artesanal de plata. Anillos, cadenas, aros, pulseras y collares hechos a mano por orfebres chilenos verificados. Plata 925 y 950 con certificado de autenticidad.",
+    "Marketplace de joyería artesanal de plata. Anillos, cadenas, aros, pulseras y collares hechos a mano por orfebres chilenos verificados. Plata 925 y 950 con certificado de autenticidad.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"
   ),
   alternates: { canonical: "/" },
   formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
-    title: "Casa Orfebre — Joyería de Autor",
+    title: "Casa Orfebre — Joyería auténtica hecha por orfebres",
     description:
       "Piezas únicas de orfebres chilenos verificados. Certificado de autenticidad digital con cada compra.",
     siteName: "Casa Orfebre",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Casa Orfebre — Joyería de Autor",
+    title: "Casa Orfebre — Joyería auténtica hecha por orfebres",
     description:
       "Piezas únicas de orfebres chilenos verificados. Certificado de autenticidad digital con cada compra.",
     images: ["/casaorfebre-og-image.png"],

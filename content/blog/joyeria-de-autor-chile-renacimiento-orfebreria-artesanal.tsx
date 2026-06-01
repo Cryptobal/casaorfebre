@@ -208,11 +208,10 @@ export function PostContent() {
       </p>
       <p className="text-text-secondary font-light leading-relaxed mb-6 text-lg">
         Nuestra plataforma es ese puente. Cada orfebre que exhibe en Casa Orfebre ha pasado por
-        un proceso de curación: verificamos la autenticidad de su trabajo, la calidad de sus
-        materiales, la consistencia de su propuesta. No somos una feria abierta donde cualquiera
-        puede vender: somos una galería digital que selecciona con criterio. Cuando encuentras una
+        un proceso de verificación: confirmamos que detrás hay un creador o productor real de las
+        piezas y que los materiales declarados son auténticos. Cuando encuentras una
         pieza en nuestra colección, puedes confiar en que detrás hay un artesano real, materiales
-        nobles y un compromiso con la excelencia.
+        nobles y un trabajo propio: diseño, fabricación o participación real en la producción.
       </p>
       <p className="text-text-secondary font-light leading-relaxed mb-6 text-lg">
         Además, cada compra en Casa Orfebre incluye un&nbsp;

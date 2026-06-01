@@ -97,7 +97,7 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Cómo puedo vender en Casa Orfebre?",
         answer:
-          "Completa el formulario de postulación en nuestra sección para orfebres. Nuestro equipo curatorial revisará tu portafolio, técnicas y materiales. Buscamos orfebres que trabajen con materiales nobles y demuestren un compromiso con la calidad artesanal. El proceso de revisión toma entre 5 y 10 días hábiles.",
+          "Completa el formulario de postulación en nuestra sección para orfebres. Nuestro equipo verifica que eres quien crea o produce tus piezas y que las fotos e información cumplen un estándar mínimo de la plataforma. No evaluamos estilos ni propuestas artísticas: confirmamos autenticidad y autoría. El proceso de revisión toma entre 5 y 10 días hábiles.",
       },
       {
         question: "¿Qué comisión cobra Casa Orfebre?",

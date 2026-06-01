@@ -309,11 +309,11 @@ export function ApplicationForm({
               id="bio"
               name="bio"
               required
-              rows={4}
+              rows={3}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-              placeholder="Cuéntanos sobre tu trayectoria, tu inspiración y qué hace únicas tus piezas..."
+              placeholder="Cuéntanos brevemente sobre tu trabajo: qué tipo de piezas haces y cómo las creas o produces. No necesitas un texto largo."
             />
           </div>
 
@@ -326,7 +326,7 @@ export function ApplicationForm({
               value={experience}
               onChange={(e) => setExperience(e.target.value)}
               className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-              placeholder="Años de experiencia, formación, exposiciones, premios..."
+              placeholder="Opcional: dónde aprendiste el oficio o desde cuándo trabajas en orfebrería."
             />
           </div>
 
@@ -514,6 +514,12 @@ export function ApplicationForm({
           </span>
         </label>
       </div>
+
+      <p className="text-xs text-text-tertiary">
+        Al postular, aceptas que verifiquemos que eres quien crea o produce tus
+        piezas. No evaluamos estilos ni propuestas estéticas: confirmamos
+        autenticidad y autoría.
+      </p>
 
       <Button type="submit" className="w-full" size="lg" loading={pending}>
         Enviar Postulación

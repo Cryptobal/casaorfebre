@@ -223,9 +223,9 @@ ${shippingBlocks}
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
-    <title>${escapeXml("Casa Orfebre — Joyería de Autor")}</title>
+    <title>${escapeXml("Casa Orfebre — Joyería auténtica hecha por orfebres")}</title>
     <link>${baseUrl}</link>
-    <description>${escapeXml("Marketplace curado de joyería artesanal de plata")}</description>
+    <description>${escapeXml("Marketplace de joyería artesanal de plata hecha por orfebres")}</description>
 ${items}
   </channel>
 </rss>`;

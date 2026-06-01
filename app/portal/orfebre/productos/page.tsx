@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
   REJECTED: "Rechazado",
   PAUSED: "Pausado",
   SOLD_OUT: "Agotado",
+  ARCHIVED: "Archivado",
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -24,6 +25,7 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-700",
   PAUSED: "bg-blue-100 text-blue-700",
   SOLD_OUT: "bg-zinc-200 text-zinc-500",
+  ARCHIVED: "bg-zinc-100 text-zinc-400",
 };
 
 export default async function ProductosPage() {
@@ -37,7 +39,8 @@ export default async function ProductosPage() {
   if (!artisan) redirect("/");
 
   const products = await prisma.product.findMany({
-    where: { artisanId: artisan.id },
+    // Los productos archivados se ocultan del listado activo.
+    where: { artisanId: artisan.id, status: { not: "ARCHIVED" } },
     include: {
       categories: { select: { name: true } },
       images: {

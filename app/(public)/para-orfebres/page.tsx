@@ -9,7 +9,7 @@ import { FaqAccordion } from '../para-orfebre/faq-accordion';
 export const metadata: Metadata = {
   title: 'Vende tu Joyería Artesanal Online | Casa Orfebre para Orfebres',
   description:
-    'Exhibe tu joyería artesanal ante todo Chile. Empieza gratis. Google Shopping, Pinterest, Instagram, blog SEO, 20 emails automáticos, certificado de autenticidad digital. El marketplace curado que tu oficio merece.',
+    'Exhibe tu joyería artesanal ante todo Chile. Empieza gratis. Google Shopping, Pinterest, Instagram, blog SEO, 20 emails automáticos, certificado de autenticidad digital. La plataforma que tu oficio merece.',
   keywords: [
     'vender joyería artesanal Chile',
     'plataforma para orfebres',
@@ -292,9 +292,9 @@ export default function ParaOrfebresPage() {
           </FadeIn>
           <FadeIn delay={300}>
             <p className="mx-auto mt-8 max-w-xl text-base font-light leading-relaxed text-[rgba(250,250,248,0.65)]">
-              Casa Orfebre es el primer marketplace curado de joyería de autor en
-              Chile. Exhibe tus creaciones ante miles de compradores que valoran
-              lo hecho a mano. Empieza gratis. Solo pagas cuando vendes.
+              Casa Orfebre es una plataforma de joyería auténtica hecha por
+              orfebres en Chile. Exhibe tus creaciones ante miles de compradores
+              que valoran lo hecho a mano. Empieza gratis. Solo pagas cuando vendes.
             </p>
           </FadeIn>
           <FadeIn delay={400}>
@@ -351,10 +351,12 @@ export default function ParaOrfebresPage() {
           </FadeIn>
           <FadeIn delay={150}>
             <p className="mt-8 text-base font-light leading-relaxed text-text-secondary">
-              Casa Orfebre es una plataforma curada donde solo exhiben orfebres
-              seleccionados por la calidad de su trabajo, la autenticidad de sus
-              materiales y la coherencia de su propuesta. No cualquiera entra —
-              y eso es exactamente lo que hace valiosa tu presencia aquí.
+              Casa Orfebre es una plataforma para orfebres que diseñan o
+              producen sus propias piezas. Verificamos autoría, no estilos:
+              confirmamos que eres el creador o productor real de tus piezas y
+              que tus materiales declarados son auténticos. No evaluamos
+              propuestas estéticas, y eso hace que tu trabajo se muestre tal
+              como es.
             </p>
           </FadeIn>
           <FadeIn delay={250}>

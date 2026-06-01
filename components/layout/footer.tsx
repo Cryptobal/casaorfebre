@@ -139,7 +139,7 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           <div className="col-span-2 md:col-span-1">
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={180} height={42} />
-            <p className="mt-3 text-sm font-light text-text-tertiary">Joyería de Autor</p>
+            <p className="mt-3 text-sm font-light text-text-tertiary">Joyería auténtica hecha por orfebres</p>
             <div className="mt-4 flex items-center gap-3">
               <a
                 href="https://www.instagram.com/casaorfebre"

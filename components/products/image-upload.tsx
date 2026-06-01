@@ -243,7 +243,9 @@ export function ImageUpload({
         <PhotographyGuide />
       </div>
       <p className="text-xs text-text-tertiary">
-        Puedes reordenar las fotos en cualquier momento: el nuevo orden se guarda automáticamente y no requiere enviar a revisión.
+        La primera foto es la <strong>portada</strong>. Usa los botones ↑ / ↓ de
+        cada foto para reordenarlas; el nuevo orden se guarda automáticamente y
+        no requiere enviar a revisión.
       </p>
 
       {error && (
@@ -313,25 +315,33 @@ export function ImageUpload({
                 className="h-full w-full object-cover"
               />
 
-              {/* Position badge */}
-              <span className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[10px] font-medium text-white">
-                {index + 1}
-              </span>
+              {/* Position / cover badge */}
+              {index === 0 ? (
+                <span className="absolute left-1.5 top-1.5 inline-flex items-center rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                  Portada
+                </span>
+              ) : (
+                <span className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[10px] font-medium text-white">
+                  {index + 1}
+                </span>
+              )}
 
-              {/* Controls overlay - always visible on mobile, hover on desktop */}
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-1.5 py-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+              {/* Controls overlay — siempre visible (también en táctil: iPad/tablet
+                  no tienen hover). Botones con área tocable mínima de 44×44px. */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-1 py-1">
                 <div className="flex gap-0.5">
                   <button
                     type="button"
                     onClick={() => handleMove(index, "up")}
                     disabled={index === 0}
-                    className="rounded p-0.5 text-white hover:bg-white/20 disabled:opacity-30"
-                    aria-label="Mover arriba"
+                    className="flex h-11 w-11 items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30"
+                    aria-label="Mover antes"
+                    title="Mover antes"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
+                      width="18"
+                      height="18"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -344,13 +354,14 @@ export function ImageUpload({
                     type="button"
                     onClick={() => handleMove(index, "down")}
                     disabled={index === images.length - 1}
-                    className="rounded p-0.5 text-white hover:bg-white/20 disabled:opacity-30"
-                    aria-label="Mover abajo"
+                    className="flex h-11 w-11 items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30"
+                    aria-label="Mover después"
+                    title="Mover después"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
+                      width="18"
+                      height="18"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -363,13 +374,14 @@ export function ImageUpload({
                 <button
                   type="button"
                   onClick={() => handleDelete(img.id)}
-                  className="rounded p-0.5 text-white hover:bg-red-500/80"
+                  className="flex h-11 w-11 items-center justify-center rounded text-white hover:bg-red-500/80"
                   aria-label="Eliminar imagen"
+                  title="Eliminar imagen"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
+                    width="18"
+                    height="18"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
