@@ -117,7 +117,7 @@ export default async function HomePage() {
             <FadeIn>
               <SectionHeading
                 title="Orfebres Maestros"
-                subtitle="Los mejores artesanos de nuestra comunidad"
+                subtitle="Orfebres destacados de nuestra comunidad"
               />
             </FadeIn>
 
@@ -309,7 +309,7 @@ const TRUST_ITEMS = [
   },
   {
     title: "Orfebres Verificados",
-    description: "Proceso de curaduría",
+    description: "Verificación de autoría",
     icon: (
       <svg
         width="24"
@@ -410,7 +410,7 @@ const VALUE_PROPS = [
   },
   {
     title: "Orfebres verificados",
-    description: "Cada artesano pasa por nuestro proceso de curaduría",
+    description: "Cada artesano pasa por nuestro proceso de verificación de autoría",
     icon: (
       <svg
         width="32"

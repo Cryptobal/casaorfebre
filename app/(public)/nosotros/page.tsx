@@ -9,19 +9,19 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Nosotros",
   description:
-    "Casa Orfebre es el primer marketplace curado de joyería artesanal chilena. Conectamos orfebres verificados con compradores que valoran lo auténtico.",
+    "Casa Orfebre es una plataforma de joyería artesanal chilena. Conectamos orfebres verificados con compradores que valoran lo auténtico.",
   alternates: { canonical: "/nosotros" },
   openGraph: {
     title: "Nosotros | Casa Orfebre",
     description:
-      "El primer marketplace curado de joyería artesanal chilena. Piezas únicas de orfebres verificados.",
+      "Una plataforma de joyería artesanal chilena. Piezas únicas de orfebres verificados.",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Nosotros | Casa Orfebre",
     description:
-      "El primer marketplace curado de joyería artesanal chilena. Piezas únicas de orfebres verificados.",
+      "Una plataforma de joyería artesanal chilena. Piezas únicas de orfebres verificados.",
     images: ["/casaorfebre-og-image.png"],
   },
 };
@@ -34,7 +34,7 @@ export default function NosotrosPage() {
         <FadeIn>
           <SectionHeading
             title="Casa Orfebre — Joyería de Autor"
-            subtitle="El primer marketplace curado de joyería artesanal chilena"
+            subtitle="Una plataforma de joyería artesanal chilena"
             as="h1"
           />
         </FadeIn>
@@ -49,9 +49,9 @@ export default function NosotrosPage() {
                 Nuestra misión
               </h2>
               <p className="mt-6 text-base font-light leading-relaxed text-text-secondary">
-                Conectar a los mejores orfebres de Chile con compradores que
+                Conectar a orfebres de Chile con compradores que
                 valoran lo artesanal y auténtico. Cada pieza en Casa Orfebre es
-                seleccionada, verificada y certificada.
+                verificada y certificada.
               </p>
             </div>
           </FadeIn>
@@ -92,8 +92,8 @@ export default function NosotrosPage() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <ValueCard
                 icon={<CuraduriaIcon />}
-                title="Curaduría"
-                description="Cada orfebre pasa por un proceso de selección"
+                title="Verificación"
+                description="Cada orfebre pasa por un proceso de verificación de autoría"
               />
               <ValueCard
                 icon={<AutenticidadIcon />}
@@ -122,8 +122,8 @@ export default function NosotrosPage() {
                 Para orfebres
               </h2>
               <p className="mt-6 text-base font-light leading-relaxed text-text-secondary">
-                ¿Eres orfebre? Únete a la comunidad de artesanos más selecta de
-                Chile.
+                ¿Eres orfebre? Únete a la comunidad de orfebres de Chile que
+                diseñan o producen sus propias piezas.
               </p>
               <Link
                 href="/postular"

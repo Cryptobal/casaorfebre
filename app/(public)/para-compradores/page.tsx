@@ -5,7 +5,7 @@ import { FadeIn } from '@/components/shared/fade-in';
 export const metadata: Metadata = {
   title: 'Para Compradores — Casa Orfebre',
   description:
-    'Descubre joyería de autor única, hecha a mano por los mejores orfebres independientes de Chile. Piezas curadas, certificadas y con compra protegida. El primer marketplace curado de joyería artesanal chilena.',
+    'Descubre joyería de autor única, hecha a mano por orfebres independientes de Chile. Piezas verificadas, certificadas y con compra protegida. Joyería artesanal chilena con autoría verificada.',
   keywords: [
     'joyería artesanal',
     'joyería de autor',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Casa Orfebre — Joyería de Autor Chilena',
     description:
-      'Piezas únicas de orfebres independientes. Curadas, certificadas y con compra protegida.',
+      'Piezas únicas de orfebres independientes. Verificadas, certificadas y con compra protegida.',
     url: 'https://casaorfebre.cl/para-compradores',
     siteName: 'Casa Orfebre',
     locale: 'es_CL',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Casa Orfebre — Joyería de Autor Chilena',
     description:
-      'Piezas únicas de orfebres independientes. Curadas, certificadas y con compra protegida.',
+      'Piezas únicas de orfebres independientes. Verificadas, certificadas y con compra protegida.',
   },
 };
 
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
 const PILARES = [
   {
     num: '01',
-    title: 'Curación',
-    desc: 'Cada orfebre es seleccionado. Revisamos su portafolio, verificamos sus materiales, validamos su técnica. No cualquiera exhibe en Casa Orfebre — y eso es lo que protege tu compra.',
+    title: 'Verificación',
+    desc: 'Verificamos a cada orfebre: confirmamos que es el creador o productor real de sus piezas y que sus materiales declarados son auténticos. No evaluamos estilos — confirmamos autoría, y eso es lo que protege tu compra.',
   },
   {
     num: '02',
@@ -77,8 +77,8 @@ const BENEFICIOS = [
     desc: 'Cada joya es una obra de autor. No encontrarás dos iguales porque cada orfebre crea desde su propia visión artística.',
   },
   {
-    title: 'Orfebres verificados y curados',
-    desc: 'Seleccionamos a cada artesano por la calidad de su trabajo, autenticidad de sus materiales y coherencia artística.',
+    title: 'Orfebres verificados',
+    desc: 'Verificamos que cada artesano es el creador o productor real de sus piezas y que sus materiales declarados son auténticos.',
   },
   {
     title: 'Certificado de autenticidad digital',
@@ -126,7 +126,7 @@ const PASOS = [
   {
     num: '01',
     title: 'Explora',
-    desc: 'Navega nuestra colección curada. Filtra por orfebre, material, técnica o precio. Descubre piezas que resuenan contigo.',
+    desc: 'Navega nuestra colección. Filtra por orfebre, material, técnica o precio. Descubre piezas que resuenan contigo.',
   },
   {
     num: '02',
@@ -164,7 +164,7 @@ const GARANTIAS = [
   },
   {
     title: 'Orfebres verificados',
-    desc: 'Cada artesano pasa por un proceso de selección que valida su portafolio, materiales y técnica.',
+    desc: 'Cada artesano pasa por un proceso de verificación que confirma su autoría y la autenticidad de sus materiales.',
   },
   {
     title: 'Comunicación directa',
@@ -174,7 +174,7 @@ const GARANTIAS = [
 
 const COMPARATIVA = [
   {
-    feature: 'Curación de artesanos',
+    feature: 'Verificación de autoría',
     casa: true,
     marketplace: false,
     redes: false,
@@ -262,9 +262,9 @@ const MERCADO = [
     desc: 'Chile tiene una tradición orfebre centenaria con técnicas únicas en plata, cobre y piedras nativas como el lapislázuli.',
   },
   {
-    value: 'Curación',
+    value: 'Autenticidad',
     label: 'Movimiento global',
-    desc: 'Los marketplaces curados están reemplazando a los genéricos. El consumidor quiere selección, no exceso de opciones.',
+    desc: 'Las plataformas que verifican autoría y autenticidad están reemplazando a los marketplaces genéricos. El consumidor quiere saber quién hizo su joya.',
   },
 ];
 
@@ -291,7 +291,7 @@ const JSON_LD = {
   '@type': 'WebPage',
   name: 'Para Compradores — Casa Orfebre',
   description:
-    'Descubre joyería de autor única, hecha a mano por los mejores orfebres independientes de Chile.',
+    'Descubre joyería de autor única, hecha a mano por orfebres independientes de Chile.',
   url: 'https://casaorfebre.cl/para-compradores',
   isPartOf: {
     '@type': 'WebSite',
@@ -343,8 +343,8 @@ export default function ParaCompradoresPage() {
           </FadeIn>
           <FadeIn delay={400}>
             <p className="mx-auto mt-8 max-w-xl text-lg font-light leading-relaxed text-text-secondary">
-              El primer marketplace curado de joyería artesanal de autor en
-              Chile. Piezas únicas, orfebres seleccionados, compra protegida.
+              Una plataforma de joyería artesanal de autor en Chile. Piezas
+              únicas de orfebres verificados, con compra protegida.
             </p>
           </FadeIn>
           <FadeIn delay={500}>
@@ -382,23 +382,23 @@ export default function ParaCompradoresPage() {
               Qué es Casa Orfebre
             </p>
             <h2 className="mt-4 font-serif text-3xl font-light leading-snug text-text md:text-4xl">
-              Un espacio curado donde el oficio y quien lo valora se encuentran
+              Un espacio donde el oficio y quien lo valora se encuentran
             </h2>
             <div className="mt-6 h-px w-16 bg-accent" />
           </FadeIn>
           <FadeIn delay={150}>
             <p className="mt-8 text-base font-light leading-relaxed text-text-secondary">
               Casa Orfebre no es una tienda más. Es una galería digital donde
-              cada orfebre ha sido seleccionado por la calidad de su trabajo, la
-              autenticidad de sus materiales y la coherencia de su propuesta
-              artística. Cada pieza que encuentras en nuestra colección ha pasado
-              por un proceso de verificación que garantiza que estás comprando
-              arte, no producción masiva.
+              cada orfebre ha sido verificado: confirmamos que es el creador o
+              productor real de sus piezas y que sus materiales declarados son
+              auténticos. Cada pieza que encuentras en nuestra colección ha
+              pasado por un proceso de verificación que garantiza que detrás hay
+              un artesano real, no producción masiva.
             </p>
           </FadeIn>
           <FadeIn delay={250}>
             <p className="mt-6 text-base font-light leading-relaxed text-text-secondary">
-              Conectamos a los mejores orfebres independientes de Chile con
+              Conectamos a orfebres independientes de Chile con
               personas que buscan piezas únicas — hechas a mano, con historia y
               con un artesano de verdad detrás. No somos un e-commerce genérico.
               No somos una feria de artesanía. Somos la experiencia que la
@@ -745,8 +745,8 @@ export default function ParaCompradoresPage() {
               Descubre piezas que no encontrarás en otro lugar
             </h2>
             <p className="mx-auto mt-6 max-w-lg text-base font-light leading-relaxed text-[rgba(250,250,248,0.7)]">
-              Joyería de autor hecha a mano por los mejores orfebres
-              independientes de Chile. Curada. Certificada. Protegida.
+              Joyería de autor hecha a mano por orfebres independientes de
+              Chile. Verificada. Certificada. Protegida.
             </p>
             <Link
               href="/coleccion"
