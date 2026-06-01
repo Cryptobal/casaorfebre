@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     canonical: 'https://casaorfebre.cl/para-comprador',
   },
   openGraph: {
-    title: 'Casa Orfebre — Joyería de Autor Chilena',
+    title: 'Casa Orfebre — Joyería auténtica hecha por orfebres',
     description:
       'Piezas únicas de orfebres independientes. Verificadas, certificadas y con compra protegida.',
     url: 'https://casaorfebre.cl/para-comprador',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Casa Orfebre — Joyería de Autor Chilena',
+    title: 'Casa Orfebre — Joyería auténtica hecha por orfebres',
     description:
       'Piezas únicas de orfebres independientes. Verificadas, certificadas y con compra protegida.',
   },
@@ -338,7 +338,7 @@ export default function ParaCompradoresPage() {
           </FadeIn>
           <FadeIn delay={300}>
             <p className="mt-6 text-sm font-light uppercase tracking-[6px] text-accent">
-              JOYERÍA DE AUTOR
+              JOYERÍA AUTÉNTICA HECHA POR ORFEBRES
             </p>
           </FadeIn>
           <FadeIn delay={400}>

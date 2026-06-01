@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { brandOgImageFonts, loadBrandOgFonts } from '@/lib/og/brand-fonts';
 
 export const runtime = 'nodejs';
-export const alt = 'Casa Orfebre — Joyería de Autor Chilena';
+export const alt = 'Casa Orfebre — Joyería auténtica hecha por orfebres';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -69,7 +69,7 @@ export default async function Image() {
               textTransform: 'uppercase' as const,
             }}
           >
-            JOYERÍA DE AUTOR
+            JOYERÍA AUTÉNTICA HECHA POR ORFEBRES
           </div>
 
           {/* Main text */}

@@ -8,7 +8,7 @@ import { FaqAccordion } from '../para-orfebre/faq-accordion';
 export const metadata: Metadata = {
   title: 'Programa Pioneros \u2014 Casa Orfebre',
   description:
-    '3 meses con plan Maestro gratis: $0 de suscripci\u00f3n y 0% de comisi\u00f3n. S\u00e9 de los primeros orfebres en exhibir en el marketplace curado de joyer\u00eda de autor m\u00e1s importante de Chile. Cupos limitados.',
+    '3 meses con plan Maestro gratis: $0 de suscripci\u00f3n y 0% de comisi\u00f3n. S\u00e9 de los primeros orfebres en exhibir en la plataforma de joyer\u00eda aut\u00e9ntica hecha por orfebres m\u00e1s importante de Chile. Cupos limitados.',
   keywords: [
     'programa pioneros Casa Orfebre',
     'vender joyer\u00eda gratis Chile',

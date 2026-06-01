@@ -85,7 +85,7 @@ export async function GET(request: Request) {
               color: "#8B7355",
             }}
           >
-            Joyería de Autor · casaorfebre.cl
+            Joyería auténtica hecha por orfebres · casaorfebre.cl
           </div>
         </div>
       </div>

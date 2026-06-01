@@ -168,15 +168,17 @@ Ejemplo: ["Título atractivo en español"]`,
 
 // ─── Genera el pool de keywords dinámicamente desde la DB ──────────────────
 export async function generateDynamicKeywordPool(): Promise<string[]> {
-  const [materials, categories, occasions] = await Promise.all([
+  const [materials, categories, occasions, specialties] = await Promise.all([
     prisma.material.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { position: "asc" } }),
     prisma.category.findMany({ where: { isActive: true }, select: { name: true, slug: true }, orderBy: { position: "asc" } }),
     prisma.occasion.findMany({ where: { isActive: true }, select: { name: true, slug: true } }),
+    prisma.specialty.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { position: "asc" } }),
   ]);
 
   const materialNames = materials.map((m) => m.name.toLowerCase());
   const categoryNames = categories.map((c) => c.name.toLowerCase());
   const occasionNames = occasions.map((o) => o.name.toLowerCase());
+  const specialtyNames = specialties.map((s) => s.name.toLowerCase());
 
   const audiences = ["hombre", "mujer", "pareja", "unisex"];
 
@@ -224,6 +226,13 @@ export async function generateDynamicKeywordPool(): Promise<string[]> {
     keywords.add(`${cat} únicos chile`);
     keywords.add(`${cat} de autor chile`);
     keywords.add(`${cat} hechos a mano chile`);
+  }
+
+  // ── Especialidades (líneas de orfebrería desde BD) ───────────────────────
+  for (const spec of specialtyNames) {
+    keywords.add(`${spec} chile`);
+    keywords.add(`orfebres de ${spec} chile`);
+    keywords.add(`joyería ${spec} chile`);
   }
 
   // ── Ocasiones × Materiales ───────────────────────────────────────────────

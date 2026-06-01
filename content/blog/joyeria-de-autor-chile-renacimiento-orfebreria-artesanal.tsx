@@ -251,7 +251,7 @@ export function PostContent() {
       {/* ─── CTA ─── */}
       <div className="mt-16 rounded-2xl bg-surface border border-border p-8 sm:p-12 text-center">
         <h3 className="font-serif text-xl font-light text-text mb-3">
-          Descubre la colección curada de Casa Orfebre
+          Explora la colección de Casa Orfebre
         </h3>
         <p className="text-text-secondary font-light mb-6 text-lg max-w-xl mx-auto">
           Piezas únicas de orfebres chilenos independientes. Cada una con certificado de

@@ -53,7 +53,7 @@ function buildPinDescription(product: {
 
   const region = product.artisan.region || "Chile";
 
-  const desc = `${product.name} — ${product.description.slice(0, 150)}. Hecho a mano por ${product.artisan.displayName} en ${region}, Chile. ${materialsText} ${typeLabel}. ✨ Compra en Casa Orfebre — Joyería de Autor`;
+  const desc = `${product.name} — ${product.description.slice(0, 150)}. Hecho a mano por ${product.artisan.displayName} en ${region}, Chile. ${materialsText} ${typeLabel}. ✨ Compra en Casa Orfebre — Joyería auténtica hecha por orfebres`;
 
   return desc.slice(0, 500);
 }

@@ -119,6 +119,60 @@ export default async function PostularPage({
         <p className="mt-3 text-text-secondary">{headerSubtitle}</p>
       </div>
 
+      {!promoData?.valid && !isPioneerApplication && (
+        <section
+          className="mx-auto mt-10 max-w-2xl rounded-xl border border-border bg-surface/60 px-6 py-6 text-left sm:px-8"
+          aria-labelledby="criterios-verificacion"
+        >
+          <h2
+            id="criterios-verificacion"
+            className="font-serif text-lg font-light text-text"
+          >
+            Qué verificamos
+          </h2>
+          <p className="mt-2 text-sm font-light text-text-secondary">
+            No es un jurado de estilo: confirmamos que detrás de tu taller hay
+            trabajo propio y piezas auténticas.
+          </p>
+          <ul className="mt-4 space-y-2.5 text-sm font-light text-text-secondary">
+            <li className="flex gap-2">
+              <span className="text-accent" aria-hidden>
+                ·
+              </span>
+              <span>
+                Eres orfebre o creadora real de las piezas que postulas.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-accent" aria-hidden>
+                ·
+              </span>
+              <span>
+                No revendes productos importados ni comprados al por mayor.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-accent" aria-hidden>
+                ·
+              </span>
+              <span>
+                Tienes trabajo propio: diseño, fabricación o participación real
+                en la producción.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-accent" aria-hidden>
+                ·
+              </span>
+              <span>
+                Tus fotos e información cumplen un estándar mínimo de la
+                plataforma.
+              </span>
+            </li>
+          </ul>
+        </section>
+      )}
+
       <div className="mt-12">
         <PostularFlow
           plans={plans}

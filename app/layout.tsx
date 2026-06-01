@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     locale: "es_CL",
     type: "website",
     url: "https://casaorfebre.cl",
-    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630, alt: "Casa Orfebre — Joyería de Autor" }],
+    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630, alt: "Casa Orfebre — Joyería auténtica hecha por orfebres" }],
   },
   twitter: {
     card: "summary_large_image",

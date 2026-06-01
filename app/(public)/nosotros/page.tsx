@@ -33,7 +33,7 @@ export default function NosotrosPage() {
       <section className="pt-20 pb-16 text-center">
         <FadeIn>
           <SectionHeading
-            title="Casa Orfebre — Joyería de Autor"
+            title="Casa Orfebre — Joyería auténtica hecha por orfebres"
             subtitle="Una plataforma de joyería artesanal chilena"
             as="h1"
           />

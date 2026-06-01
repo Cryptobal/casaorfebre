@@ -209,7 +209,7 @@ export function generateOrganizationJsonLd() {
     "@type": "OnlineStore",
     "@id": `${BASE_URL}/#organization`,
     name: "Casa Orfebre",
-    alternateName: "Casa Orfebre · Joyería de Autor",
+    alternateName: "Casa Orfebre · Joyería auténtica hecha por orfebres",
     url: BASE_URL,
     logo: {
       "@type": "ImageObject",
@@ -391,7 +391,7 @@ export function generateWebSiteJsonLd() {
     "@id": `${BASE_URL}/#website`,
     url: BASE_URL,
     name: "Casa Orfebre",
-    alternateName: "Casa Orfebre · Joyería de Autor",
+    alternateName: "Casa Orfebre · Joyería auténtica hecha por orfebres",
     description:
       "Marketplace de joyería artesanal chilena hecha a mano por orfebres verificados.",
     inLanguage: "es-CL",

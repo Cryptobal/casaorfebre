@@ -66,7 +66,7 @@ export default async function Image() {
               textTransform: 'uppercase' as const,
             }}
           >
-            JOYERÍA DE AUTOR
+            JOYERÍA AUTÉNTICA HECHA POR ORFEBRES
           </div>
 
           <div

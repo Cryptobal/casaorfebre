@@ -91,7 +91,7 @@ export async function GET(request: Request) {
             letterSpacing: "2px",
           }}
         >
-          Casa Orfebre · Joyería de Autor
+          Casa Orfebre · Joyería auténtica hecha por orfebres
         </div>
       </div>
     ),
