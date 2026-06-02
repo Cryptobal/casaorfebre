@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { formatCLP } from "@/lib/utils";
+import { formatCLP, formatDate } from "@/lib/utils";
 import {
   approveProduct,
   rejectProduct,
@@ -100,6 +100,8 @@ interface Product {
   stones: { id: string; stoneType: string; stoneCarat: number | null; stoneColor: string | null; quantity: number }[];
   pinterestPinId: string | null;
   aiModeration: { riskLevel: string; reasons: string[]; score: number } | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   _count: { orderItems: number; images: number };
 }
 
@@ -161,6 +163,9 @@ export function ExpandableProductRow({ product }: ExpandableProductRowProps) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-text">{product.name}</p>
           <p className="text-xs text-text-secondary">{product.artisan.displayName}</p>
+          <p className="text-[11px] text-text-tertiary">
+            Creado {formatDate(product.createdAt)} · Modif. {formatDate(product.updatedAt)}
+          </p>
         </div>
 
         {/* Metadata badges */}

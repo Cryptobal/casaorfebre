@@ -259,43 +259,120 @@ export async function getPendingProducts() {
   });
 }
 
-// All products for admin management (filterable by status)
-export async function getAllProductsForAdmin(statusFilter?: string) {
-  const where = statusFilter && statusFilter !== "all"
-    ? { status: statusFilter as "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "PAUSED" | "SOLD_OUT" }
-    : {};
+// Sort tokens for the admin product list → Prisma orderBy
+const PRODUCT_SORTS = {
+  modificados: { updatedAt: "desc" },
+  nuevos: { createdAt: "desc" },
+  antiguos: { createdAt: "asc" },
+  precio_alto: { price: "desc" },
+  precio_bajo: { price: "asc" },
+  nombre: { name: "asc" },
+} as const;
 
-  return prisma.product.findMany({
-    where,
-    orderBy: { updatedAt: "desc" },
-    include: {
-      artisan: { select: { displayName: true, slug: true } },
-      categories: { select: { name: true, slug: true } },
-      materials: { select: { id: true, name: true } },
-      collection: { select: { name: true } },
-      images: { orderBy: { position: "asc" } },
-      video: true,
-      stones: { orderBy: { position: "asc" } },
-      _count: { select: { orderItems: true, images: true } },
-    },
-    take: 200,
-  });
+export type ProductSort = keyof typeof PRODUCT_SORTS;
+export const PRODUCTS_PER_PAGE = 20;
+
+// All products for admin management (filterable by status, sortable, paginated)
+export async function getAllProductsForAdmin({
+  status,
+  sort = "modificados",
+  page = 1,
+  perPage = PRODUCTS_PER_PAGE,
+}: {
+  status?: string;
+  sort?: string;
+  page?: number;
+  perPage?: number;
+} = {}) {
+  const where =
+    status && status !== "all"
+      ? { status: status as "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "PAUSED" | "SOLD_OUT" }
+      : {};
+  const orderBy = PRODUCT_SORTS[(sort as ProductSort)] ?? PRODUCT_SORTS.modificados;
+
+  const [items, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy,
+      include: {
+        artisan: { select: { displayName: true, slug: true } },
+        categories: { select: { name: true, slug: true } },
+        materials: { select: { id: true, name: true } },
+        collection: { select: { name: true } },
+        images: { orderBy: { position: "asc" } },
+        video: true,
+        stones: { orderBy: { position: "asc" } },
+        _count: { select: { orderItems: true, images: true } },
+      },
+      skip: (page - 1) * perPage,
+      take: perPage,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return { items, total, totalPages: Math.max(1, Math.ceil(total / perPage)) };
 }
 
-// Photos for review
-export async function getPhotosForReview(filter?: string) {
-  const statusFilter =
-    filter && filter !== "all" ? { status: filter as "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "REPLACED" } : {};
-  return prisma.productImage.findMany({
-    where: statusFilter,
-    orderBy: { createdAt: "asc" },
-    include: {
-      product: {
-        select: { name: true, artisan: { select: { displayName: true } } },
+// Sort tokens for the photo review list → Prisma orderBy
+const PHOTO_SORTS = {
+  recientes: { createdAt: "desc" },
+  antiguas: { createdAt: "asc" },
+  producto: { product: { name: "asc" } },
+} as const;
+
+export type PhotoSort = keyof typeof PHOTO_SORTS;
+export const PHOTOS_PER_PAGE = 24;
+
+// Photos for review (filterable by status, sortable, paginated)
+export async function getPhotosForReview({
+  status,
+  sort = "recientes",
+  page = 1,
+  perPage = PHOTOS_PER_PAGE,
+}: {
+  status?: string;
+  sort?: string;
+  page?: number;
+  perPage?: number;
+} = {}) {
+  const where =
+    status && status !== "all" ? { status: status as "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "REPLACED" } : {};
+  const orderBy = PHOTO_SORTS[(sort as PhotoSort)] ?? PHOTO_SORTS.recientes;
+
+  const [items, total] = await Promise.all([
+    prisma.productImage.findMany({
+      where,
+      orderBy,
+      include: {
+        product: {
+          select: { name: true, artisan: { select: { displayName: true } } },
+        },
       },
-    },
-    take: 100,
+      skip: (page - 1) * perPage,
+      take: perPage,
+    }),
+    prisma.productImage.count({ where }),
+  ]);
+
+  return { items, total, totalPages: Math.max(1, Math.ceil(total / perPage)) };
+}
+
+// Accurate per-status counts for the review tabs (not capped by `take`)
+export async function getPhotoReviewCounts() {
+  const grouped = await prisma.productImage.groupBy({
+    by: ["status"],
+    _count: { _all: true },
   });
+  const counts: Record<string, number> = {
+    PENDING_REVIEW: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    REPLACED: 0,
+  };
+  for (const row of grouped) {
+    counts[row.status] = row._count._all;
+  }
+  return counts;
 }
 
 // All artisans with metrics

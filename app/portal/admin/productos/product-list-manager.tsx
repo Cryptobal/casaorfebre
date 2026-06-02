@@ -11,10 +11,11 @@ type Product = Parameters<typeof ExpandableProductRow>[0]["product"];
 
 interface ProductListManagerProps {
   products: Product[];
+  total?: number;
   showBulkActions?: boolean;
 }
 
-export function ProductListManager({ products, showBulkActions = false }: ProductListManagerProps) {
+export function ProductListManager({ products, total, showBulkActions = false }: ProductListManagerProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -73,7 +74,7 @@ export function ProductListManager({ products, showBulkActions = false }: Produc
     <>
       <div className="mt-4 flex items-center justify-between">
         <p className="text-xs text-text-tertiary">
-          {products.length} producto{products.length !== 1 ? "s" : ""}
+          {total ?? products.length} producto{(total ?? products.length) !== 1 ? "s" : ""}
         </p>
         {showBulkActions && (
           <label className="flex cursor-pointer items-center gap-2 text-xs text-text-secondary hover:text-text">

@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/shared/image-placeholder";
+import { SortSelect } from "@/components/admin/sort-select";
+import { AdminPagination } from "@/components/admin/admin-pagination";
+import { formatDate } from "@/lib/utils";
 import {
   approvePhoto,
   approvePhotosBatch,
@@ -19,13 +23,26 @@ interface PhotoItem {
   url: string;
   altText: string | null;
   status: string;
+  createdAt: string;
   productName: string;
   artisanName: string;
 }
 
 interface PhotoReviewProps {
   photos: PhotoItem[];
+  counts?: Record<string, number>;
+  activeTab: string;
+  sort: string;
+  page: number;
+  totalPages: number;
+  total: number;
 }
+
+const SORT_OPTIONS = [
+  { value: "recientes", label: "Más recientes" },
+  { value: "antiguas", label: "Más antiguas" },
+  { value: "producto", label: "Producto (A-Z)" },
+];
 
 const STATUS_TABS = [
   { key: "PENDING_REVIEW", label: "Pendientes" },
@@ -48,8 +65,7 @@ const STATUS_LABELS: Record<string, string> = {
   REPLACED: "Reemplazada",
 };
 
-export function PhotoReview({ photos }: PhotoReviewProps) {
-  const [activeTab, setActiveTab] = useState<string>("PENDING_REVIEW");
+export function PhotoReview({ photos, counts, activeTab, sort, page, totalPages, total }: PhotoReviewProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -58,7 +74,12 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const filtered = photos.filter((p) => p.status === activeTab);
+  function buildTabHref(tabKey: string) {
+    const sp = new URLSearchParams();
+    sp.set("tab", tabKey);
+    if (sort !== "recientes") sp.set("sort", sort);
+    return `/portal/admin/fotos?${sp.toString()}`;
+  }
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -172,14 +193,11 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
       {/* Filter tabs */}
       <div className="flex gap-1 border-b border-border">
         {STATUS_TABS.map((tab) => {
-          const count = photos.filter((p) => p.status === tab.key).length;
+          const count = counts?.[tab.key] ?? 0;
           return (
-            <button
+            <Link
               key={tab.key}
-              onClick={() => {
-                setActiveTab(tab.key);
-                setSelected(new Set());
-              }}
+              href={buildTabHref(tab.key)}
               className={`px-4 py-2 text-sm transition-colors ${
                 activeTab === tab.key
                   ? "border-b-2 border-accent font-medium text-text"
@@ -187,9 +205,17 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
               }`}
             >
               {tab.label} ({count})
-            </button>
+            </Link>
           );
         })}
+      </div>
+
+      {/* Sort + result count */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-text-tertiary">
+          {total} foto{total !== 1 ? "s" : ""}
+        </p>
+        <SortSelect options={SORT_OPTIONS} current={sort} />
       </div>
 
       {/* Batch action bar */}
@@ -240,13 +266,13 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
       )}
 
       {/* Grid */}
-      {filtered.length === 0 ? (
+      {photos.length === 0 ? (
         <p className="mt-8 text-center text-sm text-text-tertiary">
           No hay fotos en esta categoria
         </p>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((photo) => (
+          {photos.map((photo) => (
             <div
               key={photo.id}
               className="overflow-hidden rounded-lg border border-border bg-surface"
@@ -286,6 +312,9 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
                 <p className="text-sm font-medium">{photo.productName}</p>
                 <p className="text-xs text-text-tertiary">
                   {photo.artisanName}
+                </p>
+                <p className="text-[11px] text-text-tertiary">
+                  Subida: {formatDate(photo.createdAt)}
                 </p>
                 <span
                   className={`inline-block rounded-full px-2 py-0.5 text-xs ${
@@ -410,6 +439,14 @@ export function PhotoReview({ photos }: PhotoReviewProps) {
           ))}
         </div>
       )}
+
+      <AdminPagination
+        basePath="/portal/admin/fotos"
+        params={{ tab: activeTab, sort }}
+        page={page}
+        totalPages={totalPages}
+      />
+
       {/* Delete confirmation modal */}
       <ConfirmDestructiveModal
         open={deleteModalOpen}

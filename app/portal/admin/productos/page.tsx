@@ -1,20 +1,36 @@
 import { getPendingProducts, getAllProductsForAdmin } from "@/lib/queries/admin";
 import { ExpandableProductRow } from "./expandable-product-row";
 import { ProductListManager } from "./product-list-manager";
+import { SortSelect } from "@/components/admin/sort-select";
+import { AdminPagination } from "@/components/admin/admin-pagination";
 import Link from "next/link";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+const PRODUCT_SORT_OPTIONS = [
+  { value: "modificados", label: "Modificados recientes" },
+  { value: "nuevos", label: "Más nuevos" },
+  { value: "antiguos", label: "Más antiguos" },
+  { value: "precio_alto", label: "Precio: mayor a menor" },
+  { value: "precio_bajo", label: "Precio: menor a mayor" },
+  { value: "nombre", label: "Nombre (A-Z)" },
+];
+
 export default async function ProductosAdminPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const view = (params.view as string) || "moderation";
   const statusFilter = (params.status as string) || "APPROVED";
+  const sort = (params.sort as string) || "modificados";
+  const pageParam = typeof params.page === "string" ? parseInt(params.page, 10) : 1;
+  const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-  const [pendingProducts, allProducts] = await Promise.all([
+  const [pendingProducts, managed] = await Promise.all([
     getPendingProducts(),
-    view === "manage" ? getAllProductsForAdmin(statusFilter) : Promise.resolve([]),
+    view === "manage"
+      ? getAllProductsForAdmin({ status: statusFilter, sort, page })
+      : Promise.resolve(null),
   ]);
 
   const TAB_ITEMS = [
@@ -85,25 +101,36 @@ export default async function ProductosAdminPage({ searchParams }: PageProps) {
       {/* ─── Management view ─── */}
       {view === "manage" && (
         <>
-          <div className="mt-4 flex flex-wrap gap-1">
-            {STATUS_TABS.map((tab) => (
-              <Link
-                key={tab.key}
-                href={`/portal/admin/productos?view=manage&status=${tab.key}`}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  statusFilter === tab.key
-                    ? "bg-accent/10 text-accent"
-                    : "bg-background text-text-tertiary hover:text-text-secondary"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            ))}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-1">
+              {STATUS_TABS.map((tab) => (
+                <Link
+                  key={tab.key}
+                  href={`/portal/admin/productos?view=manage&status=${tab.key}`}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    statusFilter === tab.key
+                      ? "bg-accent/10 text-accent"
+                      : "bg-background text-text-tertiary hover:text-text-secondary"
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              ))}
+            </div>
+            <SortSelect options={PRODUCT_SORT_OPTIONS} current={sort} />
           </div>
 
           <ProductListManager
-            products={allProducts as unknown as Parameters<typeof ProductListManager>[0]["products"]}
+            products={managed?.items as unknown as Parameters<typeof ProductListManager>[0]["products"]}
+            total={managed?.total ?? 0}
             showBulkActions
+          />
+
+          <AdminPagination
+            basePath="/portal/admin/productos"
+            params={{ view: "manage", status: statusFilter, sort }}
+            page={page}
+            totalPages={managed?.totalPages ?? 1}
           />
         </>
       )}
