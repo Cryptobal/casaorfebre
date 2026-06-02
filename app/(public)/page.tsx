@@ -117,7 +117,7 @@ export default async function HomePage() {
             <FadeIn>
               <SectionHeading
                 title="Orfebres Maestros"
-                subtitle="Orfebres destacados de nuestra comunidad"
+                subtitle="Artesanos de nuestra comunidad"
               />
             </FadeIn>
 

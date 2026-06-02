@@ -9,19 +9,19 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Nosotros",
   description:
-    "Casa Orfebre es una plataforma de joyería artesanal chilena. Conectamos orfebres verificados con compradores que valoran lo auténtico.",
+    "Casa Orfebre es la plataforma de joyería artesanal chilena hecha por orfebres verificados. Conectamos orfebres verificados con compradores que valoran lo auténtico.",
   alternates: { canonical: "/nosotros" },
   openGraph: {
     title: "Nosotros | Casa Orfebre",
     description:
-      "Una plataforma de joyería artesanal chilena. Piezas únicas de orfebres verificados.",
+      "Plataforma de joyería artesanal chilena hecha por orfebres verificados. Piezas únicas de orfebres verificados.",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Nosotros | Casa Orfebre",
     description:
-      "Una plataforma de joyería artesanal chilena. Piezas únicas de orfebres verificados.",
+      "Plataforma de joyería artesanal chilena hecha por orfebres verificados. Piezas únicas de orfebres verificados.",
     images: ["/casaorfebre-og-image.png"],
   },
 };
@@ -34,7 +34,7 @@ export default function NosotrosPage() {
         <FadeIn>
           <SectionHeading
             title="Casa Orfebre — Joyería de Autor"
-            subtitle="Una plataforma de joyería artesanal chilena"
+            subtitle="Joyería artesanal chilena hecha por orfebres verificados"
             as="h1"
           />
         </FadeIn>
@@ -93,7 +93,7 @@ export default function NosotrosPage() {
               <ValueCard
                 icon={<CuraduriaIcon />}
                 title="Verificación"
-                description="Cada orfebre pasa por un proceso de verificación de autoría"
+                description="Verificamos que detrás de cada pieza hay un creador real y materiales declarados, no un jurado de estilo"
               />
               <ValueCard
                 icon={<AutenticidadIcon />}
@@ -122,8 +122,8 @@ export default function NosotrosPage() {
                 Para orfebres
               </h2>
               <p className="mt-6 text-base font-light leading-relaxed text-text-secondary">
-                ¿Eres orfebre? Únete a la comunidad de orfebres de Chile que
-                diseñan o producen sus propias piezas.
+                ¿Eres orfebre? Únete a la comunidad de orfebres verificados de
+                Chile.
               </p>
               <Link
                 href="/postular"

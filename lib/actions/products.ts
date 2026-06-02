@@ -856,11 +856,11 @@ export async function deleteProduct(
 }
 
 /**
- * Archiva un producto: cambia su estado a ARCHIVED en lugar de borrarlo
- * físicamente. Esto preserva el historial de órdenes y certificados (cuya FK
- * a Product no tiene onDelete: Cascade) y lo retira del catálogo público y del
- * listado activo del orfebre. Es la vía correcta para "eliminar" un producto
- * que ya tuvo ventas.
+ * Archiva un producto (status → ARCHIVED) en lugar de borrarlo físicamente.
+ * Es la vía correcta para productos con ventas: la FK OrderItem→Product no tiene
+ * onDelete: Cascade, así que un delete físico rompería el historial de órdenes y
+ * certificados. Archivar lo retira del catálogo público (todas las queries
+ * públicas filtran status: "APPROVED") sin perder trazabilidad.
  */
 export async function archiveProduct(
   productId: string
@@ -868,13 +868,13 @@ export async function archiveProduct(
   const artisan = await getArtisan();
   if (!artisan) return { error: "No tienes permisos" };
 
-  const product = await prisma.product.findUnique({ where: { id: productId } });
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, artisanId: true },
+  });
+
   if (!product || product.artisanId !== artisan.id) {
     return { error: "Producto no encontrado" };
-  }
-
-  if (product.status === "ARCHIVED") {
-    return { success: true };
   }
 
   try {
@@ -882,14 +882,17 @@ export async function archiveProduct(
       where: { id: productId },
       data: { status: "ARCHIVED" },
     });
-
-    revalidatePath("/portal/orfebre/productos");
-    revalidatePath("/coleccion");
-    return { success: true };
   } catch (e) {
     console.error("[archiveProduct]", productId, e);
-    return { error: "No se pudo archivar el producto. Intenta de nuevo." };
+    return {
+      error:
+        "No se pudo archivar el producto. Recarga la página e intenta de nuevo.",
+    };
   }
+
+  revalidatePath("/portal/orfebre/productos");
+  revalidatePath("/coleccion");
+  return { success: true };
 }
 
 export async function deleteProductImage(

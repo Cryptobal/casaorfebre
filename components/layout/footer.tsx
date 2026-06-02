@@ -55,7 +55,7 @@ const footerColumns = [
     title: "Explorar",
     links: [
       { href: "/coleccion", label: "Colección" },
-      { href: "/colecciones", label: "Colecciones curadas" },
+      { href: "/colecciones", label: "Colecciones" },
       { href: "/orfebres", label: "Orfebres" },
       { href: "/gift-cards", label: "Gift Cards" },
       { href: "/blog", label: "Blog" },

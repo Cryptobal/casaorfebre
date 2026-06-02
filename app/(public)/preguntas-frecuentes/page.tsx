@@ -97,7 +97,7 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Cómo puedo vender en Casa Orfebre?",
         answer:
-          "Completa el formulario de postulación en nuestra sección para orfebres. Nuestro equipo verifica que eres quien crea o produce tus piezas y que las fotos e información cumplen un estándar mínimo de la plataforma. No evaluamos estilos ni propuestas artísticas: confirmamos autenticidad y autoría. El proceso de revisión toma entre 5 y 10 días hábiles.",
+          "Completa el formulario de postulación en nuestra sección para orfebres. Nuestro equipo verifica que eres el creador o productor de tus piezas y que las fotos e información cumplen un estándar mínimo de la plataforma. No evaluamos estilos ni propuestas artísticas: confirmamos autenticidad y autoría. El proceso toma entre 5 y 10 días hábiles.",
       },
       {
         question: "¿Qué comisión cobra Casa Orfebre?",

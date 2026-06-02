@@ -207,11 +207,11 @@ export function PostContent() {
         extraordinarios permanecen invisibles porque no tienen acceso a una vitrina profesional.
       </p>
       <p className="text-text-secondary font-light leading-relaxed mb-6 text-lg">
-        Nuestra plataforma es ese puente. Cada orfebre que exhibe en Casa Orfebre ha pasado por
-        un proceso de verificación: confirmamos que detrás hay un creador o productor real de las
-        piezas y que los materiales declarados son auténticos. Cuando encuentras una
-        pieza en nuestra colección, puedes confiar en que detrás hay un artesano real, materiales
-        nobles y un trabajo propio: diseño, fabricación o participación real en la producción.
+        Nuestra plataforma es ese puente. Cada orfebre que exhibe en Casa Orfebre pasa por un
+        proceso de verificación de autoría: confirmamos que detrás de cada pieza hay un creador o
+        productor real y que los materiales declarados corresponden a lo que se ofrece. Cuando
+        encuentras una pieza en nuestra colección, puedes confiar en que detrás hay un artesano
+        real y materiales nobles, no un producto importado ni revendido al por mayor.
       </p>
       <p className="text-text-secondary font-light leading-relaxed mb-6 text-lg">
         Además, cada compra en Casa Orfebre incluye un&nbsp;
@@ -251,7 +251,7 @@ export function PostContent() {
       {/* ─── CTA ─── */}
       <div className="mt-16 rounded-2xl bg-surface border border-border p-8 sm:p-12 text-center">
         <h3 className="font-serif text-xl font-light text-text mb-3">
-          Descubre la colección curada de Casa Orfebre
+          Descubre la colección de Casa Orfebre
         </h3>
         <p className="text-text-secondary font-light mb-6 text-lg max-w-xl mx-auto">
           Piezas únicas de orfebres chilenos independientes. Cada una con certificado de

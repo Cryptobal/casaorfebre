@@ -24,7 +24,7 @@ interface GeneratedArticle {
   tags: string[];
 }
 
-const SYSTEM_PROMPT = `Eres el editor de contenido de Casa Orfebre, un marketplace curado de joyería artesanal chilena. Escribes artículos para el blog de la marca.
+const SYSTEM_PROMPT = `Eres el editor de contenido de Casa Orfebre, una plataforma de joyería artesanal chilena hecha por orfebres verificados. Escribes artículos para el blog de la marca.
 
 VOZ DE MARCA:
 - Sofisticada pero accesible. Nunca condescendiente.
@@ -144,7 +144,7 @@ export async function suggestBlogTopics(existingTitles: string[], targetKeyword?
     max_tokens: 1024,
     messages: [{
       role: "user",
-      content: `Sugiere ${count} de artículo para el blog de Casa Orfebre (marketplace curado de joyería artesanal chilena con orfebres de todo Chile).
+      content: `Sugiere ${count} de artículo para el blog de Casa Orfebre (plataforma de joyería artesanal chilena con orfebres de todo Chile).
 
 ${keywordInstruction}
 
@@ -260,20 +260,25 @@ export async function generateDynamicKeywordPool(): Promise<string[]> {
     "piedras chilenas lapislázuli",
     "joyas con piedras chilenas",
     "lapislázuli joyería chile",
-    // ── Líneas de orfebrería ampliadas (más allá de "autor/artesanal") ──
+    // ── Líneas de orfebrería ampliadas (no solo "autor/artesanal") ──────────
     "joyería contemporánea chile",
     "joyería comercial chile",
     "joyería tradicional chilena",
     "joyería simbólica chile",
     "joyería patrimonial chilena",
     "joyería experimental chile",
-    "orfebrería contemporánea chile",
+    "orfebrería contemporánea chilena",
+    "orfebrería comercial chile",
+    "orfebrería simbólica chile",
+    "orfebrería patrimonial chile",
     "orfebrería experimental chile",
-    // ── Intención de venta orientada al orfebre (amplio) ──
+    // ── Intención de venta (orfebre amplio) ─────────────────────────────────
     "vender joyas hechas por mí",
     "plataforma para orfebres chile",
     "dónde vender mi orfebrería",
     "vender joyería artesanal chile",
+    "vender joyería artesanal online chile",
+    "plataforma para vender joyas hechas a mano chile",
     "cómo vender mis joyas en chile",
   ];
   brandKeywords.forEach((kw) => keywords.add(kw));

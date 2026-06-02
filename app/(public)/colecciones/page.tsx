@@ -160,7 +160,7 @@ export default async function ColeccionesPage() {
       {curatedCollections.filter((c) => c._count.products > 0).length > 0 && (
         <div className="mt-16">
           <h2 className="mb-6 font-serif text-xl font-light text-text">
-            Colecciones curadas
+            Colecciones
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {curatedCollections.filter((c) => c._count.products > 0).map((col, i) => {

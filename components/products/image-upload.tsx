@@ -243,9 +243,7 @@ export function ImageUpload({
         <PhotographyGuide />
       </div>
       <p className="text-xs text-text-tertiary">
-        La primera foto es la <strong>portada</strong>. Usa los botones ↑ / ↓ de
-        cada foto para reordenarlas; el nuevo orden se guarda automáticamente y
-        no requiere enviar a revisión.
+        Usa los botones ↑ ↓ para reordenar las fotos. La primera es la portada. El nuevo orden se guarda automáticamente y no requiere enviar a revisión.
       </p>
 
       {error && (
@@ -315,9 +313,9 @@ export function ImageUpload({
                 className="h-full w-full object-cover"
               />
 
-              {/* Position / cover badge */}
+              {/* Position / Portada badge */}
               {index === 0 ? (
-                <span className="absolute left-1.5 top-1.5 inline-flex items-center rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white shadow">
                   Portada
                 </span>
               ) : (
@@ -326,17 +324,16 @@ export function ImageUpload({
                 </span>
               )}
 
-              {/* Controls overlay — siempre visible (también en táctil: iPad/tablet
-                  no tienen hover). Botones con área tocable mínima de 44×44px. */}
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-1 py-1">
-                <div className="flex gap-0.5">
+              {/* Controls overlay — siempre visible en táctil, hover en desktop.
+                  Botones con área tocable ≥44×44px para iPad/tablets. */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+                <div className="flex">
                   <button
                     type="button"
                     onClick={() => handleMove(index, "up")}
                     disabled={index === 0}
-                    className="flex h-11 w-11 items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30"
-                    aria-label="Mover antes"
-                    title="Mover antes"
+                    className="flex h-11 w-11 items-center justify-center text-white hover:bg-white/20 disabled:opacity-30"
+                    aria-label="Mover antes (hacia la portada)"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -354,9 +351,8 @@ export function ImageUpload({
                     type="button"
                     onClick={() => handleMove(index, "down")}
                     disabled={index === images.length - 1}
-                    className="flex h-11 w-11 items-center justify-center rounded text-white hover:bg-white/20 disabled:opacity-30"
+                    className="flex h-11 w-11 items-center justify-center text-white hover:bg-white/20 disabled:opacity-30"
                     aria-label="Mover después"
-                    title="Mover después"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -374,7 +370,7 @@ export function ImageUpload({
                 <button
                   type="button"
                   onClick={() => handleDelete(img.id)}
-                  className="flex h-11 w-11 items-center justify-center rounded text-white hover:bg-red-500/80"
+                  className="flex h-11 w-11 items-center justify-center text-white hover:bg-red-500/80"
                   aria-label="Eliminar imagen"
                   title="Eliminar imagen"
                 >

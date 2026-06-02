@@ -9,7 +9,7 @@ import { FaqAccordion } from './faq-accordion';
 export const metadata: Metadata = {
   title: 'Para Orfebres — Vende en Casa Orfebre',
   description:
-    'Exhibe tu joyería artesanal ante todo Chile. Empieza gratis. Google Shopping, Pinterest, Instagram, blog SEO, 20 emails automáticos, certificado de autenticidad digital. La plataforma que tu oficio merece.',
+    'Exhibe tu joyería artesanal ante todo Chile. Empieza gratis. Google Shopping, Pinterest, Instagram, blog SEO, 20 emails automáticos, certificado de autenticidad digital. La plataforma de joyería artesanal chilena que tu oficio merece.',
   keywords: [
     'vender joyería artesanal Chile',
     'plataforma para orfebres',
@@ -195,8 +195,8 @@ const HERRAMIENTAS = [
 ];
 
 const PASOS = [
-  { num: '01', title: 'Postula', desc: 'Completa el formulario con tu portafolio, materiales y propuesta artística. Toma 10 minutos.' },
-  { num: '02', title: 'Evaluación', desc: 'Nuestro equipo revisa tu trabajo en 48-72 horas. Buscamos calidad, autenticidad y coherencia.' },
+  { num: '01', title: 'Postula', desc: 'Completa el formulario con tu portafolio, materiales y proceso de trabajo. Toma 10 minutos.' },
+  { num: '02', title: 'Verificación de autoría', desc: 'Nuestro equipo verifica tu postulación en 48-72 horas. Confirmamos que creas o produces tus propias piezas, con materiales reales y declarados. No evaluamos estilos.' },
   { num: '03', title: 'Elige tu plan', desc: 'Empieza gratis con Esencial o elige Artesano/Maestro para más beneficios.' },
   { num: '04', title: 'Sube tus piezas', desc: 'Fotografía tus creaciones, describe materiales y técnica, y publica en tu galería.' },
   { num: '05', title: 'Empieza a vender', desc: 'Tus piezas quedan visibles ante todo Chile. Nosotros nos encargamos del marketing, tú del arte.' },
@@ -291,9 +291,10 @@ export default function ParaOrfebresPage() {
           </FadeIn>
           <FadeIn delay={300}>
             <p className="mx-auto mt-8 max-w-xl text-base font-light leading-relaxed text-[rgba(250,250,248,0.65)]">
-              Casa Orfebre es una plataforma de joyería auténtica hecha por
-              orfebres en Chile. Exhibe tus creaciones ante miles de compradores
-              que valoran lo hecho a mano. Empieza gratis. Solo pagas cuando vendes.
+              Casa Orfebre es la primera plataforma de joyería artesanal chilena
+              con autoría verificada. Exhibe tus creaciones ante miles de
+              compradores que valoran lo hecho a mano. Empieza gratis. Solo pagas
+              cuando vendes.
             </p>
           </FadeIn>
           <FadeIn delay={400}>
@@ -350,12 +351,11 @@ export default function ParaOrfebresPage() {
           </FadeIn>
           <FadeIn delay={150}>
             <p className="mt-8 text-base font-light leading-relaxed text-text-secondary">
-              Casa Orfebre es una plataforma para orfebres que diseñan o
-              producen sus propias piezas. Verificamos autoría, no estilos:
-              confirmamos que eres el creador o productor real de tus piezas y
-              que tus materiales declarados son auténticos. No evaluamos
-              propuestas estéticas, y eso hace que tu trabajo se muestre tal
-              como es.
+              Casa Orfebre es una plataforma de joyería artesanal chilena donde
+              exhiben orfebres verificados: confirmamos que cada persona crea o
+              produce sus propias piezas, con materiales reales y declarados. No
+              evaluamos estilos ni propuestas estéticas — solo verificamos que
+              haya autoría genuina detrás de cada pieza.
             </p>
           </FadeIn>
           <FadeIn delay={250}>

@@ -125,12 +125,12 @@ export default function TerminosPage() {
               identidad, la descripción de su taller y técnicas, y la
               presentación de un portafolio inicial de sus creaciones. Casa
               Orfebre se reserva el derecho de aceptar o rechazar postulaciones
-              según sus criterios de verificación de autoría, que confirman que
-              la persona es la creadora o productora real de las piezas, que no
-              revende productos importados o comprados al por mayor, que existe
-              trabajo propio (diseño, fabricación o participación real en la
-              producción) y que las fotos e información cumplen un estándar
-              mínimo de la Plataforma. Casa Orfebre no evalúa estilos ni
+              según sus criterios de verificación de autoría, que confirman que:
+              (1) la persona es orfebre o creadora real de las piezas; (2) no
+              revende productos importados ni comprados al por mayor; (3) existe
+              trabajo propio (diseño propio, fabricación propia o participación
+              real en la producción); y (4) las fotos e información cumplen un
+              estándar mínimo de la Plataforma. No se evalúan estilos ni
               propuestas estéticas.
             </p>
           </section>
