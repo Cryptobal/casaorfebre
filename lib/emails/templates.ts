@@ -592,6 +592,26 @@ export async function sendProductRejectedEmail(
 }
 
 // ---------------------------------------------------------------------------
+// 11b. Product Pending Review (to admins)
+// ---------------------------------------------------------------------------
+export async function sendProductPendingReviewAdminEmail(
+  to: string,
+  { artisanName, productName }: { artisanName: string; productName: string },
+) {
+  const base = appUrl();
+  await sendEmail(
+    to,
+    `Nueva pieza pendiente de revisión: '${productName}'`,
+    `<p style="margin:0 0 16px;"><strong>${artisanName}</strong> envió una pieza a revisión.</p>
+     <p style="margin:0 0 8px;"><strong>Pieza:</strong> ${productName}</p>
+     <p style="margin:0 0 16px;"><strong>Orfebre:</strong> ${artisanName}</p>
+     <p style="margin:0 0 0;">
+       <a href="${base}/portal/admin/productos?view=moderation" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Revisar pieza</a>
+     </p>`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 12. Shipment Alert (to artisan)
 // ---------------------------------------------------------------------------
 export async function sendShipmentAlertEmail(

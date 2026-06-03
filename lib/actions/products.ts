@@ -8,6 +8,24 @@ import { getArtisanPlanLimits } from "@/lib/plan-limits";
 import { revalidatePath } from "next/cache";
 import type { ProductionType } from "@prisma/client";
 import { getActiveCategories } from "@/lib/queries/catalog";
+import { getAdminEmails } from "@/lib/config";
+import { sendProductPendingReviewAdminEmail } from "@/lib/emails/templates";
+
+/** Notify admins (best-effort) that a piece was submitted for review. */
+async function notifyAdminsProductPending(
+  artisanName: string,
+  productName: string,
+) {
+  try {
+    await Promise.all(
+      getAdminEmails().map((email) =>
+        sendProductPendingReviewAdminEmail(email, { artisanName, productName }),
+      ),
+    );
+  } catch (e) {
+    console.error("[submitForReview] Admin notification failed:", e);
+  }
+}
 
 async function getArtisan() {
   const session = await auth();
@@ -552,6 +570,8 @@ export async function submitForReview(
       data: { status: "PENDING_REVIEW" },
     });
 
+    await notifyAdminsProductPending(artisan.displayName, product.name);
+
     revalidatePath("/portal/orfebre/productos");
     return { success: true };
   } catch {
@@ -707,6 +727,8 @@ export async function saveAndSubmitForReview(
         await prisma.productStone.create({ data: stonePayload });
       }
     }
+
+    await notifyAdminsProductPending(artisan.displayName, data.name);
 
     revalidatePath("/portal/orfebre/productos");
     return { success: true };
