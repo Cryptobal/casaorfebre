@@ -10,7 +10,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:seed": "npx tsx tests/e2e/seed-test-data.ts"
+    "test:seed": "npx tsx tests/e2e/seed-test-data.ts",
+    "backfill:instagram": "npx tsx scripts/backfill-artisan-instagram.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",

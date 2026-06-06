@@ -87,6 +87,7 @@ export function ApplicationForm({
   const [bio, setBio] = useState("");
   const [experience, setExperience] = useState("");
   const [yearsExperience, setYearsExperience] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
 
   const [region, setRegion] = useState("");
@@ -400,6 +401,22 @@ export function ApplicationForm({
                 ))}
               </div>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="instagram">Instagram (recomendado)</Label>
+            <Input
+              id="instagram"
+              name="instagram"
+              type="text"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              className="mt-1"
+              placeholder="@tu_usuario o link a tu perfil"
+            />
+            <p className="mt-1 text-xs text-text-tertiary">
+              Tu Instagram nos ayuda a conocer tu trabajo y difundirlo.
+            </p>
           </div>
 
           <div>

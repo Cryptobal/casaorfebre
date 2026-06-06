@@ -383,6 +383,7 @@ export async function getAllArtisans() {
       id: true,
       displayName: true,
       slug: true,
+      instagram: true,
       location: true,
       phone: true,
       status: true,

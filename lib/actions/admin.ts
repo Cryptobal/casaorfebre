@@ -105,6 +105,12 @@ export async function approveApplication(
         application.portfolioImages.length > 0 ? application.portfolioImages : [],
       yearsExperience: application.yearsExperience,
       awards: application.awards,
+      instagram: application.instagram ?? null,
+      applicationId: application.id,
+      story: application.experience ?? null,
+      socialLinks: (application.instagram || application.portfolioUrl)
+        ? { instagram: application.instagram ?? null, portfolio: application.portfolioUrl ?? null }
+        : undefined,
       status: "APPROVED",
       approvedAt: new Date(),
       isPioneer: application.isPioneerCandidate,
