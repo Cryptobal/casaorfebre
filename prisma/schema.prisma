@@ -145,6 +145,8 @@ model Artisan {
   yearsExperience  Int?
   awards           String[]
   socialLinks      Json?
+  instagram        String?
+  applicationId    String?
   rut            String?
   phone          String?
   mpAccessToken    String?
@@ -635,6 +637,7 @@ model ArtisanApplication {
   categories      String[]                 @default([])
   portfolioImages String[]
   portfolioUrl    String?
+  instagram       String?
   materials       String[]
   experience        String?
   yearsExperience   Int?

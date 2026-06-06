@@ -9,6 +9,14 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+type SocialLinks = { instagram?: string | null; portfolio?: string | null };
+
+function instagramHref(value: string): string {
+  if (value.includes("http")) return value;
+  if (value.startsWith("@")) return `https://instagram.com/${value.slice(1)}`;
+  return `https://instagram.com/${value}`;
+}
+
 export default async function AdminArtisanDetailPage({ params }: PageProps) {
   const { id } = await params;
 
@@ -64,6 +72,9 @@ export default async function AdminArtisanDetailPage({ params }: PageProps) {
   const planName = artisan.subscriptions?.[0]?.plan?.name || "Esencial";
   const commission = artisan.commissionOverride ?? artisan.commissionRate;
   const hasMp = !!artisan.mpAccessToken;
+  const socialLinks = artisan.socialLinks as SocialLinks | null;
+  const portfolio = socialLinks?.portfolio;
+  const hasProfileInfo = !!(artisan.instagram || artisan.story || portfolio);
 
   return (
     <div>
@@ -103,6 +114,51 @@ export default async function AdminArtisanDetailPage({ params }: PageProps) {
             <dd className="select-all">{artisan.rut || "—"}</dd>
           </div>
         </dl>
+      </Card>
+
+      {/* Perfil público / Postulación */}
+      <Card className="mt-6">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+          Perfil público / Postulación
+        </h2>
+        {!hasProfileInfo ? (
+          <p className="text-sm text-text-tertiary">Sin información de perfil aún.</p>
+        ) : (
+          <div className="space-y-3 text-sm">
+            {artisan.instagram && (
+              <div>
+                <p className="text-text-tertiary">Instagram</p>
+                <a
+                  href={instagramHref(artisan.instagram)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  {artisan.instagram}
+                </a>
+              </div>
+            )}
+            {artisan.story && (
+              <div>
+                <p className="text-text-tertiary">Historia</p>
+                <p className="text-text-secondary whitespace-pre-wrap">{artisan.story}</p>
+              </div>
+            )}
+            {portfolio && (
+              <div>
+                <p className="text-text-tertiary">Portafolio</p>
+                <a
+                  href={portfolio}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline break-all"
+                >
+                  {portfolio}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Metrics */}

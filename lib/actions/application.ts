@@ -20,6 +20,7 @@ export async function submitApplication(
   const materialsRaw = ((formData.get("materials") as string) || "").trim();
   const experience = ((formData.get("experience") as string) || "").trim() || null;
   const portfolioUrl = ((formData.get("portfolioUrl") as string) || "").trim() || null;
+  const instagram = ((formData.get("instagram") as string) || "").trim() || null;
   const phoneRaw = (formData.get("phone") as string) || "";
   const phoneDigits = phoneRaw.replace(/\D/g, "");
   /** Chile: celular sin código de país = 9 dígitos (ej. 912345678) → E.164 +56912345678 */
@@ -141,6 +142,7 @@ export async function submitApplication(
         materials,
         experience,
         portfolioUrl,
+        instagram,
         phone,
         categories,
         portfolioImages,
