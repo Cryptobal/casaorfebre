@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     where: {
       payoutStatus: "HELD",
       fulfillmentStatus: "DELIVERED",
+      receivedAt: { not: null },
       payoutEligibleAt: { lte: now },
       order: {
         disputes: {
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
     where: {
       payoutStatus: "HELD",
       fulfillmentStatus: "DELIVERED",
+      receivedAt: { not: null },
       payoutEligibleAt: null,
       deliveredAt: { lt: fourteenDaysAgo },
       order: {

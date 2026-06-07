@@ -5,7 +5,11 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { TrackingLink } from "@/components/tracking-link";
-import { AdminStatusChanger, ReleasePayoutButton } from "./admin-order-actions";
+import {
+  AdminStatusChanger,
+  ReleasePayoutButton,
+  ConfirmAutoConfirmedButton,
+} from "./admin-order-actions";
 import type { OrderStatus, FulfillmentStatus, PayoutStatus } from "@prisma/client";
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -274,6 +278,9 @@ export default async function AdminOrderDetailPage({
                       >
                         Ver mensajes
                       </Link>
+                      {item.fulfillmentStatus === "AUTO_CONFIRMED" && (
+                        <ConfirmAutoConfirmedButton orderItemId={item.id} />
+                      )}
                       {item.payoutStatus === "HELD" && (
                         <ReleasePayoutButton
                           orderItemId={item.id}

@@ -11,6 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
   PREPARING: "Preparando",
   SHIPPED: "Despachado",
   DELIVERED: "Entregado",
+  AUTO_CONFIRMED: "Cierre automático",
   RETURNED: "Devuelto",
 };
 
@@ -19,6 +20,7 @@ const STATUS_STYLES: Record<string, string> = {
   PREPARING: "bg-blue-100 text-blue-700",
   SHIPPED: "bg-indigo-100 text-indigo-700",
   DELIVERED: "bg-green-100 text-green-700",
+  AUTO_CONFIRMED: "bg-amber-100 text-amber-800",
   RETURNED: "bg-red-100 text-red-700",
 };
 
@@ -46,7 +48,7 @@ export default async function PedidosPage({
 
   if (!artisan) redirect("/");
 
-  const validStatuses: FulfillmentStatus[] = ["PENDING", "PREPARING", "SHIPPED", "DELIVERED", "RETURNED"];
+  const validStatuses: FulfillmentStatus[] = ["PENDING", "PREPARING", "SHIPPED", "DELIVERED", "AUTO_CONFIRMED", "RETURNED"];
   const filterStatus = status && validStatuses.includes(status as FulfillmentStatus)
     ? (status as FulfillmentStatus)
     : undefined;

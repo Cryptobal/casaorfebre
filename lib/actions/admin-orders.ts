@@ -102,6 +102,50 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
   return { success: true };
 }
 
+export async function confirmAutoConfirmedDelivery(orderItemId: string) {
+  await requireAdmin();
+
+  // Only items closed automatically by inactivity can be promoted here.
+  const item = await prisma.orderItem.findFirst({
+    where: {
+      id: orderItemId,
+      fulfillmentStatus: "AUTO_CONFIRMED",
+    },
+    include: {
+      artisan: {
+        include: {
+          user: { select: { email: true } },
+          subscriptions: {
+            where: { status: "ACTIVE" },
+            include: { plan: { select: { payoutFrequency: true } } },
+            take: 1,
+          },
+        },
+      },
+    },
+  });
+
+  if (!item) return { error: "Item no encontrado o no está auto-confirmado" };
+
+  const now = new Date();
+  const payoutDays = getPayoutDaysForArtisan(item.artisan);
+  const payoutEligibleAt = calculatePayoutEligibleDate(now, payoutDays);
+
+  await prisma.orderItem.update({
+    where: { id: item.id },
+    data: {
+      fulfillmentStatus: "DELIVERED",
+      receivedAt: now,
+      deliveredAt: now,
+      payoutEligibleAt,
+    },
+  });
+
+  revalidatePath("/portal/admin/pedidos");
+  revalidatePath(`/portal/admin/pedidos/${item.orderId}`);
+  return { success: true };
+}
+
 export async function releasePayoutManually(orderItemId: string) {
   await requireAdmin();
 
