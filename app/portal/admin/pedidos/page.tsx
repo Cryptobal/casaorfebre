@@ -31,6 +31,7 @@ const fulfillmentStyles: Record<string, string> = {
   PREPARING: "bg-amber-100 text-amber-800",
   SHIPPED: "bg-indigo-100 text-indigo-800",
   DELIVERED: "bg-green-100 text-green-800",
+  AUTO_CONFIRMED: "bg-amber-100 text-amber-800",
   RETURNED: "bg-red-100 text-red-800",
 };
 

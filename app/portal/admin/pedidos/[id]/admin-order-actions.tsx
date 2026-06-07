@@ -1,7 +1,11 @@
 "use client";
 
 import { useTransition } from "react";
-import { updateOrderStatus, releasePayoutManually } from "@/lib/actions/admin-orders";
+import {
+  updateOrderStatus,
+  releasePayoutManually,
+  confirmAutoConfirmedDelivery,
+} from "@/lib/actions/admin-orders";
 import { formatCLP } from "@/lib/utils";
 import type { OrderStatus } from "@prisma/client";
 
@@ -75,6 +79,34 @@ export function ReleasePayoutButton({
       className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
     >
       {isPending ? "Liberando..." : "Liberar pago"}
+    </button>
+  );
+}
+
+export function ConfirmAutoConfirmedButton({
+  orderItemId,
+}: {
+  orderItemId: string;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() => {
+        if (
+          !confirm(
+            "¿Confirmar que esta pieza fue realmente entregada? Esto habilitará el payout al orfebre."
+          )
+        )
+          return;
+        startTransition(async () => {
+          await confirmAutoConfirmedDelivery(orderItemId);
+        });
+      }}
+      className="rounded-md bg-amber-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+    >
+      {isPending ? "Confirmando..." : "Confirmar entrega real"}
     </button>
   );
 }

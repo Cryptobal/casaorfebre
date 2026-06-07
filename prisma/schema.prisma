@@ -901,6 +901,7 @@ enum FulfillmentStatus {
   PREPARING
   SHIPPED
   DELIVERED
+  AUTO_CONFIRMED
   RETURNED
 }
 

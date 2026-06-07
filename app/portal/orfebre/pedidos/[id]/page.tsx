@@ -46,6 +46,7 @@ const STATUS_LABELS: Record<string, string> = {
   PREPARING: "Preparando",
   SHIPPED: "Despachado",
   DELIVERED: "Entregado",
+  AUTO_CONFIRMED: "Cierre automático",
   RETURNED: "Devuelto",
 };
 
@@ -54,6 +55,7 @@ const STATUS_STYLES: Record<string, string> = {
   PREPARING: "bg-blue-100 text-blue-700",
   SHIPPED: "bg-indigo-100 text-indigo-700",
   DELIVERED: "bg-green-100 text-green-700",
+  AUTO_CONFIRMED: "bg-amber-100 text-amber-800",
   RETURNED: "bg-red-100 text-red-700",
 };
 
