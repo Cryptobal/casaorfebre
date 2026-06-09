@@ -13,13 +13,12 @@ export async function createReview(formData: FormData) {
   if (!session?.user) return { error: "No autorizado" };
 
   const productId = formData.get("productId") as string;
-  const artisanId = formData.get("artisanId") as string;
   const orderId = formData.get("orderId") as string;
   const rating = parseInt(formData.get("rating") as string);
   const comment = formData.get("comment") as string;
   const imageUrls = JSON.parse((formData.get("imageUrls") as string) || "[]");
 
-  if (!productId || !artisanId || !rating || !comment?.trim()) {
+  if (!productId || !rating || !comment?.trim()) {
     return { error: "Todos los campos son requeridos" };
   }
   if (rating < 1 || rating > 5) return { error: "Rating debe ser entre 1 y 5" };
@@ -33,6 +32,10 @@ export async function createReview(formData: FormData) {
     },
   });
   if (!orderItem) return { error: "Solo puedes dejar opinión sobre productos que compraste y recibiste" };
+
+  // Derive the artisan from the verified purchase — never trust a hidden form
+  // field for it (a tampered artisanId would poison another artisan's rating).
+  const artisanId = orderItem.artisanId;
 
   // Check 3+ days since delivery
   if (orderItem.deliveredAt) {

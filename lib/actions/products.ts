@@ -259,12 +259,14 @@ export async function createProduct(
   }
 
   // ── Enforce product limit by plan ──
+  // Count only submitted/published pieces — empty in-progress drafts must not
+  // consume the plan slot (otherwise an orfebre gets blocked with 0 live pieces).
   const limits = await getArtisanPlanLimits(artisan.id);
   if (limits.maxProducts > 0) {
     const activeCount = await prisma.product.count({
       where: {
         artisanId: artisan.id,
-        status: { in: ["DRAFT", "PENDING_REVIEW", "APPROVED"] },
+        status: { in: ["PENDING_REVIEW", "APPROVED"] },
       },
     });
     if (activeCount >= limits.maxProducts) {
@@ -531,6 +533,16 @@ export async function submitForReview(
     return { error: "El producto debe tener al menos 1 imagen" };
   }
 
+  const usableImages = product.images.filter(
+    (img) => img.status === "APPROVED" || img.status === "PENDING_REVIEW"
+  );
+  if (usableImages.length === 0) {
+    return {
+      error:
+        "Todas tus fotos fueron rechazadas. Sube al menos una foto nueva antes de enviar a revisión.",
+    };
+  }
+
   if (!product.name || !product.description || product.price <= 0) {
     return { error: "El producto debe tener nombre, descripcion y precio mayor a 0" };
   }
@@ -614,6 +626,16 @@ export async function saveAndSubmitForReview(
     return { error: "El producto debe tener al menos 1 imagen" };
   }
 
+  const usableImages = product.images.filter(
+    (img) => img.status === "APPROVED" || img.status === "PENDING_REVIEW"
+  );
+  if (usableImages.length === 0) {
+    return {
+      error:
+        "Todas tus fotos fueron rechazadas. Sube al menos una foto nueva antes de enviar a revisión.",
+    };
+  }
+
   if (data.categoryIds.length === 0) {
     return { error: "Selecciona al menos una categoría" };
   }
@@ -638,6 +660,29 @@ export async function saveAndSubmitForReview(
   }
   if (selectedSlugs.includes("pulsera") && !data.diametroMm) {
     return { error: "Las pulseras requieren el diámetro o largo (mm) para publicarse" };
+  }
+
+  // ── Enforce product limit by plan at submit time ──
+  // Count live pieces (submitted/published) excluding this one. Drafts don't
+  // count, so the limit only applies to pieces actually going to the catalog.
+  const limits = await getArtisanPlanLimits(artisan.id);
+  if (limits.maxProducts > 0 && product.status !== "PENDING_REVIEW" && product.status !== "APPROVED") {
+    const liveCount = await prisma.product.count({
+      where: {
+        artisanId: artisan.id,
+        status: { in: ["PENDING_REVIEW", "APPROVED"] },
+        id: { not: productId },
+      },
+    });
+    if (liveCount >= limits.maxProducts) {
+      const planLabel = limits.planName.charAt(0).toUpperCase() + limits.planName.slice(1);
+      const upgradeMsg = limits.nextPlanName
+        ? ` Actualiza a ${limits.nextPlanName} para publicar más piezas.`
+        : "";
+      return {
+        error: `Has alcanzado el límite de ${limits.maxProducts} productos de tu plan ${planLabel}.${upgradeMsg}`,
+      };
+    }
   }
 
   try {

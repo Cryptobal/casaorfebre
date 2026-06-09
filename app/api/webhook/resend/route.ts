@@ -22,40 +22,21 @@ interface ResendWebhookPayload {
   };
 }
 
-function verifySignature(
-  payload: string,
-  signature: string | null,
-  secret: string,
-): boolean {
-  if (!signature) return false;
-
-  // Resend uses svix for webhooks — signature format: "v1,<base64>"
-  const parts = signature.split(" ");
-  for (const part of parts) {
-    const [version, sig] = part.split(",");
-    if (version !== "v1") continue;
-    // For svix, we need the timestamp from svix-timestamp header + payload
-    // But simplified: just check the hmac
-    try {
-      const expected = crypto
-        .createHmac("sha256", secret)
-        .update(payload)
-        .digest("base64");
-      if (sig === expected) return true;
-    } catch {
-      continue;
-    }
-  }
-  return false;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
     const secret = process.env.RESEND_WEBHOOK_SECRET;
 
-    // Verify webhook signature if secret is configured
-    if (secret) {
+    // Fail closed: never accept unauthenticated webhook writes. If the secret
+    // isn't configured we cannot verify the sender, so reject (same posture as
+    // the MercadoPago webhook).
+    if (!secret) {
+      console.error("[resend-webhook] RESEND_WEBHOOK_SECRET no configurado");
+      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+    }
+
+    // Verify webhook signature
+    {
       const svixId = req.headers.get("svix-id");
       const svixTimestamp = req.headers.get("svix-timestamp");
       const svixSignature = req.headers.get("svix-signature");

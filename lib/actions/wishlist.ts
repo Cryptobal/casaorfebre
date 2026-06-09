@@ -36,8 +36,12 @@ export async function addToWishlist(wishlistId: string, productId: string) {
   });
   if (!wishlist) throw new Error("Lista no encontrada");
 
-  await prisma.wishlistItem.create({
-    data: { wishlistId, productId },
+  // Idempotent: adding the same product twice is a no-op instead of a crash
+  // on the @@unique([wishlistId, productId]) constraint.
+  await prisma.wishlistItem.upsert({
+    where: { wishlistId_productId: { wishlistId, productId } },
+    create: { wishlistId, productId },
+    update: {},
   });
   revalidatePath("/portal/comprador/listas");
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function ConfirmModal({
   onCancel,
 }: ConfirmModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -38,11 +40,6 @@ export function ConfirmModal({
 
   if (!open) return null;
 
-  const confirmClass =
-    variant === "danger"
-      ? "bg-red-600 text-white hover:bg-red-700"
-      : "bg-accent text-white hover:bg-accent/90";
-
   return (
     <div
       ref={overlayRef}
@@ -52,29 +49,30 @@ export function ConfirmModal({
       }}
       role="dialog"
       aria-modal="true"
+      aria-labelledby={titleId}
     >
       <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-6 shadow-lg">
-        <h3 className="font-serif text-lg font-semibold text-text">{title}</h3>
+        <h3 id={titleId} className="font-serif text-lg font-semibold text-text">{title}</h3>
         {message && (
           <p className="mt-2 text-sm text-text-secondary">{message}</p>
         )}
         <div className="mt-5 flex justify-end gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onCancel}
             disabled={loading}
-            className="touch-manipulation rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-background disabled:opacity-50"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={variant === "danger" ? "destructive" : "primary"}
             onClick={onConfirm}
-            disabled={loading}
-            className={`touch-manipulation rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${confirmClass}`}
+            loading={loading}
           >
-            {loading ? "Procesando..." : confirmLabel}
-          </button>
+            {confirmLabel}
+          </Button>
         </div>
       </div>
     </div>

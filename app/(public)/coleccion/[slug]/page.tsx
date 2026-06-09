@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductBySlug, getSimilarProducts } from "@/lib/queries/products";
 import { ProductCard } from "@/components/products/product-card";
-import { canonicalUrl, buildBreadcrumbJsonLd } from "@/lib/seo";
+import { canonicalUrl } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ImageGallery } from "./image-gallery";
@@ -139,7 +139,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const primaryCategory = product.categories[0];
   const categoryLabel = primaryCategory?.name ?? "Otro";
-  const categorySlug = primaryCategory?.slug ?? "coleccion";
+  // When the product has no category, link the crumb to the catalog root —
+  // /coleccion/categoria/coleccion is not a real route.
+  const categoryHref = primaryCategory
+    ? `/coleccion/categoria/${primaryCategory.slug}`
+    : "/coleccion";
 
   const isRing = product.categories.some((c: { slug: string }) => c.slug === "anillo");
   const ringSizeOptions: RingSizeOption[] | undefined = (() => {
@@ -346,20 +350,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
         }}
       />
       <JsonLd data={jsonLd} />
-      <JsonLd data={buildBreadcrumbJsonLd([
-        { name: "Inicio", url: "/" },
-        { name: "Colección", url: "/coleccion" },
-        { name: categoryLabel, url: `/coleccion/${categorySlug}` },
-        { name: product.name, url: `/coleccion/${slug}` },
-      ])} />
 
       <div className="mx-auto max-w-6xl px-4 pt-8 pb-20 sm:px-6 lg:px-8">
+        {/* Breadcrumbs renders both the visible nav and its BreadcrumbList JSON-LD
+            (single source of truth — avoids duplicate structured data). */}
         <Breadcrumbs
           items={[
             { label: "Inicio", href: "/" },
             { label: "Colección", href: "/coleccion" },
-            { label: categoryLabel, href: `/coleccion/${categorySlug}` },
-            { label: product.name },
+            { label: categoryLabel, href: categoryHref },
+            { label: product.name, href: `/coleccion/${slug}` },
           ]}
         />
         {/* Two-column layout */}
@@ -594,7 +594,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* Story */}
           {product.story && (
             <div className="rounded-lg bg-background p-6">
-              <h3 className="mb-3 font-serif text-sm uppercase tracking-widest text-text-tertiary">La Historia de esta Pieza</h3>
+              <h2 className="mb-3 font-serif text-sm uppercase tracking-widest text-text-tertiary">La Historia de esta Pieza</h2>
               <p className="font-serif text-lg font-light italic leading-relaxed text-text-secondary">
                 {product.story}
               </p>

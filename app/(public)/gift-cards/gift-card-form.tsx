@@ -51,7 +51,9 @@ export function GiftCardForm() {
     setError(null);
 
     if (!session?.user) {
-      router.push(`/login?redirect=/gift-cards`);
+      // Login reads `callbackUrl`, not `redirect` — with the wrong param the
+      // buyer never returned to gift cards after signing in.
+      router.push(`/login?callbackUrl=${encodeURIComponent("/gift-cards")}`);
       return;
     }
 

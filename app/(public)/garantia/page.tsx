@@ -212,10 +212,10 @@ export default function GarantiaPage() {
                     <ReturnStep n={1}>
                       Escribes a{" "}
                       <a
-                        href="mailto:soporte@casaorfebre.cl"
+                        href="mailto:contacto@casaorfebre.cl"
                         className="break-all text-accent underline decoration-accent/30 underline-offset-2 hover:decoration-accent sm:break-normal"
                       >
-                        soporte@casaorfebre.cl
+                        contacto@casaorfebre.cl
                       </a>{" "}
                       o abres una solicitud desde tu cuenta, con fotos si aplica.
                     </ReturnStep>
@@ -246,10 +246,10 @@ export default function GarantiaPage() {
                 <BulletItem>
                   Email:{" "}
                   <a
-                    href="mailto:soporte@casaorfebre.cl"
+                    href="mailto:contacto@casaorfebre.cl"
                     className="text-accent underline decoration-accent/30 underline-offset-2 hover:decoration-accent"
                   >
-                    soporte@casaorfebre.cl
+                    contacto@casaorfebre.cl
                   </a>
                 </BulletItem>
                 <BulletItem>

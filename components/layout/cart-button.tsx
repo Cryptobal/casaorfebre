@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 import { resolveGuestCartLines } from "@/lib/actions/guest-cart";
@@ -103,13 +103,26 @@ export function CartButton() {
     [displayItems]
   );
 
+  // Pulse the badge whenever the count increases (add-to-cart feedback).
+  const [badgePop, setBadgePop] = useState(false);
+  const prevCountRef = useRef(displayCount);
+  useEffect(() => {
+    if (displayCount > prevCountRef.current) {
+      setBadgePop(true);
+      const id = setTimeout(() => setBadgePop(false), 400);
+      prevCountRef.current = displayCount;
+      return () => clearTimeout(id);
+    }
+    prevCountRef.current = displayCount;
+  }, [displayCount]);
+
   return (
     <>
       <button
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Carrito"
-        className="relative text-text-secondary transition-colors hover:text-text"
+        className="relative -mr-2 flex h-11 w-11 items-center justify-center text-text-secondary transition-colors hover:text-text"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -127,7 +140,10 @@ export function CartButton() {
           <path d="M16 10a4 4 0 01-8 0" />
         </svg>
         {displayCount > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold leading-none text-white">
+          <span
+            className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold leading-none text-white"
+            style={badgePop ? { animation: "badge-pop 0.4s ease-out" } : undefined}
+          >
             {displayCount > 9 ? "9+" : displayCount}
           </span>
         )}

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminEmails } from "@/lib/config";
+import { refundPayment } from "@/lib/mercadopago";
 import {
   sendShipmentLastWarningEmail,
   sendOrderAutoCancelledToBuyerEmail,
   sendOrderAutoCancelledToArtisanEmail,
+  sendEmail,
 } from "@/lib/emails/templates";
 
 export async function GET(request: Request) {
@@ -64,6 +66,9 @@ export async function GET(request: Request) {
           id: true,
           orderNumber: true,
           userId: true,
+          mpPaymentId: true,
+          giftCardCode: true,
+          giftCardDiscount: true,
           items: { select: { id: true, fulfillmentStatus: true } },
         },
       },
@@ -77,6 +82,9 @@ export async function GET(request: Request) {
       orderId: string;
       orderNumber: string;
       userId: string;
+      mpPaymentId: string | null;
+      giftCardCode: string | null;
+      giftCardDiscount: number;
       allUnshipped: boolean;
       unshippedItems: typeof cancelItems;
       unshippedProductNames: string[];
@@ -109,6 +117,9 @@ export async function GET(request: Request) {
         orderId: item.order.id,
         orderNumber: item.order.orderNumber,
         userId: item.order.userId,
+        mpPaymentId: item.order.mpPaymentId,
+        giftCardCode: item.order.giftCardCode,
+        giftCardDiscount: item.order.giftCardDiscount,
         allUnshipped,
         unshippedItems: [item],
         unshippedProductNames: [item.productName],
@@ -125,9 +136,59 @@ export async function GET(request: Request) {
     // If some items were shipped, the admin needs to handle it manually
     if (!orderGroup.allUnshipped) continue;
 
+    // Refund the buyer in MercadoPago BEFORE cancelling. If the refund fails we
+    // must NOT cancel the order (that would lose the buyer's money silently);
+    // instead we leave it untouched and alert admins for manual handling.
+    if (orderGroup.mpPaymentId) {
+      try {
+        await refundPayment(orderGroup.mpPaymentId);
+      } catch (e) {
+        console.error(
+          `[auto-cancel] MP refund FAILED for ${orderGroup.orderNumber}; NOT cancelling (manual review):`,
+          e
+        );
+        for (const adminEmail of adminEmails) {
+          try {
+            await sendEmail(
+              adminEmail,
+              `⚠️ Reembolso falló — revisar pedido ${orderGroup.orderNumber}`,
+              `<p>La cancelación automática del pedido <strong>${orderGroup.orderNumber}</strong> se detuvo porque el reembolso en Mercado Pago falló (pago ${orderGroup.mpPaymentId}).</p>
+               <p>El pedido sigue en estado <strong>PAID</strong> y requiere reembolso/cancelación manual.</p>`
+            );
+          } catch {}
+        }
+        continue;
+      }
+    }
+
     try {
-      // Restore stock for all items
+      // Restore gift card balance if it was used to (partially) pay this order.
+      // Without this, gift-card-funded orders would be cancelled and the buyer
+      // would lose that balance silently.
+      if (orderGroup.giftCardCode && orderGroup.giftCardDiscount > 0) {
+        const gc = await prisma.giftCard.findUnique({
+          where: { code: orderGroup.giftCardCode },
+        });
+        if (gc) {
+          const newBalance = gc.balance + orderGroup.giftCardDiscount;
+          await prisma.giftCard.update({
+            where: { code: orderGroup.giftCardCode },
+            data: {
+              balance: newBalance,
+              status: gc.status === "REDEEMED" ? "PARTIALLY_USED" : gc.status,
+            },
+          });
+        }
+      }
+
+      // Restore stock for all items (global + per-size variant)
       for (const item of orderGroup.unshippedItems) {
+        if (item.size) {
+          await prisma.productVariant.updateMany({
+            where: { productId: item.productId, size: item.size },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
         await prisma.product.update({
           where: { id: item.productId },
           data: { stock: { increment: item.quantity } },

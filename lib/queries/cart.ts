@@ -9,6 +9,7 @@ export async function getCart(userId: string) {
         include: {
           artisan: { select: { displayName: true, slug: true } },
           images: { orderBy: { position: "asc" }, take: 1 },
+          variants: { select: { size: true, stock: true } },
         },
       },
     },

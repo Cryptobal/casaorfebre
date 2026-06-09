@@ -11,7 +11,7 @@ import {
   sendGiftCardRecipientEmail,
   sendGiftCardPurchaserEmail,
 } from "@/lib/emails/templates";
-import { createReferralRewardIfApplicable } from "@/lib/actions/referral";
+import { createReferralRewardIfApplicable, markRewardAsUsed } from "@/lib/actions/referral";
 import { generateGiftCardCode } from "@/lib/gift-cards";
 
 /**
@@ -168,76 +168,107 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
     const transactionAmount = payment.transaction_amount ?? 0;
     const mpNetReceived = transactionAmount - mpFeeAmount;
 
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        status: "PAID",
-        mpPaymentId: String(paymentId),
-        mpMerchantOrderId: payment.order?.id ? String(payment.order.id) : undefined,
-        mpFeeAmount: Math.round(mpFeeAmount),
-        mpNetReceived: Math.round(mpNetReceived),
-      },
-    });
+    // All money-affecting mutations run atomically. A concurrency/idempotency
+    // guard (conditional update on PENDING_PAYMENT) ensures only the first
+    // webhook for this payment applies side effects. Emails and referral
+    // rewards run AFTER the transaction commits (they must not roll back DB).
+    const processed = await prisma.$transaction(
+      async (tx) => {
+        const flipped = await tx.order.updateMany({
+          where: { id: orderId, status: "PENDING_PAYMENT" },
+          data: {
+            status: "PAID",
+            mpPaymentId: String(paymentId),
+            mpMerchantOrderId: payment.order?.id ? String(payment.order.id) : undefined,
+            mpFeeAmount: Math.round(mpFeeAmount),
+            mpNetReceived: Math.round(mpNetReceived),
+          },
+        });
+        // Already processed by a concurrent webhook — do nothing else.
+        if (flipped.count === 0) return false;
 
-    // Save mpTransactionId on each OrderItem
-    await prisma.orderItem.updateMany({
-      where: { orderId },
-      data: { mpTransactionId: String(paymentId) },
-    });
+        // Save mpTransactionId on each OrderItem
+        await tx.orderItem.updateMany({
+          where: { orderId },
+          data: { mpTransactionId: String(paymentId) },
+        });
 
-    // Destock products (batch to avoid N+1)
-    await Promise.all(
-      order.items.map(async (item: any) => {
-        // Decrement variant stock if size is specified
-        if (item.size) {
-          await prisma.productVariant.updateMany({
-            where: { productId: item.productId, size: item.size },
+        // Destock products (sequential — interactive transactions require
+        // serial queries on the same connection).
+        for (const item of order.items as any[]) {
+          // Decrement variant stock if size is specified
+          if (item.size) {
+            await tx.productVariant.updateMany({
+              where: { productId: item.productId, size: item.size },
+              data: { stock: { decrement: item.quantity } },
+            });
+          }
+          // Always decrement global product stock, guarded against going negative.
+          const decremented = await tx.product.updateMany({
+            where: { id: item.productId, stock: { gte: item.quantity } },
             data: { stock: { decrement: item.quantity } },
           });
+          if (decremented.count === 0) {
+            // Stock was already insufficient (oversell race): clamp to 0 and mark
+            // sold out instead of going negative. Payment already succeeded.
+            console.error(
+              `[MP Webhook] Oversell detected on product ${item.productId} (order ${orderId}); clamping stock to 0`
+            );
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: 0, status: "SOLD_OUT" },
+            });
+          } else {
+            const product = await tx.product.findUnique({
+              where: { id: item.productId },
+              select: { stock: true },
+            });
+            if (product && product.stock <= 0) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: { status: "SOLD_OUT" },
+              });
+            }
+          }
         }
-        // Always decrement global product stock
-        const product = await prisma.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        });
-        if (product.stock <= 0) {
-          await prisma.product.update({
-            where: { id: item.productId },
-            data: { status: "SOLD_OUT" },
+
+        // Deduct gift card balance if used
+        if (order.giftCardCode && order.giftCardDiscount > 0) {
+          const gc = await tx.giftCard.findUnique({
+            where: { code: order.giftCardCode },
           });
+          if (gc) {
+            const newBalance = gc.balance - order.giftCardDiscount;
+            await tx.giftCard.update({
+              where: { code: order.giftCardCode },
+              data: {
+                balance: Math.max(0, newBalance),
+                status: newBalance <= 0 ? "REDEEMED" : "PARTIALLY_USED",
+                redeemedAt: gc.redeemedAt ?? new Date(),
+              },
+            });
+            await tx.giftCardUsage.create({
+              data: {
+                giftCardId: gc.id,
+                orderId: order.id,
+                amount: order.giftCardDiscount,
+              },
+            });
+          }
         }
-      })
+
+        // Clear cart for the buyer
+        await tx.cartItem.deleteMany({
+          where: { userId: order.userId },
+        });
+
+        return true;
+      },
+      { timeout: 15000 },
     );
 
-    // Deduct gift card balance if used
-    if (order.giftCardCode && order.giftCardDiscount > 0) {
-      const gc = await prisma.giftCard.findUnique({
-        where: { code: order.giftCardCode },
-      });
-      if (gc) {
-        const newBalance = gc.balance - order.giftCardDiscount;
-        await prisma.giftCard.update({
-          where: { code: order.giftCardCode },
-          data: {
-            balance: Math.max(0, newBalance),
-            status: newBalance <= 0 ? "REDEEMED" : "PARTIALLY_USED",
-            redeemedAt: gc.redeemedAt ?? new Date(),
-          },
-        });
-        await prisma.giftCardUsage.create({
-          data: {
-            giftCardId: gc.id,
-            orderId: order.id,
-            amount: order.giftCardDiscount,
-          },
-        });
-      }
-    }
-
-    // Clear cart for the buyer
-    await prisma.cartItem.deleteMany({
-      where: { userId: order.userId },
-    });
+    // A concurrent webhook already processed this payment — stop here.
+    if (!processed) return;
 
     // Send purchase confirmation to buyer
     const buyer = await prisma.user.findUnique({
@@ -328,9 +359,28 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
     } catch (e) {
       console.error("Referral reward creation failed:", e);
     }
+
+    // Mark the referral discount code (if any) as USED now that the payment is
+    // confirmed. Marking it at preference creation would burn it on abandoned
+    // checkouts. Only consume codes still ACTIVATED to stay idempotent.
+    if (order.discountCode) {
+      try {
+        const reward = await prisma.referralReward.findUnique({
+          where: { code: order.discountCode },
+          select: { id: true, status: true },
+        });
+        if (reward && reward.status === "ACTIVATED") {
+          await markRewardAsUsed(reward.id, order.id);
+        }
+      } catch (e) {
+        console.error("Failed to mark referral reward as used:", e);
+      }
+    }
   } else if (payment.status === "rejected") {
-    await prisma.order.update({
-      where: { id: orderId },
+    // Guard: a late "rejected" notification (retry of an earlier failed
+    // attempt) must never cancel an order that was already PAID.
+    await prisma.order.updateMany({
+      where: { id: orderId, status: "PENDING_PAYMENT" },
       data: { status: "CANCELLED" },
     });
   } else if (payment.status === "pending" || payment.status === "in_process") {
@@ -363,9 +413,15 @@ async function handleProductPayment(payment: any, paymentId: string | number) {
         data: { status: "REFUNDED" },
       });
 
-      // Restore stock
+      // Restore stock (global + per-size variant, mirroring the destock)
       await Promise.all(
         order.items.map(async (item: any) => {
+          if (item.size) {
+            await prisma.productVariant.updateMany({
+              where: { productId: item.productId, size: item.size },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
           await prisma.product.update({
             where: { id: item.productId },
             data: { stock: { increment: item.quantity } },
@@ -395,11 +451,14 @@ async function handleGiftCardPayment(payment: any, paymentId: string | number) {
   if (payment.status !== "approved") return;
 
   const metadata = payment.metadata as Record<string, unknown>;
-  const purchaserId = metadata?.purchaser_id as string;
-  const purchaserEmail = metadata?.purchaser_email as string;
-  const purchaserName = metadata?.purchaser_name as string || "Alguien especial";
-  const recipientEmail = metadata?.recipient_email as string;
-  const recipientName = (metadata?.recipient_name as string) || null;
+  // MercadoPago may or may not normalize metadata keys to snake_case; the
+  // preference sends camelCase. Read both variants so gift cards are never
+  // silently dropped after a successful charge.
+  const purchaserId = (metadata?.purchaser_id ?? metadata?.purchaserId) as string;
+  const purchaserEmail = (metadata?.purchaser_email ?? metadata?.purchaserEmail) as string;
+  const purchaserName = ((metadata?.purchaser_name ?? metadata?.purchaserName) as string) || "Alguien especial";
+  const recipientEmail = (metadata?.recipient_email ?? metadata?.recipientEmail) as string;
+  const recipientName = ((metadata?.recipient_name ?? metadata?.recipientName) as string) || null;
   const message = (metadata?.message as string) || null;
   const amount = Number(metadata?.amount);
 

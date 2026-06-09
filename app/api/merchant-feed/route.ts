@@ -201,6 +201,15 @@ export async function GET() {
 
       const shippingBlocks = buildShippingBlocks(product.price);
 
+      // Made-to-order pieces are produced after purchase → "backorder".
+      // Otherwise reflect real stock (SOLD_OUT pieces are already filtered out).
+      const availability =
+        product.productionType === "MADE_TO_ORDER"
+          ? "backorder"
+          : product.stock > 0
+            ? "in_stock"
+            : "out_of_stock";
+
       return `    <item>
       <g:id>${escapeXml(product.id)}</g:id>
       <g:title>${escapeXml(product.name.trim())}</g:title>
@@ -208,7 +217,7 @@ export async function GET() {
       <g:link>${escapeXml(productLink)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
 ${additionalImages}${additionalImages ? "\n" : ""}      <g:price>${regularPrice} CLP</g:price>${salePriceXml}
-      <g:availability>in_stock</g:availability>
+      <g:availability>${availability}</g:availability>
       <g:condition>new</g:condition>
       <g:brand>${escapeXml(product.artisan?.displayName || "Casa Orfebre")}</g:brand>
       <g:mpn>${escapeXml(mpn)}</g:mpn>

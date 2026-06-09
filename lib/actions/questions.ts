@@ -17,16 +17,24 @@ export async function submitQuestion(formData: FormData) {
   if (!session?.user) return { error: "No autorizado" };
 
   const productId = formData.get("productId") as string;
-  const artisanId = formData.get("artisanId") as string;
   const question = formData.get("question") as string;
 
-  if (!productId || !artisanId || !question?.trim()) {
+  if (!productId || !question?.trim()) {
     return { error: "Todos los campos son requeridos" };
   }
 
   // Contact filter
   const filter = checkContactInfo(question);
   if (!filter.isClean) return { error: CONTACT_FILTER_MESSAGE };
+
+  // Derive the artisan from the product — never trust a hidden form field
+  // (a tampered artisanId would route the question to the wrong orfebre).
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { name: true, artisanId: true },
+  });
+  if (!product) return { error: "Producto no encontrado" };
+  const artisanId = product.artisanId;
 
   await prisma.productQuestion.create({
     data: {
@@ -45,10 +53,6 @@ export async function submitQuestion(formData: FormData) {
     include: {
       user: { select: { email: true } },
     },
-  });
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { name: true },
   });
   if (artisan?.user?.email && product) {
     try {

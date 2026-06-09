@@ -80,14 +80,36 @@ export async function createCheckoutPreference(formData: FormData) {
           commissionOverride: true,
         },
       },
+      variants: { select: { size: true, stock: true } },
     },
   });
   const productMap = new Map(products.map((p: any) => [p.id, p]));
 
-  // Validate stock
+  // Validate availability + stock (revalidate APPROVED to avoid selling a piece
+  // that was paused/sold/removed between cart and checkout, and honor per-size
+  // variant stock when a size was chosen).
   for (const item of cartItems) {
     const product = productMap.get(item.productId);
-    if (!product || product.stock < item.quantity) {
+    if (!product || product.status !== "APPROVED") {
+      return {
+        error: `"${item.product.name}" ya no está disponible. Quítalo del carrito para continuar.`,
+      };
+    }
+    if (item.size) {
+      const variant = product.variants?.find((v: any) => v.size === item.size);
+      // A chosen size whose variant no longer exists means the talla was
+      // removed by the orfebre — reject instead of silently using global stock.
+      if (!variant) {
+        return {
+          error: `La talla ${item.size} de "${item.product.name}" ya no está disponible. Actualiza tu carrito.`,
+        };
+      }
+      if (variant.stock < item.quantity) {
+        return {
+          error: `Stock insuficiente para ${item.product.name} (talla ${item.size})`,
+        };
+      }
+    } else if (product.stock < item.quantity) {
       return {
         error: `Stock insuficiente para ${item.product.name}`,
       };
@@ -197,6 +219,7 @@ export async function createCheckoutPreference(formData: FormData) {
             productName: item.product.name,
             productPrice: product.price,
             quantity: item.quantity,
+            size: item.size ?? null,
             commissionRate,
             commissionAmount,
             artisanPayout,
@@ -231,6 +254,13 @@ export async function createCheckoutPreference(formData: FormData) {
     // Destock products
     await Promise.all(
       cartItems.map(async (item: any) => {
+        // Decrement per-size variant stock when a size was chosen
+        if (item.size) {
+          await prisma.productVariant.updateMany({
+            where: { productId: item.productId, size: item.size },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
         const product = await prisma.product.update({
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },
@@ -327,7 +357,12 @@ export async function createCheckoutPreference(formData: FormData) {
     markReferralConversion(order.id).catch(() => {});
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    return { success: true, redirectUrl: `${appUrl}/checkout/success` };
+    // Include the order reference so the success page can confirm the order is
+    // PAID (without it, gift-card-only orders showed "confirmando tu pago").
+    return {
+      success: true,
+      redirectUrl: `${appUrl}/checkout/success?external_reference=${order.id}`,
+    };
   }
 
   const artisanIds = [...new Set(products.map((p: any) => p.artisan?.id).filter(Boolean))];
@@ -394,14 +429,10 @@ export async function createCheckoutPreference(formData: FormData) {
 
     console.log(`[checkout] Usando ${useSandbox ? "sandbox_init_point" : "init_point"} (MP_SANDBOX=${process.env.MP_SANDBOX ?? "undefined"})`);
 
-    // Mark referral reward as used (link to order)
-    if (discountRewardId) {
-      try {
-        await markRewardAsUsed(discountRewardId, order.id);
-      } catch (e) {
-        console.error("Failed to mark reward as used:", e);
-      }
-    }
+    // NOTE: the referral discount code is intentionally NOT marked as USED here.
+    // The payment has not happened yet — marking it now would burn the code on
+    // abandoned checkouts. It is marked USED in the MercadoPago webhook once the
+    // payment is approved (see app/api/mercadopago/webhook/route.ts).
 
     // Mark referral conversion
     markReferralConversion(order.id).catch(() => {});
@@ -443,13 +474,26 @@ export async function resumeOrderPayment(orderId: string) {
           commissionOverride: true,
         },
       },
+      variants: { select: { size: true, stock: true } },
     },
   });
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   for (const item of order.items) {
     const product = productMap.get(item.productId);
-    if (!product || product.stock < item.quantity) {
+    if (!product || product.status !== "APPROVED") {
+      return {
+        error: `"${item.productName}" ya no está disponible.`,
+      };
+    }
+    if (item.size) {
+      const variant = product.variants?.find((v) => v.size === item.size);
+      if (!variant || variant.stock < item.quantity) {
+        return {
+          error: `La talla ${item.size} de "${item.productName}" ya no está disponible. Contacta al sitio si necesitas ayuda.`,
+        };
+      }
+    } else if (product.stock < item.quantity) {
       return {
         error: `No hay stock suficiente para "${item.productName}". Contacta al sitio si necesitas ayuda.`,
       };
@@ -460,11 +504,21 @@ export async function resumeOrderPayment(orderId: string) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const useSandbox = isSandbox();
 
+    // Reconstruct MP items honoring the discounts/gift card already stored on
+    // the order, so the buyer is charged exactly order.total on retry (MP CLP
+    // doesn't accept negative unit_price, so we prorate like createCheckoutPreference).
+    const totalDiscount = order.discountAmount + order.giftCardDiscount;
+    const rawItemsTotal = order.subtotal + order.shippingCost;
+    const adjustmentRatio =
+      totalDiscount > 0 && rawItemsTotal > 0
+        ? (rawItemsTotal - totalDiscount) / rawItemsTotal
+        : 1;
+
     const items: { id: string; title: string; quantity: number; unit_price: number; currency_id: "CLP" }[] = order.items.map((item) => ({
       id: item.productId,
       title: item.productName,
       quantity: item.quantity,
-      unit_price: item.productPrice,
+      unit_price: Math.round(item.productPrice * adjustmentRatio),
       currency_id: "CLP" as const,
     }));
 
@@ -473,9 +527,15 @@ export async function resumeOrderPayment(orderId: string) {
         id: "shipping",
         title: "Despacho",
         quantity: 1,
-        unit_price: order.shippingCost,
+        unit_price: Math.round(order.shippingCost * adjustmentRatio),
         currency_id: "CLP",
       });
+    }
+
+    // Ensure MP items sum exactly matches order.total (fix proration rounding)
+    const mpSum = items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+    if (mpSum !== order.total && items.length > 0) {
+      items[0].unit_price += order.total - mpSum;
     }
 
     const backUrls = {

@@ -50,6 +50,7 @@ export function ContactForm() {
           name="name"
           type="text"
           required
+          autoComplete="name"
           className="w-full rounded-md border border-border bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
           placeholder="Tu nombre"
         />
@@ -65,6 +66,7 @@ export function ContactForm() {
           name="email"
           type="email"
           required
+          autoComplete="email"
           className="w-full rounded-md border border-border bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
           placeholder="tu@email.com"
         />

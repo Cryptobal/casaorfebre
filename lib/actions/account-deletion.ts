@@ -57,6 +57,22 @@ export async function deleteOrebreAccount(): Promise<{
     return { success: false, error: "No se encontró cuenta de orfebre" };
   }
 
+  // Block deletion while there are active orders to fulfill. Deleting now would
+  // strand buyers who already paid (items in PENDING/PREPARING/SHIPPED).
+  const activeFulfillment = await prisma.orderItem.count({
+    where: {
+      artisanId: artisan.id,
+      fulfillmentStatus: { in: ["PENDING", "PREPARING", "SHIPPED"] },
+    },
+  });
+  if (activeFulfillment > 0) {
+    return {
+      success: false,
+      error:
+        "No puedes eliminar tu cuenta mientras tengas pedidos activos (por preparar, en preparación o enviados). Complétalos o escríbenos a contacto@casaorfebre.cl.",
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { email: true, name: true },

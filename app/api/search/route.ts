@@ -69,7 +69,9 @@ export async function GET(req: NextRequest) {
       const semanticResults = await semanticSearch(q, { category, maxPrice, material }, 6);
       const ids = semanticResults.map((r) => r.id);
       const rows = await prisma.product.findMany({
-        where: { id: { in: ids } },
+        // Only surface available pieces; excludes SOLD_OUT/PAUSED/etc. that the
+        // embedding index may still reference.
+        where: { id: { in: ids }, status: "APPROVED" },
         select: {
           id: true,
           slug: true,

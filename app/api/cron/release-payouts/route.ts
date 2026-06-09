@@ -16,6 +16,14 @@ export async function GET(request: Request) {
   const now = new Date();
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
+  // Return requests still in-flight must block the payout (a refund may be due).
+  const ACTIVE_RETURN_STATUSES = [
+    "REQUESTED",
+    "APPROVED",
+    "SHIPPED_BACK",
+    "RECEIVED_BY_ARTISAN",
+  ] as const;
+
   // Primary: items with payoutEligibleAt set and reached
   const eligibleByDate = await prisma.orderItem.findMany({
     where: {
@@ -23,6 +31,9 @@ export async function GET(request: Request) {
       fulfillmentStatus: "DELIVERED",
       receivedAt: { not: null },
       payoutEligibleAt: { lte: now },
+      returnRequests: {
+        none: { status: { in: [...ACTIVE_RETURN_STATUSES] } },
+      },
       order: {
         disputes: {
           none: { status: { in: ["OPEN", "UNDER_REVIEW"] } },
@@ -45,6 +56,9 @@ export async function GET(request: Request) {
       receivedAt: { not: null },
       payoutEligibleAt: null,
       deliveredAt: { lt: fourteenDaysAgo },
+      returnRequests: {
+        none: { status: { in: [...ACTIVE_RETURN_STATUSES] } },
+      },
       order: {
         disputes: {
           none: { status: { in: ["OPEN", "UNDER_REVIEW"] } },

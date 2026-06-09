@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { aiPriceLimiter } from "@/lib/rate-limit";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -12,6 +13,20 @@ function getAnthropic() {
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Only orfebres/admins use the pricing advisor (it costs Anthropic tokens).
+  const role = session.user.role;
+  if (role !== "ARTISAN" && role !== "ADMIN") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  const { success } = await aiPriceLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo más tarde." },
+      { status: 429 },
+    );
+  }
 
   const body = await request.json();
   const { materialCost, laborCost, totalCost, materials, hours } = body;

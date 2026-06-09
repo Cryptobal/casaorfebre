@@ -68,11 +68,20 @@ interface ProductFilters {
   occasionSlug?: string;
   specialtySlug?: string;
   audiencia?: string;
+  q?: string;
   sort?: "newest" | "price_asc" | "price_desc" | "rating" | "popular";
 }
 
 export async function getApprovedProducts(filters: ProductFilters = {}) {
   const where: Record<string, unknown> = { status: "APPROVED" as const };
+
+  const q = filters.q?.trim();
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { description: { contains: q, mode: "insensitive" } },
+    ];
+  }
 
   if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
   if (filters.material) where.materials = { some: { name: filters.material } };

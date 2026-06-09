@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { getApprovedProducts, getAllMaterials } from "@/lib/queries/products";
 import { getApprovedArtisans } from "@/lib/queries/artisans";
 import { getActiveCategories, getActiveMaterials, getActiveOccasions, getActiveSpecialties } from "@/lib/queries/catalog";
@@ -73,8 +74,9 @@ export default async function ColeccionPage({
     : undefined;
   const priceParam = typeof params.price === "string" ? params.price : undefined;
   const { minPrice, maxPrice } = parsePriceRange(priceParam);
+  const q = typeof params.q === "string" ? params.q : undefined;
   const [products, materials, artisans, dbCategories, dbMaterials, dbOccasions, dbSpecialties] = await Promise.all([
-    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, audiencia, sort }),
+    getApprovedProducts({ categorySlug, material, minPrice, maxPrice, artisanSlug, occasionSlug, specialtySlug, audiencia, q, sort }),
     getAllMaterials(),
     getApprovedArtisans(),
     getActiveCategories(),
@@ -127,10 +129,36 @@ export default async function ColeccionPage({
         </div>
         </>
       ) : (
-        <div className="mt-16 text-center">
-          <p className="text-sm text-text-secondary">
-            No encontramos piezas con esos filtros.
-          </p>
+        <div className="mt-16 flex flex-col items-center gap-4 text-center">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-text-tertiary"
+            aria-hidden
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <div>
+            <p className="font-serif text-lg text-text">
+              No encontramos piezas con esos filtros
+            </p>
+            <p className="mt-1 text-sm text-text-secondary">
+              Prueba quitando algún filtro o explora toda la colección.
+            </p>
+          </div>
+          <Link
+            href="/coleccion"
+            className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
+          >
+            Ver toda la colección
+          </Link>
         </div>
       )}
     </section>

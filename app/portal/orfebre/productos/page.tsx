@@ -74,13 +74,18 @@ export default async function ProductosPage() {
       </div>
 
       {products.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border py-16 text-center">
-          <p className="text-text-secondary">
-            Aun no tienes piezas publicadas.
-          </p>
-          <p className="mt-1 text-sm text-text-tertiary">
-            Crea tu primera pieza para comenzar a vender.
-          </p>
+        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border py-16 text-center">
+          <div>
+            <p className="text-text-secondary">
+              Aún no tienes piezas publicadas.
+            </p>
+            <p className="mt-1 text-sm text-text-tertiary">
+              Crea tu primera pieza para comenzar a vender.
+            </p>
+          </div>
+          <Link href="/portal/orfebre/productos/nuevo">
+            <Button>Crear mi primera pieza</Button>
+          </Link>
         </div>
       ) : (
         <>

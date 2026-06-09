@@ -46,7 +46,7 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Qué medios de pago aceptan?",
         answer:
-          "Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de nuestra pasarela de pago segura. También puedes pagar con transferencia bancaria. Todos los pagos se procesan en pesos chilenos (CLP) con encriptación SSL para proteger tu información financiera.",
+          "Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) y los demás medios disponibles a través de Mercado Pago, nuestra pasarela de pago segura. Todos los pagos se procesan en pesos chilenos (CLP) con encriptación SSL para proteger tu información financiera.",
       },
       {
         question: "¿Cuánto demora el envío?",
@@ -97,7 +97,7 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Cómo puedo vender en Casa Orfebre?",
         answer:
-          "Completa el formulario de postulación en nuestra sección para orfebres. Nuestro equipo verifica que eres el creador o productor de tus piezas y que las fotos e información cumplen un estándar mínimo de la plataforma. No evaluamos estilos ni propuestas artísticas: confirmamos autenticidad y autoría. El proceso toma entre 5 y 10 días hábiles.",
+          "Completa el formulario de postulación en nuestra sección para orfebres. Nuestro equipo verifica que eres el creador o productor de tus piezas y que las fotos e información cumplen un estándar mínimo de la plataforma. No evaluamos estilos ni propuestas artísticas: confirmamos autenticidad y autoría. El proceso toma entre 3 y 7 días hábiles.",
       },
       {
         question: "¿Qué comisión cobra Casa Orfebre?",
@@ -127,7 +127,7 @@ const faqSections: FaqSection[] = [
       {
         question: "¿Qué es el certificado de autenticidad?",
         answer:
-          "Cada pieza vendida en Casa Orfebre incluye un certificado digital de autenticidad que acredita al orfebre creador, los materiales utilizados, la técnica de elaboración y un código único de verificación. Este certificado garantiza que estás adquiriendo una pieza original de joyería artesanal chilena.",
+          "Muchas piezas de Casa Orfebre incluyen un certificado digital de autenticidad que acredita al orfebre creador, los materiales utilizados, la técnica de elaboración y un código único de verificación. La ficha de cada producto indica si la pieza incluye certificado. Este documento garantiza que estás adquiriendo una pieza original de joyería artesanal chilena.",
       },
       {
         question: "¿Cómo verifico un certificado?",

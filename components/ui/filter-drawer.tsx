@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useCallback, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 interface FilterDrawerProps {
   open: boolean;
@@ -20,34 +21,30 @@ export function FilterDrawer({
   footer,
 }: FilterDrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose],
-  );
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
-    document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
     };
-  }, [open, handleEscape]);
+  }, [open]);
+
+  // Focus trap + Escape + restore focus when the drawer is open.
+  useFocusTrap(open, panelRef, onClose);
 
   if (typeof window === "undefined") return null;
 
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 z-50 transition-visibility duration-300",
-        open ? "visible" : "invisible",
+        "fixed inset-0 z-50",
+        open ? "visible" : "invisible pointer-events-none",
       )}
       aria-modal="true"
       role="dialog"
+      aria-labelledby={titleId}
     >
       {/* Overlay */}
       <div
@@ -61,8 +58,9 @@ export function FilterDrawer({
       {/* Panel — bottom sheet on mobile, right sheet on md+ */}
       <div
         ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          "absolute flex flex-col bg-surface shadow-2xl transition-transform duration-300 ease-out",
+          "absolute flex flex-col bg-surface shadow-2xl transition-transform duration-300 ease-out focus:outline-none",
           // Mobile: bottom sheet
           "inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl",
           // Desktop: right sheet
@@ -75,7 +73,7 @@ export function FilterDrawer({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="font-serif text-lg font-light">{title}</h2>
+          <h2 id={titleId} className="font-serif text-lg font-light">{title}</h2>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full text-text-tertiary transition-colors hover:bg-border/50 hover:text-text"

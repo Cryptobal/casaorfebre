@@ -8,8 +8,10 @@
   --color-accent-dark: #6e5a42;
   --color-background: #FAFAF8;
   --color-surface: #FFFFFF;
+  --color-surface-alt: #F5F3EF;
   --color-text-secondary: #6b6860;
-  --color-text-tertiary: #9e9a90;
+  /* Oscurecido desde #9e9a90 para cumplir contraste WCAG AA en texto pequeño. */
+  --color-text-tertiary: #7d786e;
   --color-border: #e8e5df;
   --color-error: #dc2626;
   --color-success: #16a34a;
@@ -30,6 +32,37 @@ body {
 ::selection {
   background-color: var(--color-accent);
   color: white;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cart badge pulse when the count changes */
+@keyframes badge-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[toast-in_0\.25s_ease-out\],
+  [class*="badge-pop"] {
+    animation: none !important;
+  }
 }
 
 /* Mobile tap responsiveness: remove 300ms delay and highlight flash on all interactive elements */

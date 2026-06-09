@@ -219,7 +219,7 @@ export default function ListasPage() {
                     </div>
                   ) : (
                     <p className="text-center text-sm text-text-tertiary">
-                      Esta lista esta vacia. Agrega piezas desde la coleccion.
+                      Esta lista está vacía. Agrega piezas desde la colección.
                     </p>
                   )}
                 </div>
@@ -228,10 +228,16 @@ export default function ListasPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-16 text-center">
+        <div className="mt-16 flex flex-col items-center gap-3 text-center">
           <p className="text-sm text-text-secondary">
-            Aun no tienes listas de deseos. Crea una para organizar tus piezas favoritas.
+            Aún no tienes listas de deseos. Crea una para organizar tus piezas favoritas.
           </p>
+          <Link
+            href="/coleccion"
+            className="text-sm font-medium text-accent underline-offset-4 hover:underline"
+          >
+            Explorar colección →
+          </Link>
         </div>
       )}
     </div>

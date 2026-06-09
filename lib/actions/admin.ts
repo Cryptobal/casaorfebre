@@ -423,6 +423,46 @@ export async function rejectPhoto(
     },
   });
 
+  // Notify the orfebre so they know why and can re-upload a new photo.
+  try {
+    const img = await prisma.productImage.findUnique({
+      where: { id: imageId },
+      select: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            artisan: {
+              select: {
+                displayName: true,
+                user: { select: { email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+    const email = img?.product?.artisan?.user?.email;
+    if (email) {
+      const { sendEmail } = await import("@/lib/emails/templates");
+      // Escape user-provided text before interpolating into email HTML.
+      const esc = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      await sendEmail(
+        email,
+        "Una foto de tu pieza necesita atención",
+        `<p>Hola ${esc(img!.product.artisan.displayName)},</p>
+         <p>Revisamos las fotos de tu pieza <strong>${esc(img!.product.name)}</strong> y una de ellas no fue aprobada${
+           reason ? `:</p><blockquote style="border-left:3px solid #8B7355;padding-left:12px;color:#555;">${esc(reason)}</blockquote>` : "."
+         }</p>
+         <p>Sube una nueva foto desde el editor del producto para poder publicarla.</p>
+         <p><a href="https://casaorfebre.cl/portal/orfebre/productos/${img!.product.id}" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;">Editar pieza</a></p>`
+      );
+    }
+  } catch (e) {
+    console.error("[rejectPhoto] notification failed:", e);
+  }
+
   revalidatePath("/portal/admin/fotos");
   revalidatePath("/portal/admin/productos");
   return { success: true };
@@ -998,6 +1038,26 @@ export async function resolveDispute(
       resolvedAt: new Date(),
     },
   });
+
+  // Unblock the payouts that createDispute set to DISPUTED. Without this the
+  // items stayed DISPUTED forever and the artisan never got paid even when the
+  // dispute was resolved in their favor.
+  if (status === "RESOLVED_NO_REFUND" || status === "CLOSED") {
+    // Resolved in the artisan's favor → back to HELD so the release cron can
+    // pick them up under the normal rules.
+    await prisma.orderItem.updateMany({
+      where: { orderId: dispute.orderId, payoutStatus: "DISPUTED" },
+      data: { payoutStatus: "HELD" },
+    });
+  } else if (status === "RESOLVED_REFUND") {
+    // Full refund → the artisan is not paid for these items.
+    await prisma.orderItem.updateMany({
+      where: { orderId: dispute.orderId, payoutStatus: "DISPUTED" },
+      data: { payoutStatus: "REFUNDED" },
+    });
+  }
+  // RESOLVED_PARTIAL_REFUND intentionally keeps items DISPUTED: the split
+  // between refund and payout requires manual admin adjustment per item.
 
   try {
     await sendDisputeResolvedEmail(dispute.user.email, {

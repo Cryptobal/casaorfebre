@@ -2,7 +2,6 @@ export const revalidate = 60;
 export const dynamic = "force-static";
 
 import Link from "next/link";
-import Image from "next/image";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 import { ProductCard } from "@/components/products/product-card";
@@ -16,6 +15,10 @@ import { BuyerTour } from "@/components/guided-tour/BuyerTour";
 import { auth } from "@/lib/auth";
 import { generateItemListJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
+
+export const metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const session = await auth();
@@ -144,42 +147,11 @@ export default async function HomePage() {
             <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {curatorPicks.map((product, i) => (
                 <FadeIn key={product.id} delay={i * 100}>
-                  <Link href={`/coleccion/${product.slug}`} className="group block">
-                    <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
-                      {product.images[0]?.url ? (
-                        <Image
-                          src={product.images[0].url}
-                          alt={product.images[0].altText ?? product.name}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-surface text-text-tertiary">
-                          {product.name}
-                        </div>
-                      )}
-                      <span className="absolute left-3 top-3 rounded-full bg-[#8B7355]/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
-                        Selección ✦
-                      </span>
-                    </div>
-                    <div className="mt-3 space-y-1">
-                      <p className="text-xs font-light text-text-tertiary">
-                        {product.artisan.displayName}
-                      </p>
-                      <h3 className="font-serif text-base font-medium text-text">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm font-medium text-text">
-                        ${product.price.toLocaleString("es-CL")}
-                      </p>
-                    </div>
-                    {product.curatorNote && (
-                      <p className="mt-2 text-xs italic text-text-secondary line-clamp-2">
-                        「{product.curatorNote}」
-                      </p>
-                    )}
-                  </Link>
+                  <ProductCard
+                    product={product}
+                    curatorNote={product.curatorNote}
+                    listName="Selección del Curador"
+                  />
                 </FadeIn>
               ))}
             </div>

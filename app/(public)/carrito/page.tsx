@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { Button } from "@/components/ui/button";
 import { formatCLP } from "@/lib/utils";
 import { CartPageItems } from "./cart-page-items";
+import { GuestCart } from "./guest-cart";
 import type { SerializedCartItem } from "@/components/cart/cart-item";
 
 export const metadata = {
@@ -34,12 +35,16 @@ export default async function CarritoPage() {
     cartItems = items.map((item: CartRow) => ({
       id: item.id,
       quantity: item.quantity,
+      size: item.size,
       product: {
         id: item.product.id,
         name: item.product.name,
         slug: item.product.slug,
         price: item.product.price,
-        stock: item.product.stock,
+        // Effective stock for this line (per-size variant when applicable)
+        stock: item.size
+          ? (item.product.variants.find((v) => v.size === item.size)?.stock ?? 0)
+          : item.product.stock,
         productionType: item.product.productionType,
         artisan: {
           displayName: item.product.artisan.displayName,
@@ -65,25 +70,14 @@ export default async function CarritoPage() {
         as="h1"
       />
 
-      {cartItems.length === 0 ? (
+      {isGuest ? (
+        <GuestCart />
+      ) : cartItems.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-4 text-center">
-          {isGuest ? (
-            <>
-              <p className="text-text-secondary">
-                Inicia sesión para ver tu carrito guardado.
-              </p>
-              <Link href="/login?callbackUrl=%2Fcarrito">
-                <Button variant="secondary">Iniciar Sesión</Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <p className="text-text-secondary">Tu carrito está vacío</p>
-              <Link href="/coleccion">
-                <Button variant="secondary">Explorar colección</Button>
-              </Link>
-            </>
-          )}
+          <p className="text-text-secondary">Tu carrito está vacío</p>
+          <Link href="/coleccion">
+            <Button variant="secondary">Explorar colección</Button>
+          </Link>
         </div>
       ) : (
         <div className="mt-10">

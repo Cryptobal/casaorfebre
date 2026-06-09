@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive" | "link";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,6 +14,8 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary: "bg-accent text-white hover:bg-accent-dark active:bg-accent-dark",
   secondary: "border border-border text-text hover:border-accent/50 hover:text-accent active:border-accent",
   ghost: "text-text-secondary hover:text-text hover:bg-background",
+  destructive: "bg-error text-white hover:bg-red-700 active:bg-red-700",
+  link: "text-accent underline-offset-4 hover:underline",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -24,13 +26,15 @@ const sizeStyles: Record<ButtonSize, string> = {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", loading = false, disabled, children, ...props }, ref) => {
+    // The "link" variant renders as inline text, so it skips the box padding.
+    const isLink = variant === "link";
     return (
       <button
         ref={ref}
         className={cn(
           "inline-flex touch-manipulation select-none items-center justify-center rounded-md font-sans font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50",
           variantStyles[variant],
-          sizeStyles[size],
+          !isLink && sizeStyles[size],
           className
         )}
         disabled={disabled || loading}

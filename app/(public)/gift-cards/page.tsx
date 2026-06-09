@@ -12,7 +12,7 @@ export default function GiftCardsPage() {
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Hero */}
       <div className="mb-10 text-center">
-        <h1 className="text-3xl font-light tracking-tight text-text sm:text-4xl">
+        <h1 className="font-serif text-3xl font-light tracking-tight text-text sm:text-4xl">
           Gift Cards Casa Orfebre
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-base text-text-secondary">

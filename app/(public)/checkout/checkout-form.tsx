@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback, useEffect } from "react";
+import { useState, useTransition, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +48,21 @@ export function CheckoutForm({
 }: CheckoutFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Mobile sticky pay bar: shown only while the main submit button is
+  // off-screen (the form is very long on small screens).
+  const submitAreaRef = useRef<HTMLDivElement>(null);
+  const [showStickyPay, setShowStickyPay] = useState(false);
+  useEffect(() => {
+    const el = submitAreaRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyPay(!entry.isIntersecting),
+      { rootMargin: "0px 0px -40px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Address fields from Google
   const [addressRegion, setAddressRegion] = useState(savedAddress?.shippingRegion ?? "");
@@ -274,6 +289,15 @@ export function CheckoutForm({
     });
   }
 
+  // Derived totals shown in the summary — mirror the server-side calculation
+  // (subtotal + shipping − referral discount − gift card), so the UI total
+  // matches what the buyer is actually charged.
+  const appliedDiscount = discountApplied ? discountAmount : 0;
+  const shippingForTotal = shippingCost ?? 0;
+  const preGiftCardTotal = Math.max(0, subtotal + shippingForTotal - appliedDiscount);
+  const appliedGiftCard = gcApplied ? Math.min(gcBalance, preGiftCardTotal) : 0;
+  const finalTotal = Math.max(0, preGiftCardTotal - appliedGiftCard);
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {/* Shipping */}
@@ -326,6 +350,7 @@ export function CheckoutForm({
                   id="shippingPhone"
                   type="tel"
                   inputMode="numeric"
+                  autoComplete="tel-national"
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   placeholder="912345678"
@@ -611,7 +636,9 @@ export function CheckoutForm({
           <div className="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-4 py-3">
             <div>
               <p className="text-sm font-medium text-green-800">
-                Gift Card aplicada: -{formatCLP(Math.min(gcBalance, 999999))}
+                {appliedGiftCard > 0
+                  ? `Gift Card aplicada: -${formatCLP(appliedGiftCard)}`
+                  : "Gift Card válida — el descuento se aplicará al total final"}
               </p>
               <p className="text-xs text-green-600">
                 Saldo disponible: {formatCLP(gcBalance)}
@@ -713,9 +740,21 @@ export function CheckoutForm({
                 Agrega {formatCLP(shippingThreshold - subtotal)} más para envío gratis
               </p>
             )}
+            {appliedDiscount > 0 && (
+              <div className="flex justify-between text-green-700">
+                <span>Descuento referido</span>
+                <span className="tabular-nums">-{formatCLP(appliedDiscount)}</span>
+              </div>
+            )}
+            {appliedGiftCard > 0 && (
+              <div className="flex justify-between text-green-700">
+                <span>Gift Card</span>
+                <span className="tabular-nums">-{formatCLP(appliedGiftCard)}</span>
+              </div>
+            )}
             <div className="flex justify-between border-t border-border pt-2 font-medium">
               <span className="text-text">Total</span>
-              <span className="text-text">{formatCLP(subtotal + (shippingCost ?? 0))}</span>
+              <span className="text-text tabular-nums">{formatCLP(finalTotal)}</span>
             </div>
           </div>
         </div>
@@ -744,27 +783,49 @@ export function CheckoutForm({
       )}
 
       {/* Pay button */}
-      <Button
-        type="submit"
-        size="lg"
-        loading={isPending}
-        className="w-full gap-2"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div ref={submitAreaRef}>
+        <Button
+          type="submit"
+          size="lg"
+          loading={isPending}
+          className="w-full gap-2"
         >
-          <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        Pagar con Mercado Pago
-      </Button>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Pagar con Mercado Pago
+        </Button>
+      </div>
+
+      {/* Mobile sticky pay bar — the form is long; keep the total and the pay
+          CTA reachable at all times. Hidden on lg+ (sidebar handles it). */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md transition-transform duration-300 lg:hidden ${
+          showStickyPay ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 leading-tight">
+            <p className="text-[11px] text-text-tertiary">Total</p>
+            <p className="text-sm font-semibold tabular-nums text-text">
+              {formatCLP(finalTotal)}
+            </p>
+          </div>
+          <Button type="submit" loading={isPending} className="flex-1">
+            Pagar con Mercado Pago
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }

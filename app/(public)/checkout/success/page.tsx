@@ -4,8 +4,8 @@ import { formatCLP } from "@/lib/utils";
 import { PurchaseTracker } from "./purchase-tracker";
 
 export const metadata = {
-  title: "Compra Exitosa — Casa Orfebre",
-  description: "Tu compra en Casa Orfebre fue procesada exitosamente.",
+  title: "Estado de tu pedido — Casa Orfebre",
+  description: "Revisa el estado de tu compra en Casa Orfebre.",
   alternates: { canonical: "/checkout/success" },
 };
 
@@ -23,6 +23,7 @@ export default async function CheckoutSuccessPage({
         select: {
           orderNumber: true,
           total: true,
+          status: true,
           shippingCity: true,
           shippingRegion: true,
           items: {
@@ -32,9 +33,16 @@ export default async function CheckoutSuccessPage({
       })
     : null;
 
+  // Only treat the order as confirmed once the webhook has moved it out of
+  // PENDING_PAYMENT. MercadoPago can redirect here while the payment is still
+  // processing (or with no reference at all), so we must not claim success.
+  // Explicit allowlist: REFUNDED/CANCELLED must never show the success state.
+  const PAID_STATUSES = ["PAID", "PARTIALLY_SHIPPED", "SHIPPED", "DELIVERED", "COMPLETED"];
+  const isPaid = !!order && PAID_STATUSES.includes(order.status);
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4 py-12">
-      {order && (
+      {isPaid && order && (
         <PurchaseTracker
           transactionId={externalReference!}
           items={order.items.map((item, i) => ({
@@ -50,28 +58,50 @@ export default async function CheckoutSuccessPage({
         />
       )}
       <div className="w-full max-w-lg text-center">
-        {/* Animated checkmark */}
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-          <svg
-            className="h-10 w-10 text-green-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4.5 12.75l6 6 9-13.5"
-            />
-          </svg>
+        {/* Status icon: confirmed (check) vs still verifying (clock) */}
+        <div
+          className={`mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full ${
+            isPaid ? "bg-green-100" : "bg-amber-100"
+          }`}
+        >
+          {isPaid ? (
+            <svg
+              className="h-10 w-10 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.5 12.75l6 6 9-13.5"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="h-10 w-10 text-amber-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          )}
         </div>
 
         <h1 className="mb-2 text-3xl font-serif text-text">
-          ¡Gracias por tu compra!
+          {isPaid ? "¡Gracias por tu compra!" : "Estamos confirmando tu pago"}
         </h1>
         <p className="text-text-secondary">
-          Tu pedido está siendo procesado. Recibirás un correo con la confirmación.
+          {isPaid
+            ? "Tu pedido está siendo procesado. Recibirás un correo con la confirmación."
+            : "Tu pago se está verificando con Mercado Pago. En cuanto se confirme, te enviaremos un correo y verás el pedido en tu cuenta. Esto puede tardar unos minutos."}
         </p>
 
         {order && (

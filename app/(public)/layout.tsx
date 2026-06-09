@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/footer";
 import { ShoppingChatbot } from "@/components/chat/shopping-chatbot";
 import { ReferralTracker } from "@/components/shared/referral-tracker";
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner";
+import { Toaster } from "@/components/ui/toast";
 
 // Layout 100% estático: no llama a auth() ni a Prisma.
 // Esto permite que las páginas hijas (home, /coleccion/[slug], categorías, etc.)
@@ -16,10 +17,17 @@ export default function PublicLayout({
 }) {
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+      >
+        Saltar al contenido
+      </a>
       <Navbar />
       <EmailVerificationBanner />
-      <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+      <main id="main-content" className="min-h-[calc(100dvh-4rem)]">{children}</main>
       <Footer />
+      <Toaster />
       <ShoppingChatbot />
       {/* ReferralTracker usa useSearchParams; Suspense permite prerender estático del layout. */}
       <Suspense fallback={null}>

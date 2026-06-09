@@ -7,7 +7,8 @@ export async function GET() {
     where: { status: "APPROVED" },
     select: { slug: true, updatedAt: true },
     orderBy: { createdAt: "desc" },
-    take: 5000,
+    // Sitemaps allow up to 50.000 URLs; keep headroom under that hard limit.
+    take: 45000,
   });
 
   const urls = products

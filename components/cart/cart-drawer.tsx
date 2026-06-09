@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { formatCLP } from "@/lib/utils";
 import { CartItem, type SerializedCartItem } from "./cart-item";
 import { Button } from "@/components/ui/button";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -37,6 +38,8 @@ export function CartDrawer({
   isGuest = false,
 }: CartDrawerProps) {
   const [mounted, setMounted] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     setMounted(true);
@@ -54,14 +57,8 @@ export function CartDrawer({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+  // Trap focus + handle Escape + restore focus on close.
+  useFocusTrap(isOpen, panelRef, onClose);
 
   const grouped = groupByArtisan(items);
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -80,14 +77,19 @@ export function CartDrawer({
 
       {/* Panel: pointer-events y stacking explícitos para que el cierre funcione siempre */}
       <div
+        ref={panelRef}
         style={{ zIndex: Z_PANEL }}
-        className={`pointer-events-auto fixed inset-y-0 right-0 flex w-full flex-col bg-surface shadow-xl transition-transform duration-300 ease-in-out sm:w-96 ${
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={`pointer-events-auto fixed inset-y-0 right-0 flex w-full flex-col bg-surface shadow-xl transition-transform duration-300 ease-in-out focus:outline-none sm:w-96 ${
           isOpen ? "translate-x-0" : "pointer-events-none translate-x-full"
         }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-4">
-          <h2 className="font-serif text-lg font-light text-text">
+          <h2 id={titleId} className="font-serif text-lg font-light text-text">
             Tu Carrito ({count})
           </h2>
           <button

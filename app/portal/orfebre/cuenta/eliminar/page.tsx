@@ -18,7 +18,9 @@ export default async function DeleteAccountPage() {
       _count: {
         select: {
           products: true,
-          orderItems: { where: { fulfillmentStatus: "PENDING" } },
+          orderItems: {
+            where: { fulfillmentStatus: { in: ["PENDING", "PREPARING", "SHIPPED"] } },
+          },
         },
       },
     },
@@ -59,8 +61,8 @@ export default async function DeleteAccountPage() {
       {hasPendingOrders && (
         <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-medium text-amber-800">
-            Tienes pedidos pendientes de despacho. Debes completar o cancelar
-            todos los pedidos antes de poder eliminar tu cuenta.
+            Tienes pedidos activos (por preparar, en preparación o enviados).
+            Debes completar todos los pedidos antes de poder eliminar tu cuenta.
           </p>
         </div>
       )}

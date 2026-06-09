@@ -81,7 +81,11 @@ export default async function PedidosPage({
 
       {orders.length === 0 ? (
         <div className="mt-8 rounded-lg border border-dashed border-border py-16 text-center">
-          <p className="text-text-secondary">No tienes pedidos aun</p>
+          <p className="text-text-secondary">No tienes pedidos aún</p>
+          <p className="mt-1 text-sm text-text-tertiary">
+            Cuando un comprador adquiera una de tus piezas, aparecerá aquí para
+            que la prepares y despaches.
+          </p>
         </div>
       ) : (
         <>

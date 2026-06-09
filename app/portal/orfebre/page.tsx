@@ -75,6 +75,8 @@ export default async function ArtisanDashboard({
         where: {
           artisanId: artisan.id,
           createdAt: { gte: startOfMonth },
+          // Only count real sales (exclude never-paid / cancelled orders)
+          order: { status: { notIn: ["PENDING_PAYMENT", "CANCELLED"] } },
         },
       }),
       prisma.product.findFirst({
@@ -270,7 +272,7 @@ export default async function ArtisanDashboard({
         Mi Taller
       </h1>
       <p className="mt-1 text-text-secondary">
-        Bienvenida, {artisan.displayName}
+        Te damos la bienvenida, {artisan.displayName}
       </p>
 
       {/* Plan indicator */}

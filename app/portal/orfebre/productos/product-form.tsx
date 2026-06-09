@@ -624,7 +624,22 @@ export function ProductForm({ product, artisanId, categories = [], materials = [
         </div>
       )}
 
-      <form ref={formRef} action={formAction} className="space-y-6">
+      <form
+        ref={formRef}
+        action={formAction}
+        onSubmit={(e) => {
+          // "Guardar borrador" on a published piece would unpublish it (status
+          // APPROVED → DRAFT) and remove it from the catalog. Confirm explicitly
+          // so the orfebre never takes a live piece offline by accident.
+          if (product?.status === "APPROVED") {
+            const ok = window.confirm(
+              "Esta pieza está publicada. Si la guardas como borrador dejará de estar visible y no se podrá comprar hasta que la vuelvas a enviar a revisión y sea aprobada.\n\n¿Quieres continuar?"
+            );
+            if (!ok) e.preventDefault();
+          }
+        }}
+        className="space-y-6"
+      >
         {/* AI-generated banner with regenerate option */}
         {aiGenerated && (
           <div className="flex items-center gap-4 rounded-md border border-accent/20 bg-accent/5 px-4 py-3">

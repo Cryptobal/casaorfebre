@@ -9,25 +9,44 @@ import { ProductCard } from "@/components/products/product-card";
 import { FadeIn } from "@/components/shared/fade-in";
 import { LoNuevoFilters } from "./lo-nuevo-filters";
 
-export const metadata = {
-  title: "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre",
-  description:
-    "Descubre las últimas piezas de joyería artesanal chilena. Nuevos diseños de orfebres verificados, actualizados cada semana.",
-  alternates: { canonical: "/lo-nuevo" },
-  openGraph: {
-    title: "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre",
-    description:
-      "Descubre las últimas piezas de joyería artesanal chilena. Nuevos diseños de orfebres verificados, actualizados cada semana.",
-    images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: "summary_large_image" as const,
-    title: "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre",
-    description:
-      "Descubre las últimas piezas de joyería artesanal chilena. Nuevos diseños de orfebres verificados.",
-    images: ["/casaorfebre-og-image.png"],
-  },
-};
+import type { Metadata } from "next";
+
+const LO_NUEVO_TITLE = "Lo Nuevo — Joyería Artesanal Reciente | Casa Orfebre";
+const LO_NUEVO_DESC =
+  "Descubre las últimas piezas de joyería artesanal chilena. Nuevos diseños de orfebres verificados, actualizados cada semana.";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  // Paginated/filtered variants are thin/duplicate — keep only the canonical
+  // base page indexable; let crawlers still follow links on the others.
+  const isFilteredOrPaged =
+    (typeof params.page === "string" && params.page !== "1") ||
+    !!params.category ||
+    !!params.material ||
+    !!params.price;
+
+  return {
+    title: LO_NUEVO_TITLE,
+    description: LO_NUEVO_DESC,
+    alternates: { canonical: "/lo-nuevo" },
+    ...(isFilteredOrPaged ? { robots: { index: false, follow: true } } : {}),
+    openGraph: {
+      title: LO_NUEVO_TITLE,
+      description: LO_NUEVO_DESC,
+      images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: LO_NUEVO_TITLE,
+      description: LO_NUEVO_DESC,
+      images: ["/casaorfebre-og-image.png"],
+    },
+  };
+}
 
 // Category slugs validated against DB below
 

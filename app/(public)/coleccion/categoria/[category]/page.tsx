@@ -15,7 +15,7 @@ const CATEGORY_SEO: Record<
   string,
   { h1: string; description: string; faqs: { q: string; a: string }[] }
 > = {
-  anillos: {
+  anillo: {
     h1: "Anillos Artesanales de Chile",
     description:
       "Descubre anillos únicos hechos a mano por orfebres chilenos. Plata 950, oro 18k, piedras naturales y diseños de autor con certificado de autenticidad.",
@@ -53,7 +53,7 @@ const CATEGORY_SEO: Record<
       },
     ],
   },
-  collares: {
+  collar: {
     h1: "Collares Artesanales Únicos",
     description:
       "Collares hechos a mano por orfebres independientes de Chile. Cadenas de plata, gargantillas con piedras y diseños contemporáneos.",
@@ -72,7 +72,7 @@ const CATEGORY_SEO: Record<
       },
     ],
   },
-  pulseras: {
+  pulsera: {
     h1: "Pulseras Artesanales de Plata",
     description:
       "Pulseras únicas de orfebres chilenos. Brazaletes, cadenas y esclavas en plata 950 y oro con diseños de autor.",
@@ -91,7 +91,7 @@ const CATEGORY_SEO: Record<
       },
     ],
   },
-  colgantes: {
+  colgante: {
     h1: "Colgantes y Dijes Artesanales",
     description:
       "Colgantes y dijes hechos a mano en Chile. Piezas únicas en plata, oro y piedras naturales con certificado de autenticidad.",

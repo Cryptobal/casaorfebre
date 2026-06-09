@@ -68,3 +68,10 @@ export const aiCollectionLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, "1 h"),
   prefix: "rl:ai-collection",
 });
+
+/** AI price suggestion — 20 per hour per artisan */
+export const aiPriceLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 h"),
+  prefix: "rl:ai-price",
+});

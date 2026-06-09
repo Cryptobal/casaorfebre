@@ -42,7 +42,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl"
   ),
-  alternates: { canonical: "/" },
+  // NOTE: no canonical here on purpose — a canonical in the root layout is
+  // inherited by every child page that doesn't set its own, making them all
+  // claim "/" as canonical. Each page declares its own canonical (home below).
   formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     title: "Casa Orfebre — Joyería auténtica hecha por orfebres",

@@ -41,6 +41,17 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Invalid portal context" }, { status: 400 });
     }
 
+    // Authorize the requested portal context against the user's role so a BUYER
+    // can't obtain the admin/orfebre assistant context (which leaks operational
+    // and financial guidance). Admins may use any context (role-switcher).
+    const role = session.user.role;
+    if (portalContext === "admin" && role !== "ADMIN") {
+      return Response.json({ error: "No autorizado" }, { status: 403 });
+    }
+    if (portalContext === "orfebre" && role !== "ARTISAN" && role !== "ADMIN") {
+      return Response.json({ error: "No autorizado" }, { status: 403 });
+    }
+
     for (const msg of messages) {
       if (!msg.role || !msg.content || !["user", "assistant"].includes(msg.role)) {
         return Response.json({ error: "Invalid message format" }, { status: 400 });

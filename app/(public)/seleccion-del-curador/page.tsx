@@ -1,13 +1,9 @@
 export const revalidate = 120;
 export const dynamic = "force-static";
 
-import Link from "next/link";
-import Image from "next/image";
 import { getCuratorPicks } from "@/lib/queries/products";
-import { ImagePlaceholder } from "@/components/shared/image-placeholder";
-import { PriceDisplay } from "@/components/shared/price-display";
-import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
+import { ProductCard } from "@/components/products/product-card";
 
 export const metadata = {
   title: "Selección del Curador — Lo Mejor de Casa Orfebre",
@@ -47,42 +43,11 @@ export default async function SeleccionDelCuradorPage() {
         <div className="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-2">
           {picks.map((product, i) => (
             <FadeIn key={product.id} delay={i * 100}>
-              <Link href={`/coleccion/${product.slug}`} className="group block">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-background">
-                  {product.images[0]?.url ? (
-                    <Image
-                      src={product.images[0].url}
-                      alt={product.images[0].altText ?? product.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 50vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <ImagePlaceholder name={product.name} className="h-full w-full" />
-                  )}
-
-                  {/* Curator badge */}
-                  <span className="absolute left-3 top-3 rounded-full bg-[#8B7355]/80 px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
-                    Selección del Curador ✦
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-1.5">
-                  <p className="text-xs font-light text-text-tertiary">
-                    {product.artisan.displayName}
-                  </p>
-                  <h2 className="font-serif text-lg font-medium text-text">
-                    {product.name}
-                  </h2>
-                  <PriceDisplay price={product.price} compareAtPrice={product.compareAtPrice} />
-                </div>
-
-                {product.curatorNote && (
-                  <blockquote className="mt-3 border-l-2 border-accent/30 pl-3 text-sm italic text-text-secondary">
-                    「{product.curatorNote}」
-                  </blockquote>
-                )}
-              </Link>
+              <ProductCard
+                product={product}
+                curatorNote={product.curatorNote}
+                listName="Selección del Curador"
+              />
             </FadeIn>
           ))}
         </div>

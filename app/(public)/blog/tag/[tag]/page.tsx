@@ -52,13 +52,19 @@ export async function generateMetadata({
   params: Promise<{ tag: string }>;
 }): Promise<Metadata> {
   const { tag: tagSlug } = await params;
-  const tags = await getAllTags();
+  const [tags, posts] = await Promise.all([
+    getAllTags(),
+    getPostsByTagSlug(tagSlug),
+  ]);
   const label = findTagLabel(tagSlug, tags);
 
   return {
     title: `${label} — Blog`,
     description: `Artículos sobre ${label} en el blog de Casa Orfebre. Joyería artesanal chilena.`,
     alternates: { canonical: `https://casaorfebre.cl/blog/tag/${tagSlug}` },
+    // Thin tag pages (<3 posts) shouldn't be indexed (duplicate/low value),
+    // but keep links followable so the posts still get crawled.
+    ...(posts.length < 3 ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title: `Artículos sobre ${label} | Blog Casa Orfebre`,
       description: `Artículos sobre ${label} en el blog de Casa Orfebre.`,

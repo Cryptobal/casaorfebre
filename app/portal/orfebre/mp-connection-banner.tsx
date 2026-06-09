@@ -17,7 +17,7 @@ export function MpConnectionBanner({ isConnected, tokenExpiresAt }: MpConnection
       <div className="mb-4 rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
         <div className="flex items-center justify-between gap-4">
           <p>
-            Tu conexion con Mercado Pago expira pronto. Reconectate para seguir recibiendo pagos directamente.
+            Tu conexión con Mercado Pago expira pronto. Reconéctate para seguir recibiendo pagos directamente.
           </p>
           <button
             type="button"
@@ -58,7 +58,7 @@ export function MpConnectionBanner({ isConnected, tokenExpiresAt }: MpConnection
       <div className="flex items-center justify-between gap-4">
         <p>
           Conecta tu cuenta de Mercado Pago para recibir tus pagos directamente.
-          Mientras no la conectes, los pagos se procesan a traves del marketplace.
+          Mientras no la conectes, los pagos se procesan a través del marketplace.
         </p>
         <button
           type="button"

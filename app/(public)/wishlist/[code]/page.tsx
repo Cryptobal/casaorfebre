@@ -44,6 +44,8 @@ export default async function PublicWishlistPage({ params }: Props) {
     include: {
       user: { select: { name: true, image: true } },
       items: {
+        // Only show pieces still available to the public.
+        where: { product: { status: "APPROVED" } },
         include: {
           product: {
             include: {

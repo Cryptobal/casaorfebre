@@ -16,6 +16,14 @@ export function FadeIn({ children, delay = 0, className }: FadeInProps) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Respect reduced-motion: show content immediately, no fade/translate.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(true);
+      return;
+    }
     // threshold 0: con elementos muy altos (p. ej. cuerpo de un blog largo), un umbral
     // del 10 % puede nunca alcanzarse en móvil (viewport / altura del bloque < 0.1),
     // dejando el contenido invisible de forma permanente.

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 const emptySubscribe = () => () => {};
 
@@ -74,6 +75,7 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
   const [coleccionOpen, setColeccionOpen] = useState(false);
   const [regalarOpen, setRegalarOpen] = useState(false);
   const isClient = useIsClient();
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -83,6 +85,9 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
       document.body.style.overflow = prev;
     };
   }, [open]);
+
+  // Trap focus + Escape to close + restore focus to the toggle on close.
+  useFocusTrap(open, panelRef, () => setOpen(false));
 
   const portalLink =
     user?.role === "ADMIN"
@@ -107,7 +112,14 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
           className="fixed inset-0 top-16 z-[60] bg-[color:var(--color-background)] backdrop-blur-xl backdrop-saturate-150"
           aria-hidden="true"
         />
-        <div className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto">
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menú de navegación"
+          tabIndex={-1}
+          className="fixed inset-0 top-16 z-[61] flex flex-col overflow-y-auto focus:outline-none"
+        >
           <nav className="flex flex-col items-center gap-8 px-6 pt-10 pb-12">
             {/* Colección Menu */}
             <div className="flex w-full flex-col items-center">
@@ -321,7 +333,7 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
-        className="flex h-8 w-8 items-center justify-center text-text-secondary"
+        className="-mr-2 flex h-11 w-11 items-center justify-center text-text-secondary"
       >
         {open ? (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

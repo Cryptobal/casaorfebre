@@ -2,7 +2,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
 
 export default async function FinanzasPage() {
   const session = await auth();
@@ -15,7 +17,12 @@ export default async function FinanzasPage() {
   if (!artisan) redirect("/");
 
   const orderItems = await prisma.orderItem.findMany({
-    where: { artisanId: artisan.id },
+    // Only real sales: exclude never-paid (PENDING_PAYMENT) and cancelled orders
+    // so totals/payout figures aren't inflated by abandoned checkouts.
+    where: {
+      artisanId: artisan.id,
+      order: { status: { notIn: ["PENDING_PAYMENT", "CANCELLED"] } },
+    },
     orderBy: { createdAt: "desc" },
     include: {
       product: { select: { name: true } },
@@ -39,6 +46,17 @@ export default async function FinanzasPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="font-serif text-2xl font-semibold text-text">Finanzas</h1>
+
+      {!artisan.bankAccountNumber && (
+        <Alert variant="warning" className="mt-4">
+          Aún no registraste tus datos bancarios. Sin ellos no podemos
+          transferirte tus pagos liberados.{" "}
+          <Link href="/portal/orfebre/perfil" className="font-medium underline">
+            Completar datos bancarios
+          </Link>
+          .
+        </Alert>
+      )}
 
       {/* Summary cards — row 1 */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -94,7 +112,14 @@ export default async function FinanzasPage() {
 
       {orderItems.length === 0 ? (
         <div className="mt-8 rounded-lg border border-dashed border-border py-16 text-center">
-          <p className="text-text-secondary">Aun no tienes ventas registradas</p>
+          <p className="text-text-secondary">Aún no tienes ventas registradas</p>
+          <p className="mt-1 text-sm text-text-tertiary">
+            Cuando vendas tu primera pieza verás aquí el detalle de cada pago.{" "}
+            <Link href="/portal/orfebre/productos/nuevo" className="text-accent underline-offset-4 hover:underline">
+              Publica una pieza
+            </Link>{" "}
+            para comenzar.
+          </p>
         </div>
       ) : (
         <>

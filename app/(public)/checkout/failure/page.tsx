@@ -247,10 +247,10 @@ export default async function CheckoutFailurePage({
         <p className="mt-6 text-xs text-text-tertiary">
           Si necesitas ayuda, escríbenos a{" "}
           <a
-            href="mailto:soporte@casaorfebre.cl"
+            href="mailto:contacto@casaorfebre.cl"
             className="text-accent hover:underline"
           >
-            soporte@casaorfebre.cl
+            contacto@casaorfebre.cl
           </a>
         </p>
       </div>

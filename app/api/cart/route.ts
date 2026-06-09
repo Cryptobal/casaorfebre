@@ -23,12 +23,17 @@ export async function GET() {
   const serialized: SerializedCartItem[] = items.map((item: CartRow) => ({
     id: item.id,
     quantity: item.quantity,
+    size: item.size,
     product: {
       id: item.product.id,
       name: item.product.name,
       slug: item.product.slug,
       price: item.product.price,
-      stock: item.product.stock,
+      // Effective stock for this line: per-size variant stock when a talla
+      // was chosen (drives the +/- limits in the cart UI).
+      stock: item.size
+        ? (item.product.variants.find((v) => v.size === item.size)?.stock ?? 0)
+        : item.product.stock,
       productionType: item.product.productionType,
       artisan: {
         displayName: item.product.artisan.displayName,

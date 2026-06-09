@@ -103,6 +103,7 @@ const ARTISAN_LINKS = [
   { href: "/portal/orfebre/preguntas", label: "Preguntas", ai: true },
   { href: "/portal/orfebre/mensajes", label: "Mensajes" },
   { href: "/portal/orfebre/finanzas", label: "Finanzas" },
+  { href: "/portal/orfebre/plan", label: "Mi Plan" },
   { href: "/portal/orfebre/estadisticas", label: "Estadísticas", ai: true },
   { href: "/portal/orfebre/herramientas/calculadora", label: "Calculadora", ai: true },
   { href: "/portal/orfebre/ia", label: "Asistente IA", ai: true },

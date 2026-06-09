@@ -300,9 +300,9 @@ export default async function OrderDetailPage({
                   </span>
                 </p>
               )}
-              {item.payoutStatus === "RELEASED" && (
+              {(item.payoutStatus === "RELEASED" || item.payoutStatus === "PENDING") && (
                 <p className="text-sm text-green-700 font-medium">
-                  Pago liberado{item.payoutAt ? ` el ${new Date(item.payoutAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}` : ""}
+                  Pago liberado{item.payoutAt ? ` el ${new Date(item.payoutAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}` : ""} — en proceso de transferencia
                 </p>
               )}
               {item.payoutStatus === "DISPUTED" && (
@@ -312,6 +312,38 @@ export default async function OrderDetailPage({
               )}
             </div>
 
+            {item.trackingNumber && (
+              <TrackingLink
+                carrier={item.trackingCarrier}
+                trackingNumber={item.trackingNumber}
+              />
+            )}
+          </div>
+        )}
+
+        {item.fulfillmentStatus === "AUTO_CONFIRMED" && (
+          <div className="mt-4 space-y-3">
+            <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
+              Cierre automático
+            </span>
+            <p className="text-sm text-text-secondary">
+              El comprador no confirmó la recepción dentro del plazo, por lo que
+              el pedido se cerró automáticamente
+              {item.autoReceivedAt
+                ? ` el ${new Date(item.autoReceivedAt).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}`
+                : ""}
+              . Nuestro equipo verificará la entrega antes de habilitar tu pago.
+            </p>
+            <div className="rounded-md border border-border bg-background p-3 space-y-1">
+              <p className="text-sm">
+                <span className="text-text-secondary">Tu pago neto:</span>{" "}
+                <span className="font-semibold text-text">{formatCLP(item.artisanPayout)}</span>
+              </p>
+              <p className="text-sm text-text-secondary">
+                Estado del pago: <span className="font-medium text-amber-700">en revisión manual</span>.
+                Si tienes dudas, escríbenos a contacto@casaorfebre.cl.
+              </p>
+            </div>
             {item.trackingNumber && (
               <TrackingLink
                 carrier={item.trackingCarrier}

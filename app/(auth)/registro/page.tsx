@@ -64,6 +64,7 @@ export default function RegisterPage() {
             name="name"
             type="text"
             required
+            autoComplete="name"
             className="mt-1"
             placeholder="Tu nombre"
             value={name}
@@ -77,6 +78,7 @@ export default function RegisterPage() {
             name="email"
             type="email"
             required
+            autoComplete="email"
             className="mt-1"
             placeholder="tu@email.com"
             value={email}
@@ -90,6 +92,7 @@ export default function RegisterPage() {
             name="password"
             required
             minLength={8}
+            autoComplete="new-password"
             className="mt-1"
             placeholder="Mínimo 8 caracteres"
             value={password}
@@ -102,6 +105,7 @@ export default function RegisterPage() {
             id="confirmPassword"
             name="confirmPassword"
             required
+            autoComplete="new-password"
             className="mt-1"
             placeholder="Repite tu contraseña"
             value={confirmPassword}

@@ -43,8 +43,15 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex-shrink-0">
-          <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={210} height={48} priority />
+        <Link href="/" className="flex-shrink-0" aria-label="Casa Orfebre — Inicio">
+          <Image
+            src="/casaorfebre-logo-compact.svg"
+            alt="Casa Orfebre"
+            width={210}
+            height={48}
+            priority
+            className="h-8 w-auto sm:h-9"
+          />
         </Link>
 
         <ul className="hidden items-center gap-6 lg:flex">

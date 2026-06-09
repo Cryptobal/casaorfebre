@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn, formatCLP } from "@/lib/utils";
 import { trackSearch } from "@/lib/analytics-events";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 /* ------------------------------------------------------------------ */
 /*  Visual Search Types                                                */
@@ -117,7 +118,11 @@ export function SearchModal() {
   const [visualPreview, setVisualPreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Trap focus within the search dialog + Escape + restore focus on close.
+  useFocusTrap(open, panelRef, () => setOpen(false));
 
   // Portal needs document.body — only available after mount.
   useEffect(() => {
@@ -245,7 +250,7 @@ export function SearchModal() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex items-center gap-2 text-text-secondary hover:text-text transition-colors"
+      className="flex h-11 min-w-11 items-center justify-center gap-2 text-text-secondary transition-colors hover:text-text md:min-w-0 md:justify-start"
       aria-label="Buscar"
     >
       <SearchIcon />
@@ -273,8 +278,10 @@ export function SearchModal() {
 
           {/* Panel */}
           <div
+            ref={panelRef}
+            tabIndex={-1}
             className={cn(
-              "relative w-full max-w-lg bg-surface rounded-xl shadow-2xl border border-border",
+              "relative w-full max-w-lg bg-surface rounded-xl shadow-2xl border border-border focus:outline-none",
               "flex flex-col overflow-hidden",
               // Mobile: fullscreen
               "max-md:fixed max-md:inset-0 max-md:rounded-none max-md:border-0 max-md:max-w-none max-md:pt-0",
@@ -289,10 +296,8 @@ export function SearchModal() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Busca productos, orfebres, materiales..."
+                aria-label="Buscar productos, orfebres y materiales"
                 className="flex-1 bg-transparent text-text placeholder:text-text-tertiary outline-none text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setOpen(false);
-                }}
               />
               {loading && <Spinner />}
               {/* Visual search (camera) button */}

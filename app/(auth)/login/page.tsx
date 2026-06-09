@@ -70,6 +70,7 @@ function LoginPageInner() {
             name="email"
             type="email"
             required
+            autoComplete="email"
             className="mt-1"
             placeholder="tu@email.com"
             value={email}
@@ -90,6 +91,7 @@ function LoginPageInner() {
             id="password"
             name="password"
             required
+            autoComplete="current-password"
             className="mt-1"
             placeholder="••••••••"
             value={password}

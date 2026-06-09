@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { validateGuestAddToCart } from "@/lib/actions/guest-cart";
 import { addGuestCartLine, readGuestCartLines } from "@/lib/guest-cart-storage";
 import { formatCLP } from "@/lib/utils";
 import { trackAddToCart, type GA4Item } from "@/lib/analytics-events";
+import { showToast } from "@/components/ui/toast";
 
 export interface RingSizeOption {
   size: string;
@@ -29,7 +30,6 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
   const { status } = useSession();
   const [isPending, startTransition] = useTransition();
   const [quantity, setQuantity] = useState(1);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const availableSizes = useMemo(
@@ -50,6 +50,32 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
   const sessionLoading = status === "loading";
   const isGuestMode = status === "unauthenticated";
 
+  // Sticky mobile buy bar: only show once the inline CTA scrolls out of view.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inlineCtaRef = useRef<HTMLDivElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    const el = inlineCtaRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { rootMargin: "0px 0px -40px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  function handleStickyAdd() {
+    // If a size is required but not chosen, surface the inline selector instead.
+    if (hasSizeChoice && !selectedSize) {
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setErrorMsg("Selecciona una talla");
+      return;
+    }
+    handleAddToCart();
+  }
+
   function decrement() {
     setQuantity((q) => Math.max(1, q - 1));
   }
@@ -65,7 +91,6 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
   }
 
   function handleAddToCart() {
-    setSuccessMsg(null);
     setErrorMsg(null);
 
     if (hasSizeChoice && !selectedSize) {
@@ -82,10 +107,13 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
           setErrorMsg(result.error);
         } else {
           if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
-          setSuccessMsg("¡Agregado al carrito!");
+          showToast({
+            message: "Añadido al carrito",
+            actionLabel: "Ver carrito",
+            actionHref: "/carrito",
+          });
           window.dispatchEvent(new Event("casaorfebre:cart-updated"));
           router.refresh();
-          setTimeout(() => setSuccessMsg(null), 2000);
         }
         return;
       }
@@ -106,8 +134,11 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
       }
       addGuestCartLine(productId, quantity, sizeToSend);
       if (ga4Item) trackAddToCart({ ...ga4Item, quantity });
-      setSuccessMsg("¡Agregado al carrito!");
-      setTimeout(() => setSuccessMsg(null), 2000);
+      showToast({
+        message: "Añadido al carrito",
+        actionLabel: "Ver carrito",
+        actionHref: "/carrito",
+      });
     });
   }
 
@@ -116,7 +147,7 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
     (hasSizeChoice ? effectiveStock > 1 : stock > 1);
 
   return (
-    <div className="space-y-3">
+    <div ref={rootRef} className="space-y-3">
       {/* Size selector — only when product has ring sizes */}
       {hasSizeChoice && availableSizes.length > 1 && (
         <div className="space-y-2">
@@ -178,22 +209,17 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
       )}
 
       {/* Add to cart button */}
-      <Button
-        size="lg"
-        className="w-full"
-        loading={isPending || sessionLoading}
-        disabled={sessionLoading || (hasSizeChoice && !selectedSize)}
-        onClick={handleAddToCart}
-      >
-        A&ntilde;adir al Carrito &mdash; {formatCLP(price * quantity)}
-      </Button>
-
-      {/* Success message */}
-      {successMsg && (
-        <p className="text-center text-sm font-medium text-green-600 transition-opacity">
-          {successMsg}
-        </p>
-      )}
+      <div ref={inlineCtaRef}>
+        <Button
+          size="lg"
+          className="w-full"
+          loading={isPending || sessionLoading}
+          disabled={sessionLoading || (hasSizeChoice && !selectedSize)}
+          onClick={handleAddToCart}
+        >
+          A&ntilde;adir al Carrito &mdash; {formatCLP(price * quantity)}
+        </Button>
+      </div>
 
       {/* Error message */}
       {errorMsg && (
@@ -201,6 +227,28 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
           {errorMsg}
         </p>
       )}
+
+      {/* Sticky mobile buy bar — appears when the main CTA scrolls off-screen */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pl-4 pr-20 pt-3 backdrop-blur-md transition-transform duration-300 lg:hidden ${
+          showStickyBar ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 text-sm font-medium tabular-nums text-text">
+            {formatCLP(price * quantity)}
+          </span>
+          <Button
+            size="md"
+            className="flex-1"
+            loading={isPending || sessionLoading}
+            disabled={sessionLoading}
+            onClick={handleStickyAdd}
+          >
+            A&ntilde;adir al Carrito
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

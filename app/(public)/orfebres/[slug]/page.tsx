@@ -4,7 +4,7 @@ export const dynamic = "force-static";
 import { notFound } from "next/navigation";
 import { getArtisanBySlug } from "@/lib/queries/artisans";
 
-import { buildBreadcrumbJsonLd, generateJewelerPersonJsonLd } from "@/lib/seo";
+import { buildBreadcrumbJsonLd, generateJewelerPersonJsonLd, generateItemListJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
@@ -81,60 +81,15 @@ export default async function ArtisanProfilePage({
     { name: artisan.displayName, url: `/orfebres/${slug}` },
   ]);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: artisan.displayName,
-    description: artisan.bio,
-    image: artisan.profileImage || `${baseUrl}/casaorfebre-og-image.png`,
-    url: `${baseUrl}/orfebres/${slug}`,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: artisan.location,
-      ...(artisan.region ? { addressRegion: artisan.region } : {}),
-      addressCountry: "CL",
-    },
-    parentOrganization: {
-      "@type": "Organization",
-      name: "Casa Orfebre",
-      url: "https://casaorfebre.cl",
-    },
-    ...(artisan.rating > 0 && artisan._count.reviews > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: artisan.rating,
-            reviewCount: artisan._count.reviews,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
-    ...(artisan.products.length > 0
-      ? {
-          makesOffer: artisan.products.slice(0, 10).map((p: any) => ({
-            "@type": "Offer",
-            price: p.price,
-            priceCurrency: "CLP",
-            availability: "https://schema.org/InStock",
-            url: `${baseUrl}/coleccion/${p.slug}`,
-            itemOffered: {
-              "@type": "Product",
-              name: p.name,
-              image:
-                p.images?.[0]?.url ||
-                `${baseUrl}/casaorfebre-og-image.png`,
-              url: `${baseUrl}/coleccion/${p.slug}`,
-            },
-          })),
-        }
-      : {}),
-  };
-
+  // Use a single Person entity for the jeweler (below) plus an ItemList of
+  // their pieces. We intentionally do NOT emit LocalBusiness here: it conflicts
+  // with Person (same entity, duplicate aggregateRating) and an individual
+  // artisan in a marketplace isn't a standalone local business.
   return (
     <>
-      <JsonLd data={jsonLd} />
+      {artisan.products.length > 0 && (
+        <JsonLd data={generateItemListJsonLd(artisan.products)} />
+      )}
       <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={generateJewelerPersonJsonLd({
         name: artisan.displayName,

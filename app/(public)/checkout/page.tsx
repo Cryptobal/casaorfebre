@@ -173,28 +173,19 @@ export default async function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-text-secondary">Envío</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    Gratis
+                  <span className="text-xs text-text-tertiary">
+                    Se calcula según tu región
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-border pt-3 text-base font-semibold text-text">
-                  <span>Total</span>
+                  <span>Total estimado</span>
                   <span className="tabular-nums">
                     {formatCLP(cartTotal)}
                   </span>
                 </div>
+                <p className="text-xs text-text-tertiary">
+                  El envío y los descuentos se calculan al completar tus datos.
+                </p>
               </div>
             </div>
 
@@ -248,7 +239,7 @@ export default async function CheckoutPage() {
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
-                Envío gratis a todo Chile
+                Envío a todo Chile
               </div>
             </div>
           </div>

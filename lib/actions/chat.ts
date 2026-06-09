@@ -454,6 +454,25 @@ export async function getMessages(conversationId: string) {
 export async function markAsRead(conversationId: string) {
   const user = await requireUser();
 
+  // Only participants (or admins) may mark a conversation as read — same
+  // membership check as getMessages.
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: {
+      artisan: { select: { userId: true } },
+      admin: { select: { id: true } },
+    },
+  });
+  if (!conversation) return { error: "Conversación no encontrada" };
+
+  const isParticipant =
+    conversation.buyerId === user.id ||
+    conversation.artisan?.userId === user.id ||
+    conversation.admin?.id === user.id;
+  if (!isParticipant && !isAdmin(user.role)) {
+    return { error: "No tienes acceso" };
+  }
+
   await prisma.message.updateMany({
     where: {
       conversationId,
@@ -622,6 +641,9 @@ export async function getUnreadMessageCount() {
 // ---------------------------------------------------------------------------
 
 export async function getBypassConversationCount() {
+  // Operational metric — admins only.
+  const user = await requireUser();
+  if (!isAdmin(user.role)) return 0;
   return prisma.conversation.count({
     where: { hasBypassAttempt: true, status: "ACTIVE" },
   });

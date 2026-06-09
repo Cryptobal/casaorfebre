@@ -24,6 +24,15 @@ export async function toggleFavorite(productId: string) {
       data: { favoriteCount: 0 },
     });
   } else {
+    // Only public pieces can be favorited (a known ID of a DRAFT/REJECTED
+    // product must not inflate its favoriteCount).
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { status: true },
+    });
+    if (!product || product.status !== "APPROVED") {
+      return { error: "Producto no disponible" };
+    }
     await prisma.favorite.create({
       data: { userId: session.user.id, productId },
     });

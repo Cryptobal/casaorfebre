@@ -160,10 +160,13 @@ export async function releasePayoutManually(orderItemId: string) {
   if (!item) return { error: "Item no encontrado" };
   if (item.payoutStatus !== "HELD") return { error: "El pago ya no está retenido" };
 
+  // Use PENDING (same state the release-payouts cron sets): the payroll
+  // generator only picks up PENDING items, so RELEASED payouts were invisible
+  // to the transfer flow and never got paid.
   await prisma.orderItem.update({
     where: { id: orderItemId },
     data: {
-      payoutStatus: "RELEASED",
+      payoutStatus: "PENDING",
       payoutAt: new Date(),
     },
   });

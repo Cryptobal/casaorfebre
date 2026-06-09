@@ -130,10 +130,18 @@ export async function updateCartQuantity(
 
   const item = await prisma.cartItem.findFirst({
     where: { id: cartItemId, userId: session.user.id },
-    include: { product: { select: { stock: true } } },
+    include: {
+      product: {
+        select: { stock: true, variants: { select: { size: true, stock: true } } },
+      },
+    },
   });
   if (!item) return { error: "Item no encontrado" };
-  if (quantity < 1 || quantity > item.product.stock)
+  // Honor per-size variant stock when the line has a talla.
+  const maxStock = item.size
+    ? (item.product.variants.find((v) => v.size === item.size)?.stock ?? 0)
+    : item.product.stock;
+  if (quantity < 1 || quantity > maxStock)
     return { error: "Cantidad no válida" };
 
   await prisma.cartItem.update({
