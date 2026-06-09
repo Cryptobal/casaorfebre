@@ -30,34 +30,67 @@ export async function POST(req: NextRequest) {
     };
     const maxPrice = budgetMap[budget];
 
-    const results = await semanticSearch(
-      searchQuery,
-      maxPrice ? { maxPrice } : undefined,
-      12,
-    );
+    const productSelect = {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      description: true,
+      materials: { select: { name: true } },
+      artisan: { select: { displayName: true } },
+      images: {
+        where: { status: "APPROVED" as const },
+        orderBy: { position: "asc" as const },
+        take: 1,
+        select: { url: true },
+      },
+    };
 
-    if (results.length === 0) {
+    // Semantic search is best-effort: it requires OPENAI_API_KEY + pgvector
+    // embeddings. If it fails (missing key, quota, timeout), fall back to a
+    // plain catalog query instead of failing the whole quiz with a 500.
+    let products: Awaited<ReturnType<typeof prisma.product.findMany<{ select: typeof productSelect }>>> = [];
+    try {
+      const results = await semanticSearch(
+        searchQuery,
+        maxPrice ? { maxPrice } : undefined,
+        12,
+      );
+      if (results.length > 0) {
+        const productIds = results.map((r) => r.id);
+        const rows = await prisma.product.findMany({
+          where: { id: { in: productIds }, status: "APPROVED" },
+          select: productSelect,
+        });
+        // Preserve semantic ordering
+        const byId = new Map(rows.map((r) => [r.id, r]));
+        products = productIds
+          .map((id) => byId.get(id))
+          .filter((p): p is NonNullable<typeof p> => Boolean(p));
+      }
+    } catch (e) {
+      console.error("[gift-guide] semantic search failed, using fallback:", e);
+    }
+
+    if (products.length === 0) {
+      // Fallback: popular approved pieces within budget.
+      products = await prisma.product.findMany({
+        where: {
+          status: "APPROVED",
+          ...(maxPrice ? { price: { lte: maxPrice } } : {}),
+        },
+        orderBy: [{ favoriteCount: "desc" }, { publishedAt: "desc" }],
+        take: 12,
+        select: productSelect,
+      });
+    }
+
+    if (products.length === 0) {
       return Response.json({
         products: [],
         giftNote: "No encontramos productos que coincidan exactamente con tu búsqueda. Te invitamos a explorar nuestra colección completa.",
       });
     }
-
-    // Fetch product details
-    const productIds = results.map((r) => r.id);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        price: true,
-        description: true,
-        materials: { select: { name: true } },
-        artisan: { select: { displayName: true } },
-        images: { orderBy: { position: "asc" }, take: 1, select: { url: true } },
-      },
-    });
 
     // Generate personalized reasons and gift note with Claude Haiku
     const productList = products
@@ -67,14 +100,21 @@ export async function POST(req: NextRequest) {
       )
       .join("\n");
 
-    const response = await getAnthropic().messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: `Eres una asistente de regalos de Casa Orfebre, marketplace de joyería artesanal chilena. Español chileno, cálida y breve.`,
-      messages: [
-        {
-          role: "user",
-          content: `El comprador busca un regalo con estas preferencias:
+    // The AI copy is also best-effort: if Anthropic is unavailable (missing
+    // key, quota, timeout), still return the products with default copy.
+    let parsed: { reasons?: Record<string, string>; giftNote?: string } = {
+      reasons: {},
+      giftNote: "Un regalo hecho a mano, con amor y dedicación.",
+    };
+    try {
+      const response = await getAnthropic().messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system: `Eres una asistente de regalos de Casa Orfebre, marketplace de joyería artesanal chilena. Español chileno, cálida y breve.`,
+        messages: [
+          {
+            role: "user",
+            content: `El comprador busca un regalo con estas preferencias:
 - Para quién: ${forWhom}
 - Ocasión: ${occasion}
 - Estilo: ${style}
@@ -90,17 +130,15 @@ Responde en formato JSON exacto (sin markdown, sin backticks):
 }
 
 Usa los nombres exactos de los productos como keys en "reasons". La nota de regalo debe ser emotiva, personal y mencionar la ocasión.`,
-        },
-      ],
-    });
+          },
+        ],
+      });
 
-    const text = response.content[0].type === "text" ? response.content[0].text : "{}";
-
-    let parsed: { reasons?: Record<string, string>; giftNote?: string } = {};
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = { reasons: {}, giftNote: "Un regalo hecho a mano, con amor y dedicación." };
+      const text = response.content[0].type === "text" ? response.content[0].text : "{}";
+      const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
+      parsed = JSON.parse(cleaned);
+    } catch (e) {
+      console.error("[gift-guide] AI copy generation failed, using defaults:", e);
     }
 
     const productsWithReasons = products.slice(0, 8).map((p) => ({

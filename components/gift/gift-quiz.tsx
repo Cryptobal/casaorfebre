@@ -191,13 +191,15 @@ function QuizResultsView({
       )}
 
       <div className="mt-8 flex flex-col items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setShowNote(!showNote)}
-          className="rounded-lg border border-[#8B7355] px-6 py-2.5 text-sm font-medium text-[#8B7355] transition-colors hover:bg-[#8B7355] hover:text-white"
-        >
-          {showNote ? "Ocultar nota de regalo" : "Generar nota de regalo"}
-        </button>
+        {results.products.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowNote(!showNote)}
+            className="rounded-lg border border-[#8B7355] px-6 py-2.5 text-sm font-medium text-[#8B7355] transition-colors hover:bg-[#8B7355] hover:text-white"
+          >
+            {showNote ? "Ocultar nota de regalo" : "Generar nota de regalo"}
+          </button>
+        )}
 
         {showNote && (
           <div className="w-full max-w-md rounded-xl border border-[#e8e5df] bg-[#FAFAF8] p-4">
@@ -253,10 +255,30 @@ export function GiftQuiz() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newAnswers),
           });
-          const data = await res.json();
-          setResults(data);
+          const data = await res.json().catch(() => null);
+          // Never trust the shape blindly: a 500 returns { error } without
+          // `products`, which used to crash the results view on `.map`.
+          if (res.ok && data && Array.isArray(data.products)) {
+            setResults({
+              products: data.products,
+              giftNote:
+                typeof data.giftNote === "string" && data.giftNote
+                  ? data.giftNote
+                  : "Un regalo hecho a mano, con amor y dedicación.",
+            });
+          } else {
+            setResults({
+              products: [],
+              giftNote:
+                "Tuvimos un problema generando recomendaciones. Intenta de nuevo en unos minutos o explora la colección.",
+            });
+          }
         } catch {
-          setResults({ products: [], giftNote: "Error al generar recomendaciones." });
+          setResults({
+            products: [],
+            giftNote:
+              "Tuvimos un problema generando recomendaciones. Intenta de nuevo en unos minutos o explora la colección.",
+          });
         } finally {
           setLoading(false);
         }
