@@ -12,15 +12,15 @@ import { CatalogFilters } from "./catalog-filters";
 import { ListTracker } from "./list-tracker";
 
 export const metadata = {
-  title: "Colección",
+  title: "Colección de Joyería de Plata Artesanal",
   description:
-    "Explora joyas artesanales únicas de orfebres independientes de Chile. Anillos, collares, aros y pulseras hechos a mano con plata, oro y piedras preciosas.",
+    "Explora el catálogo completo de joyería de plata hecha a mano: aros, anillos, collares, pulseras y colgantes de orfebres chilenos verificados. Envío a todo Chile.",
   alternates: { canonical: "https://casaorfebre.cl/coleccion" },
   openGraph: {
     type: "website" as const,
-    title: "Colección de Joyería Artesanal | Casa Orfebre",
+    title: "Colección de Joyería de Plata Artesanal | Casa Orfebre",
     description:
-      "Explora joyas artesanales únicas de orfebres independientes de Chile.",
+      "Explora el catálogo completo de joyería de plata hecha a mano: aros, anillos, collares, pulseras y colgantes de orfebres chilenos verificados. Envío a todo Chile.",
     url: "https://casaorfebre.cl/coleccion",
     siteName: "Casa Orfebre",
     locale: "es_CL",
@@ -28,9 +28,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image" as const,
-    title: "Colección de Joyería Artesanal | Casa Orfebre",
+    title: "Colección de Joyería de Plata Artesanal | Casa Orfebre",
     description:
-      "Explora joyas artesanales únicas de orfebres independientes de Chile.",
+      "Explora el catálogo completo de joyería de plata hecha a mano: aros, anillos, collares, pulseras y colgantes de orfebres chilenos verificados. Envío a todo Chile.",
     creator: "@casaorfebre",
     site: "@casaorfebre",
     images: ["/casaorfebre-og-image.png"],

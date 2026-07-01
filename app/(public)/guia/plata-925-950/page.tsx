@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "Plata 925 vs Plata 950: Guía Definitiva",
   description:
     "Todo sobre plata 925 y plata 950. Diferencias, cómo identificar plata real, significado de sellos. Guía completa con tabla comparativa.",
-  alternates: { canonical: "/guia/plata-925-950" },
+  alternates: { canonical: "https://casaorfebre.cl/guia/plata-925-950" },
   openGraph: {
     title: "Plata 925 vs Plata 950: Guía Definitiva | Casa Orfebre",
     description:

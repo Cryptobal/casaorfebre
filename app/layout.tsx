@@ -35,7 +35,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: {
     default: "Casa Orfebre · Joyería Artesanal de Plata en Chile",
-    template: "%s",
+    template: "%s · Casa Orfebre",
   },
   description:
     "Marketplace de joyería artesanal de plata. Anillos, cadenas, aros, pulseras y collares hechos a mano por orfebres chilenos verificados. Plata 925 y 950 con certificado de autenticidad.",

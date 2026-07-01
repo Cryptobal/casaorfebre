@@ -4,21 +4,21 @@ import type { Metadata } from "next";
 import { CategoryLanding } from "../category-landing";
 
 export const metadata: Metadata = {
-  title: "Aros de Plata Artesanales — Argollas, Colgantes y Más | Casa Orfebre",
+  title: "Aros de Plata para Mujer y Hombre — Artesanales",
   description:
-    "Aros de plata artesanales para mujer y hombre. Argollas, colgantes, gota, perla. Diseños únicos de orfebres verificados con envío a Chile.",
+    "Aros de plata artesanales para mujer y hombre. Argollas, colgantes, gota y perla en plata 925 y 950. Diseños únicos de orfebres chilenos verificados, con envío a todo Chile.",
   alternates: { canonical: "/coleccion/aros-de-plata" },
   openGraph: {
-    title: "Aros de Plata Artesanales — Argollas, Colgantes y Más | Casa Orfebre",
+    title: "Aros de Plata para Mujer y Hombre — Artesanales | Casa Orfebre",
     description:
-      "Aros de plata artesanales para mujer y hombre. Argollas, colgantes, gota, perla. Diseños únicos de orfebres verificados.",
+      "Aros de plata artesanales para mujer y hombre. Argollas, colgantes, gota y perla en plata 925 y 950. Diseños únicos de orfebres chilenos verificados, con envío a todo Chile.",
     images: [{ url: "/casaorfebre-og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aros de Plata Artesanales | Casa Orfebre",
+    title: "Aros de Plata para Mujer y Hombre — Artesanales | Casa Orfebre",
     description:
-      "Aros de plata artesanales para mujer y hombre. Argollas, colgantes, gota, perla. Diseños únicos de orfebres verificados.",
+      "Aros de plata artesanales para mujer y hombre. Argollas, colgantes, gota y perla en plata 925 y 950. Diseños únicos de orfebres chilenos verificados, con envío a todo Chile.",
     images: ["/casaorfebre-og-image.png"],
   },
 };
@@ -69,7 +69,7 @@ export default async function ArosPage({
       categorySlug="aros"
       breadcrumbLabel="Aros de Plata"
       basePath="/coleccion/aros-de-plata"
-      h1="Aros de Plata Hechos a Mano"
+      h1="Aros de Plata"
       subtitle="Aros artesanales de plata creados por orfebres chilenos. Cada par es una pieza de autor —desde argollas clásicas hasta diseños contemporáneos con piedras naturales."
       seoContent={<SeoContent />}
       faqs={FAQS}

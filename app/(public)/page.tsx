@@ -17,6 +17,9 @@ import { generateItemListJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = {
+  title: "Orfebrería Artesanal de Autor en Chile",
+  description:
+    "Casa Orfebre reúne a los mejores orfebres independientes de Chile. Joyería de plata hecha a mano, verificada, con certificado de autenticidad. Descubre piezas únicas de autor.",
   alternates: { canonical: "/" },
 };
 
