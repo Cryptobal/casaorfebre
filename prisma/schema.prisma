@@ -189,6 +189,7 @@ model Artisan {
   conversations       Conversation[]
   artisanMaterials     ArtisanMaterial[]
   collections          Collection[]
+  credits              ArtisanCredits?
 
   // Consentimientos granulares (Ley 21.719)
   consentTerms         Boolean   @default(false)
@@ -681,6 +682,7 @@ model MembershipPlan {
   searchWeight        Float                    @default(1.0)
   payoutFrequency     String                   @default("quincenal")
   socialPostsPerMonth Int                      @default(0)
+  monthlyCredits      Int                      @default(0)
   supportLevel        String                   @default("email")
   hasCertificate      Boolean                  @default(false)
   homeHighlight       Boolean                  @default(false)
@@ -1413,4 +1415,44 @@ model SystemSetting {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@map("system_settings")
+}
+
+/// Saldo de créditos de un orfebre. Un registro por orfebre.
+model ArtisanCredits {
+  id            String    @id @default(cuid())
+  artisanId     String    @unique
+  balance       Int       @default(0) // saldo actual disponible
+  lastAllocated DateTime? // última recarga mensual aplicada
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  artisan      Artisan             @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  transactions CreditTransaction[]
+
+  @@map("artisan_credits")
+}
+
+/// Registro inmutable de cada movimiento de créditos (auditoría).
+model CreditTransaction {
+  id           String                @id @default(cuid())
+  creditsId    String
+  amount       Int // positivo = ingreso, negativo = consumo
+  type         CreditTransactionType
+  reason       String? // descripción legible (ej. "Foto catálogo: Anillo Marejada")
+  balanceAfter Int // saldo resultante tras el movimiento
+  createdAt    DateTime              @default(now())
+
+  credits ArtisanCredits @relation(fields: [creditsId], references: [id], onDelete: Cascade)
+
+  @@index([creditsId])
+  @@map("credit_transactions")
+}
+
+enum CreditTransactionType {
+  MONTHLY_ALLOCATION // recarga mensual por plan
+  PURCHASE // compra de paquete
+  CONSUMPTION_PHOTO // canje por foto catálogo
+  CONSUMPTION_POST // canje por post de Instagram
+  ADJUSTMENT // ajuste manual de admin
+  EXPIRATION // expiración de créditos no usados
 }
