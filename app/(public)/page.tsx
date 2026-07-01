@@ -8,8 +8,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { ArtisanCard } from "@/components/artisans/artisan-card";
 import { Button } from "@/components/ui/button";
 import { getLatestProducts, getCuratorPicks } from "@/lib/queries/products";
-import { getFeaturedArtisans, getMaestroArtisans } from "@/lib/queries/artisans";
-import { MaestroCarousel } from "@/components/artisans/maestro-carousel";
+import { getFeaturedArtisans } from "@/lib/queries/artisans";
 import { HeroSection } from "@/components/home/hero-section";
 import { BuyerTour } from "@/components/guided-tour/BuyerTour";
 import { auth } from "@/lib/auth";
@@ -22,10 +21,9 @@ export const metadata = {
 
 export default async function HomePage() {
   const session = await auth();
-  const [products, artisans, maestros, curatorPicks] = await Promise.all([
+  const [products, artisans, curatorPicks] = await Promise.all([
     getLatestProducts(8),
     getFeaturedArtisans(3),
-    getMaestroArtisans(),
     getCuratorPicks(4),
   ]);
 
@@ -112,26 +110,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ─── 4.5. Orfebres Maestros ─── */}
-      {maestros.length > 0 && (
-        <section className="border-y border-border bg-surface/50 py-20 sm:py-28">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <FadeIn>
-              <SectionHeading
-                title="Orfebres Maestros"
-                subtitle="Artesanos de nuestra comunidad"
-              />
-            </FadeIn>
-
-            <div className="mt-12">
-              <FadeIn delay={120}>
-                <MaestroCarousel artisans={maestros} />
-              </FadeIn>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ─── 4.7. Selección del Curador ─── */}
       {curatorPicks.length > 0 && (
