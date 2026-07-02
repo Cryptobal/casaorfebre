@@ -174,6 +174,14 @@ git push -u origin content/blog-<slug>
 El PR debe incluir: keyword objetivo + volumen Semrush, score de selección, money pages enlazadas,
 estado de imagen (asset reutilizado / ambiental / PENDIENTE), y link de lectura del Preview de Vercel.
 
+## Variables de entorno necesarias
+
+- `SEMRUSH_API_KEY` — para la investigación de keywords real (sin ella, `blog-generator` cae a
+  heurística; el sistema funciona pero pierde el dirigido por datos).
+- `SLACK_WEBHOOK_URL` — canal #blog-casaorfebre para la notificación.
+- Ya existentes en el proyecto: `CRON_SECRET`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_APP_URL`,
+  `DATABASE_URL`.
+
 ## Notificación (Slack — `$SLACK_WEBHOOK_URL`, canal #blog-casaorfebre)
 
 Al terminar, POST al webhook con: **título del post**, **link de lectura** (Preview de Vercel o URL
