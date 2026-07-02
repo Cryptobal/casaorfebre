@@ -19,8 +19,9 @@
 | **Cron actual** | `blog-auto-generate` corre `0 3 * * *` (diario 03:00 UTC) vía Vercel. |
 | **Imágenes** | `coverImage String?` — **opcional y nullable**. El generador actual NO asigna imagen (queda `null`). Assets se sirven desde Cloudflare R2 (`assets.casaorfebre.cl`, vía `@aws-sdk/client-s3`). Existe registro de fotos reales de producto en la tabla `Product` (relación a imágenes). |
 | **Indexación** | Tras publicar, el cron escribe `LAST_BLOG_URL_GENERATED` en `system_setting`; el cron `gsc-indexing` (`0 2 * * *`) la envía a Google. |
-| **Semrush** | **NO integrado en código.** El pool de keywords es heurístico (combinatorio desde la DB), sin datos de volumen reales. **Este es el principal valor que agrega la rutina remota.** |
+| **Semrush** | **YA integrado** en este PR → `lib/seo/semrush.ts` (reports `phrase_this/these/questions/related`, DB `cl`, fail-soft). Conectado a `blog-generator.ts` vía `selectBestKeywordWithSemrush()`, que eleva la keyword heurística a datos reales de volumen/estacionalidad/intención. Requiere `SEMRUSH_API_KEY`. |
 | **Slack** | **NO existe** ningún webhook en el código. La notificación es responsabilidad de la rutina remota (variable `SLACK_WEBHOOK_URL`). |
+| **Sistema de seeds** | **YA implementado** en este PR → `lib/blog/seeds.ts` + cron `blog-publish-seeds` (`0 5 * * 2,4,6`). Lee `prisma/blog-seeds/pendientes/*.md`, valida frontmatter, inserta en `blog_posts`, registra URL para GSC y mueve a `publicados/`. Idempotente. |
 | **Auth de crons** | `Authorization: Bearer $CRON_SECRET`. Patrón fail-closed (si `CRON_SECRET` no está, 401). |
 | **Enums** | `BlogCategory`: GUIAS, TENDENCIAS, ORFEBRES, CUIDADOS, MATERIALES, CULTURA. `BlogStatus`: DRAFT, PUBLISHED, ARCHIVED. |
 
@@ -198,6 +199,21 @@ se limitan a lo que un producto real en la DB respalde.
 2. **Keywords de intención vendedor en el pool:** `lib/ai/blog-generator.ts` incluye 7 keywords de
    "vender/plataforma para orfebres" que contradicen el funnel de comprador (ver
    `estrategia-keywords.md` §3). Decidir: segmentar a funnel de captación de orfebres, o eliminar.
-3. **Consumo del seed:** implementar el paso que lee `prisma/blog-seeds/pendientes/` e inserta en
-   `blog_posts` tras el merge (o adaptar `blog-auto-generate` para drenar esa carpeta). Recordar:
-   la migración de schema en este repo es **`prisma db push`**, NO `migrate dev` (historia rota).
+3. **Consumo del seed:** ✅ RESUELTO en este PR. `lib/blog/seeds.ts` (`publishPendingSeeds()`) +
+   cron `blog-publish-seeds` drenan `prisma/blog-seeds/pendientes/` tras el merge. Idempotente,
+   registra URL para GSC. Verificado con seed de ejemplo (parser 8/8 en tests). Recordar: la
+   migración de schema en este repo es **`prisma db push`**, NO `migrate dev` (historia rota) — pero
+   este PR NO cambia el schema (usa campos existentes de `BlogPost`), así que no requiere `db push`.
+4. **Borrar el seed de ejemplo:** `prisma/blog-seeds/pendientes/EJEMPLO-*.md` es solo para validar
+   el pipeline. Bórralo o deja que el primer run del cron lo publique (es contenido real y correcto).
+
+## Componentes implementados en este PR (resumen para revisión)
+
+| Archivo | Qué hace | Verificado |
+|---|---|---|
+| `lib/seo/semrush.ts` | Cliente Semrush (`cl`), filtro de intención comprador, scoring de estacionalidad. Fail-soft. | `tsc` ✓ · filtro 8/8 ✓ · fail-soft ✓ |
+| `lib/blog/seeds.ts` | Parser de frontmatter + inserción idempotente en `blog_posts`. | `tsc` ✓ · parser ✓ |
+| `app/api/cron/blog-publish-seeds/route.ts` | Cron que drena seeds mergeados. Auth Bearer fail-closed. | `tsc` ✓ · eslint ✓ |
+| `lib/ai/blog-generator.ts` (+función) | `selectBestKeywordWithSemrush()`: eleva keyword heurística a datos reales. | `tsc` ✓ |
+| `prisma/blog-seeds/` | Carpeta de seeds + README + ejemplo. | — |
+| `vercel.json` | +1 cron `blog-publish-seeds`. | JSON válido ✓ |

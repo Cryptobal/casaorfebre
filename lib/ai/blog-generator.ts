@@ -340,3 +340,51 @@ export async function selectAndRotateKeyword(): Promise<{ keyword: string; poolS
 
   return { keyword, poolSize: pool.length };
 }
+
+// ─── Validación Semrush: eleva la keyword heurística a datos reales ──────────
+import {
+  getBatchMetrics,
+  isBuyerIntent,
+  seasonalityScore,
+  type SemrushKeyword,
+} from "@/lib/seo/semrush";
+
+/**
+ * Toma varios candidatos del pool heurístico, los valida contra Semrush (volumen
+ * real, intención de compra, estacionalidad) y devuelve el de MAYOR valor.
+ *
+ * Fail-soft: si Semrush no está configurado o no devuelve datos, cae al primer
+ * candidato con intención de compra (el pool ya está ordenado por rotación).
+ *
+ * Esto es lo que convierte el blog de "combinatoria ciega" a "SEO dirigido por datos".
+ */
+export async function selectBestKeywordWithSemrush(
+  candidates: string[],
+): Promise<{ keyword: string; metrics: SemrushKeyword | null; source: "semrush" | "heuristic" }> {
+  const buyerCandidates = candidates.filter(isBuyerIntent);
+  if (buyerCandidates.length === 0) {
+    // Todos los candidatos eran intención negativa: devolvemos el primero original
+    // igual filtrado, o el primero crudo como último recurso.
+    return { keyword: candidates[0] ?? "", metrics: null, source: "heuristic" };
+  }
+
+  const metrics = await getBatchMetrics(buyerCandidates.slice(0, 20));
+  if (metrics.length === 0) {
+    return { keyword: buyerCandidates[0], metrics: null, source: "heuristic" };
+  }
+
+  // Puntúa: volumen (log) + estacionalidad + señal comercial (CPC).
+  let best = metrics[0];
+  let bestScore = -Infinity;
+  for (const m of metrics) {
+    if (m.volume < 10) continue; // Umbral mínimo de demanda.
+    const score =
+      Math.log10(m.volume + 1) * 2 + seasonalityScore(m) + Math.min(m.cpc * 2, 2);
+    if (score > bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+
+  return { keyword: best.phrase, metrics: best, source: "semrush" };
+}
