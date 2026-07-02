@@ -102,7 +102,8 @@ function coerceSeed(fileName: string, data: Record<string, unknown>, body: strin
   const targetKeyword = asString(data.targetKeyword) || undefined;
 
   return {
-    slug: asString(data.slug) || slugify(fileName.replace(/\.md$/, "")),
+    // Siempre slugificar: garantiza [a-z0-9-] aunque el frontmatter traiga algo raro.
+    slug: slugify(asString(data.slug) || fileName.replace(/\.md$/, "")),
     title: asStringReq(data.title, "title"),
     excerpt: asStringReq(data.excerpt, "excerpt"),
     content: body,
@@ -206,11 +207,27 @@ export async function publishPendingSeeds(
   return results;
 }
 
+/** Valida que un slug sea seguro para usar como nombre de archivo (anti path-traversal). */
+function isSafeSlug(slug: string): boolean {
+  return /^[a-z0-9-]+$/.test(slug) && !slug.includes("..");
+}
+
 async function moveSeedFile(slug: string): Promise<void> {
+  // Defensa en profundidad: nunca construir una ruta con un slug no validado.
+  if (!isSafeSlug(slug)) {
+    console.warn(`[SEEDS] slug inseguro, no se mueve el archivo: "${slug}"`);
+    return;
+  }
   try {
     await fs.mkdir(PUBLISHED_DIR, { recursive: true });
     const src = path.join(PENDING_DIR, `${slug}.md`);
     const dest = path.join(PUBLISHED_DIR, `${slug}.md`);
+    // Verificación final: las rutas resueltas DEBEN quedar dentro de sus carpetas.
+    if (!path.resolve(src).startsWith(path.resolve(PENDING_DIR)) ||
+        !path.resolve(dest).startsWith(path.resolve(PUBLISHED_DIR))) {
+      console.warn(`[SEEDS] ruta fuera de carpeta, abortado: "${slug}"`);
+      return;
+    }
     await fs.rename(src, dest).catch(() => {
       // En entorno serverless el FS puede ser read-only; no es fatal.
     });
