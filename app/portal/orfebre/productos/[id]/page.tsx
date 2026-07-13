@@ -20,12 +20,21 @@ export default async function EditProductPage({
 
   if (!artisan) redirect("/");
 
-  // Get artisan's active plan to check videoEnabled
-  const activeSub = await prisma.membershipSubscription.findFirst({
-    where: { artisanId: artisan.id, status: "ACTIVE" },
-    include: { plan: true },
-    orderBy: { startDate: "desc" },
-  });
+  // Get artisan's active plan to check videoEnabled. This is a peripheral
+  // capability check — if it ever fails (e.g. schema drift on the plan table),
+  // the orfebre must still be able to edit her piece (including lowering the
+  // price), so we degrade gracefully to videoEnabled=false instead of crashing
+  // the whole page.
+  let activeSub: { plan: { videoEnabled: boolean } | null } | null = null;
+  try {
+    activeSub = await prisma.membershipSubscription.findFirst({
+      where: { artisanId: artisan.id, status: "ACTIVE" },
+      include: { plan: { select: { videoEnabled: true } } },
+      orderBy: { startDate: "desc" },
+    });
+  } catch (err) {
+    console.error("[editar-producto] no se pudo cargar la suscripción activa:", err);
+  }
 
   const [product, categories, allMaterials, specialties, occasions, collections] = await Promise.all([
     prisma.product.findUnique({
