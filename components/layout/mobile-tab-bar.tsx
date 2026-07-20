@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { openSearch } from "@/components/shared/search-modal";
+import { openShoppingChat } from "@/components/chat/shopping-chatbot";
 import { cn } from "@/lib/utils";
 
 const FAVORITES_PATH = "/favoritos";
@@ -204,13 +204,13 @@ export function MobileTabBar() {
         <li className="flex justify-center">
           <TabLink tab={tabs[1]} pathname={pathname} />
         </li>
-        {/* Engaste — búsqueda IA */}
+        {/* Engaste — Asistente IA */}
         <li className="flex justify-center">
           <button
             type="button"
-            onClick={() => openSearch()}
+            onClick={() => openShoppingChat()}
             className="gem gem-appear"
-            aria-label="Buscar con IA"
+            aria-label="Asistente de compras con IA"
           >
             <SparkleIcon />
           </button>
