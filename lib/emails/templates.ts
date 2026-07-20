@@ -1874,6 +1874,7 @@ export async function sendNewOrderMessageEmail(
     senderName,
     senderRole,
     orderId,
+    orderItemId,
     orderNumber,
     productName,
     messagePreview,
@@ -1883,6 +1884,7 @@ export async function sendNewOrderMessageEmail(
     senderName: string;
     senderRole: string;
     orderId: string;
+    orderItemId: string;
     orderNumber: string;
     productName: string;
     messagePreview: string;
@@ -1895,7 +1897,10 @@ export async function sendNewOrderMessageEmail(
         ? "El comprador"
         : "Casa Orfebre";
   const rolePath = recipientRole === "ARTISAN" ? "orfebre" : "comprador";
-  const messageUrl = `${appUrl()}/portal/${rolePath}/pedidos/${orderId}`;
+  // La vista de pedido del orfebre se enruta por OrderItem.id; la del comprador por Order.id.
+  const messageUrl = `${appUrl()}/portal/${rolePath}/pedidos/${
+    rolePath === "orfebre" ? orderItemId : orderId
+  }`;
   await sendEmail(
     to,
     `Nuevo mensaje - pedido #${orderNumber}`,
