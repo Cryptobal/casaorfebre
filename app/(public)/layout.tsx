@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { ShoppingChatbot } from "@/components/chat/shopping-chatbot";
 import { ReferralTracker } from "@/components/shared/referral-tracker";
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner";
@@ -25,8 +26,11 @@ export default function PublicLayout({
       </a>
       <Navbar />
       <EmailVerificationBanner />
-      <main id="main-content" className="min-h-[calc(100dvh-4rem)]">{children}</main>
+      <main id="main-content" className="min-h-[calc(100dvh-4rem)] pb-[104px] md:pb-0">
+        {children}
+      </main>
       <Footer />
+      <MobileTabBar />
       <Toaster />
       <ShoppingChatbot />
       {/* ReferralTracker usa useSearchParams; Suspense permite prerender estático del layout. */}

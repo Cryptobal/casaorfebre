@@ -193,6 +193,12 @@ export async function getProductBySlug(slug: string) {
           specialties: { select: { id: true, name: true, slug: true } },
           materials: true,
           profileImage: true,
+          status: true,
+          _count: {
+            select: {
+              products: { where: { status: "APPROVED" } },
+            },
+          },
         },
       },
       categories: { select: { id: true, name: true, slug: true } },

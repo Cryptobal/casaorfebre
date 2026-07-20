@@ -56,6 +56,9 @@ const footerColumns = [
     links: [
       { href: "/coleccion", label: "Colección" },
       { href: "/colecciones", label: "Colecciones" },
+      { href: "/lo-nuevo", label: "Lo Nuevo" },
+      { href: "/seleccion-del-curador", label: "Selección del Curador" },
+      { href: "/tesoros-de-chile", label: "Tesoros de Chile" },
       { href: "/orfebres", label: "Orfebres" },
       { href: "/gift-cards", label: "Gift Cards" },
       { href: "/blog", label: "Blog" },

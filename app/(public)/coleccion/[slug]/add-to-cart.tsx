@@ -228,25 +228,47 @@ export function AddToCart({ productId, price, productionType, stock, ringSizeOpt
         </p>
       )}
 
-      {/* Sticky mobile buy bar — appears when the main CTA scrolls off-screen */}
+      {/* Sticky mobile buy bar — CTA Liquid Glass (tab bar se oculta en ficha) */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pl-4 pr-20 pt-3 backdrop-blur-md transition-transform duration-300 lg:hidden ${
+        className={`fixed z-50 transition-transform duration-300 md:hidden ${
           showStickyBar ? "translate-y-0" : "translate-y-full"
         }`}
+        style={{
+          left: 14,
+          right: 14,
+          bottom: "max(14px, env(safe-area-inset-bottom))",
+          borderRadius: 28,
+          background: "rgba(26,26,24,0.88)",
+          WebkitBackdropFilter: "blur(16px)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.14)",
+          padding: "12px 14px",
+        }}
       >
         <div className="flex items-center gap-3">
-          <span className="shrink-0 text-sm font-medium tabular-nums text-text">
-            {formatCLP(price * quantity)}
-          </span>
-          <Button
-            size="md"
-            className="flex-1"
-            loading={isPending || sessionLoading}
-            disabled={sessionLoading}
+          <div className="min-w-0 shrink-0">
+            <p
+              className="uppercase"
+              style={{ fontSize: "8.5px", letterSpacing: "0.1em", color: "#b8ab97" }}
+            >
+              Precio
+            </p>
+            <p className="tabular-nums font-medium" style={{ fontSize: "15px", color: "#FAFAF8" }}>
+              {formatCLP(price * quantity)}
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={sessionLoading || isPending}
             onClick={handleStickyAdd}
+            className="flex-1 py-3 text-sm font-medium text-[#FAFAF8] disabled:opacity-60"
+            style={{
+              borderRadius: 22,
+              background: "linear-gradient(120deg,#c9ad84,#8B7355)",
+            }}
           >
-            A&ntilde;adir al Carrito
-          </Button>
+            {isPending || sessionLoading ? "Agregando…" : "Agregar a la bolsa"}
+          </button>
         </div>
       </div>
     </div>

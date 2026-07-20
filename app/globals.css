@@ -21,6 +21,118 @@
   --font-sans: var(--font-outfit);
 }
 
+:root {
+  --glass-bg: rgba(250, 250, 248, 0.55);
+  --glass-line: rgba(255, 255, 255, 0.55);
+}
+
+@layer components {
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(22px) saturate(1.65);
+    backdrop-filter: blur(22px) saturate(1.65);
+    border: 1px solid var(--glass-line);
+    box-shadow:
+      0 10px 34px rgba(26, 26, 24, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 0 rgba(139, 115, 85, 0.08);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background: #faf9f6;
+      border-color: var(--color-border);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background: #faf9f6;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /* Botón central «el engaste» — tab bar móvil */
+  .gem {
+    width: 58px;
+    height: 58px;
+    border-radius: 9999px;
+    margin-top: -26px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    color: #fafaf8;
+    background: radial-gradient(circle at 32% 26%, #c9ad84, #8b7355 58%, #6e5a42);
+    box-shadow:
+      0 10px 22px rgba(110, 90, 66, 0.45),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.22);
+  }
+
+  .gem::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 9999px;
+    border: 1px solid rgba(139, 115, 85, 0.35);
+  }
+
+  @keyframes gem-appear {
+    from {
+      opacity: 0;
+      transform: scale(0.86);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .gem-appear {
+    animation: gem-appear 0.45s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gem-appear {
+      animation: none;
+    }
+  }
+
+  .mobile-tab-bar-glass {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mobile-tab-bar-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.55),
+      transparent 34%,
+      transparent 70%,
+      rgba(255, 255, 255, 0.28)
+    );
+  }
+
+  /* Ficha de pieza — sheet móvil sobre la galería */
+  @media (max-width: 767px) {
+    .product-info-sheet {
+      margin-top: -2rem;
+      border-radius: 30px 30px 0 0;
+      background: rgba(250, 250, 248, 0.86);
+      -webkit-backdrop-filter: blur(26px) saturate(1.6);
+      backdrop-filter: blur(26px) saturate(1.6);
+      border-top: 1px solid rgba(255, 255, 255, 0.7);
+      padding: 0.5rem 1rem 1.5rem;
+    }
+  }
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-text);

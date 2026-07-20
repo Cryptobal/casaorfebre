@@ -27,11 +27,14 @@ export const buyerTourStepsDesktop: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="nav-curador"]',
+    // nav-curador vive dentro del mega menú (cerrado por defecto).
+    // driver.js no soporta abrir el mega antes del highlight sin hacks:
+    // reasignamos al trigger Colección con copy actualizado.
+    element: '[data-tour="nav-coleccion"]',
     popover: {
       title: "Selección del Curador",
       description:
-        "Nuestras piezas favoritas, elegidas a mano. Si no sabes por dónde empezar, este es el lugar.",
+        "Dentro de Colección encontrarás la Selección del Curador ✦ — nuestras piezas favoritas, elegidas a mano. También Lo Nuevo y Tesoros de Chile.",
     },
   },
   {

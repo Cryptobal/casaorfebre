@@ -10,6 +10,8 @@ import { canonicalUrl } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ImageGallery } from "./image-gallery";
+import { ProductMobileChrome } from "./product-mobile-chrome";
+import { ProductMobileSheetHeader } from "./product-mobile-sheet-header";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { MaterialBadge } from "@/components/shared/material-badge";
 import { AddToCart, type RingSizeOption } from "./add-to-cart";
@@ -351,28 +353,55 @@ export default async function ProductDetailPage({ params }: PageProps) {
       />
       <JsonLd data={jsonLd} />
 
-      <div className="mx-auto max-w-6xl px-4 pt-8 pb-20 sm:px-6 lg:px-8">
-        {/* Breadcrumbs renders both the visible nav and its BreadcrumbList JSON-LD
-            (single source of truth — avoids duplicate structured data). */}
-        <Breadcrumbs
-          items={[
-            { label: "Inicio", href: "/" },
-            { label: "Colección", href: "/coleccion" },
-            { label: categoryLabel, href: categoryHref },
-            { label: product.name, href: `/coleccion/${slug}` },
-          ]}
-        />
+      <div className="mx-auto max-w-6xl pb-28 pt-0 md:px-4 md:pb-20 md:pt-8 sm:px-6 lg:px-8">
+        {/* Breadcrumbs: JSON-LD siempre; nav visible solo desktop */}
+        <div className="px-4 md:px-0 [&_nav]:hidden md:[&_nav]:block">
+          <Breadcrumbs
+            items={[
+              { label: "Inicio", href: "/" },
+              { label: "Colección", href: "/coleccion" },
+              { label: categoryLabel, href: categoryHref },
+              { label: product.name, href: `/coleccion/${slug}` },
+            ]}
+          />
+        </div>
         {/* Two-column layout */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12">
+        <div className="grid grid-cols-1 gap-0 md:gap-8 lg:grid-cols-5 lg:gap-12">
           {/* Left column — gallery */}
-          <div className="lg:col-span-3">
+          <div className="relative lg:col-span-3">
             <ImageGallery images={product.images} productName={product.name} productSlug={product.slug} video={product.video} />
+            <ProductMobileChrome
+              productId={product.id}
+              ga4Item={{
+                item_id: product.id,
+                item_name: product.name,
+                item_category: categoryLabel,
+                item_brand: artisan.displayName,
+                price: product.price,
+              }}
+            />
           </div>
 
-          {/* Right column — info */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Type badges */}
-            <div className="flex flex-wrap gap-2">
+          {/* Right column — info (móvil: sheet de vidrio sobre la foto) */}
+          <div className="product-info-sheet relative z-10 space-y-6 lg:col-span-2">
+            <ProductMobileSheetHeader
+              categoryLabel={categoryLabel}
+              materialLabel={product.materials[0]?.name ?? null}
+              productName={product.name}
+              artisan={{
+                slug: artisan.slug,
+                displayName: artisan.displayName,
+                location: artisan.location,
+                profileImage: artisan.profileImage,
+                status: artisan.status,
+                productCount: artisan._count?.products ?? 0,
+              }}
+              productionType={product.productionType}
+              stock={product.stock}
+            />
+
+            {/* Type badges — desktop */}
+            <div className="hidden flex-wrap gap-2 md:flex">
               {product.productionType === "UNIQUE" && (
                 <span className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text-secondary">
                   Pieza &Uacute;nica
@@ -403,13 +432,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Product name */}
-            <h1 className="font-serif text-2xl font-light sm:text-3xl">
+            {/* Product name — desktop */}
+            <h1 className="hidden font-serif text-2xl font-light sm:text-3xl md:block">
               {product.name}
             </h1>
 
-            {/* Artisan link */}
-            <p className="text-sm text-text-secondary">
+            {/* Artisan link — desktop */}
+            <p className="hidden text-sm text-text-secondary md:block">
               por{" "}
               <Link
                 href={`/orfebres/${artisan.slug}`}

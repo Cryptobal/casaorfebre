@@ -104,10 +104,27 @@ function Spinner() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Open API — pill móvil / engaste / ⌘K comparten el mismo modal     */
+/* ------------------------------------------------------------------ */
+
+export const OPEN_SEARCH_EVENT = "casaorfebre:open-search";
+
+export function openSearch() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
+  }
+}
+
+interface SearchModalProps {
+  /** Si false, no renderiza el trigger (el modal se abre vía openSearch / ⌘K). */
+  showTrigger?: boolean;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function SearchModal() {
+export function SearchModal({ showTrigger = true }: SearchModalProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
@@ -129,7 +146,7 @@ export function SearchModal() {
     setMounted(true);
   }, []);
 
-  // Global keyboard shortcut: Cmd+K / Ctrl+K
+  // Global keyboard shortcut: Cmd+K / Ctrl+K + openSearch() event
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -137,8 +154,15 @@ export function SearchModal() {
         setOpen((prev) => !prev);
       }
     }
+    function handleOpenEvent() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener(OPEN_SEARCH_EVENT, handleOpenEvent);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener(OPEN_SEARCH_EVENT, handleOpenEvent);
+    };
   }, []);
 
   // Autofocus input when modal opens
@@ -550,12 +574,12 @@ export function SearchModal() {
 
   if (!mounted) {
     // SSR / first render — just show the trigger without portal
-    return trigger;
+    return showTrigger ? trigger : null;
   }
 
   return (
     <>
-      {trigger}
+      {showTrigger ? trigger : null}
       {modal}
     </>
   );

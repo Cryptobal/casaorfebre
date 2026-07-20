@@ -327,7 +327,7 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
     );
 
   return (
-    <div className="lg:hidden">
+    <div>
       <button
         type="button"
         onClick={() => setOpen(!open)}
