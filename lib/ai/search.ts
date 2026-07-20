@@ -16,6 +16,7 @@ export async function semanticSearch(
   query: string,
   filters?: SearchFilters,
   limit: number = 12,
+  opts?: { minSimilarity?: number },
 ): Promise<ProductWithScore[]> {
   const queryEmbedding = await generateEmbedding(query);
   const embeddingStr = `[${queryEmbedding.join(",")}]`;
@@ -25,6 +26,12 @@ export async function semanticSearch(
     `p."embedding" IS NOT NULL`,
   ];
   const params: unknown[] = [embeddingStr, limit];
+
+  if (opts?.minSimilarity !== undefined) {
+    // cosine distance = 1 - similarity → distancia máxima permitida.
+    params.push(1 - opts.minSimilarity);
+    conditions.push(`(p."embedding" <=> $1::vector) <= $${params.length}`);
+  }
 
   if (filters?.category) {
     params.push(filters.category);

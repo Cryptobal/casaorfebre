@@ -7,6 +7,7 @@ import Image from "next/image";
 import { cn, formatCLP } from "@/lib/utils";
 import { trackSearch } from "@/lib/analytics-events";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { openShoppingChat, AssistantAvatar } from "@/components/chat/shopping-chatbot";
 
 /* ------------------------------------------------------------------ */
 /*  Visual Search Types                                                */
@@ -48,6 +49,46 @@ interface ArtisanResult {
 interface SearchResults {
   products: ProductResult[];
   artisans: ArtisanResult[];
+  categories?: { name: string; slug: string }[];
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sugerencias, recientes y accesos rápidos                           */
+/* ------------------------------------------------------------------ */
+
+const POPULAR_SEARCHES = [
+  "Anillos de plata",
+  "Aros",
+  "Colgantes",
+  "Pulseras",
+  "Plata 950",
+  "Regalos",
+];
+
+const EXPLORE_LINKS: { name: string; slug: string }[] = [
+  { name: "Anillos", slug: "anillos" },
+  { name: "Aros", slug: "aros" },
+  { name: "Collares", slug: "collares" },
+  { name: "Pulseras", slug: "pulseras" },
+];
+
+const RECENT_KEY = "co-recent-searches";
+
+function loadRecent(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]").slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(q: string) {
+  try {
+    const cur = loadRecent().filter((x) => x.toLowerCase() !== q.toLowerCase());
+    localStorage.setItem(RECENT_KEY, JSON.stringify([q, ...cur].slice(0, 5)));
+  } catch {
+    /* ignore */
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -70,6 +111,25 @@ function SearchIcon({ className }: { className?: string }) {
     >
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="m9 18 6-6-6-6" />
     </svg>
   );
 }
@@ -104,7 +164,48 @@ function Spinner() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Open API — pill móvil / engaste / ⌘K comparten el mismo modal     */
+/*  Fila puente hacia el asistente IA (Aura)                           */
+/* ------------------------------------------------------------------ */
+
+function AiBridgeRow({
+  query,
+  onClick,
+  highlighted,
+}: {
+  query: string;
+  onClick: () => void;
+  highlighted?: boolean;
+}) {
+  const q = query.trim();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-alt/60",
+        highlighted
+          ? "mt-2 rounded-xl border border-border bg-surface-alt/60"
+          : "border-t border-border",
+      )}
+    >
+      <AssistantAvatar size={26} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm text-text">
+          {highlighted && q ? `Pregúntale a Aura por “${q}” ✦` : "Pregúntale a Aura ✦"}
+        </span>
+        <span className="block truncate text-xs text-text-tertiary">
+          {q
+            ? `Buscar con IA: “${q}”`
+            : "Cuéntale qué buscas y te recomienda piezas"}
+        </span>
+      </span>
+      <span className="text-text-tertiary">→</span>
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Open API — pill móvil / ⌘K comparten el mismo modal               */
 /* ------------------------------------------------------------------ */
 
 export const OPEN_SEARCH_EVENT = "casaorfebre:open-search";
@@ -130,6 +231,7 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [recent, setRecent] = useState<string[]>([]);
   const [visualLoading, setVisualLoading] = useState(false);
   const [visualResults, setVisualResults] = useState<VisualSearchResult | null>(null);
   const [visualPreview, setVisualPreview] = useState<string | null>(null);
@@ -165,9 +267,10 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
     };
   }, []);
 
-  // Autofocus input when modal opens
+  // Autofocus input when modal opens + cargar recientes
   useEffect(() => {
     if (open) {
+      setRecent(loadRecent());
       // Small delay so the portal has rendered
       const id = setTimeout(() => inputRef.current?.focus(), 50);
       return () => clearTimeout(id);
@@ -264,9 +367,23 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
     [router],
   );
 
+  const commitRecent = useCallback((term: string) => {
+    const t = term.trim();
+    if (t.length < 2) return;
+    saveRecent(t);
+    setRecent(loadRecent());
+  }, []);
+
+  const openAura = useCallback(() => {
+    setOpen(false);
+    openShoppingChat(query.trim() || undefined);
+  }, [query]);
+
   const hasResults =
     results &&
-    (results.products.length > 0 || results.artisans.length > 0);
+    (results.products.length > 0 ||
+      results.artisans.length > 0 ||
+      (results.categories?.length ?? 0) > 0);
   const hasQuery = query.trim().length >= 2;
 
   /* ---- Trigger button ---- */
@@ -288,7 +405,7 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
   const modal = open
     ? createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] md:pt-[20vh] px-4"
+          className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh] md:pt-[16vh]"
           role="dialog"
           aria-modal="true"
           aria-label="Buscar"
@@ -305,23 +422,23 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
             ref={panelRef}
             tabIndex={-1}
             className={cn(
-              "relative w-full max-w-lg bg-surface rounded-xl shadow-2xl border border-border focus:outline-none",
+              "relative w-full max-w-xl bg-surface rounded-xl shadow-2xl border border-border focus:outline-none",
               "flex flex-col overflow-hidden",
               // Mobile: fullscreen
               "max-md:fixed max-md:inset-0 max-md:rounded-none max-md:border-0 max-md:max-w-none max-md:pt-0",
             )}
           >
             {/* Search input bar */}
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
               <SearchIcon className="shrink-0 text-text-tertiary" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Busca productos, orfebres, materiales..."
+                placeholder="¿Qué joya buscas hoy?"
                 aria-label="Buscar productos, orfebres y materiales"
-                className="flex-1 bg-transparent text-text placeholder:text-text-tertiary outline-none text-sm"
+                className="flex-1 bg-transparent py-1 text-base text-text placeholder:text-text-tertiary outline-none"
               />
               {loading && <Spinner />}
               {/* Visual search (camera) button */}
@@ -363,7 +480,7 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
             </div>
 
             {/* Results area */}
-            <div className="max-h-[60vh] max-md:flex-1 overflow-y-auto overscroll-contain">
+            <div className="max-h-[62vh] max-md:flex-1 overflow-y-auto overscroll-contain">
               {/* Visual search results */}
               {(visualLoading || visualResults) && (
                 <div className="px-4 pt-4 pb-2">
@@ -433,8 +550,70 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
 
               {/* Empty state — no query yet */}
               {!hasQuery && !loading && !visualResults && !visualLoading && (
-                <div className="px-4 py-10 text-center text-sm text-text-tertiary font-light">
-                  Busca productos, orfebres, materiales...
+                <div className="px-4 py-5">
+                  {recent.length > 0 && (
+                    <div className="mb-5">
+                      <p className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                        Recientes
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {recent.map((term) => (
+                          <button
+                            key={term}
+                            type="button"
+                            onClick={() => setQuery(term)}
+                            className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                              <path d="M3 3v5h5" />
+                              <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+                              <path d="M12 7v5l3 2" />
+                            </svg>
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-5">
+                    <p className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                      Búsquedas populares
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {POPULAR_SEARCHES.map((term) => (
+                        <button
+                          key={term}
+                          type="button"
+                          onClick={() => setQuery(term)}
+                          className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
+                        >
+                          {term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-1">
+                    <p className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                      Explorar
+                    </p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {EXPLORE_LINKS.map((link) => (
+                        <button
+                          key={link.slug}
+                          type="button"
+                          onClick={() => navigate(`/coleccion/${link.slug}`)}
+                          className="flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-text transition-colors hover:bg-surface-alt/60"
+                        >
+                          <span>{link.name}</span>
+                          <ChevronRight className="text-text-tertiary" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <AiBridgeRow query="" onClick={openAura} />
                 </div>
               )}
 
@@ -447,123 +626,187 @@ export function SearchModal({ showTrigger = true }: SearchModalProps) {
 
               {/* No results */}
               {hasQuery && !loading && results && !hasResults && (
-                <div className="px-4 py-10 text-center text-sm text-text-tertiary font-light">
-                  No encontramos resultados para &lsquo;{query.trim()}&rsquo;
-                </div>
-              )}
-
-              {/* Products */}
-              {results && results.products.length > 0 && (
-                <div className="px-2 pt-3 pb-1">
-                  <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
-                    Productos
+                <div className="px-4 py-6">
+                  <p className="text-center text-sm text-text-secondary">
+                    No encontramos «{query.trim()}» — prueba con otro término
                   </p>
-                  <ul>
-                    {results.products.map((product) => (
-                      <li key={product.slug}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/coleccion/${product.slug}`)
-                          }
-                          className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-black/[0.04] transition-colors"
-                        >
-                          {/* Thumbnail */}
-                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-black/[0.03]">
-                            {product.images[0] ? (
-                              <Image
-                                src={product.images[0].url}
-                                alt={
-                                  product.images[0].altText ?? product.name
-                                }
-                                fill
-                                className="object-cover"
-                                sizes="40px"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-text-tertiary text-xs">
-                                --
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-serif text-text">
-                              {product.name}
-                            </p>
-                            <p className="truncate text-xs text-text-secondary font-light">
-                              {product.artisan.displayName}
-                            </p>
-                          </div>
-
-                          {/* Price */}
-                          <span className="shrink-0 text-sm text-accent font-medium">
-                            {formatCLP(product.price)}
-                          </span>
-                        </button>
-                      </li>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {POPULAR_SEARCHES.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => setQuery(term)}
+                        className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent hover:text-accent"
+                      >
+                        {term}
+                      </button>
                     ))}
-                  </ul>
+                  </div>
+                  <AiBridgeRow query={query} onClick={openAura} highlighted />
                 </div>
               )}
 
-              {/* Artisans */}
-              {results && results.artisans.length > 0 && (
-                <div className="px-2 pt-3 pb-3">
-                  <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
-                    Orfebres
-                  </p>
-                  <ul>
-                    {results.artisans.map((artisan) => {
-                      const initials = artisan.displayName
-                        .split(" ")
-                        .map((w) => w[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase();
+              {/* Results with content */}
+              {hasQuery && !loading && results && hasResults && (
+                <>
+                  {/* Categorías */}
+                  {results.categories && results.categories.length > 0 && (
+                    <div className="px-2 pt-3 pb-1">
+                      <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                        Categorías
+                      </p>
+                      <ul>
+                        {results.categories.map((cat) => (
+                          <li key={cat.slug}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                commitRecent(query);
+                                navigate(`/coleccion/${cat.slug}`);
+                              }}
+                              className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-black/[0.04] transition-colors"
+                            >
+                              <span className="text-sm font-serif text-text">{cat.name}</span>
+                              <ChevronRight className="text-text-tertiary" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-                      return (
-                        <li key={artisan.slug}>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(`/orfebres/${artisan.slug}`)
-                            }
-                            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-black/[0.04] transition-colors"
-                          >
-                            {/* Avatar */}
-                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-accent/10">
-                              {artisan.profileImage ? (
-                                <Image
-                                  src={artisan.profileImage}
-                                  alt={artisan.displayName}
-                                  fill
-                                  className="object-cover"
-                                  sizes="40px"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-accent text-xs font-medium">
-                                  {initials}
+                  {/* Products */}
+                  {results.products.length > 0 && (
+                    <div className="px-2 pt-3 pb-1">
+                      <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                        Productos
+                      </p>
+                      <ul>
+                        {results.products.map((product) => (
+                          <li key={product.slug}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                commitRecent(query);
+                                navigate(`/coleccion/${product.slug}`);
+                              }}
+                              className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-black/[0.04] transition-colors"
+                            >
+                              {/* Thumbnail */}
+                              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-black/[0.03]">
+                                {product.images[0] ? (
+                                  <Image
+                                    src={product.images[0].url}
+                                    alt={product.images[0].altText ?? product.name}
+                                    fill
+                                    className="object-cover"
+                                    sizes="56px"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-text-tertiary text-xs">
+                                    --
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <p className="truncate text-sm font-serif text-text">
+                                  {product.name}
+                                </p>
+                                <p className="truncate text-xs text-text-tertiary font-light">
+                                  {product.artisan.displayName}
+                                  {product.categories[0]
+                                    ? ` · ${product.categories[0].name}`
+                                    : ""}
+                                </p>
+                              </div>
+
+                              {/* Price */}
+                              <span className="shrink-0 text-sm text-accent font-medium">
+                                {formatCLP(product.price)}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Footer: ver todos en la colección */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          commitRecent(query);
+                          navigate(`/coleccion?q=${encodeURIComponent(query.trim())}`);
+                        }}
+                        className="mt-1 w-full border-t border-border py-3 text-sm text-accent transition-colors hover:bg-surface-alt/60"
+                      >
+                        Ver todos los resultados en la colección →
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Artisans */}
+                  {results.artisans.length > 0 && (
+                    <div className="px-2 pt-3 pb-1">
+                      <p className="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">
+                        Orfebres
+                      </p>
+                      <ul>
+                        {results.artisans.map((artisan) => {
+                          const initials = artisan.displayName
+                            .split(" ")
+                            .map((w) => w[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase();
+
+                          return (
+                            <li key={artisan.slug}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  commitRecent(query);
+                                  navigate(`/orfebres/${artisan.slug}`);
+                                }}
+                                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-black/[0.04] transition-colors"
+                              >
+                                {/* Avatar */}
+                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-accent/10">
+                                  {artisan.profileImage ? (
+                                    <Image
+                                      src={artisan.profileImage}
+                                      alt={artisan.displayName}
+                                      fill
+                                      className="object-cover"
+                                      sizes="40px"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-accent text-xs font-medium">
+                                      {initials}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
 
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <p className="truncate text-sm font-serif text-text">
-                                {artisan.displayName}
-                              </p>
-                              <p className="truncate text-xs text-text-secondary font-light">
-                                {artisan.specialty} &middot; {artisan.location}
-                              </p>
-                            </div>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="truncate text-sm font-serif text-text">
+                                    {artisan.displayName}
+                                  </p>
+                                  <p className="truncate text-xs text-text-secondary font-light">
+                                    {artisan.specialty} &middot; {artisan.location}
+                                  </p>
+                                </div>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Fila puente IA */}
+                  <AiBridgeRow query={query} onClick={openAura} />
+                </>
               )}
             </div>
           </div>

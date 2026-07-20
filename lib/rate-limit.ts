@@ -75,3 +75,17 @@ export const aiPriceLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 h"),
   prefix: "rl:ai-price",
 });
+
+/** Chat de compras IA — 30 mensajes por hora por IP */
+export const aiShoppingChatLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, "1 h"),
+  prefix: "rl:ai-chat",
+});
+
+/** GET /api/search — 30 requests por minuto por IP */
+export const searchLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, "1 m"),
+  prefix: "rl:search",
+});
