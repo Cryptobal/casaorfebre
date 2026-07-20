@@ -1,9 +1,16 @@
 /**
  * Runs during `npm run build` (Vercel) to guarantee that every column the
- * Prisma schema references on `artisan_applications` actually exists in the
- * live database. Several columns were added to prisma/schema.prisma over
- * time without a matching migration being applied to production, which
- * caused POST /postular to fail with Prisma P2022 ColumnNotFound.
+ * Prisma schema references actually exists in the live database. This project
+ * deploys with `prisma db push` (the migration history is intentionally not
+ * applied on Vercel), so columns added to prisma/schema.prisma without a
+ * matching push land in the client but not in production, and every Prisma
+ * read that auto-selects them fails with P2022 ColumnNotFound.
+ *
+ * That happened twice:
+ *   - `artisan_applications` columns → POST /postular failed.
+ *   - `order_items.shippingShare` (added with the shipping-payout feature)
+ *     → the orfebre portal (pedidos, finanzas) and admin payout views threw
+ *       a Server Components error, blocking artisans from their console.
  *
  * The statements use `ADD COLUMN IF NOT EXISTS`, so running this on every
  * build is a no-op once the columns are in place.
@@ -26,6 +33,9 @@ ALTER TABLE "artisan_applications"
   ADD COLUMN IF NOT EXISTS "consentMarketingAt" TIMESTAMP(3),
   ADD COLUMN IF NOT EXISTS "consentSocialMedia" BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS "consentSocialMediaAt" TIMESTAMP(3);
+
+ALTER TABLE "order_items"
+  ADD COLUMN IF NOT EXISTS "shippingShare" INTEGER NOT NULL DEFAULT 0;
 `;
 
 const url = process.env.DATABASE_URL;
@@ -42,7 +52,9 @@ const client = new pg.Client({ connectionString: url });
 try {
   await client.connect();
   await client.query(SQL);
-  console.log("[ensure-production-schema] artisan_applications columns verified.");
+  console.log(
+    "[ensure-production-schema] artisan_applications + order_items columns verified."
+  );
 } catch (err) {
   console.error("[ensure-production-schema] Failed to ensure schema:", err);
   process.exit(1);
