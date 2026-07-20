@@ -42,7 +42,7 @@ export async function toggleFavorite(productId: string) {
     });
   }
 
-  revalidatePath("/portal/comprador/favoritos");
+  revalidatePath("/favoritos");
   revalidatePath("/coleccion");
   revalidatePath("/orfebres");
   revalidatePath("/");

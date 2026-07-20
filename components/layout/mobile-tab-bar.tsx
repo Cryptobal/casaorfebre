@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { openSearch } from "@/components/shared/search-modal";
 import { cn } from "@/lib/utils";
 
-const FAVORITES_PATH = "/portal/comprador/favoritos";
+const FAVORITES_PATH = "/favoritos";
 
 function isHiddenPath(pathname: string): boolean {
   if (pathname.startsWith("/portal")) return true;
@@ -139,10 +139,9 @@ export function MobileTabBar() {
     return null;
   }
 
-  const savedHref =
-    status === "authenticated"
-      ? FAVORITES_PATH
-      : `/login?next=${encodeURIComponent(FAVORITES_PATH)}`;
+  // Guest y logueado van a `/favoritos`; la página pública maneja el estado
+  // de invitado (vacío elegante con CTA a iniciar sesión).
+  const savedHref = FAVORITES_PATH;
 
   const accountHref =
     status === "authenticated" ? portalHref(role) : "/login";
@@ -173,7 +172,7 @@ export function MobileTabBar() {
       href: savedHref,
       label: "Guardado",
       icon: "saved",
-      match: (p) => p.startsWith("/portal/comprador/favoritos"),
+      match: (p) => p.startsWith("/favoritos"),
     },
     {
       key: "account",

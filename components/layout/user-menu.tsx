@@ -68,7 +68,7 @@ export function UserMenu({ user }: UserMenuProps) {
             Mi Portal
           </Link>
           <Link
-            href="/portal/comprador/favoritos"
+            href="/favoritos"
             onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
           >

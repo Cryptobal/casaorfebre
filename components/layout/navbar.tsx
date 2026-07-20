@@ -126,8 +126,9 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Desktop nav */}
-      <div className="hidden border-b border-border bg-background/80 backdrop-blur-md md:block">
+      {/* Desktop nav — fondo sólido, sin vidrio: un blur de ancho completo en
+          un header sticky forzaría re-blur en cada frame de scroll = jank. */}
+      <div className="hidden border-b border-border bg-surface md:block">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex-shrink-0" aria-label="Casa Orfebre — Inicio">
             <Image
