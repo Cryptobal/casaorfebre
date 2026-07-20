@@ -130,7 +130,9 @@ class PinterestClient {
     }
   }
 
-  async createPin(pin: PinterestPin): Promise<{ id: string } | null> {
+  async createPin(
+    pin: PinterestPin,
+  ): Promise<{ id: string } | { error: "board_not_found" } | null> {
     const res = await this.request(`${this.baseUrl}/pins`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -141,12 +143,35 @@ class PinterestClient {
       if (res) {
         const body = await res.text();
         console.error(`[Pinterest] createPin failed: ${res.status} ${body}`);
+        if (
+          res.status === 404 &&
+          /board not found/i.test(body)
+        ) {
+          return { error: "board_not_found" };
+        }
       }
       return null;
     }
 
     const data = await res.json();
     return { id: data.id };
+  }
+
+  /** Lista boards del usuario autenticado (id → name). */
+  async listBoards(): Promise<{ id: string; name: string }[]> {
+    const res = await this.request(`${this.baseUrl}/boards?page_size=100`);
+    if (!res || !res.ok) {
+      if (res) {
+        const body = await res.text();
+        console.error(`[Pinterest] listBoards failed: ${res.status} ${body}`);
+      }
+      return [];
+    }
+    const data = await res.json();
+    const items = (data.items ?? []) as { id?: string; name?: string }[];
+    return items
+      .filter((b): b is { id: string; name: string } => Boolean(b.id && b.name))
+      .map((b) => ({ id: b.id, name: b.name }));
   }
 
   async getPinAnalytics(

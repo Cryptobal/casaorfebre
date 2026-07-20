@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import type { BlogCategory } from "@prisma/client";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -104,7 +105,7 @@ Categoría: ${params.targetCategory}
 Sugiere 3-5 tags relevantes en español.${productContext}`;
 
   const message = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     messages: [{ role: "user", content: userPrompt }],
     system: SYSTEM_PROMPT,
@@ -140,7 +141,7 @@ export async function suggestBlogTopics(existingTitles: string[], targetKeyword?
   const count = targetKeyword ? "1 idea" : "5 ideas";
 
   const message = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 1024,
     messages: [{
       role: "user",

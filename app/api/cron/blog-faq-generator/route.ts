@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 import { getGoogleAccessToken } from "@/lib/seo/gsc-indexing";
 import { slugify } from "@/lib/utils";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
   const questionList = questions.slice(0, 15).map((q, i) => `${i + 1}. ${q}`).join("\n");
 
   const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 3000,
     messages: [
       {

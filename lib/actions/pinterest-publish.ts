@@ -113,6 +113,9 @@ export async function publishProductToPinterest(
   });
 
   if (!result) return { success: false, error: "Error al crear Pin" };
+  if ("error" in result) {
+    return { success: false, error: result.error };
+  }
 
   await prisma.product.update({
     where: { id: productId },

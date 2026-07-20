@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -20,7 +21,7 @@ export interface MarketplaceStats {
 
 export async function generateAdminInsights(stats: MarketplaceStats): Promise<string[]> {
   const response = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 512,
     system: `Eres el analista de datos de Casa Orfebre marketplace. Generas insights accionables para el equipo admin. Español chileno, tuteas, tono profesional.
 Responde SOLO con un JSON array de strings, cada uno un insight de 1-2 oraciones. Sin markdown.`,

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { aiPriceLimiter } from "@/lib/rate-limit";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
   // Use Claude to generate suggestion
   const anthropic = getAnthropic();
   const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 512,
     system: `Eres un asesor de precios de Casa Orfebre, marketplace de joyería artesanal chilena. Ayudas a orfebres a poner precios competitivos y rentables. Responde en JSON: {"suggestedMin": number, "suggestedMax": number, "reasoning": "string corto en español", "tips": ["tip1", "tip2"]}. No incluyas nada fuera del JSON.`,
     messages: [{

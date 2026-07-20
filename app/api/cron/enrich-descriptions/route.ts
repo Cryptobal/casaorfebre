@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const msg = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: CLAUDE_SONNET,
         max_tokens: 200,
         messages: [
           {

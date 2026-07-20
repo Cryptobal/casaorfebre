@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -44,7 +45,7 @@ export async function suggestArtisanCollections(artisanId: string): Promise<Coll
   }));
 
   const response = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 512,
     system: `Eres un curador de joyería artesanal. Analizas el catálogo de un orfebre y sugieres colecciones temáticas.
 Responde SOLO con un JSON array. Sin markdown, sin code fences.

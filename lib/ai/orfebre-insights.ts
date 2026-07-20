@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -24,7 +25,7 @@ export interface ArtisanStats {
 
 export async function generateWeeklyInsights(stats: ArtisanStats): Promise<string[]> {
   const response = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 512,
     system: `Eres un analista de datos de Casa Orfebre, marketplace de joyería artesanal chilena.
 Generas insights accionables y concretos para orfebres.

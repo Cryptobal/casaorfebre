@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { generateEmbedding } from "@/lib/ai/embeddings";
 import { prisma } from "@/lib/prisma";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -24,7 +25,7 @@ export async function searchByImage(
 ): Promise<{ products: ProductResult[]; description: string }> {
   // Step 1: Use Claude Vision to describe the jewelry in the image
   const visionResponse = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 300,
     messages: [
       {

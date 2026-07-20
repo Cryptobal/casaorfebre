@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -55,7 +56,7 @@ export async function generateEmailCopy(params: {
     .join("\n");
 
   const response = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 768,
     system: `Eres la redactora de emails de Casa Orfebre, marketplace de joyería artesanal chilena.
 Escribe emails breves, cálidos, elegantes. Español chileno, tutea al comprador.

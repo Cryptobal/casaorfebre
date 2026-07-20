@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -19,7 +20,7 @@ export async function generateReviewHighlights(reviews: ReviewInput[]): Promise<
     .join("\n");
 
   const message = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 256,
     messages: [{
       role: "user",

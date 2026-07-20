@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -70,7 +71,7 @@ Si no puedes determinar con certeza, asigna riesgo bajo (preferimos falsos negat
 
   try {
     const response = await getAnthropic().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: CLAUDE_SONNET,
       max_tokens: 512,
       messages: [{ role: "user", content }],
     });

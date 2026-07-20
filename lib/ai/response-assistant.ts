@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -55,7 +56,7 @@ ${recent.map((a, i) => `${i + 1}. "${a}"`).join("\n")}`;
   userPrompt += "\n\nGenera una respuesta sugerida:";
 
   const message = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 512,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],

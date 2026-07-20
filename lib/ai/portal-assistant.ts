@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -133,7 +134,7 @@ export async function portalChat({
   const systemPrompt = systemPrompts[portalContext] ?? COMPRADOR_SYSTEM;
 
   const response = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 300,
     system: systemPrompt,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),

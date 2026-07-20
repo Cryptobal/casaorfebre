@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_SONNET, CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -73,7 +74,7 @@ ${existingList}
 Sugiere 5 colecciones temáticas:`;
 
   const message = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     system: SUGGEST_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
@@ -93,7 +94,7 @@ export async function refreshCollectionProducts(
     .join("\n");
 
   const message = await getAnthropic().messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_HAIKU,
     max_tokens: 1024,
     messages: [{
       role: "user",

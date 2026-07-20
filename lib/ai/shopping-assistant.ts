@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { semanticSearch } from "@/lib/ai/search";
 import { prisma } from "@/lib/prisma";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -255,7 +256,7 @@ export async function chat(params: {
   anthropicMessages.push({ role: "user", content: augmentedUserMessage });
 
   const response = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 512,
     system: SYSTEM_PROMPT,
     messages: anthropicMessages,

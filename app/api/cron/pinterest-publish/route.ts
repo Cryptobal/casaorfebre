@@ -7,11 +7,37 @@ import {
   markBlogPinPublished,
 } from "@/lib/pinterest";
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
+
+/** Si el board configurado ya no existe, lista boards disponibles y termina suave. */
+async function diagnoseBoardNotFound() {
+  try {
+    const boards = await pinterestClient.listBoards();
+    if (boards.length === 0) {
+      console.error(
+        "[Pinterest][DIAGNÓSTICO] No se pudieron listar boards (token sin permiso o API error).",
+      );
+    } else {
+      for (const board of boards) {
+        console.log(`[Pinterest][DIAGNÓSTICO] ${board.id} → ${board.name}`);
+      }
+    }
+  } catch (err) {
+    console.error("[Pinterest][DIAGNÓSTICO] Error listando boards:", err);
+  }
+  return NextResponse.json({ skipped: true, reason: "board_not_found" });
+}
+
+function isBoardNotFound(
+  result: { id: string } | { error: "board_not_found" } | null,
+): result is { error: "board_not_found" } {
+  return Boolean(result && "error" in result && result.error === "board_not_found");
+}
 
 // ── Genera descripción del pin con Claude ─────────────────────────────────
 async function generatePinDescription(product: {
@@ -37,7 +63,7 @@ async function generatePinDescription(product: {
 
   try {
     const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: CLAUDE_SONNET,
       max_tokens: 300,
       messages: [
         {
@@ -158,6 +184,8 @@ export async function GET(request: Request) {
     if (result.success) {
       published++;
       results.push({ name: product.name, type: "product-new", status: "published" });
+    } else if (result.error === "board_not_found") {
+      return diagnoseBoardNotFound();
     } else {
       errors++;
       results.push({ name: product.name, type: "product-new", status: result.error || "error" });
@@ -229,7 +257,11 @@ export async function GET(request: Request) {
           },
         });
 
-        if (pinResult) {
+        if (isBoardNotFound(pinResult)) {
+          return diagnoseBoardNotFound();
+        }
+
+        if (pinResult && "id" in pinResult) {
           published++;
           results.push({
             name: product.name,
@@ -285,7 +317,11 @@ export async function GET(request: Request) {
         media_source: { source_type: "image_url", url: imageUrl },
       });
 
-      if (result) {
+      if (isBoardNotFound(result)) {
+        return diagnoseBoardNotFound();
+      }
+
+      if (result && "id" in result) {
         markBlogPinPublished(post.slug, result.id);
         published++;
         results.push({ name: post.title, type: "blog", status: "published" });

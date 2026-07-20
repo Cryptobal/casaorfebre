@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_SONNET } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -150,7 +151,7 @@ export async function analyzeAndGenerateListing(params: {
   }
 
   const message = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: CLAUDE_SONNET,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [

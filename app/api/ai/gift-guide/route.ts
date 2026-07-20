@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { semanticSearch } from "@/lib/ai/search";
 import { prisma } from "@/lib/prisma";
+import { CLAUDE_HAIKU } from "@/lib/ai/models";
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic() {
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     };
     try {
       const response = await getAnthropic().messages.create({
-        model: "claude-haiku-4-5-20251001",
+        model: CLAUDE_HAIKU,
         max_tokens: 1024,
         system: `Eres una asistente de regalos de Casa Orfebre, marketplace de joyería artesanal chilena. Español chileno, cálida y breve.`,
         messages: [
