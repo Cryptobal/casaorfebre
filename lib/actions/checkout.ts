@@ -212,6 +212,13 @@ export async function createCheckoutPreference(formData: FormData) {
           const itemTotal = product.price * item.quantity;
           const commissionAmount = Math.round(itemTotal * commissionRate);
           const artisanPayout = itemTotal - commissionAmount;
+          // The buyer's shipping charge is passed through to the artisan in full,
+          // prorated per item by its share of the subtotal. `zonePrice` is always
+          // the zone's rate — even on promotional free shipping, where Casa Orfebre
+          // subsidizes so the artisan still receives the zone-rate equivalent.
+          const shippingShare = subtotal > 0
+            ? Math.round((itemTotal / subtotal) * shippingResult.zonePrice)
+            : 0;
 
           return {
             productId: product.id,
@@ -223,6 +230,7 @@ export async function createCheckoutPreference(formData: FormData) {
             commissionRate,
             commissionAmount,
             artisanPayout,
+            shippingShare,
             fulfillmentStatus: "PENDING",
             payoutStatus: "HELD",
           };

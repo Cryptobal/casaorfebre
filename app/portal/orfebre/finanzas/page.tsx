@@ -31,17 +31,17 @@ export default async function FinanzasPage() {
 
   const totalSales = orderItems.reduce((sum: number, item: any) => sum + item.productPrice * item.quantity, 0);
   const totalCommissions = orderItems.reduce((sum: number, item: any) => sum + item.commissionAmount, 0);
-  const totalPayout = orderItems.reduce((sum: number, item: any) => sum + item.artisanPayout, 0);
+  const totalPayout = orderItems.reduce((sum: number, item: any) => sum + item.artisanPayout + item.shippingShare, 0);
 
   const heldAmount = orderItems
     .filter((i: any) => i.payoutStatus === "HELD")
-    .reduce((sum: number, i: any) => sum + i.artisanPayout, 0);
+    .reduce((sum: number, i: any) => sum + i.artisanPayout + i.shippingShare, 0);
   const availableAmount = orderItems
     .filter((i: any) => i.payoutStatus === "RELEASED" || i.payoutStatus === "PENDING")
-    .reduce((sum: number, i: any) => sum + i.artisanPayout, 0);
+    .reduce((sum: number, i: any) => sum + i.artisanPayout + i.shippingShare, 0);
   const paidAmount = orderItems
     .filter((i: any) => i.payoutStatus === "PAID")
-    .reduce((sum: number, i: any) => sum + i.artisanPayout, 0);
+    .reduce((sum: number, i: any) => sum + i.artisanPayout + i.shippingShare, 0);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -163,7 +163,7 @@ export default async function FinanzasPage() {
                         {formatCLP(item.commissionAmount)}
                       </td>
                       <td className="px-4 py-3 font-medium text-green-700">
-                        {formatCLP(item.artisanPayout)}
+                        {formatCLP(item.artisanPayout + item.shippingShare)}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
@@ -188,7 +188,7 @@ export default async function FinanzasPage() {
                       {new Date(item.createdAt).toLocaleDateString("es-CL")}
                     </p>
                   </div>
-                  <p className="shrink-0 font-medium text-green-700">{formatCLP(item.artisanPayout)}</p>
+                  <p className="shrink-0 font-medium text-green-700">{formatCLP(item.artisanPayout + item.shippingShare)}</p>
                 </div>
                 <div className="mt-2 flex gap-4 text-xs text-text-secondary">
                   <span>Venta: {formatCLP(item.productPrice * item.quantity)}</span>

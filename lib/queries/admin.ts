@@ -566,7 +566,7 @@ export async function getPendingPayouts() {
       acc[key] = { artisan: item.artisan, items: [], totalAmount: 0 };
     }
     acc[key].items.push(item);
-    acc[key].totalAmount += item.artisanPayout;
+    acc[key].totalAmount += item.artisanPayout + item.shippingShare;
     return acc;
   }, {});
 

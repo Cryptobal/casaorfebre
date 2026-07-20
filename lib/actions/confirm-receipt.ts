@@ -76,6 +76,7 @@ export async function confirmReceipt(orderItemId: string) {
         productName: item.productName,
         orderNumber: item.order.orderNumber,
         artisanPayout: item.artisanPayout,
+        shippingShare: item.shippingShare,
         payoutEligibleAt,
         payoutDays,
       });
@@ -93,6 +94,7 @@ export async function confirmReceipt(orderItemId: string) {
         productName: item.productName,
         orderNumber: item.order.orderNumber,
         artisanPayout: item.artisanPayout,
+        shippingShare: item.shippingShare,
         payoutEligibleAt,
         payoutDays,
       });
