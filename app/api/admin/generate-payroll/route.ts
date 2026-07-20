@@ -63,7 +63,7 @@ export async function GET() {
     if (!grouped[key]) {
       grouped[key] = { artisan: item.artisan, totalAmount: 0, orders: [] };
     }
-    grouped[key].totalAmount += item.artisanPayout;
+    grouped[key].totalAmount += item.artisanPayout + item.shippingShare;
     if (!grouped[key].orders.includes(item.order.orderNumber)) {
       grouped[key].orders.push(item.order.orderNumber);
     }

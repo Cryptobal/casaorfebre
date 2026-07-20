@@ -22,7 +22,7 @@ export default function AcuerdoOrfebrePage() {
           Acuerdo de Orfebre
         </h1>
         <p className="mt-4 text-sm text-text-tertiary">
-          Versi&oacute;n 1.0 &mdash; Abril 2026
+          Versi&oacute;n 1.1 &mdash; Julio 2026
         </p>
         <p className="mt-4 text-sm italic font-light text-text-secondary">
           Este Acuerdo regula la relaci&oacute;n entre t&uacute; (el Orfebre) y
@@ -253,7 +253,7 @@ export default function AcuerdoOrfebrePage() {
               recibir pagos, debes conectar tu cuenta de MercadoPago a la
               Plataforma mediante el proceso OAuth que te indicaremos.
             </p>
-            <p className="font-light text-text-secondary">
+            <p className="mb-4 font-light text-text-secondary">
               3.7.{" "}
               <strong className="font-medium text-text">
                 Cambios de comisi&oacute;n.
@@ -263,6 +263,21 @@ export default function AcuerdoOrfebrePage() {
               notificado por email. Si no est&aacute;s de acuerdo, podr&aacute;s
               dar de baja tu cuenta sin penalizaci&oacute;n antes de que el
               cambio entre en vigor.
+            </p>
+            <p className="font-light text-text-secondary">
+              3.8.{" "}
+              <strong className="font-medium text-text">
+                Costo de despacho.
+              </strong>{" "}
+              El costo de env&iacute;o pagado por el Comprador se transfiere
+              &iacute;ntegramente al Orfebre junto con el pago de su venta,
+              prorrateado cuando el pedido incluye piezas de m&aacute;s de un
+              orfebre. En pedidos donde Casa Orfebre ofrezca env&iacute;o
+              gratuito promocional al Comprador, Casa Orfebre asumir&aacute;
+              dicho costo y pagar&aacute; igualmente al Orfebre el equivalente a
+              la tarifa de la zona de env&iacute;o correspondiente. El Orfebre
+              contrata y paga directamente al courier de su elecci&oacute;n, y
+              el monto por despacho no est&aacute; afecto a comisi&oacute;n.
             </p>
           </section>
 

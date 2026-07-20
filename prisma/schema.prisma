@@ -492,6 +492,7 @@ model OrderItem {
   commissionRate    Float
   commissionAmount  Int
   artisanPayout     Int
+  shippingShare     Int               @default(0)
   mpTransactionId   String?
   payoutStatus      PayoutStatus      @default(HELD)
   payoutAt          DateTime?

@@ -88,20 +88,14 @@ export async function GET(request: Request) {
     if (item.artisan.user?.email) {
       try {
         const productTotal = item.productPrice * item.quantity;
-        // Calculate proportional shipping share
-        const orderSubtotal = item.order.subtotal || 1;
-        const shippingShare =
-          item.order.shippingCost > 0
-            ? Math.round((productTotal / orderSubtotal) * item.order.shippingCost)
-            : 0;
-
+        // Shipping share is persisted per item at checkout — pass it through.
         await sendPayoutReleasedDetailedEmail(item.artisan.user.email, {
           artisanName: item.artisan.displayName,
           productName: item.productName,
           productTotal,
           commissionRate: item.commissionRate,
           commissionAmount: item.commissionAmount,
-          shippingShare,
+          shippingShare: item.shippingShare,
           artisanPayout: item.artisanPayout,
         });
       } catch (e) {
@@ -110,7 +104,7 @@ export async function GET(request: Request) {
         try {
           await sendPayoutReleasedEmail(item.artisan.user.email, {
             artisanName: item.artisan.displayName,
-            amount: item.artisanPayout,
+            amount: item.artisanPayout + item.shippingShare,
           });
         } catch {}
       }
@@ -126,7 +120,7 @@ export async function GET(request: Request) {
       if (!acc[key]) {
         acc[key] = { name: item.artisan.displayName, total: 0, items: 0 };
       }
-      acc[key].total += item.artisanPayout;
+      acc[key].total += item.artisanPayout + item.shippingShare;
       acc[key].items += 1;
       return acc;
     }, {});

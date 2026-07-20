@@ -91,7 +91,7 @@ export default async function AdminPagosPage() {
                       {item.product.name} &middot; Orden {item.order.orderNumber}
                     </span>
                     <span className="tabular-nums">
-                      {formatCLP(item.artisanPayout)}
+                      {formatCLP(item.artisanPayout + item.shippingShare)}
                     </span>
                   </div>
                 ))}
@@ -150,7 +150,7 @@ export default async function AdminPagosPage() {
                     {item.order.orderNumber}
                   </td>
                   <td className="px-4 py-3 font-medium text-green-700 tabular-nums">
-                    {formatCLP(item.artisanPayout)}
+                    {formatCLP(item.artisanPayout + item.shippingShare)}
                   </td>
                 </tr>
               ))}

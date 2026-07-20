@@ -161,7 +161,10 @@ export default async function OrderDetailPage({
             <p><span className="text-text-secondary">Total:</span> <span className="font-medium text-text">{formatCLP(item.productPrice * item.quantity)}</span></p>
           </div>
           <div className="mt-3 border-t border-border pt-3 text-sm">
-            <p><span className="text-text-secondary">Tu pago neto:</span> <span className="font-medium text-green-700">{formatCLP(item.artisanPayout)}</span></p>
+            <p><span className="text-text-secondary">Tu pago neto:</span> <span className="font-medium text-green-700">{formatCLP(item.artisanPayout + item.shippingShare)}</span></p>
+            {item.shippingShare > 0 && (
+              <p className="text-xs text-text-secondary">Incluye {formatCLP(item.shippingShare)} por despacho</p>
+            )}
           </div>
         </Card>
 
@@ -290,8 +293,11 @@ export default async function OrderDetailPage({
             <div className="rounded-md border border-border bg-background p-3 space-y-1">
               <p className="text-sm">
                 <span className="text-text-secondary">Tu pago neto:</span>{" "}
-                <span className="font-semibold text-green-700">{formatCLP(item.artisanPayout)}</span>
+                <span className="font-semibold text-green-700">{formatCLP(item.artisanPayout + item.shippingShare)}</span>
               </p>
+              {item.shippingShare > 0 && (
+                <p className="text-xs text-text-secondary">Incluye {formatCLP(item.shippingShare)} por despacho</p>
+              )}
               {item.payoutStatus === "HELD" && item.payoutEligibleAt && (
                 <p className="text-sm text-text-secondary">
                   Se liberará el{" "}
@@ -337,8 +343,11 @@ export default async function OrderDetailPage({
             <div className="rounded-md border border-border bg-background p-3 space-y-1">
               <p className="text-sm">
                 <span className="text-text-secondary">Tu pago neto:</span>{" "}
-                <span className="font-semibold text-text">{formatCLP(item.artisanPayout)}</span>
+                <span className="font-semibold text-text">{formatCLP(item.artisanPayout + item.shippingShare)}</span>
               </p>
+              {item.shippingShare > 0 && (
+                <p className="text-xs text-text-secondary">Incluye {formatCLP(item.shippingShare)} por despacho</p>
+              )}
               <p className="text-sm text-text-secondary">
                 Estado del pago: <span className="font-medium text-amber-700">en revisión manual</span>.
                 Si tienes dudas, escríbenos a contacto@casaorfebre.cl.

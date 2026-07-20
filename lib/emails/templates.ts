@@ -1680,6 +1680,7 @@ export async function sendReceiptConfirmedToArtisanEmail(
     productName,
     orderNumber,
     artisanPayout,
+    shippingShare,
     payoutEligibleAt,
     payoutDays,
   }: {
@@ -1687,6 +1688,7 @@ export async function sendReceiptConfirmedToArtisanEmail(
     productName: string;
     orderNumber: string;
     artisanPayout: number;
+    shippingShare: number;
     payoutEligibleAt: Date;
     payoutDays: number;
   },
@@ -1702,7 +1704,8 @@ export async function sendReceiptConfirmedToArtisanEmail(
     `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
      <p style="margin:0 0 16px;">El comprador ha confirmado que recibió tu pieza <strong>${productName}</strong> del pedido <strong>#${orderNumber}</strong>.</p>
      <div style="padding:12px 16px;background-color:#f0fdf4;border-radius:4px;margin:0 0 16px;">
-       <p style="margin:0 0 4px;font-weight:600;">Tu pago: ${formatCLP(artisanPayout)}</p>
+       <p style="margin:0 0 4px;font-weight:600;">Tu pago: ${formatCLP(artisanPayout + shippingShare)}</p>
+       ${shippingShare > 0 ? `<p style="margin:0 0 4px;font-size:13px;color:#4a4a48;">Incluye ${formatCLP(shippingShare)} por despacho.</p>` : ""}
        <p style="margin:0;font-size:14px;color:#4a4a48;">Se liberará el ${dateStr} (en ${payoutDays} días)</p>
      </div>
      <p style="margin:0 0 0;">
@@ -1784,11 +1787,13 @@ export async function sendAutoConfirmToArtisanEmail(
     artisanName,
     productName,
     artisanPayout,
+    shippingShare,
     payoutEligibleAt,
   }: {
     artisanName: string;
     productName: string;
     artisanPayout: number;
+    shippingShare: number;
     payoutEligibleAt: Date;
   },
 ) {
@@ -1803,7 +1808,8 @@ export async function sendAutoConfirmToArtisanEmail(
     `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
      <p style="margin:0 0 16px;">La entrega de <strong>${productName}</strong> fue confirmada automáticamente después de 10 días.</p>
      <div style="padding:12px 16px;background-color:#f0fdf4;border-radius:4px;margin:0 0 16px;">
-       <p style="margin:0 0 4px;font-weight:600;">Tu pago: ${formatCLP(artisanPayout)}</p>
+       <p style="margin:0 0 4px;font-weight:600;">Tu pago: ${formatCLP(artisanPayout + shippingShare)}</p>
+       ${shippingShare > 0 ? `<p style="margin:0 0 4px;font-size:13px;color:#4a4a48;">Incluye ${formatCLP(shippingShare)} por despacho.</p>` : ""}
        <p style="margin:0;font-size:14px;color:#4a4a48;">Se liberará el ${dateStr}</p>
      </div>
      <p style="margin:0 0 0;">
@@ -1835,9 +1841,13 @@ export async function sendPayoutReleasedDetailedEmail(
     artisanPayout: number;
   },
 ) {
+  // The artisan receives their sale payout plus the shipping charged to the
+  // buyer, prorated to this item. Showing the sum keeps the breakdown exact:
+  // producto − comisión + despacho = Tu pago.
+  const totalPago = artisanPayout + shippingShare;
   await sendEmail(
     to,
-    `Pago liberado: ${formatCLP(artisanPayout)} — ${productName}`,
+    `Pago liberado: ${formatCLP(totalPago)} — ${productName}`,
     `<p style="margin:0 0 16px;">Hola ${artisanName},</p>
      <p style="margin:0 0 16px;">Se ha liberado tu pago por <strong>${productName}</strong>.</p>
      <div style="padding:16px;background-color:#f5f3ef;border-radius:6px;margin:0 0 16px;font-size:14px;">
@@ -1845,7 +1855,7 @@ export async function sendPayoutReleasedDetailedEmail(
        <p style="margin:0 0 6px;">Comisión Casa Orfebre (${Math.round(commissionRate * 100)}%): <span style="color:#dc2626;">-${formatCLP(commissionAmount)}</span></p>
        ${shippingShare > 0 ? `<p style="margin:0 0 6px;">Monto despacho: +${formatCLP(shippingShare)}</p>` : ""}
        <hr style="border:none;border-top:1px solid #e8e4de;margin:8px 0;" />
-       <p style="margin:0;font-weight:700;font-size:16px;">Tu pago: ${formatCLP(artisanPayout)}</p>
+       <p style="margin:0;font-weight:700;font-size:16px;">Tu pago: ${formatCLP(totalPago)}</p>
      </div>
      <p style="margin:0 0 0;">
        <a href="${appUrl()}/portal/orfebre/finanzas" style="display:inline-block;padding:12px 24px;background-color:#8B7355;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;">Ver finanzas</a>

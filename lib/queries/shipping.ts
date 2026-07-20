@@ -41,6 +41,7 @@ export async function calculateShippingCost(region: string, subtotal: number) {
 
   return {
     cost: isFreeShipping ? 0 : zone.price,
+    zonePrice: zone.price,
     zoneName: zone.name,
     estimatedDays: zone.estimatedDays,
     isFreeShipping,
