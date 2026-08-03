@@ -72,6 +72,7 @@ export default async function CityPage({
     products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         artisanId: { in: artisans.map((a: any) => a.id) },
       },
       orderBy: { publishedAt: "desc" },
@@ -87,7 +88,7 @@ export default async function CityPage({
     });
   } else {
     products = await prisma.product.findMany({
-      where: { status: "APPROVED" },
+      where: { status: "APPROVED", artisan: { status: "APPROVED" } },
       orderBy: { publishedAt: "desc" },
       take: 8,
       include: {

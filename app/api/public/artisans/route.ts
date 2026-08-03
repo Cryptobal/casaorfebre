@@ -4,7 +4,7 @@ export async function GET() {
   const artisans = await prisma.artisan.findMany({
     where: {
       status: "APPROVED",
-      products: { some: { status: "APPROVED" } },
+      products: { some: { status: "APPROVED", artisan: { status: "APPROVED" } } },
     },
     select: {
       displayName: true,

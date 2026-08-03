@@ -174,7 +174,10 @@ export async function prepareChat(params: {
 
       const maxPrice = parseMaxPriceCLP(retrievalQuery);
 
-      const where: Prisma.ProductWhereInput = { status: "APPROVED" };
+      const where: Prisma.ProductWhereInput = {
+        status: "APPROVED",
+        artisan: { status: "APPROVED" },
+      };
       if (categoryMatch) {
         where.categories = { some: { slug: { contains: categoryMatch } } };
       }
@@ -197,7 +200,7 @@ export async function prepareChat(params: {
       } else {
         // Sin resultados filtrados → mostrar los más recientes
         const recentProducts = await prisma.product.findMany({
-          where: { status: "APPROVED" },
+          where: { status: "APPROVED", artisan: { status: "APPROVED" } },
           select: productSelect,
           orderBy: { createdAt: "desc" },
           take: 6,
@@ -261,7 +264,7 @@ export function parseProductSlugs(text: string): { cleanReply: string; slugs: st
 /** Hidrata las tarjetas de producto (foto/precio/orfebre) preservando el orden de slugs. */
 export async function fetchProductCards(slugs: string[]): Promise<ChatProductCard[]> {
   const rows = await prisma.product.findMany({
-    where: { slug: { in: slugs }, status: "APPROVED" },
+    where: { slug: { in: slugs }, status: "APPROVED", artisan: { status: "APPROVED" } },
     select: {
       slug: true,
       name: true,

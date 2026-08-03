@@ -34,6 +34,7 @@ export default async function GraduacionPage() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         occasions: { some: { slug: "graduacion" } },
       },
       include: {

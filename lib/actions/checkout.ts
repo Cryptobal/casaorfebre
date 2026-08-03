@@ -76,6 +76,7 @@ export async function createCheckoutPreference(formData: FormData) {
       artisan: {
         select: {
           id: true,
+          status: true,
           commissionRate: true,
           commissionOverride: true,
         },
@@ -87,10 +88,11 @@ export async function createCheckoutPreference(formData: FormData) {
 
   // Validate availability + stock (revalidate APPROVED to avoid selling a piece
   // that was paused/sold/removed between cart and checkout, and honor per-size
-  // variant stock when a size was chosen).
+  // variant stock when a size was chosen). Also reject products whose artisan
+  // was suspended after the item entered the cart.
   for (const item of cartItems) {
     const product = productMap.get(item.productId);
-    if (!product || product.status !== "APPROVED") {
+    if (!product || product.status !== "APPROVED" || product.artisan?.status !== "APPROVED") {
       return {
         error: `"${item.product.name}" ya no está disponible. Quítalo del carrito para continuar.`,
       };
@@ -478,6 +480,7 @@ export async function resumeOrderPayment(orderId: string) {
       artisan: {
         select: {
           id: true,
+          status: true,
           commissionRate: true,
           commissionOverride: true,
         },
@@ -489,7 +492,7 @@ export async function resumeOrderPayment(orderId: string) {
 
   for (const item of order.items) {
     const product = productMap.get(item.productId);
-    if (!product || product.status !== "APPROVED") {
+    if (!product || product.status !== "APPROVED" || product.artisan?.status !== "APPROVED") {
       return {
         error: `"${item.productName}" ya no está disponible.`,
       };

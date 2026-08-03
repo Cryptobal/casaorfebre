@@ -176,6 +176,7 @@ export default async function CategoryLandingPage({
     prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         categories: { some: { slug } },
       },
       include: {
@@ -193,7 +194,7 @@ export default async function CategoryLandingPage({
     prisma.artisan.findMany({
       where: {
         status: "APPROVED",
-        products: { some: { status: "APPROVED", categories: { some: { slug } } } },
+        products: { some: { status: "APPROVED", artisan: { status: "APPROVED" }, categories: { some: { slug } } } },
       },
       select: {
         displayName: true,

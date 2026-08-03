@@ -39,6 +39,7 @@ export default async function LapislazuliPage() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         materials: { some: { name: { in: ["Lapislázuli"] } } },
       },
       include: {

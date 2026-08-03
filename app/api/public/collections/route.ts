@@ -10,7 +10,7 @@ export async function GET() {
       coverImage: true,
       _count: {
         select: {
-          products: { where: { status: "APPROVED" } },
+          products: { where: { status: "APPROVED", artisan: { status: "APPROVED" } } },
         },
       },
     },

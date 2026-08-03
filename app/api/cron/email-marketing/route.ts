@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
           addedAt: { lte: sevenDaysAgo },
           product: {
             status: "APPROVED",
+            artisan: { status: "APPROVED" },
             stock: { lte: 3, gt: 0 },
           },
         },
@@ -128,6 +129,7 @@ export async function GET(req: NextRequest) {
           where: {
             artisanId: { in: artisanIds },
             status: "APPROVED",
+            artisan: { status: "APPROVED" },
             createdAt: { gte: thirtyDaysAgo },
           },
           select: {
@@ -173,6 +175,7 @@ export async function GET(req: NextRequest) {
       const newProducts = await prisma.product.findMany({
         where: {
           status: "APPROVED",
+          artisan: { status: "APPROVED" },
           publishedAt: { gte: yesterday },
         },
         select: {

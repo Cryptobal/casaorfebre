@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PUBLIC_PRODUCT_SQL, publicProductWhere } from "@/lib/product-visibility";
 
 const STOPWORDS = new Set([
   "de", "del", "la", "el", "los", "las", "en", "con", "para", "y", "o", "un", "una", "por",
@@ -47,7 +48,7 @@ export async function textSearchProductIds(q: string, take: number): Promise<str
     const rows = await prisma.$queryRawUnsafe<TextHit[]>(
       `SELECT p."id"
        FROM "products" p
-       WHERE p."status" = 'APPROVED' AND ${tokenConds}
+       WHERE ${PUBLIC_PRODUCT_SQL} AND ${tokenConds}
        ORDER BY (unaccent(lower(p."name")) = $1) DESC,
                 (unaccent(lower(p."name")) LIKE $1 || '%') DESC,
                 p."createdAt" DESC
@@ -62,8 +63,7 @@ export async function textSearchProductIds(q: string, take: number): Promise<str
 
   // Intento 2: Prisma tokenizado (sin tildes-DB pero multi-palabra correcto)
   const rows = await prisma.product.findMany({
-    where: {
-      status: "APPROVED",
+    where: publicProductWhere({
       AND: tokens.map((t) => ({
         OR: [
           { name: { contains: t, mode: "insensitive" as const } },
@@ -73,7 +73,7 @@ export async function textSearchProductIds(q: string, take: number): Promise<str
           { artisan: { displayName: { contains: t, mode: "insensitive" as const } } },
         ],
       })),
-    },
+    }),
     select: { id: true },
     orderBy: { createdAt: "desc" },
     take,

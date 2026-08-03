@@ -33,7 +33,7 @@ async function getCategoryCounts() {
     where: { isActive: true },
     include: {
       products: {
-        where: { status: "APPROVED" },
+        where: { status: "APPROVED", artisan: { status: "APPROVED" } },
         select: { id: true },
       },
     },
@@ -46,7 +46,7 @@ async function getOccasionCounts() {
     where: { isActive: true },
     include: {
       products: {
-        where: { status: "APPROVED" },
+        where: { status: "APPROVED", artisan: { status: "APPROVED" } },
         select: { id: true },
       },
     },
@@ -64,13 +64,13 @@ async function getCuratedCollections() {
     where: { isActive: true },
     include: {
       products: {
-        where: { status: "APPROVED" },
+        where: { status: "APPROVED", artisan: { status: "APPROVED" } },
         select: { images: { take: 1, orderBy: { position: "asc" } } },
         take: 1,
       },
       _count: {
         select: {
-          products: { where: { status: "APPROVED" } },
+          products: { where: { status: "APPROVED", artisan: { status: "APPROVED" } } },
         },
       },
     },

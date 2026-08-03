@@ -70,6 +70,7 @@ export async function getBuyerRecommendations(
   const recommendations = await prisma.product.findMany({
     where: {
       status: "APPROVED",
+      artisan: { status: "APPROVED" },
       id: { notIn: interactedIds },
       OR: [
         ...(categoryIds.length > 0
@@ -119,6 +120,7 @@ async function getPopularProducts(
   const products = await prisma.product.findMany({
     where: {
       status: "APPROVED",
+      artisan: { status: "APPROVED" },
       ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
     },
     select: {

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -17,6 +18,13 @@ export async function POST(req: Request) {
     where: { id: artisanId },
     data: { status: "SUSPENDED" },
   });
+
+  revalidatePath("/portal/admin/orfebres");
+  revalidatePath("/coleccion");
+  revalidatePath("/coleccion/regalos");
+  revalidatePath("/colecciones");
+  revalidatePath("/orfebres");
+  revalidatePath("/");
 
   return NextResponse.json({ success: true });
 }

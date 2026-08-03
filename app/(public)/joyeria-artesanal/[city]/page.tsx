@@ -132,6 +132,7 @@ export default async function CityPage({
   const products = await prisma.product.findMany({
     where: {
       status: "APPROVED",
+      artisan: { status: "APPROVED" },
       artisanId: { in: artisanIds },
     },
     orderBy: { publishedAt: "desc" },

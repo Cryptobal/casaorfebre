@@ -31,6 +31,7 @@ export default async function RegalosBajo100000Page() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         price: { lte: 100000 },
       },
       include: {

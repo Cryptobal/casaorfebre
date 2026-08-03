@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { generateEmbedding } from "@/lib/ai/embeddings";
+import { PUBLIC_PRODUCT_SQL } from "@/lib/product-visibility";
 import type { Product } from "@prisma/client";
 
 interface SearchFilters {
@@ -22,7 +23,7 @@ export async function semanticSearch(
   const embeddingStr = `[${queryEmbedding.join(",")}]`;
 
   const conditions: string[] = [
-    `p."status" = 'APPROVED'`,
+    PUBLIC_PRODUCT_SQL,
     `p."embedding" IS NOT NULL`,
   ];
   const params: unknown[] = [embeddingStr, limit];

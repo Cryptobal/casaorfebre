@@ -102,6 +102,7 @@ export default async function MaterialPage({
   const products = await prisma.product.findMany({
     where: {
       status: "APPROVED",
+      artisan: { status: "APPROVED" },
       materials: { some: { id: mat.id } },
     },
     orderBy: { publishedAt: "desc" },

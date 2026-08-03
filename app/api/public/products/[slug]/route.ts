@@ -7,8 +7,8 @@ export async function GET(
 ) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug, status: "APPROVED" },
+  const product = await prisma.product.findFirst({
+    where: { slug, status: "APPROVED", artisan: { status: "APPROVED" } },
     select: {
       id: true,
       name: true,

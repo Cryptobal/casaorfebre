@@ -32,6 +32,7 @@ export default async function RegalosPage() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         occasions: { some: { slug: "regalo" } },
       },
       include: {

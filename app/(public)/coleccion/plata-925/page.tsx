@@ -39,6 +39,7 @@ export default async function Plata925Page() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         materials: { some: { name: { in: ["Plata 925", "Plata 950", "Plata"] } } },
       },
       include: {

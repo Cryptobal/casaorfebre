@@ -20,8 +20,8 @@ async function mergeGuestLinesIntoUserCart(userId: string, lines: GuestCartLine[
   }
 
   for (const { productId, size, quantity: rawQty } of merged.values()) {
-    const product = await prisma.product.findUnique({
-      where: { id: productId, status: "APPROVED" },
+    const product = await prisma.product.findFirst({
+      where: { id: productId, status: "APPROVED", artisan: { status: "APPROVED" } },
       include: { variants: true },
     });
     if (!product) continue;
@@ -68,8 +68,8 @@ export async function addToCart(productId: string, quantity = 1, size?: string) 
   const session = await auth();
   if (!session?.user) return { error: "Inicia sesión para agregar al carrito" };
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId, status: "APPROVED" },
+  const product = await prisma.product.findFirst({
+    where: { id: productId, status: "APPROVED", artisan: { status: "APPROVED" } },
     include: { variants: true },
   });
   if (!product) return { error: "Producto no disponible" };

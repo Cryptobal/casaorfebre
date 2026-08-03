@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED" },
+    where: { status: "APPROVED", artisan: { status: "APPROVED" } },
     select: { slug: true, updatedAt: true },
     orderBy: { createdAt: "desc" },
     // Sitemaps allow up to 50.000 URLs; keep headroom under that hard limit.

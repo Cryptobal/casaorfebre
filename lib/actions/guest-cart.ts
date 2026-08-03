@@ -5,8 +5,8 @@ import type { GuestCartLine } from "@/lib/guest-cart";
 
 /** Valida stock y disponibilidad antes de añadir al carrito local del invitado. */
 export async function validateGuestAddToCart(productId: string, quantity = 1, size?: string) {
-  const product = await prisma.product.findUnique({
-    where: { id: productId, status: "APPROVED" },
+  const product = await prisma.product.findFirst({
+    where: { id: productId, status: "APPROVED", artisan: { status: "APPROVED" } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },
@@ -55,7 +55,7 @@ export async function resolveGuestCartLines(lines: GuestCartLine[]) {
 
   const productIds = [...new Set(lines.map((l) => l.productId))];
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, status: "APPROVED" },
+    where: { id: { in: productIds }, status: "APPROVED", artisan: { status: "APPROVED" } },
     include: {
       artisan: { select: { displayName: true, slug: true } },
       images: { orderBy: { position: "asc" }, take: 1 },
@@ -137,8 +137,8 @@ export async function resolveGuestCartLines(lines: GuestCartLine[]) {
 
 export async function validateGuestLineQuantity(productId: string, quantity: number, size?: string) {
   if (quantity < 1) return { error: "Cantidad no válida" as const };
-  const product = await prisma.product.findUnique({
-    where: { id: productId, status: "APPROVED" },
+  const product = await prisma.product.findFirst({
+    where: { id: productId, status: "APPROVED", artisan: { status: "APPROVED" } },
     include: { variants: true },
   });
   if (!product) return { error: "Producto no disponible" as const };

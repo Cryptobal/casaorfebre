@@ -15,7 +15,10 @@ export async function GET(req: NextRequest) {
   const offset = Number(params.get("offset")) || 0;
   const sort = params.get("sort") || "newest";
 
-  const where: Record<string, unknown> = { status: "APPROVED" as const };
+  const where: Record<string, unknown> = {
+    status: "APPROVED" as const,
+    artisan: { status: "APPROVED" as const },
+  };
 
   if (slug) where.slug = { in: slug.split(",") };
   if (category) where.categories = { some: { slug: category } };

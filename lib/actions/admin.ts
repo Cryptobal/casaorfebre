@@ -862,7 +862,13 @@ export async function suspendArtisan(
     data: { status: "SUSPENDED" },
   });
 
+  // Catálogo público cacheado (ISR): ocultar productos del orfebre suspendido.
   revalidatePath("/portal/admin/orfebres");
+  revalidatePath("/coleccion");
+  revalidatePath("/coleccion/regalos");
+  revalidatePath("/colecciones");
+  revalidatePath("/orfebres");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -891,6 +897,11 @@ export async function reactivateArtisan(
   });
 
   revalidatePath("/portal/admin/orfebres");
+  revalidatePath("/coleccion");
+  revalidatePath("/coleccion/regalos");
+  revalidatePath("/colecciones");
+  revalidatePath("/orfebres");
+  revalidatePath("/");
   return { success: true };
 }
 

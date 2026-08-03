@@ -111,6 +111,7 @@ async function selectDailyProduct(): Promise<string | null> {
   const products = await prisma.product.findMany({
     where: {
       status: "APPROVED",
+      artisan: { status: "APPROVED" },
       images: { some: { status: "APPROVED" } },
     },
     select: { id: true },

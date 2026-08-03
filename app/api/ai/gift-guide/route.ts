@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       if (results.length > 0) {
         const productIds = results.map((r) => r.id);
         const rows = await prisma.product.findMany({
-          where: { id: { in: productIds }, status: "APPROVED" },
+          where: { id: { in: productIds }, status: "APPROVED", artisan: { status: "APPROVED" } },
           select: productSelect,
         });
         // Preserve semantic ordering
@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
       products = await prisma.product.findMany({
         where: {
           status: "APPROVED",
+          artisan: { status: "APPROVED" },
           ...(maxPrice ? { price: { lte: maxPrice } } : {}),
         },
         orderBy: [{ favoriteCount: "desc" }, { publishedAt: "desc" }],

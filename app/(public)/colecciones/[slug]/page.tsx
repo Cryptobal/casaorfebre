@@ -19,7 +19,7 @@ async function getCollection(slug: string) {
     where: { slug, isActive: true },
     include: {
       products: {
-        where: { status: "APPROVED" },
+        where: { status: "APPROVED", artisan: { status: "APPROVED" } },
         include: {
           artisan: { select: { displayName: true, slug: true } },
           images: { orderBy: { position: "asc" }, take: 1 },

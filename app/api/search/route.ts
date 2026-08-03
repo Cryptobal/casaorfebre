@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
 
   // Hidratación en un solo query (in: [] devuelve vacío sin romper el paralelismo).
   const productsPromise = prisma.product.findMany({
-    where: { id: { in: mergedIds }, status: "APPROVED" },
+    where: { id: { in: mergedIds }, status: "APPROVED", artisan: { status: "APPROVED" } },
     select: {
       id: true,
       slug: true,

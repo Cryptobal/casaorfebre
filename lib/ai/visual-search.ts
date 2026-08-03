@@ -67,7 +67,9 @@ Responde en 2-3 oraciones descriptivas, sin formato especial.`,
     `SELECT p."id", p."name", p."slug", p."price",
             1 - (p."embedding" <=> $1::vector) AS similarity
      FROM "products" p
-     WHERE p."status" = 'APPROVED' AND p."embedding" IS NOT NULL
+     WHERE p."status" = 'APPROVED'
+       AND EXISTS (SELECT 1 FROM "artisans" a WHERE a."id" = p."artisanId" AND a."status" = 'APPROVED')
+       AND p."embedding" IS NOT NULL
      ORDER BY p."embedding" <=> $1::vector
      LIMIT 12`,
     embeddingStr,

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Product, Artisan, ProductImage } from "@prisma/client";
+import { publicProductWhere } from "@/lib/product-visibility";
 
 /** Only show approved images in public queries */
 const approvedImagesFirst = {
@@ -73,36 +74,38 @@ interface ProductFilters {
 }
 
 export async function getApprovedProducts(filters: ProductFilters = {}) {
-  const where: Record<string, unknown> = { status: "APPROVED" as const };
+  const extra: Record<string, unknown> = {};
 
   const q = filters.q?.trim();
   if (q) {
-    where.OR = [
+    extra.OR = [
       { name: { contains: q, mode: "insensitive" } },
       { description: { contains: q, mode: "insensitive" } },
     ];
   }
 
-  if (filters.categorySlug) where.categories = { some: { slug: filters.categorySlug } };
-  if (filters.material) where.materials = { some: { name: filters.material } };
+  if (filters.categorySlug) extra.categories = { some: { slug: filters.categorySlug } };
+  if (filters.material) extra.materials = { some: { name: filters.material } };
   if (filters.minPrice || filters.maxPrice) {
-    where.price = {
+    extra.price = {
       ...(filters.minPrice ? { gte: filters.minPrice } : {}),
       ...(filters.maxPrice ? { lte: filters.maxPrice } : {}),
     };
   }
   if (filters.artisanSlug) {
-    where.artisan = { slug: filters.artisanSlug };
+    extra.artisan = { slug: filters.artisanSlug };
   }
   if (filters.occasionSlug) {
-    where.occasions = { some: { slug: filters.occasionSlug } };
+    extra.occasions = { some: { slug: filters.occasionSlug } };
   }
   if (filters.specialtySlug) {
-    where.specialties = { some: { slug: filters.specialtySlug } };
+    extra.specialties = { some: { slug: filters.specialtySlug } };
   }
   if (filters.audiencia) {
-    where.audiencia = filters.audiencia;
+    extra.audiencia = filters.audiencia;
   }
+
+  const where = publicProductWhere(extra);
 
   const isRelevanceSort = !filters.sort || filters.sort === "newest";
 
@@ -179,8 +182,8 @@ export async function getApprovedProducts(filters: ProductFilters = {}) {
 }
 
 export async function getProductBySlug(slug: string) {
-  return prisma.product.findUnique({
-    where: { slug, status: "APPROVED" },
+  return prisma.product.findFirst({
+    where: publicProductWhere({ slug }),
     include: {
       artisan: {
         select: {
@@ -196,6 +199,7 @@ export async function getProductBySlug(slug: string) {
           status: true,
           _count: {
             select: {
+              // Ya estamos en un orfebre APPROVED; basta filtrar producto APPROVED.
               products: { where: { status: "APPROVED" } },
             },
           },
@@ -216,7 +220,7 @@ export async function getProductBySlug(slug: string) {
 
 export async function getLatestProducts(limit = 8) {
   return prisma.product.findMany({
-    where: { status: "APPROVED" },
+    where: publicProductWhere(),
     orderBy: { publishedAt: "desc" },
     take: limit,
     include: {
@@ -239,7 +243,7 @@ export async function getAllMaterials() {
   const materials = await prisma.material.findMany({
     where: {
       isActive: true,
-      products: { some: { status: "APPROVED" } },
+      products: { some: publicProductWhere() },
     },
     select: { name: true },
     orderBy: { name: "asc" },
@@ -265,25 +269,25 @@ export async function getNewProducts({
   const now = new Date();
   let cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const where: Record<string, unknown> = {
-    status: "APPROVED" as const,
+  const extra: Record<string, unknown> = {
     createdAt: { gte: cutoff },
   };
-  if (categorySlug) where.categories = { some: { slug: categorySlug } };
-  if (material) where.materials = { some: { name: material } };
+  if (categorySlug) extra.categories = { some: { slug: categorySlug } };
+  if (material) extra.materials = { some: { name: material } };
   if (minPrice || maxPrice) {
-    where.price = {
+    extra.price = {
       ...(minPrice ? { gte: minPrice } : {}),
       ...(maxPrice ? { lte: maxPrice } : {}),
     };
   }
 
+  let where = publicProductWhere(extra);
   let total = await prisma.product.count({ where });
 
   // Expand to 60 days if nothing in 30
   if (total === 0 && !categorySlug && !material && !minPrice && !maxPrice) {
     cutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-    where.createdAt = { gte: cutoff };
+    where = publicProductWhere({ ...extra, createdAt: { gte: cutoff } });
     total = await prisma.product.count({ where });
   }
 
@@ -303,7 +307,7 @@ export async function getNewProducts({
 
 export async function getCuratorPicks(limit?: number) {
   return prisma.product.findMany({
-    where: { status: "APPROVED", isCuratorPick: true },
+    where: publicProductWhere({ isCuratorPick: true }),
     orderBy: { curatorPickAt: "desc" },
     ...(limit ? { take: limit } : {}),
     include: {
@@ -349,7 +353,7 @@ export async function getSimilarProducts(product: {
   // Priority 1: same category + same main material (max 4)
   if (mainMaterial) {
     const p1 = await prisma.product.findMany({
-      where: { status: "APPROVED", ...catFilter, materials: { some: { id: mainMaterial.id } }, id: { notIn: [...collected] } },
+      where: publicProductWhere({ ...catFilter, materials: { some: { id: mainMaterial.id } }, id: { notIn: [...collected] } }),
       take: 4,
       orderBy: { publishedAt: "desc" },
       include,
@@ -361,7 +365,7 @@ export async function getSimilarProducts(product: {
   const minPrice = Math.round(product.price * 0.7);
   const maxPrice = Math.round(product.price * 1.3);
   const p2 = await prisma.product.findMany({
-    where: { status: "APPROVED", ...catFilter, price: { gte: minPrice, lte: maxPrice }, id: { notIn: [...collected] } },
+    where: publicProductWhere({ ...catFilter, price: { gte: minPrice, lte: maxPrice }, id: { notIn: [...collected] } }),
     take: 3,
     orderBy: { publishedAt: "desc" },
     include,
@@ -370,7 +374,7 @@ export async function getSimilarProducts(product: {
 
   // Priority 3: same artisan (max 3)
   const p3 = await prisma.product.findMany({
-    where: { status: "APPROVED", artisanId: product.artisanId, id: { notIn: [...collected] } },
+    where: publicProductWhere({ artisanId: product.artisanId, id: { notIn: [...collected] } }),
     take: 3,
     orderBy: { publishedAt: "desc" },
     include,
@@ -380,7 +384,7 @@ export async function getSimilarProducts(product: {
   // Priority 4: best-selling same category (fill up to 12)
   if (results.length < 12) {
     const p4 = await prisma.product.findMany({
-      where: { status: "APPROVED", ...catFilter, id: { notIn: [...collected] } },
+      where: publicProductWhere({ ...catFilter, id: { notIn: [...collected] } }),
       take: 12 - results.length,
       orderBy: [{ orderItems: { _count: "desc" } }, { publishedAt: "desc" }],
       include,
@@ -413,10 +417,7 @@ export async function getTesorosProducts(
   if (orConditions.length === 0) return [];
 
   return prisma.product.findMany({
-    where: {
-      status: "APPROVED",
-      OR: orConditions,
-    },
+    where: publicProductWhere({ OR: orConditions }),
     orderBy: { publishedAt: "desc" },
     take: limit,
     include: {
@@ -446,14 +447,13 @@ export async function getProductsByGender(
 
   // Try gender-filtered first
   const products = await prisma.product.findMany({
-    where: {
-      status: "APPROVED" as const,
+    where: publicProductWhere({
       ...catFilter,
       OR: keywords.flatMap((kw) => [
         { name: { contains: kw, mode: "insensitive" as const } },
         { description: { contains: kw, mode: "insensitive" as const } },
       ]),
-    },
+    }),
     take: limit,
     orderBy: { publishedAt: "desc" },
     include: {
@@ -474,11 +474,10 @@ export async function getProductsByGender(
   if (products.length < limit && categorySlug) {
     const existingIds = products.map((p) => p.id);
     const fallback = await prisma.product.findMany({
-      where: {
-        status: "APPROVED" as const,
+      where: publicProductWhere({
         ...catFilter,
         id: { notIn: existingIds },
-      },
+      }),
       take: limit - products.length,
       orderBy: { publishedAt: "desc" },
       include: {

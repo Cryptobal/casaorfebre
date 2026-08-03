@@ -39,6 +39,7 @@ export async function GET() {
     prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         images: { some: { status: "APPROVED" } },
       },
       include: {

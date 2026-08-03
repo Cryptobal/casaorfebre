@@ -34,6 +34,7 @@ export default async function MatrimonioPage() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         occasions: { some: { slug: "matrimonio" } },
       },
       include: {

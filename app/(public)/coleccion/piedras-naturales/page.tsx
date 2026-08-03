@@ -39,6 +39,7 @@ export default async function PiedrasNaturalesPage() {
     const products = await prisma.product.findMany({
       where: {
         status: "APPROVED",
+        artisan: { status: "APPROVED" },
         materials: {
           some: {
             name: {

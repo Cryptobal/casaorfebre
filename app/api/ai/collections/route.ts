@@ -11,7 +11,7 @@ import {
 
 async function getApprovedProducts(): Promise<ProductSummary[]> {
   const products = await prisma.product.findMany({
-    where: { status: "APPROVED" },
+    where: { status: "APPROVED", artisan: { status: "APPROVED" } },
     select: {
       id: true,
       name: true,
