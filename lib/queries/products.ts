@@ -21,7 +21,10 @@ function diversifyByArtisan<T extends { artisanId: string }>(
   products: T[],
   headSize = 12,
 ): T[] {
-  if (products.length <= 1) return products;
+  // Always return a new array: callers replace `products` in-place with
+  // `products.length = 0; products.push(...result)`. Returning the same
+  // reference would wipe the result when only one artisan remains active.
+  if (products.length <= 1) return products.slice();
 
   const head = products.slice(0, headSize);
   const tail = products.slice(headSize);
@@ -35,7 +38,7 @@ function diversifyByArtisan<T extends { artisanId: string }>(
   }
 
   // Only one artisan in head? Nothing to diversify.
-  if (byArtisan.size === 1) return products;
+  if (byArtisan.size === 1) return products.slice();
 
   const groups = Array.from(byArtisan.entries()).map(([artisanId, pieces]) => ({
     artisanId,
