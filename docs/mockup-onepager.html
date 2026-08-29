@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #FAFAF8; color: #1a1a18; -webkit-font-smoothing: antialiased; }
+a { color: #8B7355; text-decoration: none; transition: color .25s ease; }
+a:hover { color: #a8956f; }
+@keyframes scrollPulse { 0% { transform: scaleY(0); transform-origin: top; } 45% { transform: scaleY(1); transform-origin: top; } 55% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+</style>
+</helmet>
+<div style="font-family: 'Outfit', sans-serif; font-weight: 300; background: #FAFAF8; color: #1a1a18; min-height: 100vh;">
+
+  <nav style="position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 18px clamp(20px, 5vw, 56px); background: rgba(250,250,248,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid {{ navBorder }}; transition: border-color .3s ease;">
+    <a href="#" style="font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 19px; letter-spacing: 0.22em; color: #1a1a18;" style-hover="color: #8B7355;">casa orfebre</a>
+    <a href="#" style="font-size: 11px; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: #6b6860;" style-hover="color: #a8956f;">Blog</a>
+  </nav>
+
+  <header style="position: relative; height: 100dvh; min-height: 560px; overflow: hidden;">
+    <div style="position: absolute; inset: 0;">
+      <image-slot id="hero-taller" shape="rect" placeholder="Video / foto: Camila de espaldas trabajando metal en su banco de orfebre, luz cálida en penumbra"></image-slot>
+    </div>
+    <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(15,13,10,{{ overlayTop }}) 0%, rgba(15,13,10,{{ overlayMid }}) 45%, rgba(15,13,10,{{ overlayBottom }}) 88%, rgba(15,13,10,0.15) 100%);"></div>
+    <div style="position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; text-align: center; padding: 0 24px calc(max(12dvh, 90px));">
+      <h1 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(56px, 11vw, 108px); letter-spacing: 0.18em; color: #FAFAF8; line-height: 1;">camila</h1>
+      <div style="width: 64px; height: 1px; background: #a8956f; margin: 26px 0 20px;"></div>
+      <div style="font-size: clamp(10px, 2.6vw, 12px); font-weight: 400; letter-spacing: 0.42em; text-transform: uppercase; color: #a8956f;">Joyería de autora</div>
+      <p style="margin: 34px 0 0; font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300; font-size: clamp(19px, 4.6vw, 26px); color: rgba(250,250,248,0.88); max-width: 26ch; line-height: 1.45; text-wrap: pretty;">Joyas creadas desde el instinto, la materia y el proceso.</p>
+    </div>
+    <sc-if value="{{ showScrollHint }}" hint-placeholder-val="{{ true }}">
+      <div style="position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%); pointer-events: none;">
+        <div style="width: 1px; height: 44px; background: rgba(250,250,248,0.7); animation: scrollPulse 2.4s ease-in-out infinite;"></div>
+      </div>
+    </sc-if>
+  </header>
+
+  <section data-reveal="true" style="padding: clamp(96px, 16vw, 180px) 24px; display: flex; justify-content: center;">
+    <div style="max-width: 65ch;">
+      <div style="font-size: 11px; font-weight: 400; letter-spacing: 0.32em; text-transform: uppercase; color: #8B7355; margin-bottom: 44px;">Sobre mi trabajo</div>
+      <p style="margin: 0 0 30px; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(24px, 4.5vw, 30px); line-height: 1.4; color: #1a1a18; text-wrap: pretty;">Trabajo la joyería como un proceso de exploración.</p>
+      <p style="margin: 0 0 26px; font-size: 16px; font-weight: 300; line-height: 2; color: #6b6860; text-wrap: pretty;">Muchas de mis piezas nacen desde una idea, una textura o simplemente desde lo que ocurre mientras trabajo. Por eso, la mayoría son piezas únicas: no busco repetir exactamente una misma forma, sino dejar espacio para que cada pieza encuentre su propio carácter.</p>
+      <p style="margin: 0 0 26px; font-size: 16px; font-weight: 300; line-height: 2; color: #6b6860; text-wrap: pretty;">Me atraen las formas orgánicas, las imperfecciones y aquello que no se puede reproducir de manera idéntica.</p>
+      <p style="margin: 0 0 26px; font-size: 16px; font-weight: 300; line-height: 2; color: #6b6860; text-wrap: pretty;">Trabajo principalmente con plata, bronce y oro, explorando distintas técnicas y materiales. Poco a poco, este proceso también irá dando forma a nuevas colecciones y universos inspirados en distintas temáticas.</p>
+      <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 2; color: #6b6860; text-wrap: pretty;">Actualmente no trabajo principalmente a pedido ni realizo reproducciones exactas de diseños. Mi intención es crear piezas desde mi propio lenguaje y proceso. Sin embargo, si tienes una idea que conecte con mi estilo, podemos conversar y ver qué podemos crear.</p>
+    </div>
+  </section>
+
+  <section data-reveal="true" style="padding: 0 clamp(24px, 6vw, 72px) clamp(96px, 16vw, 180px); max-width: 1240px; margin: 0 auto; box-sizing: border-box;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: clamp(40px, 6vw, 64px) clamp(28px, 4vw, 48px);">
+      <div>
+        <div style="width: 28px; height: 1px; background: #a8956f; margin-bottom: 18px;"></div>
+        <h3 style="margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: #8B7355;">Piezas únicas</h3>
+        <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.85; color: #6b6860; text-wrap: pretty;">La mayoría de mis joyas son irrepetibles. Cada una nace desde el proceso y conserva sus propias formas y detalles.</p>
+      </div>
+      <div>
+        <div style="width: 28px; height: 1px; background: #a8956f; margin-bottom: 18px;"></div>
+        <h3 style="margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: #8B7355;">Formas orgánicas</h3>
+        <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.85; color: #6b6860; text-wrap: pretty;">Me interesa lo imperfecto, lo irregular y aquello que parece haber sido encontrado más que fabricado.</p>
+      </div>
+      <div>
+        <div style="width: 28px; height: 1px; background: #a8956f; margin-bottom: 18px;"></div>
+        <h3 style="margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: #8B7355;">Materiales</h3>
+        <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.85; color: #6b6860; text-wrap: pretty;">Trabajo principalmente con plata, bronce y oro, explorando distintas técnicas y formas.</p>
+      </div>
+      <div>
+        <div style="width: 28px; height: 1px; background: #a8956f; margin-bottom: 18px;"></div>
+        <h3 style="margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.28em; text-transform: uppercase; color: #8B7355;">En proceso</h3>
+        <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.85; color: #6b6860; text-wrap: pretty;">Estoy constantemente explorando nuevas ideas, técnicas y temáticas que poco a poco darán vida a futuras colecciones.</p>
+      </div>
+    </div>
+  </section>
+
+  <section data-reveal="true" style="padding: 0 clamp(20px, 5vw, 64px) clamp(96px, 16vw, 180px); max-width: 1240px; margin: 0 auto; box-sizing: border-box;">
+    <p style="margin: 0 auto clamp(56px, 9vw, 88px); font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300; font-size: clamp(21px, 4.6vw, 28px); color: #1a1a18; text-align: center; max-width: 34ch; line-height: 1.5; text-wrap: pretty;">Algunas pertenecen a futuras colecciones, otras simplemente existen una sola vez.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); grid-auto-flow: dense; gap: clamp(18px, 3vw, 32px); align-items: start;">
+      <figure style="margin: 0; grid-column: span 1;">
+        <div style="aspect-ratio: 3 / 4;"><image-slot id="pieza-1" shape="rect" placeholder="Anillo de plata orgánico sobre piedra"></image-slot></div>
+        <figcaption style="margin-top: 10px; font-size: 11px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">plata 950</figcaption>
+      </figure>
+      <figure style="margin: 0; grid-column: span 1; padding-top: clamp(0px, 4vw, 56px);">
+        <div style="aspect-ratio: 4 / 5;"><image-slot id="pieza-2" shape="rect" placeholder="Aros de bronce martillado sobre lino"></image-slot></div>
+        <figcaption style="margin-top: 10px; font-size: 11px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">bronce</figcaption>
+      </figure>
+      <figure style="margin: 0; grid-column: span 1;">
+        <div style="aspect-ratio: 1 / 1;"><image-slot id="pieza-3" shape="rect" placeholder="Colgante de forma irregular, luz natural"></image-slot></div>
+        <figcaption style="margin-top: 10px; font-size: 11px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">plata 950</figcaption>
+      </figure>
+      <figure style="margin: 0; grid-column: span 1; padding-top: clamp(0px, 3vw, 40px);">
+        <div style="aspect-ratio: 4 / 5;"><image-slot id="pieza-4" shape="rect" placeholder="Pulsera texturada en banco de trabajo"></image-slot></div>
+        <figcaption style="margin-top: 10px; font-size: 11px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">plata y bronce</figcaption>
+      </figure>
+      <figure style="margin: 0; grid-column: span 1;">
+        <div style="aspect-ratio: 3 / 4;"><image-slot id="pieza-5" shape="rect" placeholder="Anillo con detalle de oro, fondo neutro"></image-slot></div>
+        <figcaption style="margin-top: 10px; font-size: 11px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">plata y oro</figcaption>
+      </figure>
+      <figure style="margin: 0; grid-column: span 1; padding-top: clamp(0px, 4vw, 56px);">
+        <div style="aspect-ratio: 1 / 1;"><image-slot id="pieza-6" shape="rect" placeholder="Pieza única sobre piedra gris"></image-slot></div>
+        <figcaption style="margin-top: 10px; font-size: 11px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">bronce</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section data-reveal="true" style="padding: 0 24px clamp(110px, 18vw, 200px); display: flex; flex-direction: column; align-items: center; gap: clamp(72px, 12vw, 120px); text-align: center;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 30px; width: 100%; max-width: 420px;">
+      <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 1.9; color: #6b6860; max-width: 42ch; text-wrap: pretty;">Puedes seguir mi proceso, ver nuevas piezas y próximos proyectos en Instagram.</p>
+      <a href="#" style="display: flex; align-items: center; justify-content: center; width: 100%; max-width: 300px; min-height: 48px; box-sizing: border-box; border: 1px solid #8B7355; color: #8B7355; font-size: 12px; font-weight: 400; letter-spacing: 0.24em; text-transform: uppercase; padding: 0 32px; transition: all .25s ease;" style-hover="border-color: #a8956f; color: #a8956f; background: #FFFFFF;">Instagram</a>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 30px; width: 100%; max-width: 420px;">
+      <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 1.9; color: #6b6860; max-width: 42ch; text-wrap: pretty;">¿Te interesa alguna pieza o tienes una idea que conecte con mi estilo?</p>
+      <a href="#" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 300px; min-height: 48px; box-sizing: border-box; background: #8B7355; color: #FAFAF8; font-size: 12px; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; padding: 0 32px; transition: background .25s ease;" style-hover="background: #a8956f; color: #FAFAF8;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.2-.7l.5-.6c.1-.2.1-.3 0-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1.1 2.7c.1.2 1.9 2.9 4.6 4a5 5 0 0 0 2.3.5c.5 0 1.3-.3 1.5-1 .2-.6.2-1.2.1-1.3-.1-.2-.3-.3-.5-.4z"></path></svg>
+        Hablemos por WhatsApp
+      </a>
+    </div>
+  </section>
+
+  <footer style="border-top: 1px solid #f0ede8; padding: 48px 24px 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;">
+    <div style="font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 17px; letter-spacing: 0.22em; color: #1a1a18;">casa orfebre</div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; font-size: 11px; font-weight: 300; letter-spacing: 0.16em; text-transform: uppercase;">
+      <a href="#" style="color: #6b6860;" style-hover="color: #a8956f;">Blog</a>
+      <span style="color: #9e9a90;">·</span>
+      <a href="#" style="color: #6b6860;" style-hover="color: #a8956f;">Instagram</a>
+      <span style="color: #9e9a90;">·</span>
+      <a href="#" style="color: #6b6860;" style-hover="color: #a8956f;">Términos</a>
+      <span style="color: #9e9a90;">·</span>
+      <a href="#" style="color: #6b6860;" style-hover="color: #a8956f;">Privacidad</a>
+    </div>
+    <div style="font-size: 10px; font-weight: 300; letter-spacing: 0.14em; color: #9e9a90;">Desarrollado por LX3</div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;heroOverlay&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.5,&quot;min&quot;:0,&quot;max&quot;:0.9,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showScrollHint&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;revealAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Movimiento&quot;}}">
+class Component extends DCLogic {
+  state = { scrolled: false };
+  componentDidMount() {
+    this._onScroll = () => {
+      const s = window.scrollY > 24;
+      if (s !== this.state.scrolled) this.setState({ scrolled: s });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    if (this.props.revealAnimations ?? true) {
+      const els = document.querySelectorAll('[data-reveal]');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'none';
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.08 });
+      els.forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.top > window.innerHeight) {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(18px)';
+          el.style.transition = 'opacity .9s ease, transform .9s ease';
+          io.observe(el);
+        }
+      });
+      this._io = io;
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this._onScroll);
+    if (this._io) this._io.disconnect();
+  }
+  renderVals() {
+    const ov = Math.max(0, Math.min(0.9, this.props.heroOverlay ?? 0.45));
+    return {
+      navBorder: this.state.scrolled ? '#e8e5df' : 'transparent',
+      overlayTop: (ov * 0.8).toFixed(2),
+      overlayMid: (ov * 0.6).toFixed(2),
+      overlayBottom: ov.toFixed(2),
+      showScrollHint: this.props.showScrollHint ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

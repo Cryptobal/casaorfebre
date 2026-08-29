@@ -13,6 +13,9 @@
   /* Oscurecido desde #9e9a90 para cumplir contraste WCAG AA en texto pequeño. */
   --color-text-tertiary: #7d786e;
   --color-border: #e8e5df;
+  --color-border-subtle: #f0ede8;
+  --color-text-faint: #9e9a90;
+  --color-hero-scrim: #0f0d0a;
   --color-error: #dc2626;
   --color-success: #16a34a;
 
@@ -130,6 +133,12 @@
       border-top: 1px solid rgba(255, 255, 255, 0.7);
       padding: 0.5rem 1rem 1.5rem;
     }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -410,4 +419,47 @@ div.driver-popover.casa-orfebre-tour .driver-popover-footer {
   border-top: 1px solid rgba(139, 115, 85, 0.15) !important;
   margin-top: 16px !important;
   padding-top: 12px !important;
+}
+
+/* One-pager atelier (docs/mockup-onepager.html)
+   overlay default 0.45 → top 0.36 / mid 0.27 / bottom 0.45 / fade 0.15 */
+.hero-overlay {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-hero-scrim) 36%, transparent) 0%,
+    color-mix(in srgb, var(--color-hero-scrim) 27%, transparent) 45%,
+    color-mix(in srgb, var(--color-hero-scrim) 45%, transparent) 88%,
+    color-mix(in srgb, var(--color-hero-scrim) 15%, transparent) 100%
+  );
+}
+
+@keyframes atelier-scroll-pulse {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+.atelier-scroll-hint {
+  animation: atelier-scroll-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atelier-scroll-hint {
+    animation: none;
+    transform: scaleY(1);
+    transform-origin: center;
+  }
 }

@@ -1,3 +1,5 @@
+import { PORTAL_INSTAGRAM_URL } from "@/lib/site-config";
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
 
 /* ─── Breadcrumb ─── */
@@ -206,10 +208,10 @@ export function generateItemListJsonLd(products: ProductItem[]) {
 export function generateOrganizationJsonLd() {
   return {
     "@context": "https://schema.org",
-    "@type": "OnlineStore",
+    "@type": "Organization",
     "@id": `${BASE_URL}/#organization`,
     name: "Casa Orfebre",
-    alternateName: "Casa Orfebre · Joyería de Autor",
+    alternateName: "Casa Orfebre · Joyería de Autora",
     url: BASE_URL,
     logo: {
       "@type": "ImageObject",
@@ -219,36 +221,14 @@ export function generateOrganizationJsonLd() {
     },
     image: `${BASE_URL}/casaorfebre-og-image.png`,
     description:
-      "Plataforma de joyería artesanal chilena. Anillos, aros, cadenas, pulseras, colgantes y collares hechos a mano por orfebres verificados en plata 925, 950, oro 18k, cobre y bronce con certificado de autenticidad digital.",
-    slogan: "Joyería auténtica hecha por orfebres",
+      "Joyería de autora. Piezas únicas en plata, bronce y oro, hechas a mano por Camila.",
+    slogan: "Joyas creadas desde el instinto, la materia y el proceso.",
     foundingDate: "2024",
     areaServed: {
       "@type": "Country",
       name: "Chile",
     },
-    knowsAbout: [
-      "joyería artesanal",
-      "orfebrería",
-      "plata 925",
-      "plata 950",
-      "oro 18k",
-      "joyería de autor",
-      "joyería contemporánea",
-      "joyería tradicional",
-      "joyería comercial",
-      "joyería simbólica",
-      "joyería patrimonial",
-      "joyería experimental",
-      "anillos artesanales",
-      "piedras naturales chilenas",
-      "lapislázuli",
-      "filigrana",
-    ],
-    sameAs: [
-      "https://www.instagram.com/casaorfebre.cl",
-      "https://www.pinterest.com/casaorfebrecl/",
-      "https://www.facebook.com/casaorfebre",
-    ],
+    sameAs: [PORTAL_INSTAGRAM_URL],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
@@ -392,19 +372,11 @@ export function generateWebSiteJsonLd() {
     "@id": `${BASE_URL}/#website`,
     url: BASE_URL,
     name: "Casa Orfebre",
-    alternateName: "Casa Orfebre · Joyería de Autor",
+    alternateName: "Casa Orfebre · Joyería de Autora",
     description:
-      "Plataforma de joyería artesanal chilena hecha a mano por orfebres verificados.",
+      "Joyería de autora. Piezas únicas en plata, bronce y oro, hechas a mano por Camila.",
     inLanguage: "es-CL",
     publisher: { "@id": `${BASE_URL}/#organization` },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${BASE_URL}/coleccion?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
   };
 }
 

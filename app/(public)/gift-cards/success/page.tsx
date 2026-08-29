@@ -50,18 +50,12 @@ export default async function GiftCardSuccessPage({
         <p className="mt-2 text-sm text-text-tertiary">
           También te enviaremos una confirmación a tu email.
         </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <div className="mt-8 flex justify-center">
           <Link
-            href="/gift-cards"
-            className="inline-flex items-center justify-center rounded-lg bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+            href="/"
+            className="inline-flex min-h-12 items-center justify-center rounded-lg bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent/90"
           >
-            Comprar otra Gift Card
-          </Link>
-          <Link
-            href="/coleccion"
-            className="inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background"
-          >
-            Seguir explorando
+            Volver al inicio
           </Link>
         </div>
       </main>
@@ -132,18 +126,12 @@ export default async function GiftCardSuccessPage({
         Gift Card.
       </p>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+      <div className="mt-8 flex justify-center">
         <Link
-          href="/gift-cards"
-          className="inline-flex items-center justify-center rounded-lg bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+          href="/"
+          className="inline-flex min-h-12 items-center justify-center rounded-lg bg-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent/90"
         >
-          Comprar otra Gift Card
-        </Link>
-        <Link
-          href="/coleccion"
-          className="inline-flex items-center justify-center rounded-lg border border-border px-6 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background"
-        >
-          Seguir explorando
+          Volver al inicio
         </Link>
       </div>
     </main>

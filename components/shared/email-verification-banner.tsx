@@ -40,14 +40,14 @@ export function EmailVerificationBanner() {
 
   if (sendStatus === "sent") {
     return (
-      <div className="bg-green-50 px-4 py-2.5 text-center text-sm text-green-800">
+      <div className="mt-[4.25rem] bg-green-50 px-4 py-2.5 text-center text-sm text-green-800">
         Email de verificación reenviado. Revisa tu bandeja de entrada.
       </div>
     );
   }
 
   return (
-    <div className="bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-800">
+    <div className="mt-[4.25rem] bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-800">
       Verifica tu email para completar tu registro.{" "}
       <button
         onClick={handleResend}

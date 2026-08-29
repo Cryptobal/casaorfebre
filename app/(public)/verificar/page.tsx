@@ -43,10 +43,10 @@ export default async function VerificarEmailPage({ searchParams }: Props) {
               : "Ya puedes comprar en Casa Orfebre."}
           </p>
           <Link
-            href={isArtisan ? "/portal/orfebre" : "/coleccion"}
+            href={isArtisan ? "/portal/orfebre" : "/"}
             className="mt-6 inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
           >
-            {isArtisan ? "Ir a mi taller" : "Explorar colección"}
+            {isArtisan ? "Ir a mi taller" : "Volver al inicio"}
           </Link>
         </div>
       </div>

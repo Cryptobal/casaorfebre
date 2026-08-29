@@ -1,6 +1,7 @@
 import { uploadToR2 } from "@/lib/r2";
 import { applicationPhotoLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
+import { ATELIER_APPLICATIONS_MESSAGE, isMarketplaceMode } from "@/lib/site-config";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -18,6 +19,10 @@ function clientIp(request: Request): string {
  * Rate limit por IP; archivos en R2 bajo applications/postulaciones/
  */
 export async function POST(request: Request) {
+  if (!isMarketplaceMode()) {
+    return NextResponse.json({ error: ATELIER_APPLICATIONS_MESSAGE }, { status: 403 });
+  }
+
   const ip = clientIp(request);
   try {
     const { success } = await applicationPhotoLimiter.limit(ip);

@@ -1,8 +1,9 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { isMarketplaceMode } from "@/lib/site-config";
 
-export default function Loading() {
+function MarketplaceLoading() {
   return (
     <div className="space-y-12 py-20">
       {/* Hero skeleton */}
@@ -13,7 +14,7 @@ export default function Loading() {
       {/* Section skeleton - Cards grid */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Heading */}
-        <div className="space-y-4 mb-12">
+        <div className="mb-12 space-y-4">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-96" />
         </div>
@@ -35,7 +36,7 @@ export default function Loading() {
 
       {/* Section 2 skeleton */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="space-y-4 mb-12">
+        <div className="mb-12 space-y-4">
           <Skeleton className="h-8 w-64" />
         </div>
 
@@ -47,7 +48,7 @@ export default function Loading() {
               </div>
               <Skeleton className="h-6 w-40" />
               <Skeleton className="h-4 w-full" />
-              <div className="flex gap-2 justify-center">
+              <div className="flex justify-center gap-2">
                 <Skeleton className="h-6 w-12 rounded-full" />
                 <Skeleton className="h-6 w-12 rounded-full" />
               </div>
@@ -56,5 +57,15 @@ export default function Loading() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Loading() {
+  if (isMarketplaceMode()) {
+    return <MarketplaceLoading />;
+  }
+
+  return (
+    <div className="min-h-dvh bg-hero-scrim" aria-hidden="true" />
   );
 }

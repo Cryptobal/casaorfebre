@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { preferenceClient } from "@/lib/mercadopago";
 import { normalizeGiftCardCode } from "@/lib/gift-cards";
 import { isSandbox } from "@/lib/config";
+import { ATELIER_PAYMENTS_MESSAGE, isMarketplaceMode } from "@/lib/site-config";
 
 const MIN_AMOUNT = 10000;
 const MAX_AMOUNT = 500000;
@@ -14,6 +15,10 @@ function isValidEmail(email: string): boolean {
 }
 
 export async function purchaseGiftCard(formData: FormData) {
+  if (!isMarketplaceMode()) {
+    return { error: ATELIER_PAYMENTS_MESSAGE };
+  }
+
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     return { error: "Debes iniciar sesión para comprar una Gift Card" };
