@@ -4,11 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getResend, FROM_EMAIL } from "@/lib/resend";
 import { emailLayout } from "@/lib/emails/base-layout";
+import {
+  ATELIER_APPLICATIONS_MESSAGE,
+  isMarketplaceMode,
+} from "@/lib/site-config";
 
 export async function submitApplication(
   _prevState: { error?: string; success?: boolean } | null,
   formData: FormData
 ) {
+  if (!isMarketplaceMode()) {
+    return { error: ATELIER_APPLICATIONS_MESSAGE };
+  }
+
   const firstName = (formData.get("firstName") as string)?.trim() ?? "";
   const lastName = (formData.get("lastName") as string)?.trim() ?? "";
   const name = `${firstName} ${lastName}`.trim();

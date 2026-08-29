@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createSubscriptionPreference } from "@/lib/subscription-payment";
+import { ATELIER_PAYMENTS_MESSAGE, isMarketplaceMode } from "@/lib/site-config";
 
 async function requireArtisan() {
   const session = await auth();
@@ -69,6 +70,10 @@ export async function changePlan(
 
   // ── UPGRADE: requires payment first ──
   if (isUpgrade && newPlan.price > 0) {
+    if (!isMarketplaceMode()) {
+      return { error: ATELIER_PAYMENTS_MESSAGE };
+    }
+
     const amount =
       billingPeriod === "annual" && newPlan.annualPrice
         ? newPlan.annualPrice

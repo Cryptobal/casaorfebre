@@ -13,6 +13,7 @@ import {
   sendPurchaseConfirmationEmail,
   sendNewOrderToArtisanEmail,
 } from "@/lib/emails/templates";
+import { ATELIER_PAYMENTS_MESSAGE, isMarketplaceMode } from "@/lib/site-config";
 
 function generateOrderNumber(): string {
   const year = new Date().getFullYear();
@@ -35,6 +36,10 @@ async function markReferralConversion(orderId: string) {
 }
 
 export async function createCheckoutPreference(formData: FormData) {
+  if (!isMarketplaceMode()) {
+    return { error: ATELIER_PAYMENTS_MESSAGE };
+  }
+
   const session = await auth();
   if (!session?.user?.email) return { error: "No autorizado" };
 
@@ -458,6 +463,10 @@ export async function createCheckoutPreference(formData: FormData) {
 
 /** Reabre Mercado Pago para un pedido ya creado (pendiente de pago), sin usar el carrito. */
 export async function resumeOrderPayment(orderId: string) {
+  if (!isMarketplaceMode()) {
+    return { error: ATELIER_PAYMENTS_MESSAGE };
+  }
+
   const session = await auth();
   if (!session?.user?.email) return { error: "No autorizado" };
 

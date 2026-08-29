@@ -190,10 +190,10 @@ export default async function CheckoutSuccessPage({
             Ver mis pedidos
           </Link>
           <Link
-            href="/coleccion"
+            href="/"
             className="inline-flex items-center justify-center text-sm font-medium text-text-secondary underline-offset-4 hover:text-text hover:underline"
           >
-            Seguir explorando
+            Volver al inicio
           </Link>
         </div>
       </div>

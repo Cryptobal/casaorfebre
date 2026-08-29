@@ -6,6 +6,8 @@
 
 Casa Orfebre (casaorfebre.cl) es un marketplace chileno de joyería de autor: conecta orfebres/diseñadores aprobados con compradores. Monolito Next.js 16 (App Router) + Prisma 7 + PostgreSQL (Neon, con `pgvector`), desplegado en Vercel. Moneda: CLP. Idioma de UI y contenido: español de Chile.
 
+**Modo atelier (activo).** El sitio público opera como one-pager de Camila. Ver sección «Modo atelier» más abajo.
+
 **IMPORTANTE — Next.js 16 no es el Next.js de tu entrenamiento.** Tiene breaking changes en APIs, convenciones y estructura. Antes de escribir código de framework, lee la guía relevante en `node_modules/next/dist/docs/` y respeta avisos de deprecación. Nota: el middleware vive en `proxy.ts` (raíz), no en `middleware.ts`.
 
 ## 2. Business and product principles
@@ -262,3 +264,27 @@ Responde con estas secciones (breves; omite ruido):
 | Env vars | Ver `.env.example` (sin secretos); mínimo `DATABASE_URL` + `AUTH_SECRET` | `.env.example` |
 | Monitoreo de errores | No identificado en el repositorio | — |
 | Tests unitarios | No identificado en el repositorio | — |
+
+## 25. Modo atelier
+
+Casa Orfebre opera temporalmente como **one-pager de artista** (Camila): video hero, manifiesto, conceptos, galería y contacto por Instagram/WhatsApp. El marketplace público queda oculto; nada se borra.
+
+**Fuente de verdad del modo:** `lib/site-config.ts` (`SITE_MODE = "atelier"`). El mockup visual está en `docs/mockup-onepager.html`.
+
+**Público accesible:** `/`, `/blog/**`, `/verificar/**`, `/terminos`, `/privacidad`, `/politica-devoluciones`, `/acuerdo-orfebre`, `/checkout/success`, `/checkout/failure`, `/gift-cards/success`, auth y `/portal/**`.
+
+**Oculto (307 a `/`):** catálogo, orfebres, landings SEO comerciales, carrito, checkout, gift-cards, favoritos, postulaciones y páginas de captación. El bloque está comentado en `next.config.ts` como `// Modo atelier — borrar este bloque para revertir`.
+
+**Gates de servidor:** postulaciones (`lib/actions/application.ts`, upload de foto) y creación de preferencias Mercado Pago (`lib/actions/checkout.ts`, `lib/actions/gift-cards.ts`, `lib/subscription-payment.ts`). El webhook MP no se toca.
+
+**Sitemaps:** el índice solo emite `sitemap-static.xml` ( `/`, `/blog`, `/terminos`, `/privacidad`) y `sitemap-blog.xml`. Las otras rutas de sitemap siguen en el repo.
+
+**Layout público:** sin `MobileTabBar`, sin `ShoppingChatbot`, sin WhatsApp flotante. Navbar/footer mínimos según el mockup.
+
+### Cómo revertir
+
+1. En `lib/site-config.ts`, `SITE_MODE = "marketplace"`.
+2. En `next.config.ts`, borrar el bloque de redirects «Modo atelier».
+3. Restaurar montajes del layout público (`MobileTabBar`, `ShoppingChatbot`, padding de la tab bar) y las versiones marketplace de navbar/footer/home (revertir el commit de atelier o recuperar esos archivos de `main`).
+4. Restaurar el índice de sitemaps y `generateOrganizationJsonLd` a `OnlineStore` si se vuelve a vender en el sitio.
+

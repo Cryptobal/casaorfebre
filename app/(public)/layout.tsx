@@ -1,16 +1,12 @@
 import { Suspense } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
-import { ShoppingChatbot } from "@/components/chat/shopping-chatbot";
 import { ReferralTracker } from "@/components/shared/referral-tracker";
 import { EmailVerificationBanner } from "@/components/shared/email-verification-banner";
 import { Toaster } from "@/components/ui/toast";
 
 // Layout 100% estático: no llama a auth() ni a Prisma.
-// Esto permite que las páginas hijas (home, /coleccion/[slug], categorías, etc.)
-// puedan ser cacheadas por Vercel y respetar su `revalidate`, lo que es
-// crítico para que Google las indexe.
+// En modo atelier la home es un one-pager cacheable; el blog sigue usando este layout.
 export default function PublicLayout({
   children,
 }: {
@@ -26,13 +22,11 @@ export default function PublicLayout({
       </a>
       <Navbar />
       <EmailVerificationBanner />
-      <main id="main-content" className="min-h-[calc(100dvh-4rem)] pb-[104px] md:pb-0">
+      <main id="main-content" className="min-h-dvh">
         {children}
       </main>
       <Footer />
-      <MobileTabBar />
       <Toaster />
-      <ShoppingChatbot />
       {/* ReferralTracker usa useSearchParams; Suspense permite prerender estático del layout. */}
       <Suspense fallback={null}>
         <ReferralTracker />

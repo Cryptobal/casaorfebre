@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import { isMarketplaceMode } from "@/lib/site-config";
 
 interface UserMenuProps {
   user: {
@@ -42,7 +43,7 @@ export function UserMenu({ user }: UserMenuProps) {
         : "/portal/comprador/pedidos";
 
   return (
-    <div ref={menuRef} className="relative hidden md:block">
+    <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
         className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
@@ -67,13 +68,15 @@ export function UserMenu({ user }: UserMenuProps) {
           >
             Mi Portal
           </Link>
-          <Link
-            href="/favoritos"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
-          >
-            Favoritos
-          </Link>
+          {isMarketplaceMode() && (
+            <Link
+              href="/favoritos"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-background hover:text-text"
+            >
+              Favoritos
+            </Link>
+          )}
           <Link
             href="/portal/comprador/perfil"
             onClick={() => setOpen(false)}

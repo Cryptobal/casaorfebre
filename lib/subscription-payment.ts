@@ -1,5 +1,6 @@
 import { preferenceClient } from "@/lib/mercadopago";
 import { isSandbox } from "@/lib/config";
+import { ATELIER_PAYMENTS_MESSAGE, isMarketplaceMode } from "@/lib/site-config";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL || "https://casaorfebre.cl";
@@ -23,6 +24,10 @@ export async function createSubscriptionPreference({
   billingPeriod: "monthly" | "annual";
 }) {
   const sandbox = isSandbox();
+
+  if (!isMarketplaceMode()) {
+    throw new Error(ATELIER_PAYMENTS_MESSAGE);
+  }
 
   const preference = await preferenceClient.create({
     body: {
