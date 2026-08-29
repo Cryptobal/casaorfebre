@@ -413,11 +413,6 @@ export default async function PortalLayout({ children }: { children: React.React
         <Link href="/" className="mb-6 flex items-center gap-2 text-text-secondary transition-colors hover:text-text">
           <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={100} height={24} />
         </Link>
-        {isRoleSwitcher && (
-          <div className="mb-4">
-            <RoleSwitcherInline currentRole={role} />
-          </div>
-        )}
         <p className="mb-4 text-xs font-medium uppercase tracking-widest text-text-tertiary">Portal</p>
         <nav className="space-y-2">
           {role === "ADMIN" && (
@@ -518,6 +513,9 @@ export default async function PortalLayout({ children }: { children: React.React
           <div className="mt-6 border-t border-border pt-4 space-y-2">
             {role === "ARTISAN" && <OrfebreTour />}
             {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
+            {SITE_MODE === "atelier" && isRoleSwitcher && (
+              <RoleSwitcherInline currentRole={role} />
+            )}
             <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-text-tertiary transition-colors hover:text-accent">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -531,17 +529,20 @@ export default async function PortalLayout({ children }: { children: React.React
       <div className="min-w-0 flex-1">
         {/* Mobile header */}
         <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:hidden">
-          <PortalMobileNav title={mobileTitle} items={mobileItems} />
+          <PortalMobileNav
+            title={mobileTitle}
+            items={mobileItems}
+            footerExtra={
+              SITE_MODE === "atelier" && isRoleSwitcher ? (
+                <RoleSwitcherInline currentRole={role} />
+              ) : null
+            }
+          />
           <Link href="/" className="flex items-center">
             <Image src="/casaorfebre-logo-compact.svg" alt="Casa Orfebre" width={90} height={20} />
           </Link>
           {role === "ARTISAN" && <OrfebreTour />}
           {showBuyerSection && role === "BUYER" && <BuyerPortalTour />}
-          {isRoleSwitcher && (
-            <div className="ml-auto">
-              <RoleSwitcherInline currentRole={role} />
-            </div>
-          )}
         </div>
 
         <div className="max-w-full min-w-0 p-4 pb-32 sm:p-6 sm:pb-32 lg:p-8 lg:pb-32">{children}</div>

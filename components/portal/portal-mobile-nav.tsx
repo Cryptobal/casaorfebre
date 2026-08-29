@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,6 +28,7 @@ type MobileNavItem =
 interface PortalMobileNavProps {
   title: string;
   items: MobileNavItem[];
+  footerExtra?: ReactNode;
 }
 
 function MobileNavLinkRow({
@@ -72,7 +73,7 @@ function MobileNavLinkRow({
   );
 }
 
-export function PortalMobileNav({ title, items }: PortalMobileNavProps) {
+export function PortalMobileNav({ title, items, footerExtra }: PortalMobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -167,7 +168,8 @@ export function PortalMobileNav({ title, items }: PortalMobileNavProps) {
             </div>
           </nav>
           {/* Footer */}
-          <div className="border-t border-border p-4">
+          <div className="border-t border-border p-4 space-y-1">
+            {footerExtra}
             <Link
               href="/"
               className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-text-tertiary transition-colors hover:text-accent"

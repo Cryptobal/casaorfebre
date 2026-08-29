@@ -37,7 +37,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const portalLink =
     user.role === "ADMIN"
-      ? "/portal/admin"
+      ? "/portal"
       : user.role === "ARTISAN"
         ? "/portal/orfebre"
         : "/portal/comprador/pedidos";

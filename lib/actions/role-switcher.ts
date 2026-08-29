@@ -49,7 +49,7 @@ export async function switchActiveRole(role: "ADMIN" | "ARTISAN" | "BUYER") {
 
   const dest =
     role === "ADMIN"
-      ? "/portal/admin"
+      ? "/portal"
       : role === "ARTISAN"
         ? "/portal/orfebre"
         : "/portal/comprador/pedidos";
