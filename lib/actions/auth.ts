@@ -181,7 +181,7 @@ export async function loginWithCredentials(
     select: { role: true },
   });
   const role = dbUser?.role ?? "BUYER";
-  if (role === "ADMIN") redirect("/portal/admin");
+  if (role === "ADMIN") redirect("/portal");
   if (role === "ARTISAN") redirect("/portal/orfebre/productos");
   redirect("/portal/comprador/pedidos");
 }

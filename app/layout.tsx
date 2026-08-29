@@ -8,6 +8,7 @@ import { RefCatcher } from "@/components/shared/ref-catcher";
 import { GoogleAnalytics } from "@/components/analytics";
 import { RoleSwitcherWrapper } from "@/components/shared/role-switcher-wrapper";
 import { generateOrganizationJsonLd, generateWebSiteJsonLd } from "@/lib/seo";
+import { SITE_MODE } from "@/lib/site-config";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -113,9 +114,11 @@ export default function RootLayout({
               <RefCatcher />
             </Suspense>
             {children}
-            <Suspense fallback={null}>
-              <RoleSwitcherWrapper />
-            </Suspense>
+            {SITE_MODE === "marketplace" && (
+              <Suspense fallback={null}>
+                <RoleSwitcherWrapper />
+              </Suspense>
+            )}
           </FavoritesProvider>
         </AuthProvider>
         <GoogleAnalytics />

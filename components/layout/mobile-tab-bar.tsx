@@ -53,7 +53,7 @@ function isProductDetailPath(pathname: string): boolean {
 }
 
 function portalHref(role?: string): string {
-  if (role === "ADMIN") return "/portal/admin";
+  if (role === "ADMIN") return "/portal";
   if (role === "ARTISAN") return "/portal/orfebre";
   return "/portal/comprador/pedidos";
 }

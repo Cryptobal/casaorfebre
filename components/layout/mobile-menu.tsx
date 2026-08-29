@@ -91,7 +91,7 @@ export function MobileMenu({ links, user }: MobileMenuProps) {
 
   const portalLink =
     user?.role === "ADMIN"
-      ? "/portal/admin"
+      ? "/portal"
       : user?.role === "ARTISAN"
         ? "/portal/orfebre"
         : "/portal/comprador/pedidos";
