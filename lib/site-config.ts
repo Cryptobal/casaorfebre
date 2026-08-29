@@ -3,7 +3,8 @@ export type SiteMode = "atelier" | "marketplace";
 /** Cambia a `"marketplace"` para revertir el one-pager y reactivar catálogo/pagos. */
 export const SITE_MODE: SiteMode = "atelier";
 
-export const isMarketplaceMode = () => SITE_MODE === "marketplace";
+export const isMarketplaceMode = (): boolean =>
+  (SITE_MODE as SiteMode) === "marketplace";
 
 export const ATELIER_APPLICATIONS_MESSAGE =
   "Las postulaciones están pausadas por ahora.";
