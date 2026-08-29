@@ -1,13 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { UserMenu } from "./user-menu";
 import { cn } from "@/lib/utils";
 
-export function Navbar() {
+function NavbarUser() {
   const { data: session, status } = useSession();
+  const user = session?.user
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+        role: (session.user as { role?: string }).role,
+      }
+    : null;
+
+  if (status !== "authenticated" || !user) return null;
+  return <UserMenu user={user} />;
+}
+
+export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -17,17 +31,8 @@ export function Navbar() {
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll, { passive: true });
   }, []);
-
-  const user = session?.user
-    ? {
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image,
-        role: (session.user as { role?: string }).role,
-      }
-    : null;
 
   return (
     <nav
@@ -38,18 +43,20 @@ export function Navbar() {
     >
       <Link
         href="/"
-        className="font-serif text-[19px] font-light tracking-[0.22em] text-text transition-[color] duration-[250ms] ease-[ease] hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="font-serif text-[19px] font-light leading-none tracking-[0.22em] text-text transition-[color] duration-[250ms] ease-[ease] hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         casa orfebre
       </Link>
       <div className="flex items-center gap-6">
         <Link
           href="/blog"
-          className="text-[11px] font-normal uppercase tracking-[0.2em] text-text-secondary transition-[color] duration-[250ms] ease-[ease] hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="text-[11px] font-normal leading-none uppercase tracking-[0.2em] text-text-secondary transition-[color] duration-[250ms] ease-[ease] hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Blog
         </Link>
-        {status === "authenticated" && user ? <UserMenu user={user} /> : null}
+        <Suspense fallback={null}>
+          <NavbarUser />
+        </Suspense>
       </div>
     </nav>
   );
