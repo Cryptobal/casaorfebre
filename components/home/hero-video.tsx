@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  HERO_PHRASE,
   HERO_POSTER_ALT,
   HERO_POSTER_URL,
   HERO_VIDEO_URL,
 } from "@/lib/site-config";
 
-export function HeroVideo() {
+export function HeroVideo({ phrase }: { phrase: string }) {
   const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
@@ -63,7 +62,7 @@ export function HeroVideo() {
           Joyería de autora
         </div>
         <p className="mt-[34px] mb-0 max-w-[26ch] text-pretty font-serif text-[clamp(19px,4.6vw,26px)] font-light italic leading-[1.45] text-background/88">
-          {HERO_PHRASE}
+          {phrase}
         </p>
       </div>
 

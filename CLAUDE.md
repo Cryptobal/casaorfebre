@@ -271,6 +271,8 @@ Casa Orfebre opera temporalmente como **one-pager de artista** (Camila): video h
 
 **Fuente de verdad del modo:** `lib/site-config.ts` (`SITE_MODE = "atelier"`). El mockup visual está en `docs/mockup-onepager.html`.
 
+**Contenido de la home:** vive en BD (`HomeContent`, `HomeGalleryImage`) con fallback en `lib/home-defaults.ts` y `GALLERY_IMAGES` de `lib/site-config.ts`. Se edita desde `/portal/admin/home`. El video y el poster del hero siguen siendo assets R2 gestionados en código.
+
 **Público accesible:** `/`, `/blog/**`, `/verificar/**`, `/terminos`, `/privacidad`, `/politica-devoluciones`, `/acuerdo-orfebre`, `/checkout/success`, `/checkout/failure`, `/gift-cards/success`, auth y `/portal/**`.
 
 **Oculto (307 a `/`):** catálogo, orfebres, landings SEO comerciales, carrito, checkout, gift-cards, favoritos, postulaciones y páginas de captación. El bloque está comentado en `next.config.ts` como `// Modo atelier — borrar este bloque para revertir`.

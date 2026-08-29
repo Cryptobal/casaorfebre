@@ -7,6 +7,7 @@ import { Manifiesto } from "@/components/home/manifiesto";
 import { Conceptos } from "@/components/home/conceptos";
 import { Galeria } from "@/components/home/galeria";
 import { Contacto } from "@/components/home/contacto";
+import { getHomeContent } from "@/lib/queries/home-content";
 
 export const metadata: Metadata = {
   title: {
@@ -30,21 +31,29 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const content = await getHomeContent();
+
   return (
     <div className="min-h-dvh bg-background font-sans font-light text-text">
-      <HeroVideo />
+      <HeroVideo phrase={content.heroPhrase} />
       <AtelierReveal>
-        <Manifiesto />
+        <Manifiesto
+          lead={content.manifestoLead}
+          paragraphs={content.manifestoParagraphs}
+        />
       </AtelierReveal>
       <AtelierReveal>
-        <Conceptos />
+        <Conceptos concepts={content.concepts} />
       </AtelierReveal>
       <AtelierReveal>
-        <Galeria />
+        <Galeria intro={content.galleryIntro} images={content.gallery} />
       </AtelierReveal>
       <AtelierReveal>
-        <Contacto />
+        <Contacto
+          instagramText={content.contactInstagramText}
+          whatsappText={content.contactWhatsappText}
+        />
       </AtelierReveal>
     </div>
   );

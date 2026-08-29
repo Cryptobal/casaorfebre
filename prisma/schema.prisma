@@ -1457,3 +1457,29 @@ enum CreditTransactionType {
   ADJUSTMENT // ajuste manual de admin
   EXPIRATION // expiración de créditos no usados
 }
+
+// Singleton editorial de la home atelier. null en un campo = usar HOME_DEFAULTS.
+model HomeContent {
+  id                   String   @id @default("home")
+  heroPhrase           String?
+  manifesto            String?  @db.Text
+  concepts             Json?
+  galleryIntro         String?
+  contactInstagramText String?
+  contactWhatsappText  String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("home_content")
+}
+
+model HomeGalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String?
+  sortOrder Int
+  createdAt DateTime @default(now())
+
+  @@index([sortOrder])
+  @@map("home_gallery_images")
+}

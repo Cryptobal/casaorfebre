@@ -1,9 +1,4 @@
-import {
-  CONTACT_INSTAGRAM_TEXT,
-  CONTACT_WHATSAPP_TEXT,
-  PORTAL_INSTAGRAM_URL,
-  PORTAL_WHATSAPP_URL,
-} from "@/lib/site-config";
+import { PORTAL_INSTAGRAM_URL, PORTAL_WHATSAPP_URL } from "@/lib/site-config";
 
 function WhatsAppIcon() {
   return (
@@ -13,12 +8,18 @@ function WhatsAppIcon() {
   );
 }
 
-export function Contacto() {
+export function Contacto({
+  instagramText,
+  whatsappText,
+}: {
+  instagramText: string;
+  whatsappText: string;
+}) {
   return (
     <section className="flex flex-col items-center gap-[clamp(72px,12vw,120px)] px-6 pb-[clamp(110px,18vw,200px)] pt-0 text-center">
       <div className="flex w-full max-w-[420px] flex-col items-center gap-[30px]">
         <p className="m-0 max-w-[42ch] text-pretty text-base font-light leading-[1.9] text-text-secondary">
-          {CONTACT_INSTAGRAM_TEXT}
+          {instagramText}
         </p>
         <a
           href={PORTAL_INSTAGRAM_URL}
@@ -31,7 +32,7 @@ export function Contacto() {
       </div>
       <div className="flex w-full max-w-[420px] flex-col items-center gap-[30px]">
         <p className="m-0 max-w-[42ch] text-pretty text-base font-light leading-[1.9] text-text-secondary">
-          {CONTACT_WHATSAPP_TEXT}
+          {whatsappText}
         </p>
         <a
           href={PORTAL_WHATSAPP_URL}
