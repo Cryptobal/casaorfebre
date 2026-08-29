@@ -157,6 +157,16 @@ export default async function AdminDashboardPage() {
     <div>
       <h1 className="font-serif text-3xl font-light">Panel Administrativo</h1>
 
+      <Link href="/portal/admin/home" className="mt-6 block">
+        <Card className="transition-colors hover:border-accent/40">
+          <p className="text-xs uppercase tracking-widest text-text-tertiary">Sitio público</p>
+          <p className="mt-1 text-lg font-medium">Contenido de la Home</p>
+          <p className="mt-1 text-sm text-text-secondary">
+            Fotos de la galería y textos de la página de inicio. Pensado para editar desde el teléfono.
+          </p>
+        </Card>
+      </Link>
+
       {/* Marketplace Intelligence */}
       {intelligenceAlerts.length > 0 && (
         <div className="mt-6 rounded-lg border border-accent/20 bg-accent/5 p-5">
@@ -306,6 +316,12 @@ export default async function AdminDashboardPage() {
 
       {/* Quick Links */}
       <div className="mt-8 flex flex-wrap gap-3">
+        <Link
+          href="/portal/admin/home"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-accent/30 bg-accent/5 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
+        >
+          Home
+        </Link>
         <Link
           href="/portal/admin/curaduria"
           className="inline-flex items-center gap-1.5 rounded-md border border-[#8B7355]/30 bg-[#8B7355]/5 px-4 py-2 text-sm font-medium text-[#8B7355] transition-colors hover:bg-[#8B7355]/10"

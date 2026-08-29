@@ -13,6 +13,7 @@ import { OrfebreTour } from "@/components/guided-tour/OrfebreTour";
 import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
 import { PortalChatbot } from "@/components/chat/portal-chatbot";
 import { RoleSwitcherInline } from "@/components/shared/role-switcher-inline";
+import { Toaster } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -33,6 +34,11 @@ const ADMIN_DASHBOARD: AdminLink = {
 };
 
 const ADMIN_GROUPS: AdminGroup[] = [
+  {
+    label: "Sitio",
+    storageKey: "sitio",
+    links: [{ href: "/portal/admin/home", label: "Home" }],
+  },
   {
     label: "Ventas",
     storageKey: "ventas",
@@ -446,6 +452,7 @@ export default async function PortalLayout({ children }: { children: React.React
         <PortalChatbot portalContext={role === "ADMIN" ? "admin" : role === "ARTISAN" ? "orfebre" : "comprador"} />
       )}
       <SupportBanner />
+      <Toaster />
     </div>
   );
 }

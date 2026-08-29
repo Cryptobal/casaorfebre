@@ -1,3 +1,5 @@
+import { HOME_DEFAULTS } from "@/lib/home-defaults";
+
 export type SiteMode = "atelier" | "marketplace";
 
 /** Cambia a `"marketplace"` para revertir el one-pager y reactivar catálogo/pagos. */
@@ -29,41 +31,20 @@ export const HERO_POSTER_URL = `${ASSETS_BASE}/home/hero-camila-poster.webp`;
 export const HERO_POSTER_ALT =
   "Camila de espaldas trabajando metal en su banco de orfebre, luz cálida en penumbra";
 
-export const HERO_PHRASE =
-  "Joyas creadas desde el instinto, la materia y el proceso.";
+export const HERO_PHRASE = HOME_DEFAULTS.heroPhrase;
 
 export const MANIFIESTO_KICKER = "Sobre mi trabajo";
 
-export const MANIFIESTO_LEAD = "Trabajo la joyería como un proceso de exploración.";
+export const MANIFIESTO_LEAD = HOME_DEFAULTS.manifestoLead;
 
-export const MANIFIESTO_PARAGRAPHS = [
-  "Muchas de mis piezas nacen desde una idea, una textura o simplemente desde lo que ocurre mientras trabajo. Por eso, la mayoría son piezas únicas: no busco repetir exactamente una misma forma, sino dejar espacio para que cada pieza encuentre su propio carácter.",
-  "Me atraen las formas orgánicas, las imperfecciones y aquello que no se puede reproducir de manera idéntica.",
-  "Trabajo principalmente con plata, bronce y oro, explorando distintas técnicas y materiales. Poco a poco, este proceso también irá dando forma a nuevas colecciones y universos inspirados en distintas temáticas.",
-  "Actualmente no trabajo principalmente a pedido ni realizo reproducciones exactas de diseños. Mi intención es crear piezas desde mi propio lenguaje y proceso. Sin embargo, si tienes una idea que conecte con mi estilo, podemos conversar y ver qué podemos crear.",
-] as const;
+export const MANIFIESTO_PARAGRAPHS = HOME_DEFAULTS.manifestoParagraphs;
 
-export const CONCEPTS = [
-  {
-    title: "Piezas únicas",
-    body: "La mayoría de mis joyas son irrepetibles. Cada una nace desde el proceso y conserva sus propias formas y detalles.",
-  },
-  {
-    title: "Formas orgánicas",
-    body: "Me interesa lo imperfecto, lo irregular y aquello que parece haber sido encontrado más que fabricado.",
-  },
-  {
-    title: "Materiales",
-    body: "Trabajo principalmente con plata, bronce y oro, explorando distintas técnicas y formas.",
-  },
-  {
-    title: "En proceso",
-    body: "Estoy constantemente explorando nuevas ideas, técnicas y temáticas que poco a poco darán vida a futuras colecciones.",
-  },
-] as const;
+export const CONCEPTS = HOME_DEFAULTS.concepts.map((concept) => ({
+  title: concept.title,
+  body: concept.text,
+}));
 
-export const GALLERY_QUOTE =
-  "Algunas pertenecen a futuras colecciones, otras simplemente existen una sola vez.";
+export const GALLERY_QUOTE = HOME_DEFAULTS.galleryIntro;
 
 export type GalleryImage = {
   src: string;
@@ -115,8 +96,6 @@ export const GALLERY_IMAGES: GalleryImage[] = [
   },
 ];
 
-export const CONTACT_INSTAGRAM_TEXT =
-  "Puedes seguir mi proceso, ver nuevas piezas y próximos proyectos en Instagram.";
+export const CONTACT_INSTAGRAM_TEXT = HOME_DEFAULTS.contactInstagramText;
 
-export const CONTACT_WHATSAPP_TEXT =
-  "¿Te interesa alguna pieza o tienes una idea que conecte con mi estilo?";
+export const CONTACT_WHATSAPP_TEXT = HOME_DEFAULTS.contactWhatsappText;

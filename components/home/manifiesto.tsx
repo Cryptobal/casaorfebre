@@ -1,10 +1,12 @@
-import {
-  MANIFIESTO_KICKER,
-  MANIFIESTO_LEAD,
-  MANIFIESTO_PARAGRAPHS,
-} from "@/lib/site-config";
+import { MANIFIESTO_KICKER } from "@/lib/site-config";
 
-export function Manifiesto() {
+export function Manifiesto({
+  lead,
+  paragraphs,
+}: {
+  lead: string;
+  paragraphs: string[];
+}) {
   return (
     <section className="flex justify-center px-6 py-[clamp(96px,16vw,180px)]">
       <div className="max-w-[65ch]">
@@ -12,13 +14,13 @@ export function Manifiesto() {
           {MANIFIESTO_KICKER}
         </div>
         <p className="mb-[30px] mt-0 text-pretty font-serif text-[clamp(24px,4.5vw,30px)] font-normal leading-[1.4] text-text">
-          {MANIFIESTO_LEAD}
+          {lead}
         </p>
-        {MANIFIESTO_PARAGRAPHS.map((paragraph, index) => (
+        {paragraphs.map((paragraph, index) => (
           <p
-            key={paragraph}
+            key={`${index}-${paragraph.slice(0, 24)}`}
             className={`mt-0 text-pretty text-base font-light leading-[2] text-text-secondary ${
-              index === MANIFIESTO_PARAGRAPHS.length - 1 ? "mb-0" : "mb-[26px]"
+              index === paragraphs.length - 1 ? "mb-0" : "mb-[26px]"
             }`}
           >
             {paragraph}

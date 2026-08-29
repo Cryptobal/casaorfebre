@@ -36,6 +36,31 @@ ALTER TABLE "artisan_applications"
 
 ALTER TABLE "order_items"
   ADD COLUMN IF NOT EXISTS "shippingShare" INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS "home_content" (
+  "id" TEXT NOT NULL,
+  "heroPhrase" TEXT,
+  "manifesto" TEXT,
+  "concepts" JSONB,
+  "galleryIntro" TEXT,
+  "contactInstagramText" TEXT,
+  "contactWhatsappText" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "home_content_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "home_gallery_images" (
+  "id" TEXT NOT NULL,
+  "url" TEXT NOT NULL,
+  "caption" TEXT,
+  "sortOrder" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "home_gallery_images_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "home_gallery_images_sortOrder_idx"
+  ON "home_gallery_images"("sortOrder");
 `;
 
 const url = process.env.DATABASE_URL;
@@ -53,7 +78,7 @@ try {
   await client.connect();
   await client.query(SQL);
   console.log(
-    "[ensure-production-schema] artisan_applications + order_items columns verified."
+    "[ensure-production-schema] artisan_applications + order_items + home_content tables verified."
   );
 } catch (err) {
   console.error("[ensure-production-schema] Failed to ensure schema:", err);
