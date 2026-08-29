@@ -30,14 +30,14 @@ export function Footer() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-text-secondary transition-colors duration-[250ms] ease-out hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="text-text-secondary transition-[color] duration-[250ms] ease-[ease] hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 {link.label}
               </a>
             ) : (
               <Link
                 href={link.href}
-                className="text-text-secondary transition-colors duration-[250ms] ease-out hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="text-text-secondary transition-[color] duration-[250ms] ease-[ease] hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 {link.label}
               </Link>
@@ -46,15 +46,7 @@ export function Footer() {
         ))}
       </nav>
       <div className="text-[10px] font-light tracking-[0.14em] text-text-faint">
-        Desarrollado por{" "}
-        <a
-          href="https://lx3.ai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-text-faint transition-colors duration-[250ms] ease-out hover:text-accent-light"
-        >
-          LX3
-        </a>
+        Desarrollado por LX3
       </div>
     </footer>
   );

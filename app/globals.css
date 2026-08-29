@@ -136,6 +136,12 @@
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-text);
@@ -415,7 +421,8 @@ div.driver-popover.casa-orfebre-tour .driver-popover-footer {
   padding-top: 12px !important;
 }
 
-/* One-pager atelier (docs/mockup-onepager.html) */
+/* One-pager atelier (docs/mockup-onepager.html)
+   overlay default 0.45 → top 0.36 / mid 0.27 / bottom 0.45 / fade 0.15 */
 .hero-overlay {
   background: linear-gradient(
     to bottom,

@@ -15,19 +15,20 @@ export function GalleryFigure({
   offsetClass,
 }: GalleryImage) {
   const [failed, setFailed] = useState(false);
-  if (failed) return null;
 
   return (
-    <figure className={cn("m-0", offsetClass)}>
-      <div className={cn("relative overflow-hidden", aspectClass)}>
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes={SIZES}
-          className="object-cover"
-          onError={() => setFailed(true)}
-        />
+    <figure className={cn("m-0 col-span-1", offsetClass)}>
+      <div className={cn("relative overflow-hidden bg-surface-alt", aspectClass)}>
+        {!failed && (
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={SIZES}
+            className="object-cover"
+            onError={() => setFailed(true)}
+          />
+        )}
       </div>
       <figcaption className="mt-2.5 text-[11px] font-light tracking-[0.14em] text-text-faint">
         {caption}

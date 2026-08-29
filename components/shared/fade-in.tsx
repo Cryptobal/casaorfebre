@@ -7,19 +7,9 @@ interface FadeInProps {
   children: ReactNode;
   delay?: number;
   className?: string;
-  /** Distancia inicial en px. Default 24 (translate-y-6). El mockup atelier usa 18. */
-  offsetPx?: number;
-  /** Duración en ms. Default 700. El mockup atelier usa 900. */
-  durationMs?: number;
 }
 
-export function FadeIn({
-  children,
-  delay = 0,
-  className,
-  offsetPx = 24,
-  durationMs = 700,
-}: FadeInProps) {
+export function FadeIn({ children, delay = 0, className }: FadeInProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -50,25 +40,14 @@ export function FadeIn({
     return () => observer.disconnect();
   }, [delay]);
 
-  const customReveal = offsetPx !== 24 || durationMs !== 700;
-
   return (
     <div
       ref={ref}
       className={cn(
-        !customReveal && "transition-all duration-700 ease-out",
-        visible ? "translate-y-0 opacity-100" : !customReveal && "translate-y-6 opacity-0",
-        customReveal && (visible ? "opacity-100" : "opacity-0"),
+        "transition-all duration-700 ease-out",
+        visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
         className
       )}
-      style={
-        customReveal
-          ? {
-              transition: `opacity ${durationMs}ms ease, transform ${durationMs}ms ease`,
-              transform: visible ? "none" : `translateY(${offsetPx}px)`,
-            }
-          : undefined
-      }
     >
       {children}
     </div>

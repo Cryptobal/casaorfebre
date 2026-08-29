@@ -1,8 +1,7 @@
 export const revalidate = 3600;
 
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import { FadeIn } from "@/components/shared/fade-in";
+import { AtelierReveal } from "@/components/home/atelier-reveal";
 import { HeroVideo } from "@/components/home/hero-video";
 import { Manifiesto } from "@/components/home/manifiesto";
 import { Conceptos } from "@/components/home/conceptos";
@@ -31,30 +30,22 @@ export const metadata: Metadata = {
   },
 };
 
-function Reveal({ children }: { children: ReactNode }) {
-  return (
-    <FadeIn offsetPx={18} durationMs={900}>
-      {children}
-    </FadeIn>
-  );
-}
-
 export default function HomePage() {
   return (
-    <>
+    <div className="min-h-dvh bg-background font-sans font-light text-text">
       <HeroVideo />
-      <Reveal>
+      <AtelierReveal>
         <Manifiesto />
-      </Reveal>
-      <Reveal>
+      </AtelierReveal>
+      <AtelierReveal>
         <Conceptos />
-      </Reveal>
-      <Reveal>
+      </AtelierReveal>
+      <AtelierReveal>
         <Galeria />
-      </Reveal>
-      <Reveal>
+      </AtelierReveal>
+      <AtelierReveal>
         <Contacto />
-      </Reveal>
-    </>
+      </AtelierReveal>
+    </div>
   );
 }
