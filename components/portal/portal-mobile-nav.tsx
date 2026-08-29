@@ -4,21 +4,72 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PortalSidebarGroup } from "@/components/portal/portal-sidebar-group";
+
+type MobileNavLink = {
+  href: string;
+  label: string;
+  badge?: number;
+  ai?: boolean;
+  exact?: boolean;
+};
 
 type MobileNavItem =
+  | ({ kind: "link" } & MobileNavLink)
+  | { kind: "heading"; label: string }
   | {
-      kind: "link";
-      href: string;
+      kind: "group";
       label: string;
-      badge?: number;
-      ai?: boolean;
-      exact?: boolean;
-    }
-  | { kind: "heading"; label: string };
+      storageKey: string;
+      defaultCollapsed?: boolean;
+      links: MobileNavLink[];
+    };
 
 interface PortalMobileNavProps {
   title: string;
   items: MobileNavItem[];
+}
+
+function MobileNavLinkRow({
+  item,
+  pathname,
+}: {
+  item: MobileNavLink;
+  pathname: string;
+}) {
+  const isActive = item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(item.href + "/");
+  const badgeBg =
+    item.href.startsWith("/portal/orfebre") && item.badge != null && item.badge > 0
+      ? "bg-amber-500"
+      : "bg-accent";
+  return (
+    <Link
+      href={item.href}
+      className={`flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
+        isActive
+          ? "bg-accent/10 font-medium text-accent"
+          : "text-text-secondary hover:bg-background hover:text-text"
+      }`}
+    >
+      <span className="flex items-center">
+        {item.label}
+        {item.ai && (
+          <span className="ml-1 inline-flex items-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-[#8B7355]">
+            AI
+          </span>
+        )}
+      </span>
+      {item.badge != null && item.badge > 0 && (
+        <span
+          className={`min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ${badgeBg}`}
+        >
+          {item.badge > 99 ? "99+" : item.badge}
+        </span>
+      )}
+    </Link>
+  );
 }
 
 export function PortalMobileNav({ title, items }: PortalMobileNavProps) {
@@ -81,39 +132,36 @@ export function PortalMobileNav({ title, items }: PortalMobileNavProps) {
                     </p>
                   );
                 }
-                const isActive = item.exact
-                  ? pathname === item.href
-                  : pathname === item.href || pathname.startsWith(item.href + "/");
-                const badgeBg =
-                  item.href.startsWith("/portal/orfebre") && item.badge != null && item.badge > 0
-                    ? "bg-amber-500"
-                    : "bg-accent";
+                if (item.kind === "group") {
+                  const groupCount = item.links.reduce(
+                    (sum, l) => sum + (l.badge ?? 0),
+                    0,
+                  );
+                  return (
+                    <PortalSidebarGroup
+                      key={item.storageKey}
+                      label={item.label}
+                      count={groupCount}
+                      hrefs={item.links.map((l) => l.href)}
+                      storageKey={item.storageKey}
+                      defaultCollapsed={item.defaultCollapsed}
+                    >
+                      {item.links.map((link) => (
+                        <MobileNavLinkRow
+                          key={link.href}
+                          item={link}
+                          pathname={pathname}
+                        />
+                      ))}
+                    </PortalSidebarGroup>
+                  );
+                }
                 return (
-                  <Link
+                  <MobileNavLinkRow
                     key={item.href}
-                    href={item.href}
-                    className={`flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
-                      isActive
-                        ? "bg-accent/10 font-medium text-accent"
-                        : "text-text-secondary hover:bg-background hover:text-text"
-                    }`}
-                  >
-                    <span className="flex items-center">
-                      {item.label}
-                      {item.ai && (
-                        <span className="ml-1 inline-flex items-center rounded-full border border-[#8B7355]/30 bg-[#8B7355]/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-[#8B7355]">
-                          AI
-                        </span>
-                      )}
-                    </span>
-                    {item.badge != null && item.badge > 0 && (
-                      <span
-                        className={`min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ${badgeBg}`}
-                      >
-                        {item.badge > 99 ? "99+" : item.badge}
-                      </span>
-                    )}
-                  </Link>
+                    item={item}
+                    pathname={pathname}
+                  />
                 );
               })}
             </div>
