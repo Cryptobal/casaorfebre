@@ -14,6 +14,7 @@ import { BuyerPortalTour } from "@/components/guided-tour/BuyerPortalTour";
 import { PortalChatbot } from "@/components/chat/portal-chatbot";
 import { RoleSwitcherInline } from "@/components/shared/role-switcher-inline";
 import { Toaster } from "@/components/ui/toast";
+import { SITE_MODE } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -25,7 +26,12 @@ const ROLE_SWITCHER_EMAILS = [
 ];
 
 type AdminLink = { href: string; label: string; ai?: boolean; exact?: boolean };
-type AdminGroup = { label: string; storageKey: string; links: AdminLink[] };
+type AdminGroup = {
+  label: string;
+  storageKey: string;
+  links: AdminLink[];
+  defaultCollapsed?: boolean;
+};
 
 const ADMIN_DASHBOARD: AdminLink = {
   href: "/portal/admin",
@@ -33,73 +39,135 @@ const ADMIN_DASHBOARD: AdminLink = {
   exact: true,
 };
 
-const ADMIN_GROUPS: AdminGroup[] = [
+const ADMIN_LINK_HOME: AdminLink = { href: "/portal/admin/home", label: "Home" };
+const ADMIN_LINK_BLOG: AdminLink = { href: "/portal/admin/blog", label: "Blog", ai: true };
+
+const ADMIN_LINKS_VENTAS: AdminLink[] = [
+  { href: "/portal/admin/pedidos", label: "Pedidos" },
+  { href: "/portal/admin/despacho", label: "Despacho" },
+  { href: "/portal/admin/pagos", label: "Pagos" },
+  { href: "/portal/admin/devoluciones", label: "Devoluciones" },
+  { href: "/portal/admin/disputas", label: "Disputas" },
+  { href: "/portal/admin/gift-cards", label: "Gift Cards" },
+];
+
+const ADMIN_LINKS_CATALOGO: AdminLink[] = [
+  { href: "/portal/admin/productos", label: "Productos", ai: true },
+  { href: "/portal/admin/fotos", label: "Fotos", ai: true },
+  { href: "/portal/admin/colecciones", label: "Colecciones", ai: true },
+  { href: "/portal/admin/catalogo", label: "Categorías" },
+  { href: "/portal/admin/materiales-precio", label: "Precios Materiales" },
+];
+
+const ADMIN_LINKS_COMUNIDAD: AdminLink[] = [
+  { href: "/portal/admin/orfebres", label: "Orfebres", ai: true },
+  { href: "/portal/admin/postulaciones", label: "Postulaciones" },
+  { href: "/portal/admin/invitaciones", label: "Invitaciones" },
+  { href: "/portal/admin/compradores", label: "Compradores" },
+];
+
+const ADMIN_LINKS_MENSAJERIA: AdminLink[] = [
+  { href: "/portal/admin/mensajes", label: "Mensajes" },
+  { href: "/portal/admin/preguntas", label: "Preguntas" },
+  { href: "/portal/admin/contacto", label: "Contacto" },
+];
+
+const ADMIN_LINKS_MONETIZACION: AdminLink[] = [
+  { href: "/portal/admin/planes", label: "Planes" },
+  { href: "/portal/admin/suscripciones", label: "Suscripciones" },
+  { href: "/portal/admin/finanzas", label: "Finanzas" },
+];
+
+const ADMIN_LINKS_CRECIMIENTO_CORE: AdminLink[] = [
+  { href: "/portal/admin/analytics", label: "Analytics", ai: true },
+  { href: "/portal/admin/pipeline", label: "Pipeline", ai: true },
+];
+
+const MARKETPLACE_ADMIN_GROUPS: AdminGroup[] = [
   {
     label: "Sitio",
     storageKey: "sitio",
-    links: [{ href: "/portal/admin/home", label: "Home" }],
+    links: [ADMIN_LINK_HOME],
   },
   {
     label: "Ventas",
     storageKey: "ventas",
-    links: [
-      { href: "/portal/admin/pedidos", label: "Pedidos" },
-      { href: "/portal/admin/despacho", label: "Despacho" },
-      { href: "/portal/admin/pagos", label: "Pagos" },
-      { href: "/portal/admin/devoluciones", label: "Devoluciones" },
-      { href: "/portal/admin/disputas", label: "Disputas" },
-      { href: "/portal/admin/gift-cards", label: "Gift Cards" },
-    ],
+    links: ADMIN_LINKS_VENTAS,
   },
   {
     label: "Catálogo",
     storageKey: "catalogo",
-    links: [
-      { href: "/portal/admin/productos", label: "Productos", ai: true },
-      { href: "/portal/admin/fotos", label: "Fotos", ai: true },
-      { href: "/portal/admin/colecciones", label: "Colecciones", ai: true },
-      { href: "/portal/admin/catalogo", label: "Categorías" },
-      { href: "/portal/admin/materiales-precio", label: "Precios Materiales" },
-    ],
+    links: ADMIN_LINKS_CATALOGO,
   },
   {
     label: "Comunidad",
     storageKey: "comunidad",
-    links: [
-      { href: "/portal/admin/orfebres", label: "Orfebres", ai: true },
-      { href: "/portal/admin/postulaciones", label: "Postulaciones" },
-      { href: "/portal/admin/invitaciones", label: "Invitaciones" },
-      { href: "/portal/admin/compradores", label: "Compradores" },
-    ],
+    links: ADMIN_LINKS_COMUNIDAD,
   },
   {
     label: "Mensajería",
     storageKey: "mensajeria",
-    links: [
-      { href: "/portal/admin/mensajes", label: "Mensajes" },
-      { href: "/portal/admin/preguntas", label: "Preguntas" },
-      { href: "/portal/admin/contacto", label: "Contacto" },
-    ],
+    links: ADMIN_LINKS_MENSAJERIA,
   },
   {
     label: "Monetización",
     storageKey: "monetizacion",
-    links: [
-      { href: "/portal/admin/planes", label: "Planes" },
-      { href: "/portal/admin/suscripciones", label: "Suscripciones" },
-      { href: "/portal/admin/finanzas", label: "Finanzas" },
-    ],
+    links: ADMIN_LINKS_MONETIZACION,
   },
   {
     label: "Crecimiento",
     storageKey: "crecimiento",
-    links: [
-      { href: "/portal/admin/analytics", label: "Analytics", ai: true },
-      { href: "/portal/admin/pipeline", label: "Pipeline", ai: true },
-      { href: "/portal/admin/blog", label: "Blog", ai: true },
-    ],
+    links: [...ADMIN_LINKS_CRECIMIENTO_CORE, ADMIN_LINK_BLOG],
   },
 ];
+
+const ATELIER_ADMIN_GROUPS: AdminGroup[] = [
+  {
+    label: "Sitio",
+    storageKey: "sitio",
+    defaultCollapsed: false,
+    links: [ADMIN_LINK_HOME, ADMIN_LINK_BLOG],
+  },
+  {
+    label: "Catálogo",
+    storageKey: "catalogo",
+    defaultCollapsed: false,
+    links: ADMIN_LINKS_CATALOGO,
+  },
+  {
+    label: "Ventas · en pausa",
+    storageKey: "ventas",
+    defaultCollapsed: true,
+    links: ADMIN_LINKS_VENTAS,
+  },
+  {
+    label: "Comunidad · en pausa",
+    storageKey: "comunidad",
+    defaultCollapsed: true,
+    links: ADMIN_LINKS_COMUNIDAD,
+  },
+  {
+    label: "Mensajería · en pausa",
+    storageKey: "mensajeria",
+    defaultCollapsed: true,
+    links: ADMIN_LINKS_MENSAJERIA,
+  },
+  {
+    label: "Monetización · en pausa",
+    storageKey: "monetizacion",
+    defaultCollapsed: true,
+    links: ADMIN_LINKS_MONETIZACION,
+  },
+  {
+    label: "Crecimiento",
+    storageKey: "crecimiento",
+    defaultCollapsed: true,
+    links: ADMIN_LINKS_CRECIMIENTO_CORE,
+  },
+];
+
+const ADMIN_GROUPS: AdminGroup[] =
+  SITE_MODE === "atelier" ? ATELIER_ADMIN_GROUPS : MARKETPLACE_ADMIN_GROUPS;
 
 const ARTISAN_LINKS = [
   { href: "/portal/orfebre", label: "Mi Taller", exact: true },
@@ -253,26 +321,53 @@ export default async function PortalLayout({ children }: { children: React.React
   const groupCount = (group: AdminGroup) =>
     group.links.reduce((sum, l) => sum + (adminBadgeCounts[l.href] ?? 0), 0);
 
-  type MobileItem =
-    | {
-        kind: "link";
-        href: string;
-        label: string;
-        badge?: number;
-        ai?: boolean;
-        exact?: boolean;
-      }
-    | { kind: "heading"; label: string };
+  type MobileLinkItem = {
+    kind: "link";
+    href: string;
+    label: string;
+    badge?: number;
+    ai?: boolean;
+    exact?: boolean;
+  };
 
-  const mobileItems: MobileItem[] = [
-    ...(role === "ADMIN"
+  type MobileItem =
+    | MobileLinkItem
+    | { kind: "heading"; label: string }
+    | {
+        kind: "group";
+        label: string;
+        storageKey: string;
+        defaultCollapsed?: boolean;
+        links: Omit<MobileLinkItem, "kind">[];
+      };
+
+  const adminDashboardItem: MobileItem = {
+    kind: "link",
+    href: ADMIN_DASHBOARD.href,
+    label: ADMIN_DASHBOARD.label,
+    exact: ADMIN_DASHBOARD.exact,
+  };
+
+  const adminMobileItems: MobileItem[] =
+    SITE_MODE === "atelier"
       ? [
-          {
-            kind: "link" as const,
-            href: ADMIN_DASHBOARD.href,
-            label: ADMIN_DASHBOARD.label,
-            exact: ADMIN_DASHBOARD.exact,
-          },
+          adminDashboardItem,
+          ...ADMIN_GROUPS.map<MobileItem>((group) => ({
+            kind: "group",
+            label: group.label,
+            storageKey: group.storageKey,
+            defaultCollapsed: group.defaultCollapsed,
+            links: group.links.map((l) => ({
+              href: l.href,
+              label: l.label,
+              ai: l.ai,
+              exact: l.exact,
+              badge: adminBadgeCounts[l.href],
+            })),
+          })),
+        ]
+      : [
+          adminDashboardItem,
           ...ADMIN_GROUPS.flatMap<MobileItem>((group) => [
             { kind: "heading", label: group.label },
             ...group.links.map<MobileItem>((l) => ({
@@ -284,8 +379,10 @@ export default async function PortalLayout({ children }: { children: React.React
               badge: adminBadgeCounts[l.href],
             })),
           ]),
-        ]
-      : []),
+        ];
+
+  const mobileItems: MobileItem[] = [
+    ...(role === "ADMIN" ? adminMobileItems : []),
     ...(role === "ARTISAN"
       ? ARTISAN_LINKS.map<MobileItem>((l) => {
           let badge: number | undefined;
@@ -337,6 +434,7 @@ export default async function PortalLayout({ children }: { children: React.React
                   count={groupCount(group)}
                   hrefs={group.links.map((l) => l.href)}
                   storageKey={group.storageKey}
+                  defaultCollapsed={group.defaultCollapsed}
                 >
                   {group.links.map((link) => (
                     <PortalSidebarLink
