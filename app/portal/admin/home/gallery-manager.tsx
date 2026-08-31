@@ -1,21 +1,31 @@
 "use client";
 
-import { useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
+  addGalleryFromProductImages,
   addGalleryImages,
   deleteImage,
   moveImage,
   updateImageCaption,
+  updateImageFocal,
 } from "@/lib/actions/home-content";
 import { compressImageFile, ImageCompressError } from "@/lib/image-compress";
-import { MAX_HOME_GALLERY_IMAGES } from "@/lib/home-defaults";
+import {
+  DEFAULT_GALLERY_FOCAL_X,
+  MAX_HOME_GALLERY_IMAGES,
+} from "@/lib/home-defaults";
 import { showToast } from "@/components/ui/toast";
 import { notifyHomeActionError } from "./notify-error";
-import type { AdminHomeGalleryImage } from "@/lib/queries/home-content";
+import { ProductPhotoPicker } from "./product-photo-picker";
+import type {
+  AdminHomeGalleryImage,
+  GalleryProductPhoto,
+} from "@/lib/queries/home-content";
 
 type GalleryManagerProps = {
   images: AdminHomeGalleryImage[];
+  productPhotos: GalleryProductPhoto[];
 };
 
 type PendingUpload = {
@@ -25,11 +35,12 @@ type PendingUpload = {
   error?: string;
 };
 
-export function GalleryManager({ images }: GalleryManagerProps) {
+export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [isUploading, startUpload] = useTransition();
   const [isMutating, startMutate] = useTransition();
 
@@ -163,6 +174,20 @@ export function GalleryManager({ images }: GalleryManagerProps) {
     });
   }
 
+  function handleFocalCommit(id: string, current: number, next: number) {
+    if (current === next) return;
+    setBusyId(id);
+    startMutate(async () => {
+      const result = await updateImageFocal(id, next);
+      setBusyId(null);
+      if (result.error) {
+        notifyHomeActionError(result.error);
+        return;
+      }
+      router.refresh();
+    });
+  }
+
   function handleDelete(id: string) {
     if (!window.confirm("¿Borrar esta foto de la home?")) return;
     setBusyId(id);
@@ -180,6 +205,23 @@ export function GalleryManager({ images }: GalleryManagerProps) {
     });
   }
 
+  function handleAddFromProducts(ids: string[]) {
+    startMutate(async () => {
+      const result = await addGalleryFromProductImages(ids);
+      if (result.error && !result.success) {
+        notifyHomeActionError(result.error);
+        return;
+      }
+      const added = result.added ?? 0;
+      showToast({
+        message:
+          added === 1 ? "Foto agregada a la galería" : `${added} fotos agregadas a la galería`,
+      });
+      setPickerOpen(false);
+      router.refresh();
+    });
+  }
+
   return (
     <section className="rounded-lg border border-border bg-surface p-4 sm:p-6">
       <div className="flex items-baseline justify-between gap-3">
@@ -189,7 +231,7 @@ export function GalleryManager({ images }: GalleryManagerProps) {
         </p>
       </div>
       <p className="mt-2 text-sm text-text-secondary">
-        Estas fotos aparecen en la home. Si no hay ninguna aquí, se muestran las de respaldo.
+        Estas fotos aparecen en la home. Sube nuevas o elige de tus productos. Si no hay ninguna aquí, la galería de la home queda vacía.
       </p>
 
       <input
@@ -201,18 +243,36 @@ export function GalleryManager({ images }: GalleryManagerProps) {
         onChange={(event) => handleFiles(event.target.files)}
       />
 
-      <button
-        type="button"
-        onClick={handlePick}
-        disabled={disabled || slotsLeft <= 0}
-        className="mt-4 flex min-h-12 w-full items-center justify-center rounded-md bg-accent px-5 text-base font-medium text-white transition-colors hover:bg-accent-dark disabled:pointer-events-none disabled:opacity-50"
-      >
-        {isUploading ? "Subiendo…" : "Agregar fotos"}
-      </button>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={handlePick}
+          disabled={disabled || slotsLeft <= 0}
+          className="flex min-h-12 flex-1 items-center justify-center rounded-md bg-accent px-5 text-base font-medium text-white transition-colors hover:bg-accent-dark disabled:pointer-events-none disabled:opacity-50"
+        >
+          {isUploading ? "Subiendo…" : "Subir fotos"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (slotsLeft <= 0) {
+              showToast({
+                message: `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`,
+              });
+              return;
+            }
+            setPickerOpen(true);
+          }}
+          disabled={disabled || slotsLeft <= 0}
+          className="flex min-h-12 flex-1 items-center justify-center rounded-md border border-border px-5 text-base font-medium text-text transition-colors hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-50"
+        >
+          Elegir de productos
+        </button>
+      </div>
 
       {images.length === 0 && pendingUploads.length === 0 && (
         <p className="mt-4 rounded-md bg-background px-3 py-3 text-sm text-text-secondary">
-          Todavía no hay fotos propias. La home usa las de respaldo hasta que agregues las tuyas.
+          Todavía no hay fotos en la galería. Elige de tus productos o sube fotos nuevas.
         </p>
       )}
 
@@ -242,10 +302,22 @@ export function GalleryManager({ images }: GalleryManagerProps) {
             busy={busyId === image.id || disabled}
             onMove={handleMove}
             onCaptionBlur={handleCaptionBlur}
+            onFocalCommit={handleFocalCommit}
             onDelete={handleDelete}
           />
         ))}
       </ul>
+
+      <ProductPhotoPicker
+        open={pickerOpen}
+        photos={productPhotos}
+        slotsLeft={slotsLeft}
+        busy={isMutating}
+        onClose={() => {
+          if (!isMutating) setPickerOpen(false);
+        }}
+        onConfirm={handleAddFromProducts}
+      />
     </section>
   );
 }
@@ -257,6 +329,7 @@ function GalleryItem({
   busy,
   onMove,
   onCaptionBlur,
+  onFocalCommit,
   onDelete,
 }: {
   image: AdminHomeGalleryImage;
@@ -265,9 +338,19 @@ function GalleryItem({
   busy: boolean;
   onMove: (id: string, direction: "up" | "down") => void;
   onCaptionBlur: (id: string, current: string | null, next: string) => void;
+  onFocalCommit: (id: string, current: number, next: number) => void;
   onDelete: (id: string) => void;
 }) {
   const [caption, setCaption] = useState(image.caption ?? "");
+  const [focal, setFocal] = useState(image.focalX ?? DEFAULT_GALLERY_FOCAL_X);
+
+  useEffect(() => {
+    setCaption(image.caption ?? "");
+  }, [image.caption]);
+
+  useEffect(() => {
+    setFocal(image.focalX ?? DEFAULT_GALLERY_FOCAL_X);
+  }, [image.focalX]);
 
   return (
     <li className="flex flex-col rounded-md border border-border bg-background p-2">
@@ -277,6 +360,7 @@ function GalleryItem({
           src={image.url}
           alt={image.caption || "Foto de la galería"}
           className="h-full w-full object-cover"
+          style={{ objectPosition: `${focal}% 50%` }}
         />
       </div>
       <label className="mt-2 block">
@@ -289,6 +373,33 @@ function GalleryItem({
           placeholder="plata 950"
           disabled={busy}
           className="min-h-11 w-full rounded-md border border-border bg-surface px-3 text-base text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+      </label>
+      <label className="mt-2 block">
+        <span className="mb-1 block text-xs text-text-tertiary">Encuadre</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={focal}
+          disabled={busy}
+          aria-label="Mover la foto a la izquierda o a la derecha"
+          onChange={(event) => setFocal(Number(event.target.value))}
+          onPointerUp={(event) =>
+            onFocalCommit(
+              image.id,
+              image.focalX,
+              Number(event.currentTarget.value)
+            )
+          }
+          onBlur={(event) =>
+            onFocalCommit(
+              image.id,
+              image.focalX,
+              Number(event.currentTarget.value)
+            )
+          }
+          className="h-11 w-full accent-accent"
         />
       </label>
       <div className="mt-2 flex items-center justify-between gap-2">

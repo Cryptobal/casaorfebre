@@ -55,12 +55,30 @@ CREATE TABLE IF NOT EXISTS "home_gallery_images" (
   "url" TEXT NOT NULL,
   "caption" TEXT,
   "sortOrder" INTEGER NOT NULL,
+  "focalX" INTEGER NOT NULL DEFAULT 50,
+  "productImageId" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "home_gallery_images_pkey" PRIMARY KEY ("id")
 );
 
 CREATE INDEX IF NOT EXISTS "home_gallery_images_sortOrder_idx"
   ON "home_gallery_images"("sortOrder");
+
+ALTER TABLE "home_gallery_images"
+  ADD COLUMN IF NOT EXISTS "focalX" INTEGER NOT NULL DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS "productImageId" TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS "home_gallery_images_productImageId_key"
+  ON "home_gallery_images"("productImageId");
+
+DO $$ BEGIN
+  ALTER TABLE "home_gallery_images"
+    ADD CONSTRAINT "home_gallery_images_productImageId_fkey"
+    FOREIGN KEY ("productImageId") REFERENCES "product_images"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 `;
 
 const url = process.env.DATABASE_URL;

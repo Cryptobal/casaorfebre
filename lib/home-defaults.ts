@@ -3,8 +3,23 @@ export type HomeConcept = {
   text: string;
 };
 
-export const MAX_HOME_GALLERY_IMAGES = 12;
+export const MAX_HOME_GALLERY_IMAGES = 24;
 export const MAX_GALLERY_UPLOAD_BYTES = 2 * 1024 * 1024;
+export const DEFAULT_GALLERY_FOCAL_X = 50;
+
+export function clampGalleryFocalX(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_GALLERY_FOCAL_X;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+export function suggestedGalleryCaption(
+  materialNames: readonly string[],
+  productName: string
+): string {
+  const names = materialNames.map((name) => name.trim()).filter(Boolean);
+  if (names.length === 0) return productName.trim();
+  return names.map((name) => name.toLowerCase()).join(" y ");
+}
 
 export const HOME_DEFAULTS = {
   heroPhrase: "Joyas creadas desde el instinto, la materia y el proceso.",

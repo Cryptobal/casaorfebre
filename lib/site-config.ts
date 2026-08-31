@@ -47,11 +47,13 @@ export const CONCEPTS = HOME_DEFAULTS.concepts.map((concept) => ({
 export const GALLERY_QUOTE = HOME_DEFAULTS.galleryIntro;
 
 export type GalleryImage = {
+  id?: string;
   src: string;
   alt: string;
   caption: string;
   aspectClass: string;
   offsetClass?: string;
+  focalX?: number;
 };
 
 export const GALLERY_IMAGES: GalleryImage[] = [
