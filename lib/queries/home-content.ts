@@ -4,6 +4,7 @@ import {
   HOME_DEFAULT_MANIFESTO,
   HOME_DEFAULTS,
   splitManifesto,
+  suggestedGalleryCaption,
   type HomeConcept,
 } from "@/lib/home-defaults";
 import { GALLERY_IMAGES, type GalleryImage } from "@/lib/site-config";
@@ -34,6 +35,20 @@ export type AdminHomeGalleryImage = {
   url: string;
   caption: string | null;
   sortOrder: number;
+  focalX: number;
+  productImageId: string | null;
+};
+
+export type GalleryProductPhoto = {
+  id: string;
+  url: string;
+  productName: string;
+  suggestedCaption: string;
+  inGallery: boolean;
+};
+
+const FALLBACK_LAYOUT: Pick<GalleryImage, "aspectClass" | "offsetClass"> = {
+  aspectClass: "aspect-[3/4]",
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -84,22 +99,29 @@ function fallback<T extends string>(value: string | null | undefined, def: T): s
   return trimmed ? trimmed : def;
 }
 
-function mapDbGallery(
-  images: AdminHomeGalleryImage[]
-): GalleryImage[] {
-  if (images.length === 0 || GALLERY_IMAGES.length === 0) {
-    return [...GALLERY_IMAGES];
-  }
+function layoutForIndex(
+  index: number
+): Pick<GalleryImage, "aspectClass" | "offsetClass"> {
+  if (GALLERY_IMAGES.length === 0) return FALLBACK_LAYOUT;
+  const layout = GALLERY_IMAGES[index % GALLERY_IMAGES.length];
+  return {
+    aspectClass: layout.aspectClass,
+    offsetClass: layout.offsetClass,
+  };
+}
 
+function mapDbGallery(images: AdminHomeGalleryImage[]): GalleryImage[] {
   return images.map((image, index) => {
-    const layout = GALLERY_IMAGES[index % GALLERY_IMAGES.length];
+    const layout = layoutForIndex(index);
     const caption = image.caption?.trim() ?? "";
     return {
+      id: image.id,
       src: image.url,
       alt: caption || "Pieza de joyería",
       caption,
       aspectClass: layout.aspectClass,
       offsetClass: layout.offsetClass,
+      focalX: image.focalX,
     };
   });
 }
@@ -114,7 +136,7 @@ function emptyResolved(): ResolvedHomeContent {
     galleryIntro: HOME_DEFAULTS.galleryIntro,
     contactInstagramText: HOME_DEFAULTS.contactInstagramText,
     contactWhatsappText: HOME_DEFAULTS.contactWhatsappText,
-    gallery: [...GALLERY_IMAGES],
+    gallery: [],
   };
 }
 
@@ -147,7 +169,7 @@ export function mergeHomeContent(
       stored?.contactWhatsappText,
       HOME_DEFAULTS.contactWhatsappText
     ),
-    gallery: images.length > 0 ? mapDbGallery(images) : [...GALLERY_IMAGES],
+    gallery: mapDbGallery(images),
   };
 }
 
@@ -155,7 +177,14 @@ export async function getHomeGalleryImages(): Promise<AdminHomeGalleryImage[]> {
   try {
     return await prisma.homeGalleryImage.findMany({
       orderBy: { sortOrder: "asc" },
-      select: { id: true, url: true, caption: true, sortOrder: true },
+      select: {
+        id: true,
+        url: true,
+        caption: true,
+        sortOrder: true,
+        focalX: true,
+        productImageId: true,
+      },
     });
   } catch (error) {
     console.error("[home-content] Failed to load gallery images:", error);
@@ -249,5 +278,50 @@ export async function getAdminHomeContent(): Promise<{
       resolved: emptyResolved(),
       images: [],
     };
+  }
+}
+
+export async function getProductPhotosForGallery(): Promise<GalleryProductPhoto[]> {
+  try {
+    const [photos, used] = await Promise.all([
+      prisma.productImage.findMany({
+        where: { status: "APPROVED" },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          url: true,
+          product: {
+            select: {
+              name: true,
+              materials: { select: { name: true }, orderBy: { position: "asc" } },
+            },
+          },
+        },
+      }),
+      prisma.homeGalleryImage.findMany({
+        where: { productImageId: { not: null } },
+        select: { productImageId: true },
+      }),
+    ]);
+
+    const usedIds = new Set(
+      used
+        .map((row) => row.productImageId)
+        .filter((id): id is string => Boolean(id))
+    );
+
+    return photos.map((photo) => ({
+      id: photo.id,
+      url: photo.url,
+      productName: photo.product.name,
+      suggestedCaption: suggestedGalleryCaption(
+        photo.product.materials.map((material) => material.name),
+        photo.product.name
+      ),
+      inGallery: usedIds.has(photo.id),
+    }));
+  } catch (error) {
+    console.error("[home-content] Failed to load product photos:", error);
+    return [];
   }
 }

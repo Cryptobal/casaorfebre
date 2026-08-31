@@ -390,6 +390,7 @@ model ProductImage {
   originalUrl     String?
   createdAt   DateTime    @default(now())
   product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  homeGalleryImages HomeGalleryImage[]
 
   @@index([productId])
   @@map("product_images")
@@ -1474,11 +1475,14 @@ model HomeContent {
 }
 
 model HomeGalleryImage {
-  id        String   @id @default(cuid())
-  url       String
-  caption   String?
-  sortOrder Int
-  createdAt DateTime @default(now())
+  id             String        @id @default(cuid())
+  url            String
+  caption        String?
+  sortOrder      Int
+  focalX         Int           @default(50)
+  productImageId String?       @unique
+  productImage   ProductImage? @relation(fields: [productImageId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
 
   @@index([sortOrder])
   @@map("home_gallery_images")

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { DEFAULT_GALLERY_FOCAL_X } from "@/lib/home-defaults";
 import type { GalleryImage } from "@/lib/site-config";
 
 const SIZES = "(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw";
@@ -13,6 +14,7 @@ export function GalleryFigure({
   caption,
   aspectClass,
   offsetClass,
+  focalX = DEFAULT_GALLERY_FOCAL_X,
 }: GalleryImage) {
   const [failed, setFailed] = useState(false);
 
@@ -26,13 +28,16 @@ export function GalleryFigure({
             fill
             sizes={SIZES}
             className="object-cover"
+            style={{ objectPosition: `${focalX}% 50%` }}
             onError={() => setFailed(true)}
           />
         )}
       </div>
-      <figcaption className="mt-2.5 text-[11px] font-light tracking-[0.14em] text-text-faint">
-        {caption}
-      </figcaption>
+      {caption ? (
+        <figcaption className="mt-2.5 text-[11px] font-light tracking-[0.14em] text-text-faint">
+          {caption}
+        </figcaption>
+      ) : null}
     </figure>
   );
 }

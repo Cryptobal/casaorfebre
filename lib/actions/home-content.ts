@@ -5,8 +5,10 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { deleteFromR2, uploadToR2 } from "@/lib/r2";
 import {
+  clampGalleryFocalX,
   MAX_GALLERY_UPLOAD_BYTES,
   MAX_HOME_GALLERY_IMAGES,
+  suggestedGalleryCaption,
   type HomeConcept,
 } from "@/lib/home-defaults";
 import { revalidatePath } from "next/cache";
@@ -340,15 +342,16 @@ export async function deleteImage(id: string): Promise<ActionResult> {
 
     let warning: string | undefined;
     const key = r2KeyFromPublicUrl(image.url);
-    if (key) {
+    if (key?.startsWith("home/galeria/")) {
       try {
         await deleteFromR2(key);
       } catch (error) {
         console.error("[home-content] deleteFromR2:", error);
         warning = "La foto se quitó de la home, pero no se pudo borrar del almacenamiento.";
       }
-    } else {
-      warning = "La foto se quitó de la home, pero no se encontró el archivo en el almacenamiento.";
+    } else if (!image.productImageId && !key?.startsWith("home/galeria/")) {
+      warning =
+        "La foto se quitó de la home, pero no se encontró el archivo en el almacenamiento.";
     }
 
     revalidateHome();
@@ -356,5 +359,144 @@ export async function deleteImage(id: string): Promise<ActionResult> {
   } catch (error) {
     console.error("[home-content] deleteImage:", error);
     return { error: "No se pudo borrar la foto" };
+  }
+}
+
+export async function updateImageFocal(
+  id: string,
+  focalX: number
+): Promise<ActionResult> {
+  const gate = await requireAdmin();
+  if ("error" in gate) return gate;
+
+  if (!id) return { error: "Imagen no encontrada" };
+
+  try {
+    const image = await prisma.homeGalleryImage.findUnique({ where: { id } });
+    if (!image) return { error: "Imagen no encontrada" };
+
+    await prisma.homeGalleryImage.update({
+      where: { id },
+      data: { focalX: clampGalleryFocalX(focalX) },
+    });
+
+    revalidateHome();
+    return { success: true };
+  } catch (error) {
+    console.error("[home-content] updateImageFocal:", error);
+    return { error: "No se pudo guardar el encuadre" };
+  }
+}
+
+export type AddGalleryFromProductsResult = {
+  success?: boolean;
+  error?: string;
+  added?: number;
+  skipped?: number;
+};
+
+export async function addGalleryFromProductImages(
+  ids: string[]
+): Promise<AddGalleryFromProductsResult> {
+  const gate = await requireAdmin();
+  if ("error" in gate) return gate;
+
+  const uniqueIds = [
+    ...new Set(
+      (Array.isArray(ids) ? ids : []).filter(
+        (id): id is string => typeof id === "string" && id.length > 0
+      )
+    ),
+  ];
+
+  if (uniqueIds.length === 0) {
+    return { error: "No se seleccionaron fotos" };
+  }
+
+  try {
+    const existingCount = await prisma.homeGalleryImage.count();
+    const remaining = MAX_HOME_GALLERY_IMAGES - existingCount;
+    if (remaining <= 0) {
+      return {
+        error: `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`,
+      };
+    }
+
+    const [photos, alreadyUsed] = await Promise.all([
+      prisma.productImage.findMany({
+        where: { id: { in: uniqueIds }, status: "APPROVED" },
+        select: {
+          id: true,
+          url: true,
+          product: {
+            select: {
+              name: true,
+              materials: { select: { name: true }, orderBy: { position: "asc" } },
+            },
+          },
+        },
+      }),
+      prisma.homeGalleryImage.findMany({
+        where: { productImageId: { in: uniqueIds } },
+        select: { productImageId: true },
+      }),
+    ]);
+
+    const photoById = new Map(photos.map((photo) => [photo.id, photo]));
+    const usedIds = new Set(
+      alreadyUsed
+        .map((row) => row.productImageId)
+        .filter((id): id is string => Boolean(id))
+    );
+
+    const toAdd: typeof photos = [];
+    let skipped = 0;
+
+    for (const id of uniqueIds) {
+      const photo = photoById.get(id);
+      if (!photo || usedIds.has(id)) {
+        skipped += 1;
+        continue;
+      }
+      if (toAdd.length >= remaining) {
+        skipped += 1;
+        continue;
+      }
+      toAdd.push(photo);
+      usedIds.add(id);
+    }
+
+    if (toAdd.length === 0) {
+      return {
+        error:
+          remaining <= 0
+            ? `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`
+            : "Esas fotos ya están en la galería o no están disponibles",
+        skipped,
+      };
+    }
+
+    const maxOrder = await prisma.homeGalleryImage.aggregate({
+      _max: { sortOrder: true },
+    });
+    let nextOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+
+    await prisma.homeGalleryImage.createMany({
+      data: toAdd.map((photo) => ({
+        url: photo.url,
+        caption: suggestedGalleryCaption(
+          photo.product.materials.map((material) => material.name),
+          photo.product.name
+        ) || null,
+        sortOrder: nextOrder++,
+        productImageId: photo.id,
+      })),
+    });
+
+    revalidateHome();
+    return { success: true, added: toAdd.length, skipped: skipped || undefined };
+  } catch (error) {
+    console.error("[home-content] addGalleryFromProductImages:", error);
+    return { error: "No se pudieron agregar las fotos. Intenta de nuevo." };
   }
 }

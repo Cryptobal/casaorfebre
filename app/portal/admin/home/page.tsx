@@ -1,9 +1,12 @@
-import { getAdminHomeContent } from "@/lib/queries/home-content";
+import { getAdminHomeContent, getProductPhotosForGallery } from "@/lib/queries/home-content";
 import { GalleryManager } from "./gallery-manager";
 import { TextsEditor } from "./texts-editor";
 
 export default async function AdminHomeContentPage() {
-  const { stored, images } = await getAdminHomeContent();
+  const [{ stored, images }, productPhotos] = await Promise.all([
+    getAdminHomeContent(),
+    getProductPhotosForGallery(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -13,7 +16,7 @@ export default async function AdminHomeContentPage() {
       </p>
 
       <div className="mt-6">
-        <GalleryManager images={images} />
+        <GalleryManager images={images} productPhotos={productPhotos} />
       </div>
 
       <h2 className="mb-3 mt-8 font-serif text-2xl font-light">Textos</h2>

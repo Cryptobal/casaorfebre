@@ -17,7 +17,7 @@ export function Galeria({
       </p>
       <div className="grid grid-flow-dense grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] items-start gap-[clamp(18px,3vw,32px)]">
         {images.map((image) => (
-          <GalleryFigure key={image.src} {...image} />
+          <GalleryFigure key={image.id ?? image.src} {...image} />
         ))}
       </div>
     </section>
