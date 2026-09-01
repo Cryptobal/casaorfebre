@@ -6,8 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { deleteFromR2, uploadToR2 } from "@/lib/r2";
 import {
   clampGalleryFocalX,
+  clampGalleryFocalY,
+  clampGalleryZoom,
   MAX_GALLERY_UPLOAD_BYTES,
-  MAX_HOME_GALLERY_IMAGES,
   suggestedGalleryCaption,
   type HomeConcept,
 } from "@/lib/home-defaults";
@@ -183,14 +184,6 @@ export async function addGalleryImages(
   }
 
   try {
-    const existingCount = await prisma.homeGalleryImage.count();
-    const remaining = MAX_HOME_GALLERY_IMAGES - existingCount;
-    if (remaining <= 0) {
-      return {
-        error: `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`,
-      };
-    }
-
     const maxOrder = await prisma.homeGalleryImage.aggregate({
       _max: { sortOrder: true },
     });
@@ -198,14 +191,9 @@ export async function addGalleryImages(
 
     const errors: string[] = [];
     let added = 0;
-    let slots = remaining;
 
     for (const file of files) {
       const label = file.name || "foto";
-      if (slots <= 0) {
-        errors.push(`${label}: no se subió, se alcanzó el máximo de ${MAX_HOME_GALLERY_IMAGES} fotos`);
-        continue;
-      }
       if (file.size > MAX_GALLERY_UPLOAD_BYTES) {
         errors.push(`${label}: supera 2 MB después de comprimir`);
         continue;
@@ -230,7 +218,6 @@ export async function addGalleryImages(
         });
         nextOrder += 1;
         added += 1;
-        slots -= 1;
       } catch (error) {
         console.error("[home-content] addGalleryImages file:", error);
         errors.push(`${label}: no se pudo subir. Intenta de nuevo.`);
@@ -364,7 +351,9 @@ export async function deleteImage(id: string): Promise<ActionResult> {
 
 export async function updateImageFocal(
   id: string,
-  focalX: number
+  focalX: number,
+  focalY: number,
+  zoom: number
 ): Promise<ActionResult> {
   const gate = await requireAdmin();
   if ("error" in gate) return gate;
@@ -377,7 +366,11 @@ export async function updateImageFocal(
 
     await prisma.homeGalleryImage.update({
       where: { id },
-      data: { focalX: clampGalleryFocalX(focalX) },
+      data: {
+        focalX: clampGalleryFocalX(focalX),
+        focalY: clampGalleryFocalY(focalY),
+        zoom: clampGalleryZoom(zoom),
+      },
     });
 
     revalidateHome();
@@ -414,14 +407,6 @@ export async function addGalleryFromProductImages(
   }
 
   try {
-    const existingCount = await prisma.homeGalleryImage.count();
-    const remaining = MAX_HOME_GALLERY_IMAGES - existingCount;
-    if (remaining <= 0) {
-      return {
-        error: `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`,
-      };
-    }
-
     const [photos, alreadyUsed] = await Promise.all([
       prisma.productImage.findMany({
         where: { id: { in: uniqueIds }, status: "APPROVED" },
@@ -458,20 +443,13 @@ export async function addGalleryFromProductImages(
         skipped += 1;
         continue;
       }
-      if (toAdd.length >= remaining) {
-        skipped += 1;
-        continue;
-      }
       toAdd.push(photo);
       usedIds.add(id);
     }
 
     if (toAdd.length === 0) {
       return {
-        error:
-          remaining <= 0
-            ? `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`
-            : "Esas fotos ya están en la galería o no están disponibles",
+        error: "Esas fotos ya están en la galería o no están disponibles",
         skipped,
       };
     }

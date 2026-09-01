@@ -36,6 +36,8 @@ export type AdminHomeGalleryImage = {
   caption: string | null;
   sortOrder: number;
   focalX: number;
+  focalY: number;
+  zoom: number;
   productImageId: string | null;
 };
 
@@ -122,6 +124,8 @@ function mapDbGallery(images: AdminHomeGalleryImage[]): GalleryImage[] {
       aspectClass: layout.aspectClass,
       offsetClass: layout.offsetClass,
       focalX: image.focalX,
+      focalY: image.focalY,
+      zoom: image.zoom,
     };
   });
 }
@@ -183,6 +187,8 @@ export async function getHomeGalleryImages(): Promise<AdminHomeGalleryImage[]> {
         caption: true,
         sortOrder: true,
         focalX: true,
+        focalY: true,
+        zoom: true,
         productImageId: true,
       },
     });

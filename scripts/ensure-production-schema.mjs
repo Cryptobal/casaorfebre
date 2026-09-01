@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS "home_gallery_images" (
   "caption" TEXT,
   "sortOrder" INTEGER NOT NULL,
   "focalX" INTEGER NOT NULL DEFAULT 50,
+  "focalY" INTEGER NOT NULL DEFAULT 50,
+  "zoom" INTEGER NOT NULL DEFAULT 100,
   "productImageId" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "home_gallery_images_pkey" PRIMARY KEY ("id")
@@ -66,6 +68,8 @@ CREATE INDEX IF NOT EXISTS "home_gallery_images_sortOrder_idx"
 
 ALTER TABLE "home_gallery_images"
   ADD COLUMN IF NOT EXISTS "focalX" INTEGER NOT NULL DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS "focalY" INTEGER NOT NULL DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS "zoom" INTEGER NOT NULL DEFAULT 100,
   ADD COLUMN IF NOT EXISTS "productImageId" TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS "home_gallery_images_productImageId_key"

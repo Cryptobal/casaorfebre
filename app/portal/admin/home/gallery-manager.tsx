@@ -11,13 +11,11 @@ import {
   updateImageFocal,
 } from "@/lib/actions/home-content";
 import { compressImageFile, ImageCompressError } from "@/lib/image-compress";
-import {
-  DEFAULT_GALLERY_FOCAL_X,
-  MAX_HOME_GALLERY_IMAGES,
-} from "@/lib/home-defaults";
 import { showToast } from "@/components/ui/toast";
 import { notifyHomeActionError } from "./notify-error";
 import { ProductPhotoPicker } from "./product-photo-picker";
+import { GalleryCropEditor, cropFromImage, sameCrop } from "./gallery-crop";
+import type { GalleryCrop } from "@/lib/home-defaults";
 import type {
   AdminHomeGalleryImage,
   GalleryProductPhoto,
@@ -45,7 +43,6 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
   const [isMutating, startMutate] = useTransition();
 
   const total = images.length;
-  const slotsLeft = MAX_HOME_GALLERY_IMAGES - total;
   const disabled = isUploading || isMutating;
 
   function patchUpload(id: string, patch: Partial<PendingUpload>) {
@@ -55,12 +52,6 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
   }
 
   function handlePick() {
-    if (slotsLeft <= 0) {
-      showToast({
-        message: `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`,
-      });
-      return;
-    }
     inputRef.current?.click();
   }
 
@@ -83,15 +74,6 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
       for (let i = 0; i < files.length; i += 1) {
         const file = files[i];
         const job = jobs[i];
-        if (total + added >= MAX_HOME_GALLERY_IMAGES) {
-          patchUpload(job.id, {
-            status: "error",
-            error: `Máximo ${MAX_HOME_GALLERY_IMAGES} fotos`,
-          });
-          failures.push(job.name);
-          continue;
-        }
-
         patchUpload(job.id, { status: "compressing" });
         let blob: Blob;
         try {
@@ -174,11 +156,16 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
     });
   }
 
-  function handleFocalCommit(id: string, current: number, next: number) {
-    if (current === next) return;
+  function handleFocalCommit(id: string, current: GalleryCrop, next: GalleryCrop) {
+    if (sameCrop(current, next)) return;
     setBusyId(id);
     startMutate(async () => {
-      const result = await updateImageFocal(id, next);
+      const result = await updateImageFocal(
+        id,
+        next.focalX,
+        next.focalY,
+        next.zoom
+      );
       setBusyId(null);
       if (result.error) {
         notifyHomeActionError(result.error);
@@ -227,11 +214,11 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-serif text-2xl font-light">Galería</h2>
         <p className="text-sm text-text-secondary">
-          {total}/{MAX_HOME_GALLERY_IMAGES}
+          {total === 1 ? "1 foto" : `${total} fotos`}
         </p>
       </div>
       <p className="mt-2 text-sm text-text-secondary">
-        Estas fotos aparecen en la home. Sube nuevas o elige de tus productos. Si no hay ninguna aquí, la galería de la home queda vacía.
+        Estas fotos aparecen en la home. Sube nuevas o elige de tus productos. No hay un máximo: se guardan en Cloudflare. Si no hay ninguna aquí, la galería de la home queda vacía.
       </p>
 
       <input
@@ -247,23 +234,15 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
         <button
           type="button"
           onClick={handlePick}
-          disabled={disabled || slotsLeft <= 0}
+          disabled={disabled}
           className="flex min-h-12 flex-1 items-center justify-center rounded-md bg-accent px-5 text-base font-medium text-white transition-colors hover:bg-accent-dark disabled:pointer-events-none disabled:opacity-50"
         >
           {isUploading ? "Subiendo…" : "Subir fotos"}
         </button>
         <button
           type="button"
-          onClick={() => {
-            if (slotsLeft <= 0) {
-              showToast({
-                message: `Ya hay ${MAX_HOME_GALLERY_IMAGES} fotos. Borra alguna para agregar más.`,
-              });
-              return;
-            }
-            setPickerOpen(true);
-          }}
-          disabled={disabled || slotsLeft <= 0}
+          onClick={() => setPickerOpen(true)}
+          disabled={disabled}
           className="flex min-h-12 flex-1 items-center justify-center rounded-md border border-border px-5 text-base font-medium text-text transition-colors hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-50"
         >
           Elegir de productos
@@ -276,7 +255,7 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
         </p>
       )}
 
-      <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pendingUploads.map((item) => (
           <li
             key={item.id}
@@ -311,7 +290,6 @@ export function GalleryManager({ images, productPhotos }: GalleryManagerProps) {
       <ProductPhotoPicker
         open={pickerOpen}
         photos={productPhotos}
-        slotsLeft={slotsLeft}
         busy={isMutating}
         onClose={() => {
           if (!isMutating) setPickerOpen(false);
@@ -338,31 +316,25 @@ function GalleryItem({
   busy: boolean;
   onMove: (id: string, direction: "up" | "down") => void;
   onCaptionBlur: (id: string, current: string | null, next: string) => void;
-  onFocalCommit: (id: string, current: number, next: number) => void;
+  onFocalCommit: (id: string, current: GalleryCrop, next: GalleryCrop) => void;
   onDelete: (id: string) => void;
 }) {
   const [caption, setCaption] = useState(image.caption ?? "");
-  const [focal, setFocal] = useState(image.focalX ?? DEFAULT_GALLERY_FOCAL_X);
+  const crop = cropFromImage(image);
 
   useEffect(() => {
     setCaption(image.caption ?? "");
   }, [image.caption]);
 
-  useEffect(() => {
-    setFocal(image.focalX ?? DEFAULT_GALLERY_FOCAL_X);
-  }, [image.focalX]);
-
   return (
     <li className="flex flex-col rounded-md border border-border bg-background p-2">
-      <div className="relative aspect-square overflow-hidden rounded-sm bg-surface-alt">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image.url}
-          alt={image.caption || "Foto de la galería"}
-          className="h-full w-full object-cover"
-          style={{ objectPosition: `${focal}% 50%` }}
-        />
-      </div>
+      <GalleryCropEditor
+        src={image.url}
+        alt={image.caption || "Foto de la galería"}
+        value={crop}
+        disabled={busy}
+        onCommit={(next) => onFocalCommit(image.id, crop, next)}
+      />
       <label className="mt-2 block">
         <span className="sr-only">Leyenda</span>
         <input
@@ -373,33 +345,6 @@ function GalleryItem({
           placeholder="plata 950"
           disabled={busy}
           className="min-h-11 w-full rounded-md border border-border bg-surface px-3 text-base text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent"
-        />
-      </label>
-      <label className="mt-2 block">
-        <span className="mb-1 block text-xs text-text-tertiary">Encuadre</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={focal}
-          disabled={busy}
-          aria-label="Mover la foto a la izquierda o a la derecha"
-          onChange={(event) => setFocal(Number(event.target.value))}
-          onPointerUp={(event) =>
-            onFocalCommit(
-              image.id,
-              image.focalX,
-              Number(event.currentTarget.value)
-            )
-          }
-          onBlur={(event) =>
-            onFocalCommit(
-              image.id,
-              image.focalX,
-              Number(event.currentTarget.value)
-            )
-          }
-          className="h-11 w-full accent-accent"
         />
       </label>
       <div className="mt-2 flex items-center justify-between gap-2">

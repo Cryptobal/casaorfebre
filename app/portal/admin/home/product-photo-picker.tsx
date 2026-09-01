@@ -8,7 +8,6 @@ import type { GalleryProductPhoto } from "@/lib/queries/home-content";
 type ProductPhotoPickerProps = {
   open: boolean;
   photos: GalleryProductPhoto[];
-  slotsLeft: number;
   busy: boolean;
   onClose: () => void;
   onConfirm: (ids: string[]) => void;
@@ -17,7 +16,6 @@ type ProductPhotoPickerProps = {
 export function ProductPhotoPicker({
   open,
   photos,
-  slotsLeft,
   busy,
   onClose,
   onConfirm,
@@ -57,7 +55,6 @@ export function ProductPhotoPicker({
         next.delete(id);
         return next;
       }
-      if (next.size >= slotsLeft) return prev;
       next.add(id);
       return next;
     });
@@ -66,7 +63,7 @@ export function ProductPhotoPicker({
   if (typeof window === "undefined" || !open) return null;
 
   const count = selected.size;
-  const canAdd = count > 0 && !busy && slotsLeft > 0;
+  const canAdd = count > 0 && !busy;
 
   return createPortal(
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-labelledby={titleId}>
@@ -104,9 +101,7 @@ export function ProductPhotoPicker({
             className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent"
           />
           <p className="mt-2 text-sm text-text-secondary">
-            {slotsLeft <= 0
-              ? "La galería está llena. Borra alguna foto para agregar más."
-              : `Puedes agregar hasta ${slotsLeft} ${slotsLeft === 1 ? "foto" : "fotos"}.`}
+            Elige todas las que quieras. Se guardan en Cloudflare, no hay un máximo.
           </p>
         </div>
 
@@ -121,10 +116,7 @@ export function ProductPhotoPicker({
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {filtered.map((photo) => {
                 const isSelected = selected.has(photo.id);
-                const disabled =
-                  photo.inGallery ||
-                  busy ||
-                  (!isSelected && selected.size >= slotsLeft);
+                const disabled = photo.inGallery || busy;
                 return (
                   <li key={photo.id}>
                     <button
