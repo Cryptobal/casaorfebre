@@ -1480,6 +1480,8 @@ model HomeGalleryImage {
   caption        String?
   sortOrder      Int
   focalX         Int           @default(50)
+  focalY         Int           @default(50)
+  zoom           Int           @default(100)
   productImageId String?       @unique
   productImage   ProductImage? @relation(fields: [productImageId], references: [id], onDelete: SetNull)
   createdAt      DateTime      @default(now())

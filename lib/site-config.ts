@@ -18,8 +18,8 @@ export const ATELIER_PAYMENTS_MESSAGE =
 export const PORTAL_WHATSAPP_URL =
   "https://wa.me/56968780089?text=Hola%20Camila%2C%20vi%20tu%20trabajo%20en%20Casa%20Orfebre";
 
-// TODO Carlos: confirmar handle exacto antes del deploy
-export const PORTAL_INSTAGRAM_URL = "https://www.instagram.com/camilaorfebreria";
+export const PORTAL_INSTAGRAM_USERNAME = "camila.orfebreria";
+export const PORTAL_INSTAGRAM_URL = `https://www.instagram.com/${PORTAL_INSTAGRAM_USERNAME}/`;
 
 const ASSETS_BASE =
   process.env.NEXT_PUBLIC_R2_PUBLIC_URL ??
@@ -54,6 +54,8 @@ export type GalleryImage = {
   aspectClass: string;
   offsetClass?: string;
   focalX?: number;
+  focalY?: number;
+  zoom?: number;
 };
 
 export const GALLERY_IMAGES: GalleryImage[] = [

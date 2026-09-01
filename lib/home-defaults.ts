@@ -1,15 +1,51 @@
+import type { CSSProperties } from "react";
+
 export type HomeConcept = {
   title: string;
   text: string;
 };
 
-export const MAX_HOME_GALLERY_IMAGES = 24;
 export const MAX_GALLERY_UPLOAD_BYTES = 2 * 1024 * 1024;
 export const DEFAULT_GALLERY_FOCAL_X = 50;
+export const DEFAULT_GALLERY_FOCAL_Y = 50;
+export const DEFAULT_GALLERY_ZOOM = 100;
+export const MIN_GALLERY_ZOOM = 100;
+export const MAX_GALLERY_ZOOM = 300;
+
+function clampPercent(value: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
 
 export function clampGalleryFocalX(value: number): number {
-  if (!Number.isFinite(value)) return DEFAULT_GALLERY_FOCAL_X;
-  return Math.min(100, Math.max(0, Math.round(value)));
+  return clampPercent(value, DEFAULT_GALLERY_FOCAL_X);
+}
+
+export function clampGalleryFocalY(value: number): number {
+  return clampPercent(value, DEFAULT_GALLERY_FOCAL_Y);
+}
+
+export function clampGalleryZoom(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_GALLERY_ZOOM;
+  return Math.min(
+    MAX_GALLERY_ZOOM,
+    Math.max(MIN_GALLERY_ZOOM, Math.round(value))
+  );
+}
+
+export type GalleryCrop = {
+  focalX: number;
+  focalY: number;
+  zoom: number;
+};
+
+export function galleryCropStyle(crop: GalleryCrop): CSSProperties {
+  const origin = `${crop.focalX}% ${crop.focalY}%`;
+  return {
+    objectPosition: origin,
+    transform: crop.zoom > DEFAULT_GALLERY_ZOOM ? `scale(${crop.zoom / 100})` : undefined,
+    transformOrigin: origin,
+  };
 }
 
 export function suggestedGalleryCaption(

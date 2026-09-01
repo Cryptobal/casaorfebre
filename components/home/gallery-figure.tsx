@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { DEFAULT_GALLERY_FOCAL_X } from "@/lib/home-defaults";
+import { galleryCropStyle, DEFAULT_GALLERY_FOCAL_X, DEFAULT_GALLERY_FOCAL_Y, DEFAULT_GALLERY_ZOOM } from "@/lib/home-defaults";
 import type { GalleryImage } from "@/lib/site-config";
 
 const SIZES = "(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw";
@@ -15,6 +15,8 @@ export function GalleryFigure({
   aspectClass,
   offsetClass,
   focalX = DEFAULT_GALLERY_FOCAL_X,
+  focalY = DEFAULT_GALLERY_FOCAL_Y,
+  zoom = DEFAULT_GALLERY_ZOOM,
 }: GalleryImage) {
   const [failed, setFailed] = useState(false);
 
@@ -28,7 +30,7 @@ export function GalleryFigure({
             fill
             sizes={SIZES}
             className="object-cover"
-            style={{ objectPosition: `${focalX}% 50%` }}
+            style={galleryCropStyle({ focalX, focalY, zoom })}
             onError={() => setFailed(true)}
           />
         )}

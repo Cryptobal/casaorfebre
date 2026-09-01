@@ -30,6 +30,7 @@ export function Footer() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={link.label === "Instagram" ? "Instagram de Camila Orfebrería" : undefined}
                 className="text-text-secondary transition-[color] duration-[250ms] ease-[ease] hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 {link.label}

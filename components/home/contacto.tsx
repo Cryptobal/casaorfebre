@@ -25,6 +25,7 @@ export function Contacto({
           href={PORTAL_INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Instagram de Camila Orfebrería"
           className="box-border flex min-h-12 w-full max-w-[300px] items-center justify-center border border-accent px-8 text-xs font-normal uppercase tracking-[0.24em] text-accent transition-all duration-[250ms] ease-[ease] hover:border-accent-light hover:bg-surface hover:text-accent-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Instagram
